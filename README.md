@@ -152,9 +152,20 @@ We recommend using Java 17 (or higher versions) to run or develop `mpc4j` on `aa
 
 ## Development
 
-### Development Guideline
+We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). Here are some guidelines.
 
-We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe`, you need to configure IDEA with the following procedures so that IDEA can link to these native libraries.
+### Intellij IDEA Preferences
+
+Please change the following Preferences before actual development:
+
+1. Editor -> Code Style -> Java: Table size, Indent, Continuation indent are all **4**.
+2. Editor -> Code Style -> Java -> Imports: select "**Insert imports for inner classes**".
+3. Editor -> Inspections: select Java -> JVM languages, and select "**Serializable class without 'serialVersionUID'**". We note that all `PtoId` in `PtoDesc` instances are generated using serialVersionUID. When creatding a new instance of `PtoDesc`, make it `implement Serializable` , follow the warning to generate a `serialVersionUID`, paste that ID to be `PtoId`, and delete `implement Serializable` and corresponding imports.
+4. Plugins: Install and use "**Git Commit Template**" to write commit. If necessary, install and use "**Alibaba Java Coding Guidelines**" for unified code styles.
+
+### Linking Native Libraries
+
+After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe`, you need to configure IDEA with the following procedures so that IDEA can link to these native libraries.
 
 1. Open `Run->Edit Configurations...`
 2. Open `Edit Configuration templates...`

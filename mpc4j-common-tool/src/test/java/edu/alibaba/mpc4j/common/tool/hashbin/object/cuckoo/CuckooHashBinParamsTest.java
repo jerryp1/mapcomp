@@ -1,16 +1,15 @@
 package edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.math3.stat.regression.RegressionResults;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,14 +20,14 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Cuckoo hash bin parameters test. Here we text statistical security parameters for small bin num, and use linear
- * regression to estimate bin num for the desired security parameter σ = 40.
+ * Cuckoo hash bin parameters test. Here we text statistical security parameters for small bin num.
  *
  * @author Weiran Liu
  * @date 2023/7/27
@@ -42,41 +41,69 @@ public class CuckooHashBinParamsTest {
      */
     private static final int MAX_ROUND = 1 << 22;
     /**
-     * target σ = 40
-     */
-    private static final int TARGET_SIGMA = CommonConstants.STATS_BIT_LENGTH;
-    /**
      * random state
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
-     * regression point num
+     * log(num) -> bins for d = 3
      */
-    private static final int REGRESSION_POINT_NUM = 5;
+    private static final TIntObjectMap<int[]> H3_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
+
+    static {
+        H3_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,});
+        H3_LOG_NUM_BINS_MAP.put(2, new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,});
+        H3_LOG_NUM_BINS_MAP.put(3, new int[]{12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,});
+        H3_LOG_NUM_BINS_MAP.put(4, new int[]{21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,});
+        H3_LOG_NUM_BINS_MAP.put(5, new int[]{39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,});
+        H3_LOG_NUM_BINS_MAP.put(6, new int[]{71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 90, 92,});
+        H3_LOG_NUM_BINS_MAP.put(7, new int[]{155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166,});
+    }
+
     /**
-     * ε
+     * log(num) -> bins for d = 4
      */
-    private static final double EPSILON = 1.3;
+    private static final TIntObjectMap<int[]> H4_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
+
+    static {
+        H4_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5, 6, 7, 8,});
+        H4_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7, 8, 9, 10,});
+        H4_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11, 12, 13, 14,});
+        H4_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20, 21, 22, 23,});
+        H4_LOG_NUM_BINS_MAP.put(5, new int[]{33, 34, 35, 36, 37, 38, 39, 40,});
+        H4_LOG_NUM_BINS_MAP.put(6, new int[]{68, 69, 70, 71, 72, 73, 74, 75,});
+        H4_LOG_NUM_BINS_MAP.put(7, new int[]{135, 136, 137, 138, 139, 140, 141, 142,});
+    }
+
+    /**
+     * log(num) -> bins for d = 5
+     */
+    private static final TIntObjectMap<int[]> H5_LOG_NUM_BINS_MAP = new TIntObjectHashMap<>(7);
+
+    static {
+        H5_LOG_NUM_BINS_MAP.put(1, new int[]{3, 4, 5,});
+        H5_LOG_NUM_BINS_MAP.put(2, new int[]{5, 6, 7,});
+        H5_LOG_NUM_BINS_MAP.put(3, new int[]{9, 10, 11,});
+        H5_LOG_NUM_BINS_MAP.put(4, new int[]{17, 18, 19, 20,});
+        H5_LOG_NUM_BINS_MAP.put(5, new int[]{33, 34, 35, 36,});
+        H5_LOG_NUM_BINS_MAP.put(6, new int[]{65, 66, 67, 68, 69, 70,});
+        H5_LOG_NUM_BINS_MAP.put(7, new int[]{130, 131, 132, 133, 134, 135, 136,});
+    }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // NO_STASH_NAIVE
+        // d = 3
         configurations.add(new Object[]{
-            CuckooHashBinType.NO_STASH_NAIVE.name(), CuckooHashBinType.NO_STASH_NAIVE
+            "d = 3", CuckooHashBinType.NO_STASH_PSZ18_3_HASH
         });
-        // NO_STASH_PSZ18_3_HASH
+        // d = 4
         configurations.add(new Object[]{
-            CuckooHashBinType.NO_STASH_PSZ18_3_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_3_HASH
+            "d = 4", CuckooHashBinType.NO_STASH_PSZ18_4_HASH
         });
-        // NO_STASH_PSZ18_4_HASH
+        // d = 5
         configurations.add(new Object[]{
-            CuckooHashBinType.NO_STASH_PSZ18_4_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_4_HASH
-        });
-        // NO_STASH_PSZ18_5_HASH
-        configurations.add(new Object[]{
-            CuckooHashBinType.NO_STASH_PSZ18_5_HASH.name(), CuckooHashBinType.NO_STASH_PSZ18_5_HASH
+            "d = 5", CuckooHashBinType.NO_STASH_PSZ18_5_HASH
         });
 
         return configurations;
@@ -86,10 +113,15 @@ public class CuckooHashBinParamsTest {
      * cuckoo hash bin type
      */
     private final CuckooHashBinType type;
+    /**
+     * hash num
+     */
+    private final int hashNum;
 
     public CuckooHashBinParamsTest(String name, CuckooHashBinType type) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         this.type = type;
+        hashNum = CuckooHashBinFactory.getHashNum(type);
     }
 
     @Test
@@ -128,22 +160,28 @@ public class CuckooHashBinParamsTest {
     }
 
     private void testLogNum(int logNum) {
-        MathPreconditions.checkPositive("logNum", logNum);
+        MathPreconditions.checkInRangeClosed("logNum", logNum, 1, 7);
+        int[] binNumArray;
+        switch (hashNum) {
+            case 3:
+                binNumArray = H3_LOG_NUM_BINS_MAP.get(logNum);
+                break;
+            case 4:
+                binNumArray = H4_LOG_NUM_BINS_MAP.get(logNum);
+                break;
+            case 5:
+                binNumArray = H5_LOG_NUM_BINS_MAP.get(logNum);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid hash num: " + hashNum);
+        }
         int num = 1 << logNum;
         List<ByteBuffer> items = IntStream.range(0, num)
             .mapToObj(IntUtils::intToByteArray)
             .map(ByteBuffer::wrap)
             .collect(Collectors.toList());
-        int minBinNum = num + 2;
-        int maxBinNum = (int) Math.ceil(minBinNum * EPSILON);
-        if (maxBinNum - minBinNum < REGRESSION_POINT_NUM) {
-            maxBinNum = minBinNum + REGRESSION_POINT_NUM;
-        }
-        int binInterval = (maxBinNum - minBinNum) / REGRESSION_POINT_NUM;
-        double[][] points = new double[REGRESSION_POINT_NUM][2];
-        int pointIndex = 0;
-        for (int binNum = minBinNum; binNum <= maxBinNum && pointIndex < REGRESSION_POINT_NUM; binNum += binInterval) {
-            int finalBinNum = binNum;
+        LOGGER.info("log(num) = {}, bin num = {}", logNum, Arrays.toString(binNumArray));
+        for (int binNum : binNumArray) {
             // for each bin num, test its security parameter
             int noStashCount = IntStream.range(0, MAX_ROUND).parallel()
                 .map(round -> {
@@ -151,7 +189,7 @@ public class CuckooHashBinParamsTest {
                     try {
                         byte[][] keys = CommonUtils.generateRandomKeys(CuckooHashBinFactory.getHashNum(type), SECURE_RANDOM);
                         NoStashCuckooHashBin<ByteBuffer> hashBin = CuckooHashBinFactory.createNoStashCuckooHashBin(
-                            EnvType.STANDARD, type, num, finalBinNum, keys
+                            EnvType.STANDARD, type, num, binNum, keys
                         );
                         hashBin.insertItems(items);
                         return 1;
@@ -161,21 +199,7 @@ public class CuckooHashBinParamsTest {
                 })
                 .sum();
             double sigma = -1 * DoubleUtils.log2(1 - (double) noStashCount / MAX_ROUND);
-            points[pointIndex][0] = binNum;
-            points[pointIndex][1] = sigma;
-            pointIndex++;
             LOGGER.info("log(num) = {}, bin = {}, σ = {}", logNum, binNum, sigma);
         }
-        // linear regression
-        SimpleRegression regression = new SimpleRegression();
-        regression.addData(points);
-        RegressionResults regressionResults = regression.regress();
-        double b = regressionResults.getParameterEstimate(0);
-        double k = regressionResults.getParameterEstimate(1);
-        // σ = k * bin + b, now we want to get bin
-        double estimateBinNum = (TARGET_SIGMA - b) / k;
-        LOGGER.info("log(num) = {}, σ = {}, estimate bin = {}, estimate ε = {}",
-            logNum, TARGET_SIGMA, estimateBinNum, estimateBinNum / num
-        );
     }
 }

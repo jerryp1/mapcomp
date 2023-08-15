@@ -85,6 +85,7 @@ public class BytesFieldEfficiencyTest {
         });
         // warmup
         IntStream.range(0, MAX_RANDOM).forEach(index -> {
+            bytesField.mul(arrayA[index], arrayB[index]);
             bytesField.div(arrayA[index], arrayB[index]);
             bytesField.inv(arrayA[index]);
         });

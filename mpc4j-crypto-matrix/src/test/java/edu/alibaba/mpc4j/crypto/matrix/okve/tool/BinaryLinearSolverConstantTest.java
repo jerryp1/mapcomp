@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.tool;
 
 import cc.redberry.rings.linear.LinearSolver;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
@@ -12,20 +11,20 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 /**
- * binary linear solver test with constant inputs.
+ * binary linear solver constant test.
  *
  * @author Weiran Liu
  * @date 2023/6/17
  */
-public class BinaryConstantLinearSolverTest {
+public class BinaryLinearSolverConstantTest {
     /**
      * l
      */
-    private static final int L = CommonConstants.STATS_BIT_LENGTH;
+    private static final int L = 40;
     /**
      * random state
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private final SecureRandom secureRandom;
     /**
      * GF(2^e) instance
      */
@@ -35,9 +34,10 @@ public class BinaryConstantLinearSolverTest {
      */
     private final BinaryLinearSolver linearSolver;
 
-    public BinaryConstantLinearSolverTest() {
+    public BinaryLinearSolverConstantTest() {
         gf2e = Gf2eFactory.createInstance(EnvType.STANDARD, L);
         linearSolver = new BinaryLinearSolver(L);
+        secureRandom = new SecureRandom();
     }
 
     @Test
@@ -87,7 +87,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000001},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -115,7 +115,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000000},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -153,7 +153,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000011},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -186,7 +186,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000001},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -218,7 +218,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000010},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -250,7 +250,7 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000000},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -287,7 +287,7 @@ public class BinaryConstantLinearSolverTest {
         // A = | 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 |      | 0  |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
             gf2e.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
@@ -299,7 +299,7 @@ public class BinaryConstantLinearSolverTest {
         //     | 1 1 |      | r1 |
         b = new byte[][]{
             gf2e.createZero(),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -309,8 +309,8 @@ public class BinaryConstantLinearSolverTest {
         // A = | 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 |      | r1 |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         // r0 != r1
         if (!gf2e.isEqual(b[0], b[1])) {
@@ -360,7 +360,7 @@ public class BinaryConstantLinearSolverTest {
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 |      | 0  |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
             gf2e.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
@@ -372,7 +372,7 @@ public class BinaryConstantLinearSolverTest {
         //     | 0 0 |      | r1 |
         b = new byte[][]{
             gf2e.createZero(),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -382,8 +382,8 @@ public class BinaryConstantLinearSolverTest {
         // A = | 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 |      | r1 |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -406,8 +406,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000001},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         if (!gf2e.isEqual(b[0], b[1])) {
             systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
@@ -436,8 +436,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000010},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -451,8 +451,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000010},
         };
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -495,7 +495,7 @@ public class BinaryConstantLinearSolverTest {
         // A = | 1 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 1 |      | 0  |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
             gf2e.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
@@ -507,7 +507,7 @@ public class BinaryConstantLinearSolverTest {
         //     | 1 1 1 |      | r1 |
         b = new byte[][]{
             gf2e.createZero(),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -517,8 +517,8 @@ public class BinaryConstantLinearSolverTest {
         // A = | 1 1 1 |, b = | r0 |, solve Ax = b.
         //     | 1 1 1 |      | r1 |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         // r0 != r1
         if (!gf2e.isEqual(b[0], b[1])) {
@@ -572,7 +572,7 @@ public class BinaryConstantLinearSolverTest {
         // A = | 0 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 0 |      | 0  |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
             gf2e.createZero(),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
@@ -584,7 +584,7 @@ public class BinaryConstantLinearSolverTest {
         //     | 0 0 0 |      | r1 |
         b = new byte[][]{
             gf2e.createZero(),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -594,8 +594,8 @@ public class BinaryConstantLinearSolverTest {
         // A = | 0 0 0 |, b = | r0 |, solve Ax = b.
         //     | 0 0 0 |      | r1 |
         b = new byte[][]{
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
-            gf2e.createNonZeroRandom(SECURE_RANDOM),
+            gf2e.createNonZeroRandom(secureRandom),
+            gf2e.createNonZeroRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Inconsistent, systemInfo);
@@ -639,8 +639,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000100},
         };
         b = new byte[][]{
-            gf2e.createRandom(SECURE_RANDOM),
-            gf2e.createRandom(SECURE_RANDOM),
+            gf2e.createRandom(secureRandom),
+            gf2e.createRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -660,8 +660,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000110},
         };
         b = new byte[][]{
-            gf2e.createRandom(SECURE_RANDOM),
-            gf2e.createRandom(SECURE_RANDOM),
+            gf2e.createRandom(secureRandom),
+            gf2e.createRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);
@@ -681,8 +681,8 @@ public class BinaryConstantLinearSolverTest {
             new byte[]{0b00000111},
         };
         b = new byte[][]{
-            gf2e.createRandom(SECURE_RANDOM),
-            gf2e.createRandom(SECURE_RANDOM),
+            gf2e.createRandom(secureRandom),
+            gf2e.createRandom(secureRandom),
         };
         systemInfo = linearSolver.freeSolve(BytesUtils.clone(matrixA), m, BytesUtils.clone(b), x);
         Assert.assertEquals(LinearSolver.SystemInfo.Consistent, systemInfo);

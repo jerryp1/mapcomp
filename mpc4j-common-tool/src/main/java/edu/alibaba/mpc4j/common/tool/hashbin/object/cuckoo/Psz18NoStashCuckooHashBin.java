@@ -39,102 +39,31 @@ class Psz18NoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
      * @return ε.
      */
     static double getEpsilon(CuckooHashBinType type, int maxItemSize) {
+        MathPreconditions.checkPositiveInRangeClosed("maxItemSize", maxItemSize, CuckooHashBinFactory.MAX_ITEM_SIZE_UPPER_BOUND);
         switch (type) {
             case NO_STASH_PSZ18_3_HASH:
                 // 3 hashes
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize == 2) {
-                    // n = 2^1
-                    return 14.187707604221078;
-                } else if (maxItemSize < (1 << 2)) {
-                    // 2^1 < n < 2^2
-                    return 14.187707604221078;
-                } else if (maxItemSize < (1 << 3)) {
-                    // 2^2 <= n < 2^3
-                    return 7.753054660935952;
-                } else if (maxItemSize < (1 << 4)) {
-                    // 2^3 <= n < 2^4
-                    return 4.607033636298429;
-                } else if (maxItemSize < (1 << 5)) {
-                    // 2^4 <= n < 2^5
-                    return 3.098373987514505;
-                } else if (maxItemSize < (1 << 6)) {
-                    // 2^5 <= n < 2^6
-                    return 2.404682247274576;
-                } else if (maxItemSize <= (1 << 7)) {
-                    // 2^6 <= n < 2^7
-                    return 1.977988668572465;
-                } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^6 <= n <= 2^7
-                    return 1.7304160190125353;
                 } else {
-                    return H3_EPSILON;
+                    return Math.max(NoStashCuckooHashBinUtils.getH3SmallItemSizeEpsilon(maxItemSize), H3_EPSILON);
                 }
             case NO_STASH_PSZ18_4_HASH:
                 // 4 hashes
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize == 2) {
-                    // n = 2^1
-                    return 8.756395990772287;
-                } else if (maxItemSize < (1 << 2)) {
-                    // 2^1 < n < 2^2
-                    return 8.756395990772287;
-                } else if (maxItemSize < (1 << 3)) {
-                    // 2^2 <= n < 2^3
-                    return 4.382000122115682;
-                } else if (maxItemSize < (1 << 4)) {
-                    // 2^3 <= n < 2^4
-                    return 3.010631584268285;
-                } else if (maxItemSize < (1 << 5)) {
-                    // 2^4 <= n < 2^5
-                    return 1.9450721783545393;
-                } else if (maxItemSize < (1 << 6)) {
-                    // 2^5 <= n < 2^6
-                    return 1.5931742066193089;
-                } else if (maxItemSize <= (1 << 7)) {
-                    // 2^6 <= n < 2^7
-                    return 1.34375;
-                } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^6 <= n <= 2^7
-                    return 1.1796875;
                 } else {
-                    return H4_EPSILON;
+                    return Math.max(NoStashCuckooHashBinUtils.getH4SmallItemSizeEpsilon(maxItemSize), H4_EPSILON);
                 }
             case NO_STASH_PSZ18_5_HASH:
                 // 5 hashes
                 if (maxItemSize == 1) {
                     // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
                     return 2.0;
-                } else if (maxItemSize == 2) {
-                    // n = 2^1
-                    return 8;
-                } else if (maxItemSize < (1 << 2)) {
-                    // 2^1 < n < 2^2
-                    return 8;
-                } else if (maxItemSize < (1 << 3)) {
-                    // 2^2 <= n < 2^3
-                    return 2.75;
-                } else if (maxItemSize < (1 << 4)) {
-                    // 2^3 <= n < 2^4
-                    return 2.125;
-                } else if (maxItemSize < (1 << 5)) {
-                    // 2^4 <= n < 2^5
-                    return 1.818;
-                } else if (maxItemSize < (1 << 6)) {
-                    // 2^5 <= n < 2^6
-                    return 1.375;
-                } else if (maxItemSize <= (1 << 7)) {
-                    // 2^6 <= n < 2^7
-                    return H5_EPSILON;
-                } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-                    // 2^6 <= n <= 2^7
-                    return H5_EPSILON;
                 } else {
-                    return H5_EPSILON;
+                    return Math.max(NoStashCuckooHashBinUtils.getH5SmallItemSizeEpsilon(maxItemSize), H5_EPSILON);
                 }
             default:
                 throw new IllegalArgumentException("Invalid " + CuckooHashBinType.class.getSimpleName() + ": " + type.name());
@@ -163,13 +92,13 @@ class Psz18NoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
         // here we do not consider special cases
         switch (type) {
             case NO_STASH_PSZ18_3_HASH:
-                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE) / H3_EPSILON));
+                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE)));
                 return (int) Math.floor(binNum / H3_EPSILON);
             case NO_STASH_PSZ18_4_HASH:
-                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE) / H4_EPSILON));
+                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE)));
                 return (int) Math.floor(binNum / H4_EPSILON);
             case NO_STASH_PSZ18_5_HASH:
-                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE) / H5_EPSILON));
+                MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(type, MAX_SPECIAL_ITEM_SIZE)));
                 return (int) Math.floor(binNum / H5_EPSILON);
             default:
                 throw new IllegalArgumentException("Invalid " + CuckooHashBinType.class.getSimpleName() + ": " + type.name());

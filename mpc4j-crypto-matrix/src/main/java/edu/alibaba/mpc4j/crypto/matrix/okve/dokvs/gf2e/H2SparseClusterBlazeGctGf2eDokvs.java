@@ -10,29 +10,30 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Sparse clustering blazing fast DOKVS using garbled cuckoo table with 3 hash functions. We rearrange the storages
+ * Sparse clustering blazing fast DOKVS using garbled cuckoo table with 2 hash functions. We rearrange the storages
  * so that the dense part are clustered together.
  *
  * @author Weiran Liu
- * @date 2023/7/10
+ * @date 2023/8/3
  */
-class H3SparseClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
+class H2SparseClusterBlazeGctGf2eDokvs<T> extends AbstractH2ClusterBlazeGctGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
     /**
      * type
      */
-    private static final Gf2eDokvsType TYPE = Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
+    private static final Gf2eDokvsType TYPE = Gf2eDokvsType.H2_SPARSE_CLUSTER_BLAZE_GCT;
 
-    H3SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
+    H2SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
         this(envType, n, l, keys, new SecureRandom());
     }
 
-    H3SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
+    H2SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys, SecureRandom secureRandom) {
         super(envType, n, l, keys, secureRandom);
     }
 
@@ -94,7 +95,7 @@ class H3SparseClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eD
         ArrayList<Map<T, byte[]>> keyValueMaps = IntStream.range(0, binNum)
             .mapToObj(binIndex -> new ConcurrentHashMap<T, byte[]>(binN))
             .collect(Collectors.toCollection(ArrayList::new));
-        Stream<Map.Entry<T, byte[]>> keyValueStream = keyValueMap.entrySet().stream();
+        Stream<Entry<T, byte[]>> keyValueStream = keyValueMap.entrySet().stream();
         keyValueStream = parallelEncode ? keyValueStream.parallel() : keyValueStream;
         keyValueStream.forEach(entry -> {
             byte[] keyByte = ObjectUtils.objectToByteArray(entry.getKey());
