@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty19.Prty19FastMpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14GbfMpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -68,7 +69,12 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
             OprfType.PRTY20.name(), new Prty20MpOprfConfig.Builder().build(),
         });
 
-        // PRTY19FAST
+        // PSZ14_GBF
+        configurations.add(new Object[]{
+            OprfType.PSZ14_GBF.name(), new Psz14GbfMpOprfConfig.Builder().build(),
+        });
+
+        // PRTY19_FAST
         configurations.add(new Object[]{
             OprfType.PRTY19_FAST.name(), new Prty19FastMpOprfConfig.Builder().build(),
         });

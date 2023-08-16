@@ -33,7 +33,7 @@ public class Psz14GbfMpOprfConfig extends AbstractMultiPartyPtoConfig implements
 
     @Override
     public OprfFactory.OprfType getPtoType() {
-        return OprfFactory.OprfType.PSZ14GBF;
+        return OprfFactory.OprfType.PSZ14_GBF;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Psz14GbfMpOprfConfig> {
@@ -48,7 +48,6 @@ public class Psz14GbfMpOprfConfig extends AbstractMultiPartyPtoConfig implements
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            // TODO 不确定是不是这个
             binaryOkvsType = Gf2eDokvsType.RANDOM_GBF;
         }
 
@@ -61,7 +60,6 @@ public class Psz14GbfMpOprfConfig extends AbstractMultiPartyPtoConfig implements
             this.binaryOkvsType = binaryOkvsType;
             return this;
         }
-
 
         @Override
         public Psz14GbfMpOprfConfig build() {

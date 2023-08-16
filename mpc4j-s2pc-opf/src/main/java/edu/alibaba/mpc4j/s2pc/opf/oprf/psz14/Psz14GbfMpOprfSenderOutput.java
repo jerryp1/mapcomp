@@ -37,7 +37,7 @@ public class Psz14GbfMpOprfSenderOutput implements MpOprfSenderOutput {
     }
 
     @Override
-    public byte[] getPrf(byte[] input) { return this.okvs.decode(q1,input); }
+    public byte[] getPrf(byte[] input) { return this.okvs.decode(q1, input); }
 
     @Override
     public int getPrfByteLength() {

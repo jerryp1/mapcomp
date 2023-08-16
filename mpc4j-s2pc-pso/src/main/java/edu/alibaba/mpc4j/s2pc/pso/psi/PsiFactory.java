@@ -15,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiServer;
@@ -76,7 +77,7 @@ public class PsiFactory implements PtoFactory {
         /**
          * PSZ14 使用garbled BF的方案
          */
-        PSZ14GBF,
+        PSZ14_GBF,
         /**
          * PSZ14方案
          */
@@ -118,6 +119,10 @@ public class PsiFactory implements PtoFactory {
                 return new Prty20PsiServer<>(serverRpc, clientParty, (Prty20PsiConfig) config);
             case RA17:
                 return new Ra17PsiServer<>(serverRpc, clientParty, (Ra17PsiConfig) config);
+            case PSZ14_GBF:
+                return new Psz14GbfPsiServer<>(serverRpc, clientParty, (Psz14GbfPsiConfig) config);
+            case PSZ14:
+                return new Psz14PsiServer<>(serverRpc, clientParty, (Psz14PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -150,6 +155,10 @@ public class PsiFactory implements PtoFactory {
                 return new Prty20PsiClient<>(clientRpc, serverParty, (Prty20PsiConfig) config);
             case RA17:
                 return new Ra17PsiClient<>(clientRpc, serverParty, (Ra17PsiConfig) config);
+            case PSZ14_GBF:
+                return new Psz14GbfPsiClient<>(clientRpc, serverParty, (Psz14GbfPsiConfig) config);
+            case PSZ14:
+                return new Psz14PsiClient<>(clientRpc, serverParty, (Psz14PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }

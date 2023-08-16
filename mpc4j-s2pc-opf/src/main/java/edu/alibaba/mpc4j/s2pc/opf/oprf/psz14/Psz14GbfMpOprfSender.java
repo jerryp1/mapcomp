@@ -27,14 +27,6 @@ public class Psz14GbfMpOprfSender extends AbstractMpOprfSender {
      */
     private int m;
     /**
-     * 批处理数量字节长度
-     */
-    private int nByteLength;
-    /**
-     * COT接收方输出
-     */
-    private CotSenderOutput cotSenderOutput;
-    /**
      * OKVS type
      */
     private Gf2eDokvsFactory.Gf2eDokvsType okvsType;

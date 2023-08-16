@@ -27,7 +27,7 @@ public class Psz14GbfPsiConfig extends AbstractMultiPartyPtoConfig implements Ps
 
     @Override
     public PsiFactory.PsiType getPtoType() {
-        return PsiFactory.PsiType.PSZ14GBF;
+        return PsiFactory.PsiType.PSZ14_GBF;
     }
 
     public MpOprfConfig getMpOprfConfig() {

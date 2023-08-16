@@ -8,6 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.filter.BloomFilter;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
@@ -39,6 +41,10 @@ public class Psz14GbfMpOprfReceiver extends AbstractMpOprfReceiver {
      */
     private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
+     * Filter type
+     */
+    private final FilterType filterType = FilterType.NAIVE_RANDOM_BLOOM_FILTER;
+    /**
      * OKVS keys
      */
     private byte[][] okvsKeys;
@@ -59,52 +65,51 @@ public class Psz14GbfMpOprfReceiver extends AbstractMpOprfReceiver {
     }
 
     public void init(int maxBatchSize, int maxPrfNum) throws MpcAbortException {
-//        setInitInput(maxBatchSize, maxPrfNum);
-//        logPhaseInfo(PtoState.INIT_BEGIN);
-//
-//        stopWatch.start();
-//        //SemiHonest Setting
-//        this.okvsKeys = CommonUtils.generateRandomKeys(Gf2eDokvsFactory.getHashKeyNum(okvsType), secureRandom);
-//        this.gbf = Gf2eDokvsFactory.createBinaryInstance(envType,okvsType,maxBatchSize, CommonConstants.BLOCK_BIT_LENGTH, okvsKeys);
-//        int m = gbf.getM();
-//        this.filter = BloomFilter.create(envType, maxBatchSize, okvsKeys);
-//        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
-//        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
-//            this.encodeTaskId, getPtoDesc().getPtoId(), Psz14GbfMpOprfPtoDesc.PtoStep.RECEIVER_SEND_KEYS.ordinal(), extraInfo,
-//            ownParty().getPartyId(), otherParty().getPartyId()
-//        );
-//        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
-//        coreCotReceiver.init(m);
-//        stopWatch.stop();
-//        long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.INIT_STEP, 1, 1, initCotTime);
-//
-//        logPhaseInfo(PtoState.INIT_END);
+        setInitInput(maxBatchSize, maxPrfNum);
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        stopWatch.start();
+        //SemiHonest Setting
+        this.okvsKeys = CommonUtils.generateRandomKeys(Gf2eDokvsFactory.getHashKeyNum(okvsType), secureRandom);
+        this.gbf = Gf2eDokvsFactory.createBinaryInstance(envType,okvsType,maxBatchSize, CommonConstants.BLOCK_BIT_LENGTH, okvsKeys);
+        int m = gbf.getM();
+        this.filter = FilterFactory.createBloomFilter(envType, filterType, maxBatchSize, okvsKeys[0]);;
+        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
+        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
+            this.encodeTaskId, getPtoDesc().getPtoId(), Psz14GbfMpOprfPtoDesc.PtoStep.RECEIVER_SEND_KEYS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
+        coreCotReceiver.init(m);
+        stopWatch.stop();
+        long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initCotTime);
+
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public MpOprfReceiverOutput oprf(byte[][] inputs) throws MpcAbortException {
-//        setPtoInput(inputs);
-//        logPhaseInfo(PtoState.PTO_BEGIN);
-//
-//        stopWatch.start();
-//        IntStream.range(0, inputs.length).forEach(index -> filter.put(inputs[index]));
-//
-//        // 执行COT协议
-//        cotReceiverOutput = coreCotReceiver.receive(BinaryUtils.byteArrayToBinary(filter.getBytes()));
-//
-//        MpOprfReceiverOutput receiverOutput = generateOprfOutput();
-//        gbf = null;
-//        okvsKeys = null;
-//        stopWatch.stop();
-//        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 1, 1, cotTime);
-//
-//        logPhaseInfo(PtoState.PTO_END);
-//        return receiverOutput;
-        return null;
+        setPtoInput(inputs);
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        IntStream.range(0, inputs.length).forEach(index -> filter.put(inputs[index]));
+
+        // 执行COT协议
+        cotReceiverOutput = coreCotReceiver.receive(BinaryUtils.byteArrayToBinary(filter.getStorage()));
+
+        MpOprfReceiverOutput receiverOutput = generateOprfOutput();
+        gbf = null;
+        okvsKeys = null;
+        stopWatch.stop();
+        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 1, cotTime);
+
+        logPhaseInfo(PtoState.PTO_END);
+        return receiverOutput;
     }
 
     private MpOprfReceiverOutput generateOprfOutput() {

@@ -17,6 +17,7 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.prty19.Prty19FastMpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfSender;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.*;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfSender;
@@ -62,7 +63,15 @@ public class OprfFactory implements PtoFactory {
         /**
          * PSZ14 GBF方案
          */
-        PSZ14GBF,
+        PSZ14_GBF,
+        /**
+         * PSZ14 origin方案
+         */
+        PSZ14_ORI,
+        /**
+         * PSZ14 optimized方案
+         */
+        PSZ14_OPT,
         /**
          * PRTY20方案
          */
@@ -102,6 +111,10 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfSender(senderRpc, receiverParty, (Rs21MpOprfConfig) config);
+            case PSZ14_ORI:
+                return new Psz14OriOprfSender(senderRpc, receiverParty, (Psz14OriOprfConfig) config);
+            case PSZ14_OPT:
+                return new Psz14OptOprfSender(senderRpc, receiverParty, (Psz14OptOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -128,6 +141,10 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfReceiver(receiverRpc, senderParty, (Rs21MpOprfConfig) config);
+            case PSZ14_ORI:
+                return new Psz14OriOprfReceiver(receiverRpc, senderParty, (Psz14OriOprfConfig) config);
+            case PSZ14_OPT:
+                return new Psz14OptOprfReceiver(receiverRpc, senderParty, (Psz14OptOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -170,6 +187,8 @@ public class OprfFactory implements PtoFactory {
                 return new Rs21MpOprfSender(senderRpc, receiverParty, (Rs21MpOprfConfig) config);
             case PRTY20:
                 return new Prty20MpOprfSender(senderRpc, receiverParty, (Prty20MpOprfConfig) config);
+            case PSZ14_GBF:
+                return new Psz14GbfMpOprfSender(senderRpc, receiverParty, (Psz14GbfMpOprfConfig) config);
             case PRTY19_FAST:
                 return new Prty19FastMpOprfSender(senderRpc, receiverParty, (Prty19FastMpOprfConfig) config);
             default:
@@ -196,6 +215,8 @@ public class OprfFactory implements PtoFactory {
                 return new Rs21MpOprfReceiver(receiverRpc, senderParty, (Rs21MpOprfConfig) config);
             case PRTY20:
                 return new Prty20MpOprfReceiver(receiverRpc, senderParty, (Prty20MpOprfConfig) config);
+            case PSZ14_GBF:
+                return new Psz14GbfMpOprfReceiver(receiverRpc, senderParty, (Psz14GbfMpOprfConfig) config);
             case PRTY19_FAST:
                 return new Prty19FastMpOprfReceiver(receiverRpc, senderParty, (Prty19FastMpOprfConfig) config);
             default:

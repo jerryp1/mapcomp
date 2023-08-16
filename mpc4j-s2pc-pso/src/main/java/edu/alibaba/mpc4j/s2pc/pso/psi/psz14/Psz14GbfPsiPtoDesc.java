@@ -3,6 +3,16 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.psz14;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+/**
+ * PSZ14基于random GBF的PSI协议描述信息，论文为：
+ * <p>
+ * Benny Pinkas and Thomas Schneider and Michael Zohner Faster Private Set Intersection Based on OT Extension.
+ * USENIX Security 2014, pp. 797--812.
+ * </p>
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/16
+ */
 public class Psz14GbfPsiPtoDesc  implements PtoDesc {
     /**
      * 协议ID
@@ -11,7 +21,7 @@ public class Psz14GbfPsiPtoDesc  implements PtoDesc {
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "PSZ14GBF_PSI";
+    private static final String PTO_NAME = "PSZ14_GBF_PSI";
 
     /**
      * 协议步骤
