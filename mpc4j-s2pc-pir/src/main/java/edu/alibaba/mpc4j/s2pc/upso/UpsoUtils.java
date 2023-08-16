@@ -13,6 +13,7 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -68,10 +69,11 @@ public class UpsoUtils {
      * @return encoded array.
      */
     public static long[][] encodeQuery(byte[][] inputArray, int itemPerCiphertext, int ciphertextNum,
-                                       int polyModulusDegree, BigInteger shiftMask) {
+                                       int polyModulusDegree, BigInteger shiftMask, long plainModulus,
+                                       SecureRandom secureRandom) {
         long[][] items = IntStream.range(0, ciphertextNum)
             .mapToObj(i -> IntStream.range(0, polyModulusDegree)
-                .mapToLong(l -> 2L)
+                .mapToLong(l -> Math.abs(secureRandom.nextLong()) % plainModulus)
                 .toArray())
             .toArray(long[][]::new);
         for (int i = 0; i < ciphertextNum; i++) {
@@ -140,7 +142,8 @@ public class UpsoUtils {
      * @param shiftMask shift mask.
      * @return encoded database.
      */
-    public static long[][] encodeDatabase(byte[][][] hashBins, int binSize, int binNum, BigInteger shiftMask) {
+    public static long[][] encodeDatabase(byte[][][] hashBins, int binSize, int binNum, BigInteger shiftMask,
+                                          long plainModulus, SecureRandom secureRandom) {
         long[][] encodedItemArray = new long[binNum][binSize];
         for (int i = 0; i < binNum; i++) {
             for (int j = 0; j < hashBins[i].length; j++) {
@@ -148,7 +151,7 @@ public class UpsoUtils {
             }
             // padding dummy elements
             for (int j = 0; j < binSize - hashBins[i].length; j++) {
-                encodedItemArray[i][j + hashBins[i].length] = 1L;
+                encodedItemArray[i][j + hashBins[i].length] = Math.abs(secureRandom.nextLong()) % plainModulus;
             }
         }
         return encodedItemArray;

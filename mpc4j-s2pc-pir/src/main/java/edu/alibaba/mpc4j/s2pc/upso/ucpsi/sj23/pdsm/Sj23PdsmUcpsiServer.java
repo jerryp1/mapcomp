@@ -251,7 +251,8 @@ public class Sj23PdsmUcpsiServer<T> extends AbstractUcpsiServer<T> {
      */
     private byte[][][] serverAsReceiver() throws MpcAbortException {
         long[][] query = UpsoUtils.encodeQuery(
-            mask, params.itemPerCiphertext, params.ciphertextNum, params.polyModulusDegree, shiftMask
+            mask, params.itemPerCiphertext, params.ciphertextNum, params.polyModulusDegree, shiftMask,
+            params.plainModulus, secureRandom
         );
         List<long[][]> encodedQuery = IntStream.range(0, params.ciphertextNum)
             .mapToObj(i -> UpsoUtils.computePowers(query[i], zp64, params.queryPowers, parallel))
@@ -333,7 +334,9 @@ public class Sj23PdsmUcpsiServer<T> extends AbstractUcpsiServer<T> {
      */
     private List<long[][]> encodeDatabase(byte[][][] hashBins, int binSize) {
         Zp64Poly zp64Poly = Zp64PolyFactory.createInstance(envType, params.plainModulus);
-        long[][] encodedItems = UpsoUtils.encodeDatabase(hashBins, binSize, params.binNum, shiftMask);
+        long[][] encodedItems = UpsoUtils.encodeDatabase(
+            hashBins, binSize, params.binNum, shiftMask, params.plainModulus, secureRandom
+        );
         // for each bucket, compute the coefficients of the polynomial f(x) = \prod_{y in bucket} (x - y)
         return UpsoUtils.rootInterpolate(
             encodedItems, params.itemPerCiphertext, params.ciphertextNum, alpha, params.maxPartitionSizePerBin,

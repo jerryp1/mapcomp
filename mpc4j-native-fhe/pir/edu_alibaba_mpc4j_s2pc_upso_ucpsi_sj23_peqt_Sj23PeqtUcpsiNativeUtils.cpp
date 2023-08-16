@@ -97,6 +97,10 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcps
             parms, query_powers, plaintexts, ps_low_power, relin_keys, public_key);
     Plaintext r = deserialize_plaintext_from_coeff(env, r_coeffs, context);
     evaluator.add_plain_inplace(f_evaluated, r);
+    Ciphertext zero;
+    zero.resize(context, 2);
+    sample_poly_uniform(40, context.first_context_data()->parms(), zero.data(0));
+    evaluator.add_inplace(f_evaluated, zero);
     while (f_evaluated.parms_id() != context.last_parms_id()) {
         evaluator.mod_switch_to_next_inplace(f_evaluated);
     }
@@ -120,6 +124,10 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcps
     Ciphertext f_evaluated = ucpsi_polynomial_evaluation(parms, query_powers, plaintexts, public_key);
     Plaintext r = deserialize_plaintext_from_coeff(env, r_coeffs, context);
     evaluator.add_plain_inplace(f_evaluated, r);
+    Ciphertext zero;
+    zero.resize(context, 2);
+    sample_poly_uniform(40, context.first_context_data()->parms(), zero.data(0));
+    evaluator.add_inplace(f_evaluated, zero);
     while (f_evaluated.parms_id() != context.last_parms_id()) {
         evaluator.mod_switch_to_next_inplace(f_evaluated);
     }

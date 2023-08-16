@@ -276,7 +276,9 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
             }
             // padding dummy elements
             for (int j = 0; j < binSize - hashBins.get(i).length; j++) {
-                long[] item = IntStream.range(0, params.itemEncodedSlotSize).mapToLong(l -> 1L).toArray();
+                long[] item = IntStream.range(0, params.itemEncodedSlotSize)
+                    .mapToLong(l -> Math.abs(secureRandom.nextLong()) % params.plainModulus)
+                    .toArray();
                 for (int l = 0; l < params.itemEncodedSlotSize; l++) {
                     encodedItemArray[i * params.itemEncodedSlotSize + l][j + hashBins.get(i).length] = item[l];
                 }

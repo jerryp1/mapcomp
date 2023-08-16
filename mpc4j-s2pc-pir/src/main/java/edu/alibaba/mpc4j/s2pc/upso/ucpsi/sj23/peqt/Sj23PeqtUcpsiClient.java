@@ -112,7 +112,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(clientPublicKeysHeader, publicKeysPayload));
-        System.out.println(publicKeysPayload.stream().mapToInt(m -> m.length).sum());
         stopWatch.stop();
         long keyGenTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -149,7 +148,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(queryHeader, queryPayload));
-        System.out.println(queryPayload.stream().mapToInt(m -> m.length).sum());
         stopWatch.stop();
         long genQueryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -160,7 +158,6 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> responsePayload = rpc.receive(responseHeader).getPayload();
-        System.out.println(responsePayload.stream().mapToInt(m -> m.length).sum());
 
         stopWatch.start();
         // decode reply
@@ -272,7 +269,7 @@ public class Sj23PeqtUcpsiClient<T> extends AbstractUcpsiClient<T> {
         BigInteger shiftMask = BigInteger.ONE.shiftLeft(params.plainModulusSize).subtract(BigInteger.ONE);
         long[][] query = IntStream.range(0, params.ciphertextNum)
             .mapToObj(i -> IntStream.range(0, params.polyModulusDegree)
-                .mapToLong(l -> 2L)
+                .mapToLong(l -> Math.abs(secureRandom.nextLong()) % params.plainModulus)
                 .toArray())
             .toArray(long[][]::new);
         for (int i = 0; i < params.ciphertextNum; i++) {

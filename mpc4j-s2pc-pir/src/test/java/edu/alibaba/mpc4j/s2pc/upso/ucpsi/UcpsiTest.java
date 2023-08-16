@@ -60,11 +60,11 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // SJ23
-//        configurations.add(new Object[]{
-//            UcpsiFactory.UcpsiType.SJ23_PEQT.name(),
-//            new Sj23PeqtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
-//                .build()
-//        });
+        configurations.add(new Object[]{
+            UcpsiFactory.UcpsiType.SJ23_PEQT.name(),
+            new Sj23PeqtUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+                .build()
+        });
         configurations.add(new Object[]{
             UcpsiFactory.UcpsiType.SJ23_PDSM.name(),
             new Sj23PdsmUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
@@ -154,7 +154,7 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testDefaultParallel() {
-        testPto(DEFAULT_SERVER_ELEMENT_SIZE, 1 << 12, true);
+        testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_CLIENT_ELEMENT_SIZE, true);
     }
 
     @Test
