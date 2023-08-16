@@ -125,7 +125,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
         for (int i = 0; i < serverNum; i++) {
             int offset = Math.min(perServerCapacity, binNum - previousIdx);
             for (int j = previousIdx; j < previousIdx + offset; j++) {
-                long[][] coeffs = vectorizedPirSetup(hashBin[j - previousIdx]);
+                long[][] coeffs = vectorizedPirSetup(hashBin[j]);
                 mergeToDb(coeffs, j - previousIdx, i);
             }
             previousIdx += offset;
@@ -155,9 +155,10 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         // generate response
         stopWatch.start();
-        List<byte[]> responsePayload = new ArrayList<>();
-        for (int i = 0; i < serverNum; i++) {
-            List<byte[]> response = Mr23BatchIndexPirNativeUtils.generateReply(
+        IntStream intStream = IntStream.range(0, serverNum);
+        intStream = parallel ? intStream.parallel() : intStream;
+        List<byte[]> responsePayload = intStream.mapToObj(i ->
+            Mr23BatchIndexPirNativeUtils.generateReply(
                 params.getEncryptionParams(),
                 clientQueryPayload.subList(i * params.getDimension(), (i + 1) * params.getDimension()),
                 encodedDatabase.get(i),
@@ -165,13 +166,10 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
                 relinKeys,
                 galoisKeys,
                 params.firstTwoDimensionSize,
-                params.thirdDimensionSize
-            );
-            // merge response ciphertexts
-            responsePayload.addAll(Mr23BatchIndexPirNativeUtils.mergeResponse(
-                params.getEncryptionParams(), galoisKeys, response, partitionSize, params.firstTwoDimensionSize
-            ));
-        }
+                params.thirdDimensionSize,
+                partitionSize))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
         DataPacketHeader responseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()

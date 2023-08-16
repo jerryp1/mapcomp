@@ -271,7 +271,6 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
         return Mr23BatchIndexPirNativeUtils.generateQuery(params.getEncryptionParams(), publicKey, secretKey, query);
     }
 
-
     /**
      * generate key pair payload.
      *
@@ -342,93 +341,51 @@ public class Mr23BatchIndexPirClient extends AbstractBatchIndexPirClient {
      */
     private Map<Integer, byte[]> handleServerResponse(List<byte[]> serverResponse, List<Integer> binIndex)
         throws MpcAbortException {
-        ZlDatabase[] databases = new ZlDatabase[partitionSize];
+        MpcAbortPreconditions.checkArgument(serverResponse.size() % clientNum == 0);
+        ZlDatabase[] databases;
         int byteL = CommonUtils.getByteLength(partitionBitLength);
-        long[][] coeffs = serverResponse.stream()
-            .map(bytes -> Mr23BatchIndexPirNativeUtils.decryptReply(params.getEncryptionParams(), secretKey, bytes))
-            .toArray(long[][]::new);
-        int size = serverResponse.size() / clientNum;
-        int roundPartitionSize = PirUtils.getNextPowerOfTwo(partitionSize);
-        int max_empty_slots = params.firstTwoDimensionSize;
-        int row_size = params.rowSize;
-        int current_fill = params.gap * roundPartitionSize;
-        int num_buckets_merged = (row_size / current_fill);
-        int num_buckets = binNum;
-        int per_client_capacity = params.getPolyModulusDegree() / max_empty_slots;
-        int num_client = (int) Math.ceil(num_buckets * 1.0 / per_client_capacity);
-        byte[][][] partitionItems = new byte[partitionSize][binIndex.size()][];
-        for (int index = 0; index < clientNum; index++) {
-            if (Math.ceil(partitionSize * 1.0 / max_empty_slots) > 1 || num_buckets_merged <= 1 || num_client == 1) {
-                int num_chunk_ctx = (int) Math.ceil((partitionSize * 1.0) / max_empty_slots);
-                int previous_idx = 0;
-                for (int i = 0; i < num_client; i++) {
-                    int start_idx = (i * num_chunk_ctx);
-                    int num_queries = Math.min(per_client_capacity,binNum - previous_idx);
-                    int idx = 0;
-                    int remaining_slots_entry = partitionSize;
-                    for (int j = 0; j < num_chunk_ctx; j++) {
-                        int loop = Math.min(max_empty_slots, remaining_slots_entry);
-                        for (int l = 0; l < num_queries; l++) {
-                            int tmp = l;
-                            if (tmp >= params.gap) {
-                                idx = row_size;
-                                tmp = tmp - params.gap;
-                            } else {
-                                idx = 0;
-                            }
-                            int entry_offset = entrySlot[i][l] * params.gap + tmp;
-                            for (int k = 0; k < loop; k++) {
-                                int chunk_offset = (entry_offset + (k * params.gap)) % row_size;
-                                partitionItems[j * max_empty_slots + k][l + previous_idx] =
-                                    IntUtils.nonNegIntToFixedByteArray(Math.toIntExact(coeffs[j + start_idx][idx + chunk_offset]), byteL);
-                            }
-                        }
-                        remaining_slots_entry -= max_empty_slots;
+        IntStream intStream = IntStream.range(0, serverResponse.size());
+        intStream = parallel ? intStream.parallel() : intStream;
+        List<long[]> coeffs = intStream
+            .mapToObj(index -> Mr23BatchIndexPirNativeUtils.decryptReply(
+                params.getEncryptionParams(), secretKey, serverResponse.get(index))
+            )
+            .collect(Collectors.toList());
+        int maxEmptySlots = params.firstTwoDimensionSize;
+        int perClientCapacity = params.getPolyModulusDegree() / maxEmptySlots;
+        byte[][][] items = new byte[partitionSize][binIndex.size()][];
+        int numChunkCtx = CommonUtils.getUnitNum(partitionSize, maxEmptySlots);
+        int previousIdx = 0, idx;
+        for (int i = 0; i < clientNum; i++) {
+            int startIdx = i * numChunkCtx;
+            int numQueries = Math.min(perClientCapacity, binNum - previousIdx);
+            int remainingSlotsEntry = partitionSize;
+            for (int j = 0; j < numChunkCtx; j++) {
+                int loop = Math.min(maxEmptySlots, remainingSlotsEntry);
+                for (int l = 0; l < numQueries; l++) {
+                    int tmp = l;
+                    if (tmp >= params.gap) {
+                        idx = params.rowSize;
+                        tmp = tmp - params.gap;
+                    } else {
+                        idx = 0;
                     }
-                    previous_idx = previous_idx + num_queries;
-                }
-            } else {
-                int flag = 0;
-                System.out.println("123");
-                current_fill = params.gap * roundPartitionSize;
-                int remaining_entries = binNum;
-                int row_offset = 0;
-                int remaining_fill = (row_size / current_fill);
-                for (int k = 0; k < serverResponse.size(); k++) {
-                    int offset_index = 0;
-                    for (int j = 0; j < remaining_fill; j++) {
-                        int col_offset = j * current_fill;
-                        if (k + j < entrySlot.length) {
-                            for (int l = 0; l < entrySlot[k + j].length; l++) {
-                                int tmp = l;
-                                if (tmp >= params.gap) {
-                                    row_offset = row_size;
-                                    tmp = tmp - params.gap;
-                                } else {
-                                    row_offset = 0;
-                                }
-                                // decide the index of ct, then gap offset, then entry within a gap
-                                int pir_offset = (j * 2 * params.gap) + l;
-                                int entry_offset = ((entrySlot[k + j][l] * params.gap) % current_fill + tmp);
-                                // slots for each buckets
-                                for (int i = 0; i < partitionSize; i++) {
-                                    int slot_offset1 = (entry_offset + (i * params.gap)) % current_fill;
-                                    partitionItems[i][pir_offset] = IntUtils.nonNegIntToFixedByteArray(Math.toIntExact(coeffs[k][row_offset + slot_offset1]), byteL);
-                                }
-                            }
-                        }
-                        offset_index = offset_index + per_client_capacity;
+                    int entryOffset = entrySlot[i][l] * params.gap + tmp;
+                    for (int k = 0; k < loop; k++) {
+                        int chunkOffset = (entryOffset + (k * params.gap)) % params.rowSize;
+                        byte[] item = IntUtils.nonNegIntToFixedByteArray(
+                            Math.toIntExact(coeffs.get(j + startIdx)[idx + chunkOffset]), byteL
+                        );
+                        items[j * maxEmptySlots + k][l + previousIdx] = item;
                     }
-                    System.out.println();
                 }
+                remainingSlotsEntry -= maxEmptySlots;
             }
+            previousIdx += numQueries;
         }
-
-
-
-        for (int i = 0; i < partitionSize; i++) {
-            databases[i] = ZlDatabase.create(partitionBitLength, partitionItems[i]);
-        }
+        databases = IntStream.range(0, partitionSize)
+            .mapToObj(i -> ZlDatabase.create(partitionBitLength, items[i]))
+            .toArray(ZlDatabase[]::new);
         NaiveDatabase database = NaiveDatabase.createFromZl(elementBitLength, databases);
         // generate retrieval index and retrieval item map
         return IntStream.range(0, binNum)

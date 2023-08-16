@@ -53,11 +53,13 @@ class Mr23BatchIndexPirNativeUtils {
      * @param relinKeys             relinearization keys.
      * @param galoisKeys            Galois keys.
      * @param firstTwoDimensionSize first two dimension size.
+     * @param thirdDimensionSize    third dimension size.
+     * @param partitionSize         partition size.
      * @return response.
      */
     static native List<byte[]> generateReply(byte[] encryptionParameters, List<byte[]> queryList, List<byte[]> dbPlaintexts,
                                              byte[] publicKey, byte[] relinKeys, byte[] galoisKeys, int firstTwoDimensionSize,
-                                             int thirdDimensionSize);
+                                             int thirdDimensionSize, int partitionSize);
 
     /**
      * decrypt reply.
@@ -68,17 +70,4 @@ class Mr23BatchIndexPirNativeUtils {
      * @return retrieval result.
      */
     static native long[] decryptReply(byte[] encryptionParameters, byte[] secretKey, byte[] response);
-
-    /**
-     * merge responses.
-     *
-     * @param encryptionParameters  encryption parameters.
-     * @param galoisKey             Galois keys.
-     * @param responses             responses.
-     * @param numSlotsPerEntry      slots num per entry.
-     * @param firstTwoDimensionSize first two dimension size
-     * @return merged response.
-     */
-    static native List<byte[]> mergeResponse(byte[] encryptionParameters, byte[] galoisKey, List<byte[]> responses,
-                                             int numSlotsPerEntry, int firstTwoDimensionSize);
 }
