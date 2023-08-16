@@ -1,24 +1,14 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.cm20;
+package edu.alibaba.mpc4j.s2pc.pso.psi.psz14;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14GbfMpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
-/**
- * CM20-PSI协议配置项。
- * <p>
- * Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
- * pp. 34-63.
- * <p>
- *
- * @author Ziyuan Liang, Feng Han
- * @date 2023/08/10
- */
-public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Psz14GbfPsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
     /**
      * MPOPRF配置项
      */
@@ -28,7 +18,8 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
      */
     private final FilterFactory.FilterType filterType;
 
-    private Cm20PsiConfig(Cm20PsiConfig.Builder builder) {
+
+    private Psz14GbfPsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.mpOprfConfig);
         mpOprfConfig = builder.mpOprfConfig;
         filterType = builder.filterType;
@@ -36,7 +27,7 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
 
     @Override
     public PsiFactory.PsiType getPtoType() {
-        return PsiFactory.PsiType.CM20;
+        return PsiFactory.PsiType.PSZ14GBF;
     }
 
     public MpOprfConfig getMpOprfConfig() {
@@ -47,7 +38,7 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
         return filterType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Cm20PsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Psz14GbfPsiConfig> {
         /**
          * OPRF类型
          */
@@ -58,7 +49,7 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
         private FilterFactory.FilterType filterType;
 
         public Builder() {
-            mpOprfConfig = new Cm20MpOprfConfig.Builder().build();
+            mpOprfConfig = new Psz14GbfMpOprfConfig.Builder().build();
             filterType = FilterFactory.FilterType.SET_FILTER;
         }
 
@@ -72,9 +63,10 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
             return this;
         }
 
+
         @Override
-        public Cm20PsiConfig build() {
-            return new Cm20PsiConfig(this);
+        public Psz14GbfPsiConfig build() {
+            return new Psz14GbfPsiConfig(this);
         }
     }
 }

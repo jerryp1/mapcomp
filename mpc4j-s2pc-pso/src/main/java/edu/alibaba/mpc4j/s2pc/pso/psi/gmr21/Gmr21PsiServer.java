@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.czz22;
+package edu.alibaba.mpc4j.s2pc.pso.psi.gmr21;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtFactory;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtServer;
@@ -31,7 +32,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
+
+public class Gmr21PsiServer <T> extends AbstractPsiServer<T> {
     /**
      * MqRpmt发送方
      */
@@ -48,9 +50,22 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
      * COT output
      */
     private CotSenderOutput cotSenderOutput;
+    /**
+     * CuckooHashBinType
+     */
+    CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType = CuckooHashBinFactory.CuckooHashBinType.NAIVE_3_HASH;
+    /**
+     * JDK无填充AES-ECB模式名称
+     */
+    private static final String JDK_AES_MODE_NAME = "AES/ECB/NoPadding";
+    /**
+     * JDK的AES算法名称
+     */
+    private static final String JDK_AES_ALGORITHM_NAME = "AES";
 
-    public Czz22PsiServer(Rpc serverRpc, Party clientParty, Czz22PsiConfig config) {
-        super(Czz22PsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+
+    public Gmr21PsiServer(Rpc serverRpc, Party clientParty, Gmr21PsiConfig config) {
+        super(Gmr21PsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         mqRpmtServer = MqRpmtFactory.createServer(serverRpc, clientParty, config.getMqRpmtConfig());
         coreCotSender = CoreCotFactory.createSender(serverRpc,clientParty,config.getCoreCotConfig());
         addSubPtos(mqRpmtServer);
@@ -68,7 +83,8 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
         mqRpmtServer.init(maxServerElementSize, maxClientElementSize);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        coreCotSender.init(delta, maxServerElementSize);
+        int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxServerElementSize);
+        coreCotSender.init(delta, maxBinNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -85,8 +101,8 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
 
         stopWatch.start();
         Set<ByteBuffer> paddedServerElementSet = serverElementArrayList.stream()
-            .map(e -> ByteBuffer.wrap(ObjectUtils.objectToByteArray(e)))
-            .collect(Collectors.toSet());
+                .map(e -> ByteBuffer.wrap(ObjectUtils.objectToByteArray(e)))
+                .collect(Collectors.toSet());
         if(serverElementSet.size() == 1) {
             byte[] paddingInput = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
             secureRandom.nextBytes(paddingInput);
@@ -109,8 +125,8 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
 
         List<byte[]> serverCipherPayload = generateCipherPayload();
         DataPacketHeader serverCipherHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Czz22PsiPtoDesc.PtoStep.SERVER_SEND_CIPHER.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
+                encodeTaskId, getPtoDesc().getPtoId(), Gmr21PsiPtoDesc.PtoStep.SERVER_SEND_CIPHER.ordinal(), extraInfo,
+                ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverCipherHeader, serverCipherPayload));
         extraInfo++;
@@ -130,21 +146,21 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
         IntStream serverVectorStream = IntStream.range(0, serverVector.length);
         serverVectorStream = parallel ? serverVectorStream.parallel() : serverVectorStream;
         List<byte[]> cipherList = serverVectorStream
-            .mapToObj(index -> {
-                SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotSenderOutput.getR1(index)), Czz22PsiConfig.Cipher_ALGORITHM_NAME);
-                Cipher encryptCipher;
-                try{
-                    encryptCipher = Cipher.getInstance(Czz22PsiConfig.Cipher_MODE_NAME);
-                    encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-                    return encryptCipher.doFinal(serverVector[index].array());
-                } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-                    throw new IllegalStateException("System does not support " + Czz22PsiConfig.Cipher_MODE_NAME);
-                } catch (InvalidKeyException e) {
-                    throw new IllegalStateException("Invalid AES key length");
-                } catch (IllegalBlockSizeException | BadPaddingException e) {
-                    throw new IllegalStateException("Invalid plaintext length");
-                }
-            }).collect(Collectors.toList());
+                .mapToObj(index -> {
+                    SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotSenderOutput.getR1(index)), JDK_AES_ALGORITHM_NAME);
+                    Cipher encryptCipher;
+                    try{
+                        encryptCipher = Cipher.getInstance(JDK_AES_MODE_NAME);
+                        encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+                        return encryptCipher.doFinal(serverVector[index].array());
+                    } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
+                        throw new IllegalStateException("System does not support " + JDK_AES_MODE_NAME);
+                    } catch (InvalidKeyException e) {
+                        throw new IllegalStateException("Invalid AES key length");
+                    } catch (IllegalBlockSizeException | BadPaddingException e) {
+                        throw new IllegalStateException("Invalid plaintext length");
+                    }
+                }).collect(Collectors.toList());
         return cipherList;
     }
 }

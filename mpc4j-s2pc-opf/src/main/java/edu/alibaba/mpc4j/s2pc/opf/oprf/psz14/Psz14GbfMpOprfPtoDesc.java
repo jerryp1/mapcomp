@@ -1,0 +1,54 @@
+package edu.alibaba.mpc4j.s2pc.opf.oprf.psz14;
+
+import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
+
+public class Psz14GbfMpOprfPtoDesc implements PtoDesc{
+    /**
+     * 协议ID
+     */
+    private static final int PTO_ID = Math.abs((int)3556507340172803079L);
+    /**
+     * 协议名称
+     */
+    private static final String PTO_NAME = "PSZ14GBF_OPRF";
+
+    /**
+     * 协议步骤
+     */
+    enum PtoStep {
+        /**
+         * 接收方发送hash密钥
+         */
+        RECEIVER_SEND_KEYS,
+    }
+    /**
+     * 单例模式
+     */
+    private static final Psz14GbfMpOprfPtoDesc INSTANCE = new Psz14GbfMpOprfPtoDesc();
+
+    /**
+     * 私有构造函数
+     */
+    private Psz14GbfMpOprfPtoDesc() {
+        // empty
+    }
+
+    public static PtoDesc getInstance() {
+        return INSTANCE;
+    }
+
+    static {
+        PtoDescManager.registerPtoDesc(getInstance());
+    }
+
+    @Override
+    public int getPtoId() {
+        return PTO_ID;
+    }
+
+    @Override
+    public String getPtoName() {
+        return PTO_NAME;
+    }
+}
