@@ -72,7 +72,7 @@ public class PirUbopprfConfig extends AbstractMultiPartyPtoConfig implements Ubo
 
         public Builder() {
             sqOprfConfig = SqOprfFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = Gf2eDokvsType.H2_BLAZE_GCT;
+            okvsType = Gf2eDokvsType.H2_SPARSE_CLUSTER_BLAZE_GCT;
             assert Gf2eDokvsFactory.isSparse(okvsType);
             batchIndexPirConfig = new Mr23BatchIndexPirConfig.Builder().build();
         }
