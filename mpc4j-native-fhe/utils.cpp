@@ -88,7 +88,7 @@ void multiply_acum(uint64_t op1, uint64_t op2, __uint128_t& product_acum) {
     product_acum = product_acum + static_cast<__uint128_t>(op1) * static_cast<__uint128_t>(op2);
 }
 
-void multiply_poly_acum(const uint64_t *ct_ptr, const uint64_t *pt_ptr, size_t size, uint128_t *result) {
+void multiply_poly_acum(const uint64_t *ct_ptr, const uint64_t *pt_ptr, size_t size, __uint128_t *result) {
     for (int cc = 0; cc < size; cc += 32) {
         multiply_acum(ct_ptr[cc], pt_ptr[cc], result[cc]);
         multiply_acum(ct_ptr[cc + 1], pt_ptr[cc + 1], result[cc + 1]);

@@ -122,7 +122,7 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23Ba
     size_t coeff_mod_count = coeff_modulus.size();
     size_t encrypted_ntt_size = rotated_query[0].size();
     for (int32_t col_id = 0; col_id < encoded_db.size(); col_id += first_two_dimension_size) {
-        std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 1));
+        std::vector<std::vector<__uint128_t>> buffer(encrypted_ntt_size, std::vector<__uint128_t>(coeff_count * coeff_mod_count, 1));
         for (int32_t i = 0; i < first_two_dimension_size; i++) {
             for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++) {
                 multiply_poly_acum(rotated_query[i].data(poly_id), encoded_db[col_id + i].data(), coeff_count * coeff_mod_count, buffer[poly_id].data());

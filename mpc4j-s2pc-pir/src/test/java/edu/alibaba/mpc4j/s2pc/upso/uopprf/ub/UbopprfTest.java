@@ -65,6 +65,10 @@ public class UbopprfTest extends AbstractTwoPartyPtoTest {
             new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H3_SINGLETON_GCT).build(),
         });
         configurations.add(new Object[]{
+            UbopprfType.PIR.name() + "(" + Gf2eDokvsType.H2_SPARSE_CLUSTER_BLAZE_GCT + ")",
+            new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H2_SPARSE_CLUSTER_BLAZE_GCT).build(),
+        });
+        configurations.add(new Object[]{
             UbopprfType.PIR.name() + "(" + Gf2eDokvsType.H2_SINGLETON_GCT + ")",
             new PirUbopprfConfig.Builder().setSparseOkvsType(Gf2eDokvsType.H2_SINGLETON_GCT).build(),
         });
