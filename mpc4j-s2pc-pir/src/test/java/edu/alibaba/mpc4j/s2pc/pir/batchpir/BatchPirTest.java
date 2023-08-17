@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.batchpir;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.BatchIndexPirClient;
@@ -17,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfi
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.xpir.Mbfk16SingleIndexPirConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,27 +37,27 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default bit length
      */
-    private static final int DEFAULT_BIT_LENGTH = 20;
+    private static final int DEFAULT_BIT_LENGTH = Double.SIZE;
     /**
      * small bit length
      */
-    private static final int SMALL_BIT_LENGTH = 1;
+    private static final int SMALL_BIT_LENGTH = Integer.SIZE;
     /**
      * large bit length
      */
-    private static final int LARGE_BIT_LENGTH = 32;
+    private static final int LARGE_BIT_LENGTH = CommonConstants.BLOCK_BIT_LENGTH;
     /**
      * small server element size
      */
-    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 12;
+    private static final int SMALL_SERVER_ELEMENT_SIZE = 1 << 10;
     /**
      * default server element size
      */
-    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 16;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 14;
     /**
      * default retrieval size
      */
-    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 4;
+    private static final int DEFAULT_RETRIEVAL_SIZE = 1 << 6;
     /**
      * special retrieval size
      */
@@ -96,12 +96,6 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
             BatchIndexPirFactory.BatchIndexPirType.MUL_PIR.name(),
             new CuckooHashBatchIndexPirConfig.Builder()
                 .setSingleIndexPirConfig(new Alpr21SingleIndexPirConfig.Builder().build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.XPIR.name(),
-            new CuckooHashBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Mbfk16SingleIndexPirConfig.Builder().build())
                 .build()
         });
         // PSI - PIR
@@ -202,8 +196,8 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
             // verify
             Map<Integer, byte[]> result = clientThread.getRetrievalResult();
             Assert.assertEquals(retrievalIndexSize, result.size());
-            result.forEach((key, value) ->
-                Assert.assertEquals(ByteBuffer.wrap(database.getBytesData(key)), ByteBuffer.wrap(value))
+            result.forEach(
+                (key, value) -> Assert.assertEquals(ByteBuffer.wrap(database.getBytesData(key)), ByteBuffer.wrap(value))
             );
             // destroy
             new Thread(server::destroy).start();

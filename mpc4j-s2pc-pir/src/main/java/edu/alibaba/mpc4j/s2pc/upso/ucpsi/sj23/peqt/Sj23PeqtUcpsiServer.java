@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrix;
 import edu.alibaba.mpc4j.common.tool.bitmatrix.trans.TransBitMatrixFactory;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -18,8 +19,6 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtParty;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
@@ -45,10 +44,6 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
      * peqt sender
      */
     private final PeqtParty peqtParty;
-    /**
-     * Z2C party
-     */
-    private final Z2cParty z2cParty;
     /**
      * cuckoo hash num
      */
@@ -86,8 +81,6 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         super(Sj23PeqtUcpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         peqtParty = PeqtFactory.createSender(serverRpc, clientParty, config.getPeqtConfig());
         addSubPtos(peqtParty);
-        z2cParty = Z2cFactory.createSender(serverRpc, clientParty, config.getZ2cConfig());
-        addSubPtos(z2cParty);
         hashNum = CuckooHashBinFactory.getHashNum(CuckooHashBinType.NO_STASH_PSZ18_3_HASH);
     }
 
@@ -135,8 +128,6 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
         handleClientPublicKeyPayload(clientPublicKeysPayload);
         // initialize peqt
         peqtParty.init(params.l, alpha * params.binNum);
-        // initialize z2p party
-        z2cParty.init(params.binNum * alpha);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -188,19 +179,20 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
      *
      * @param z peqt output.
      * @return ucpsi output.
-     * @throws MpcAbortException the protocol failure aborts.
      */
-    private SquareZ2Vector handlePeqtOutput(SquareZ2Vector z) throws MpcAbortException {
+    private SquareZ2Vector handlePeqtOutput(SquareZ2Vector z) {
         SquareZ2Vector[] binVector = IntStream.range(0, params.binNum)
             .mapToObj(i -> z.split(alpha))
             .toArray(SquareZ2Vector[]::new);
         TransBitMatrix matrix = TransBitMatrixFactory.createInstance(envType, alpha, params.binNum, parallel);
         IntStream.range(0, params.binNum).forEach(i -> matrix.setColumn(i, binVector[i].getBitVector().getBytes()));
         TransBitMatrix transpose = matrix.transpose();
-        SquareZ2Vector[] partitionVector = IntStream.range(0, alpha)
-            .mapToObj(i -> SquareZ2Vector.create(BitVectorFactory.create(params.binNum, transpose.getColumn(i)), false))
-            .toArray(SquareZ2Vector[]::new);
-        return (SquareZ2Vector) UpsoUtils.or(partitionVector, z2cParty);
+        BitVector bitVector = BitVectorFactory.createZeros(params.binNum);
+        for (int i = 0; i < alpha; i++) {
+            BitVector temp = BitVectorFactory.create(params.binNum, transpose.getColumn(i));
+            bitVector = bitVector.xor(temp);
+        }
+        return SquareZ2Vector.create(bitVector, false);
     }
 
     /**
@@ -227,6 +219,7 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
                 long[] item = new long[params.itemEncodedSlotSize];
                 System.arraycopy(maskCoeffList.get(cipherIndex * alpha + j), coeffIndex, item, 0, params.itemEncodedSlotSize);
                 masks[i * alpha + j] = PirUtils.convertCoeffsToBytes(item, params.plainModulusSize);
+                BytesUtils.reduceByteArray(masks[i * alpha + j], params.l);
             }
         }
         return masks;
@@ -283,7 +276,9 @@ public class Sj23PeqtUcpsiServer<T> extends AbstractUcpsiServer<T> {
             }
             // padding dummy elements
             for (int j = 0; j < binSize - hashBins.get(i).length; j++) {
-                long[] item = IntStream.range(0, params.itemEncodedSlotSize).mapToLong(l -> 1L).toArray();
+                long[] item = IntStream.range(0, params.itemEncodedSlotSize)
+                    .mapToLong(l -> Math.abs(secureRandom.nextLong()) % params.plainModulus)
+                    .toArray();
                 for (int l = 0; l < params.itemEncodedSlotSize; l++) {
                     encodedItemArray[i * params.itemEncodedSlotSize + l][j + hashBins.get(i).length] = item[l];
                 }

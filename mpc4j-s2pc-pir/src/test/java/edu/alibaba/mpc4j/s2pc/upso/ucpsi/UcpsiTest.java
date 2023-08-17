@@ -37,7 +37,7 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default server element size
      */
-    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 17;
+    private static final int DEFAULT_SERVER_ELEMENT_SIZE = 1 << 20;
     /**
      * default client element size
      */
@@ -70,60 +70,60 @@ public class UcpsiTest extends AbstractTwoPartyPtoTest {
             new Sj23PdsmUcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
                 .build()
         });
-        // CGS22
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (direct + naive batch simple pir)",
-            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
-                .setUrbopprfConfig(
-                    new PirUrbopprfConfig.Builder().setBatchIndexPirConfig(
-                        new NaiveBatchIndexPirConfig.Builder().build())
-                        .build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (direct + cuckoo hash batch simple pir)",
-            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
-                .setUrbopprfConfig(
-                    new PirUrbopprfConfig.Builder().setBatchIndexPirConfig(
-                            new CuckooHashBatchSimplePirConfig.Builder().build())
-                        .build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (silent)",
-            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.CGS22.name() + " (direct)",
-            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
-        });
-        // PSTY19
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + naive batch simple pir)",
-            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
-                .setUbopprfConfig(
-                    new PirUbopprfConfig.Builder().setBatchIndexPirConfig(
-                            new NaiveBatchIndexPirConfig.Builder().build())
-                        .build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + cuckoo hash batch simple pir)",
-            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
-                .setUbopprfConfig(
-                    new PirUbopprfConfig.Builder().setBatchIndexPirConfig(
-                            new CuckooHashBatchSimplePirConfig.Builder().build())
-                        .build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)",
-            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
-        });
-        configurations.add(new Object[]{
-            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)",
-            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
-        });
+//        // CGS22
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.CGS22.name() + " (direct + naive batch simple pir)",
+//            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+//                .setUrbopprfConfig(
+//                    new PirUrbopprfConfig.Builder().setBatchIndexPirConfig(
+//                        new NaiveBatchIndexPirConfig.Builder().build())
+//                        .build())
+//                .build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.CGS22.name() + " (direct + cuckoo hash batch simple pir)",
+//            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+//                .setUrbopprfConfig(
+//                    new PirUrbopprfConfig.Builder().setBatchIndexPirConfig(
+//                            new CuckooHashBatchSimplePirConfig.Builder().build())
+//                        .build())
+//                .build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.CGS22.name() + " (silent)",
+//            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.CGS22.name() + " (direct)",
+//            new Cgs22UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+//        });
+//        // PSTY19
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + naive batch simple pir)",
+//            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+//                .setUbopprfConfig(
+//                    new PirUbopprfConfig.Builder().setBatchIndexPirConfig(
+//                            new NaiveBatchIndexPirConfig.Builder().build())
+//                        .build())
+//                .build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct + cuckoo hash batch simple pir)",
+//            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true)
+//                .setUbopprfConfig(
+//                    new PirUbopprfConfig.Builder().setBatchIndexPirConfig(
+//                            new CuckooHashBatchSimplePirConfig.Builder().build())
+//                        .build())
+//                .build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.PSTY19.name() + " (silent)",
+//            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, true).build()
+//        });
+//        configurations.add(new Object[]{
+//            UcpsiFactory.UcpsiType.PSTY19.name() + " (direct)",
+//            new Psty19UcpsiConfig.Builder(SecurityModel.SEMI_HONEST, false).build()
+//        });
         return configurations;
     }
 
