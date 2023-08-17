@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.IntHashBin;
 import edu.alibaba.mpc4j.common.tool.hashbin.primitive.SimpleIntHashBin;
+import edu.alibaba.mpc4j.common.tool.hashbin.primitive.cuckoo.IntCuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.NaiveDatabase;
@@ -83,7 +84,7 @@ public class Mr23BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
     public Mr23BatchIndexPirServer(Rpc serverRpc, Party clientParty, Mr23BatchIndexPirConfig config) {
         super(Mr23BatchIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
-        hashNum = 3;
+        hashNum = IntCuckooHashBinFactory.getHashNum(IntCuckooHashBinFactory.IntCuckooHashBinType.NO_STASH_NAIVE);
         cuckooFactor = 1.2;
     }
 
