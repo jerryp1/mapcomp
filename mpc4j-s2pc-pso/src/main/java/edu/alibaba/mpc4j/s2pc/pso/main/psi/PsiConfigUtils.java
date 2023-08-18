@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.main.psi;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
@@ -53,7 +55,7 @@ public class PsiConfigUtils {
             case CZZ22:
                 return createCzz22PsiConfig();
             case PSZ14:
-                return createPsz14PsiConfig();
+                return createPsz14PsiConfig(properties);
             case PSZ14_GBF:
                 return createPsz14GbfPsiConfig();
             default:
@@ -123,8 +125,14 @@ public class PsiConfigUtils {
         return new Czz22PsiConfig.Builder().build();
     }
 
-    private static PsiConfig createPsz14PsiConfig() {
-        return new Psz14PsiConfig.Builder().build();
+    private static PsiConfig createPsz14PsiConfig(Properties properties) {
+        String oprfTypeString = PropertiesUtils.readString(properties, "oprf_type",
+            OprfType.PSZ14_OPT.toString());
+        switch (oprfTypeString){
+            case "PSZ14_OPT": return new Psz14PsiConfig.Builder().build();
+            case "PSZ14_ORI" : return new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build();
+            default: throw new IllegalArgumentException("Invalid eccTypeString in PSZ14-PSI:" + oprfTypeString);
+        }
     }
 
     private static PsiConfig createPsz14GbfPsiConfig() {

@@ -22,12 +22,15 @@ public class Psz14OriOprfSenderOutput implements OprfSenderOutput {
      */
     private final Hash h1;
     /**
+     * 为了避免ote中的线性关系对PRF结果随机性的影响，需要对ot结果先hash消除线性关系再xor
+     */
+    private final Hash h2;
+    /**
      * h1 output length
      */
     private final int l;
     /**
      * LotSenderOutput
-     * TODO 从LotSenderOutput改为了LcotSenderOutput，需要确认是否正确
      */
     private final LcotSenderOutput lcotSenderOutput;
 
@@ -37,6 +40,7 @@ public class Psz14OriOprfSenderOutput implements OprfSenderOutput {
         this.prfByteLength = lotSenderOutput.getOutputByteLength();
         this.l = l;
         h1 = HashFactory.createInstance(envType, l /Byte.SIZE);
+        h2 = HashFactory.createInstance(envType, lotSenderOutput.getOutputByteLength());
         this.lcotSenderOutput = lotSenderOutput;
     }
 
@@ -46,9 +50,11 @@ public class Psz14OriOprfSenderOutput implements OprfSenderOutput {
         byte[] hashedInputByte = new byte[1];
         System.arraycopy(hashedInput, 0, hashedInputByte, 0, 1);
         byte[] prf = lcotSenderOutput.getRb(index * l / Byte.SIZE, hashedInputByte);
+        // 为了避免ote中的线性关系对PRF结果随机性的影响，需要对ot结果先hash消除线性关系再xor
+        prf = h2.digestToBytes(prf);
         for (int i = 1; i < l / Byte.SIZE; i++) {
             System.arraycopy(hashedInput, i, hashedInputByte, 0, 1);
-            BytesUtils.xori(prf, lcotSenderOutput.getRb(index * l / Byte.SIZE + i, hashedInputByte));
+            BytesUtils.xori(prf, h2.digestToBytes(lcotSenderOutput.getRb(index * l / Byte.SIZE + i, hashedInputByte)));
         }
         return prf;
     }

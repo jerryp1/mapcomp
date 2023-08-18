@@ -35,6 +35,7 @@ public class Psz14OriOprfReceiver extends AbstractOprfReceiver {
      * H_1: {0,1}^* → {0,1}^{l}
      */
     private Hash h1;
+    private Hash h2;
     /**
      * Input Hash Length
      */
@@ -69,7 +70,6 @@ public class Psz14OriOprfReceiver extends AbstractOprfReceiver {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-
         // 执行COT协议
         Stream<byte[]> inputStream = Arrays.stream(inputs);
         inputStream = parallel ? inputStream.parallel() : inputStream;
@@ -78,9 +78,10 @@ public class Psz14OriOprfReceiver extends AbstractOprfReceiver {
         for(int i = 0; i < inputs.length; i++)
             choiceList.addAll(Bytes.asList(hashedInputList.get(i)));
         List<byte[]> choices = new ArrayList<>();
-        for(int i = 0; i < choiceList.size(); i++)
-            choices.add(new byte[] {choiceList.get(i)});
+        for (Byte aByte : choiceList) choices.add(new byte[]{aByte});
         this.lcotReceiverOutput = lcotReceiver.receive(choices.toArray(new byte[choices.size()][]));
+
+        h2 = HashFactory.createInstance(envType, lcotReceiverOutput.getOutputByteLength());
         OprfReceiverOutput receiverOutput = generateOprfOutput();
 
         stopWatch.stop();
@@ -94,9 +95,10 @@ public class Psz14OriOprfReceiver extends AbstractOprfReceiver {
     private OprfReceiverOutput generateOprfOutput() {
         List<byte[]> prfList = new ArrayList<>();
         for (int i = 0; i < inputs.length; i++){
-            prfList.add(lcotReceiverOutput.getRb(i * l / Byte.SIZE));
+            // 为了避免ote中的线性关系对PRF结果随机性的影响，需要对ot结果先hash消除线性关系再xor
+            prfList.add(h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE)));
             for(int j = 1; j < l / Byte.SIZE; j++)
-                BytesUtils.xori(prfList.get(i), lcotReceiverOutput.getRb(i * l / Byte.SIZE + j));
+                BytesUtils.xori(prfList.get(i), h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE + j)));
         }
         return new OprfReceiverOutput(lcotReceiverOutput.getOutputByteLength(), inputs, prfList.toArray(new byte[inputs.length][]));
     }

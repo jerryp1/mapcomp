@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
@@ -95,9 +94,9 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
             PsiType.PSZ14_GBF.name(), new Psz14GbfPsiConfig.Builder().build(),
         });
         // PSZ14_ORI
-//        configurations.add(new Object[] {
-//            PsiType.PSZ14.name() + "_ORI", new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build(),
-//        });
+        configurations.add(new Object[] {
+            PsiType.PSZ14.name() + "_ORI", new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build(),
+        });
         // PSZ14
         configurations.add(new Object[] {
             PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),

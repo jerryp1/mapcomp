@@ -4,27 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.main.psu.MainPsuTest;
-import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuMain;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
-import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -78,9 +60,9 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
             PsiType.PSZ14_GBF.name(), "psi/psz14_gbf.txt",
         });
         // PSZ14_ORI
-//        configurations.add(new Object[] {
-//            PsiType.PSZ14.name() + "_ORI", new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build(),
-//        });
+        configurations.add(new Object[] {
+            PsiType.PSZ14.name() + "_ORI", "psi/psz14_ori.txt",
+        });
         // PSZ14
         configurations.add(new Object[] {
             PsiType.PSZ14.name(), "psi/psz14.txt",
