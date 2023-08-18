@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiServer;
@@ -65,11 +66,11 @@ public class PsiFactory implements PtoFactory {
         /**
          * PRTY19 fast方案
          */
-        PRTY19FAST,
+        PRTY19_FAST,
         /**
          * PRTY19 低通信量方案
          */
-        PRTY19LOW,
+        PRTY19_LOW,
         /**
          * 使用PaXoS的PSI方案
          */
@@ -123,6 +124,10 @@ public class PsiFactory implements PtoFactory {
                 return new Psz14GbfPsiServer<>(serverRpc, clientParty, (Psz14GbfPsiConfig) config);
             case PSZ14:
                 return new Psz14PsiServer<>(serverRpc, clientParty, (Psz14PsiConfig) config);
+            case PRTY19_FAST:
+                return new Prty19FastPsiServer<>(serverRpc, clientParty, (Prty19FastPsiConfig) config);
+            case PRTY19_LOW:
+                return new Prty19LowPsiServer<>(serverRpc, clientParty, (Prty19LowPsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -159,6 +164,10 @@ public class PsiFactory implements PtoFactory {
                 return new Psz14GbfPsiClient<>(clientRpc, serverParty, (Psz14GbfPsiConfig) config);
             case PSZ14:
                 return new Psz14PsiClient<>(clientRpc, serverParty, (Psz14PsiConfig) config);
+            case PRTY19_FAST:
+                return new Prty19FastPsiClient<>(clientRpc, serverParty, (Prty19FastPsiConfig) config);
+            case PRTY19_LOW:
+                return new Prty19LowPsiClient<>(clientRpc, serverParty, (Prty19LowPsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }

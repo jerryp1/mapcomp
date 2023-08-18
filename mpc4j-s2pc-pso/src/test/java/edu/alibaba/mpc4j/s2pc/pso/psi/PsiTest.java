@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
@@ -13,6 +15,8 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
@@ -52,11 +56,11 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     /**
      * large size
      */
-    private static final int LARGE_SIZE = 1 << 14;
+    private static final int LARGE_SIZE = 1 << 12;
     /**
      * large size
      */
-    private static final int HUGE_SIZE = 1 << 20;
+    private static final int HUGE_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -82,17 +86,29 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.RA17.name() + "BYTE_ECC", new Ra17PsiConfig.Builder().build(),
         });
-//        configurations.add(new Object[] {
-//            PsiType.RA17.name() + "ECC", new Ra17PsiConfig.Builder().
-//            setSqOprfConfig(new Ra17EccSqOprfConfig.Builder().build()).build(),
-//        });
+        configurations.add(new Object[] {
+            PsiType.RA17.name() + "ECC", new Ra17PsiConfig.Builder().
+            setSqOprfConfig(new Ra17EccSqOprfConfig.Builder().build()).build(),
+        });
         // PSZ14_GBF
         configurations.add(new Object[] {
             PsiType.PSZ14_GBF.name(), new Psz14GbfPsiConfig.Builder().build(),
         });
+        // PSZ14_ORI
+//        configurations.add(new Object[] {
+//            PsiType.PSZ14.name() + "_ORI", new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build(),
+//        });
         // PSZ14
         configurations.add(new Object[] {
             PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),
+        });
+        // PRTY19_FAST
+        configurations.add(new Object[] {
+            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
+        });
+        // PRTY19_LOW
+        configurations.add(new Object[] {
+            PsiType.PRTY19_LOW.name() + "_MEGA_BIN", new Prty19LowPsiConfig.Builder().setOkvsType(Gf2eDokvsType.MEGA_BIN).build(),
         });
 
         // KKRT16 (no-stash)

@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 
-public class Prty19FastMpOprfConfig extends AbstractMultiPartyPtoConfig implements MpOprfConfig {
+public class Prty19LowMpOprfConfig extends AbstractMultiPartyPtoConfig implements MpOprfConfig {
     /**
      * 核COT协议配置项
      */
@@ -19,7 +19,7 @@ public class Prty19FastMpOprfConfig extends AbstractMultiPartyPtoConfig implemen
      */
     private final Gf2eDokvsType okvsType;
 
-    private Prty19FastMpOprfConfig(Builder builder) {
+    private Prty19LowMpOprfConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.coreCotConfig);
         coreCotConfig = builder.coreCotConfig;
         okvsType = builder.okvsType;
@@ -33,10 +33,10 @@ public class Prty19FastMpOprfConfig extends AbstractMultiPartyPtoConfig implemen
 
     @Override
     public OprfFactory.OprfType getPtoType() {
-        return OprfFactory.OprfType.PRTY19_FAST;
+        return OprfFactory.OprfType.PRTY19_LOW;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Prty19FastMpOprfConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Prty19LowMpOprfConfig> {
         /**
          * 核COT协议配置项
          */
@@ -63,8 +63,8 @@ public class Prty19FastMpOprfConfig extends AbstractMultiPartyPtoConfig implemen
         }
 
         @Override
-        public Prty19FastMpOprfConfig build() {
-            return new Prty19FastMpOprfConfig(this);
+        public Prty19LowMpOprfConfig build() {
+            return new Prty19LowMpOprfConfig(this);
         }
     }
 }

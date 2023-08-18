@@ -128,7 +128,7 @@ public class Czz22PsiServer <T> extends AbstractPsiServer<T> {
 
         Hash keyHash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
         IntStream serverVectorStream = IntStream.range(0, serverVector.length);
-        serverVectorStream = parallel ? serverVectorStream.parallel() : serverVectorStream;
+//        serverVectorStream = parallel ? serverVectorStream.parallel() : serverVectorStream;
         List<byte[]> cipherList = serverVectorStream
             .mapToObj(index -> {
                 SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotSenderOutput.getR1(index)), Czz22PsiConfig.Cipher_ALGORITHM_NAME);

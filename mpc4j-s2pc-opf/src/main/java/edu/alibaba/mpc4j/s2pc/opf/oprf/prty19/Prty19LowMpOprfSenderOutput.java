@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
+public class Prty19LowMpOprfSenderOutput implements MpOprfSenderOutput {
     /**
      * isparallel
      */
@@ -36,19 +36,7 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
     /**
      * input hash
      */
-    private final Hash h1;
-    /**
-     * binNum
-     */
-    private final int binNum;
-    /**
-     * HashBin keys
-     */
-    byte[][] hashBinKeys;
-    /**
-     * EnvType
-     */
-    private EnvType envType;
+    private Hash h1;
     /**
      * 关联密钥
      */
@@ -68,14 +56,13 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
     /**
      * OKVS
      */
-    private final List<Gf2eDokvs<ByteBuffer>> okvsList;
+    private final Gf2eDokvs<ByteBuffer> okvs;
     /**
      * 伪随机函数输出字节长度
      */
     private final int prfByteLength;
 
-    Prty19FastMpOprfSenderOutput(EnvType envType, int batchSize, byte[][] hashBinKeys, int binNum, int maxBinSize,
-                                 byte[][] qs, byte[] s, byte[][] storage, Gf2eDokvsType type, byte[][] keys, boolean parallel) {
+    Prty19LowMpOprfSenderOutput(EnvType envType, int batchSize, byte[][] qs, byte[] s, byte[][] storage, Gf2eDokvsType type, byte[][] keys, boolean parallel) {
         assert batchSize > 0 : "BatchSize must be greater than 0: " + batchSize;
         this.batchSize = batchSize;
         this.s = s;
@@ -85,23 +72,9 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
         h1 = HashFactory.createInstance(HashFactory.HashType.BC_SHA3_512, prfByteLength);
         this.storage = storage;
         this.parallel = parallel;
-        this.hashBinKeys = hashBinKeys;
-        this.envType = envType;
         // OKVS init
-        int hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
-        this.binNum = binNum;
-
-        Gf2eDokvs<ByteBuffer>[] tmpOkvsArray = new Gf2eDokvs[binNum];
-        IntStream binStream = IntStream.range(0, binNum);
-        binStream = parallel ? binStream.parallel() : binStream;
-        binStream.forEach(index -> tmpOkvsArray[index] = Gf2eDokvsFactory.createInstance(envType, type, maxBinSize,
-            this.prfByteLength * Byte.SIZE, Arrays.copyOfRange(keys, index * hashNum, (index + 1) * hashNum)));
-        okvsList = Arrays.stream(tmpOkvsArray).collect(Collectors.toList());
-//        IntStream binStream = IntStream.range(0, binNum);
-//        binStream = parallel ? binStream.parallel() : binStream;
-//        okvsList = binStream.mapToObj(index ->
-//                        Gf2eDokvsFactory.createInstance(envType, type, maxBinSize, this.prfByteLength * Byte.SIZE, Arrays.copyOfRange(keys, index * hashNum, (index + 1) * hashNum)))
-//                .collect(Collectors.toList());
+        int n = (Gf2eDokvsFactory.isBinary(type) || (batchSize > 1)) ? batchSize: 2;
+        this.okvs = Gf2eDokvsFactory.createInstance(envType, type, n, this.prfByteLength * Byte.SIZE, keys);
         this.qs = Arrays.stream(qs)
                 .peek(q -> {
                     assert q.length == CommonConstants.BLOCK_BYTE_LENGTH;
@@ -120,34 +93,22 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
         });
     }
 
-
     @Override
-    public byte[] getPrf(int index, byte[] input) {
+    public byte[] getPrf(byte[] input) {
+        byte[] extendedInput = h1.digestToBytes(input);
         // compute Q(x)
         IntStream binaryStream = IntStream.range(0, l);
         binaryStream = parallel ? binaryStream.parallel() : binaryStream;
-        byte[] extendInput = h1.digestToBytes(ByteBuffer.allocate(prfByteLength + 1).put(h1.digestToBytes(input)).put(Integer.valueOf(index).byteValue()).array());
         boolean[] extendPrf = new boolean[prfByteLength * Byte.SIZE];
-        binaryStream.forEach(bitIndex -> {
-            extendPrf[bitIndex] = fList.get(bitIndex).getBoolean(extendInput);
+        binaryStream.forEach(index -> {
+                    extendPrf[index] = fList.get(index).getBoolean(extendedInput);
         });
         byte[] qx = BinaryUtils.binaryToByteArray(extendPrf);
         // Decode计算p(x)
-        Prf hashPrf = PrfFactory.createInstance(envType, Integer.BYTES);
-        hashPrf.setKey(hashBinKeys[index]);
-        int binIndex = hashPrf.getInteger(h1.digestToBytes(input), binNum);
-        byte[] px = okvsList.get(binIndex).decode(
-            Arrays.copyOfRange(storage,binIndex * (storage.length / binNum), (binIndex + 1) * (storage.length / binNum)),
-            ByteBuffer.wrap(h1.digestToBytes(ByteBuffer.allocate(prfByteLength + 1)
-                .put(h1.digestToBytes(input))
-                .put(Integer.valueOf(index).byteValue()).
-                array())));
+        byte[] px = okvs.decode(storage, ByteBuffer.wrap(extendedInput));
         BytesUtils.andi(px,s);
         return BytesUtils.xor(qx,px);
     }
-
-    @Override
-    public byte[] getPrf (byte[] input) { return getPrf(0, input); }
 
     @Override
     public int getPrfByteLength() {

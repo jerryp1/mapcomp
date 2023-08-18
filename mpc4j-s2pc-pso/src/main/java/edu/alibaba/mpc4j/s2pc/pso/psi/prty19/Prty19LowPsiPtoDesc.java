@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.opf.oprf.prty19;
+package edu.alibaba.mpc4j.s2pc.pso.psi.prty19;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PRTY19_FAST_OPRF的协议信息，多项式编码速度快的版本。论文来源：
+ * PRTY19_LOW_PSI协议信息。论文来源：
  * <p>
  * Benny Pinkas, Mike Rosulek, et al. SpOT-Light- Lightweight Private Set Intersection from Sparse OT Extension.
  * CRYPTO 2019, pp. 401–431.
@@ -13,39 +13,34 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/17
  */
-public class Prty19FastMpOprfPtoDesc implements PtoDesc {
+public class Prty19LowPsiPtoDesc implements PtoDesc {
     /**
      * 协议ID
      */
-    private static final int PTO_ID = Math.abs((int) 9103839597754023837L);
+    private static final int PTO_ID = Math.abs((int) -962279898847567317L);
     /**
      * 协议名称
      */
-    private static final String PTO_NAME = "PRTY19FAST_MPOPRF";
+    private static final String PTO_NAME = "PRTY19LOW_PSI";
 
     /**
      * 协议步骤
      */
     enum PtoStep {
         /**
-         * 接收方发送伪随机编码密钥
+         * 服务端发送PRF
          */
-        RECEIVER_SEND_KEY,
-        /**
-         * 接收方发送OKVS Encoding
-         */
-        RECEIVER_SEND_STORAGE,
+        SERVER_SEND_PRFS,
     }
-
     /**
      * 单例模式
      */
-    private static final Prty19FastMpOprfPtoDesc INSTANCE = new Prty19FastMpOprfPtoDesc();
+    private static final Prty19LowPsiPtoDesc INSTANCE = new Prty19LowPsiPtoDesc();
 
     /**
      * 私有构造函数
      */
-    private Prty19FastMpOprfPtoDesc() {
+    private Prty19LowPsiPtoDesc() {
         // empty
     }
 

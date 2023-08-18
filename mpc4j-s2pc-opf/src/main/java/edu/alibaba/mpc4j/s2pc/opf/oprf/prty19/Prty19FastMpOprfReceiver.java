@@ -203,14 +203,17 @@ public class Prty19FastMpOprfReceiver extends AbstractMpOprfReceiver {
         // collect OPRF output in advance
         this.inputPrfMap = new ConcurrentHashMap<>();
         // compute OPRF values and corresponding OKVS
-        IntStream binStream = IntStream.range(0,binNum);
+        IntStream binStream = IntStream.range(0, binNum);
         binStream = parallel ? binStream.parallel() : binStream;
         List<List<byte[]>> storageList = binStream.mapToObj(binIndex -> {
             Map<ByteBuffer, byte[]> keyValueMap = new ConcurrentHashMap<>();
             Stream<HashBinEntry<byte[]>> entryStream = twoChoiceHashBin.getBin(binIndex).stream();
             entryStream = parallel ? entryStream.parallel() : entryStream;
             entryStream.forEach(entry -> {
-                byte[] extendInput = h1.digestToBytes(ByteBuffer.allocate(entry.getItemByteArray().length+1).put(entry.getItemByteArray()).put(Integer.valueOf(entry.getHashIndex()).byteValue()).array());
+                byte[] extendInput = h1.digestToBytes(ByteBuffer.allocate(entry.getItemByteArray().length + 1)
+                    .put(entry.getItemByteArray())
+                    .put(Integer.valueOf(entry.getHashIndex()).byteValue())
+                    .array());
                 // 计算哈希值
                 boolean[] ty = new boolean[lByteLength * Byte.SIZE];
                 boolean[] ry = new boolean[lByteLength * Byte.SIZE];

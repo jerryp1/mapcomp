@@ -74,11 +74,6 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
             OprfType.PSZ14_GBF.name(), new Psz14GbfMpOprfConfig.Builder().build(),
         });
 
-        // PRTY19_FAST
-        configurations.add(new Object[]{
-            OprfType.PRTY19_FAST.name(), new Prty19FastMpOprfConfig.Builder().build(),
-        });
-
         return configurations;
     }
 

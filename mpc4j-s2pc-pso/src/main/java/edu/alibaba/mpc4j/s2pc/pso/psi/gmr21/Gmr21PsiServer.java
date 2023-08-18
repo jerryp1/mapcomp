@@ -145,22 +145,21 @@ public class Gmr21PsiServer <T> extends AbstractPsiServer<T> {
         Hash keyHash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
         IntStream serverVectorStream = IntStream.range(0, serverVector.length);
         serverVectorStream = parallel ? serverVectorStream.parallel() : serverVectorStream;
-        List<byte[]> cipherList = serverVectorStream
-                .mapToObj(index -> {
-                    SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotSenderOutput.getR1(index)), JDK_AES_ALGORITHM_NAME);
-                    Cipher encryptCipher;
-                    try{
-                        encryptCipher = Cipher.getInstance(JDK_AES_MODE_NAME);
-                        encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-                        return encryptCipher.doFinal(serverVector[index].array());
-                    } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-                        throw new IllegalStateException("System does not support " + JDK_AES_MODE_NAME);
-                    } catch (InvalidKeyException e) {
-                        throw new IllegalStateException("Invalid AES key length");
-                    } catch (IllegalBlockSizeException | BadPaddingException e) {
-                        throw new IllegalStateException("Invalid plaintext length");
-                    }
-                }).collect(Collectors.toList());
+        List<byte[]> cipherList = serverVectorStream.mapToObj(index -> {
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotSenderOutput.getR1(index)), JDK_AES_ALGORITHM_NAME);
+            Cipher encryptCipher;
+            try{
+                encryptCipher = Cipher.getInstance(JDK_AES_MODE_NAME);
+                encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+                return encryptCipher.doFinal(serverVector[index].array());
+            } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
+                throw new IllegalStateException("System does not support " + JDK_AES_MODE_NAME);
+            } catch (InvalidKeyException e) {
+                throw new IllegalStateException("Invalid AES key length");
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                throw new IllegalStateException("Invalid plaintext length");
+            }
+        }).collect(Collectors.toList());
         return cipherList;
     }
 }

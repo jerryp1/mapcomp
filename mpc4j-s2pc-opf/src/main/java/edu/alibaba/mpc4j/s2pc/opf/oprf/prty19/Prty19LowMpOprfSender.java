@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
-import edu.alibaba.mpc4j.common.tool.hashbin.object.TwoChoiceHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
@@ -20,7 +19,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
+
+public class Prty19LowMpOprfSender extends AbstractMpOprfSender {
     /**
      * 核COT协议接收方
      */
@@ -30,18 +30,6 @@ public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
      */
     private boolean[] s;
     /**
-     * 2choiceHash keys
-     */
-    private byte[][] hashBinKeys;
-    /**
-     * BinNum
-     */
-    private int binNum;
-    /**
-     * BinSize
-     */
-    private int binSize;
-    /**
      * OKVS type
      */
     private final Gf2eDokvsType okvsType;
@@ -50,8 +38,8 @@ public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
      */
     private byte[][] okvsKeys;
 
-    public Prty19FastMpOprfSender(Rpc senderRpc, Party receiverParty, Prty19FastMpOprfConfig config) {
-        super(Prty19FastMpOprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Prty19LowMpOprfSender(Rpc senderRpc, Party receiverParty, Prty19LowMpOprfConfig config) {
+        super(Prty19LowMpOprfPtoDesc.getInstance(), senderRpc, receiverParty, config);
         coreCotReceiver = CoreCotFactory.createReceiver(senderRpc, receiverParty, config.getCoreCotConfig());
         addSubPtos(coreCotReceiver);
         okvsType = config.getOkvsType();
@@ -65,17 +53,18 @@ public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
         stopWatch.start();
         // 计算l，初始化COT协议
         int maxL = Prty19MpOprfUtils.getL(maxBatchSize);
+
+
         coreCotReceiver.init(maxL);
-        DataPacketHeader keyHeader = new DataPacketHeader(
-                this.encodeTaskId, getPtoDesc().getPtoId(), Prty19FastMpOprfPtoDesc.PtoStep.RECEIVER_SEND_KEY.ordinal(), extraInfo,
+
+        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
+                this.encodeTaskId, getPtoDesc().getPtoId(), Prty19LowMpOprfPtoDesc.PtoStep.RECEIVER_SEND_OKVS_KEY.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> keyPayload = rpc.receive(keyHeader).getPayload();
-        byte[][] keys = keyPayload.toArray(new byte[0][]);
-        this.hashBinKeys = Arrays.copyOfRange(keys, 0 ,2);
-        this.okvsKeys = Arrays.copyOfRange(keys, 2, keys.length);
-        this.binNum = TwoChoiceHashBin.expectedBinNum(maxBatchSize);
-        this.binSize = TwoChoiceHashBin.expectedMaxBinSize(maxBatchSize);
+        List<byte[]> okvsKeyPayload = rpc.receive(okvsKeyHeader).getPayload();
+        this.okvsKeys = okvsKeyPayload.toArray(new byte[0][]);
+
+
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -103,13 +92,12 @@ public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
 
         stopWatch.start();
         DataPacketHeader storageHeader = new DataPacketHeader(
-                this.encodeTaskId, ptoDesc.getPtoId(), Prty19FastMpOprfPtoDesc.PtoStep.RECEIVER_SEND_STORAGE.ordinal(), extraInfo,
+                this.encodeTaskId, ptoDesc.getPtoId(), Prty19LowMpOprfPtoDesc.PtoStep.RECEIVER_SEND_STORAGE.ordinal(), extraInfo,
                 otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> storagePayload = rpc.receive(storageHeader).getPayload();
         // 读取矩阵
-        Prty19FastMpOprfSenderOutput senderOutput = new Prty19FastMpOprfSenderOutput(envType, batchSize, hashBinKeys, binNum, binSize,
-            cotReceiverOutput.getRbArray(), BinaryUtils.binaryToByteArray(s), storagePayload.toArray(new byte[0][]), okvsType, okvsKeys, parallel);
+        Prty19LowMpOprfSenderOutput senderOutput = new Prty19LowMpOprfSenderOutput(envType, batchSize, cotReceiverOutput.getRbArray(), BinaryUtils.binaryToByteArray(s), storagePayload.toArray(new byte[0][]), okvsType, okvsKeys, parallel);
         okvsKeys = null;
         s = null;
         stopWatch.stop();
@@ -120,4 +108,5 @@ public class Prty19FastMpOprfSender extends AbstractMpOprfSender {
         logPhaseInfo(PtoState.PTO_END);
         return senderOutput;
     }
+
 }
