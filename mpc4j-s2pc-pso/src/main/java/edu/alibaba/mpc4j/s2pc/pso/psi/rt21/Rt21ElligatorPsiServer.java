@@ -21,7 +21,6 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
 
 import java.nio.ByteBuffer;
@@ -51,15 +50,19 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
     /**
      * OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType = Gf2eDokvsType.MEGA_BIN;
+    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
      * Polynomial for encoded messages
      */
-    private Gf2eDokvs<ByteBuffer> poly;
+    private Gf2eDokvs<ByteBuffer> dOkvs;
     /**
      * OKVS keys
      */
     private byte[][] okvsKeys;
+    /**
+     * hash函数 对应论文fig4中的h1
+     */
+    private final Hash h1;
     /**
      * 过滤器类型
      */
@@ -69,6 +72,8 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
         super(Rt21ElligatorPsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(ByteEccFactory.ByteEccType.X25519_ELLIGATOR_BC);
         filterType = config.getFilterType();
+        okvsType = config.getOkvsType();
+        h1 = HashFactory.createInstance(envType, byteMulElligatorEcc.pointByteLength());
     }
 
     @Override
@@ -79,15 +84,14 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
         stopWatch.start();
         // 初始化OKVS
         this.okvsKeys = CommonUtils.generateRandomKeys(Gf2eDokvsFactory.getHashKeyNum(okvsType), secureRandom);
-        this.poly = Gf2eDokvsFactory.createInstance(envType, okvsType, Math.max(2, maxClientElementSize), byteMulElligatorEcc.pointByteLength() * Byte.SIZE, okvsKeys);
-
+        this.dOkvs = Gf2eDokvsFactory.createInstance(envType, okvsType, Math.max(2, maxClientElementSize),
+            byteMulElligatorEcc.pointByteLength() * Byte.SIZE, okvsKeys);
         List<byte[]> initPayload = generateInitPayload();
         DataPacketHeader initHeader = new DataPacketHeader(
                 this.encodeTaskId, getPtoDesc().getPtoId(), Rt21ElligatorPsiPtoDesc.PtoStep.SERVER_SEND_INIT.ordinal(), extraInfo,
                 ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(initHeader, initPayload));
-
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -156,34 +160,29 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
     }
 
     private List<byte[]> generatePeqtPayload(List<byte[]> polyPayload){
-//        byte[][] storage = polyPayload.toArray(new byte[0][]);
-//        Hash keyHash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
-//        int peqtByteLength = 2 * CommonConstants.BLOCK_BYTE_LENGTH;
-//        Stream<T> elementStream = serverElementArrayList.stream();
-//        elementStream = parallel ? elementStream.parallel() : elementStream;
-//        List<byte[]> peqtList = elementStream.map(element -> {
-//            byte[] binaryElement = ObjectUtils.objectToByteArray(element);
-//            //  P(H1(x))
-//            byte[] ph1x = poly.decode(storage, ByteBuffer.wrap(byteMulElligatorEcc.hashToCurve(binaryElement)));
-//            // prp(P(H1(x)))
-//            byte[] permutedPh1x = new byte[ph1x.length];
-//            byte[] src = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-//            for(int i = 0; i < prpNum; i++){
-//                System.arraycopy(ph1x, i * CommonConstants.BLOCK_BYTE_LENGTH, src, 0, CommonConstants.BLOCK_BYTE_LENGTH);
-//                byte[] dst = prpList.get(i).prp(src);
-//                System.arraycopy(dst, 0, permutedPh1x, i * CommonConstants.BLOCK_BYTE_LENGTH, CommonConstants.BLOCK_BYTE_LENGTH);
-//            }
-//            // K = H2(x, KA.key(a, prp(P(H1(x))))
-//            Prf peqtPrf = PrfFactory.createInstance(envType, peqtByteLength);
-//            peqtPrf.setKey(keyHash.digestToBytes(Rt21ElligatorPsiUtils.generateKaKey(byteMulElligatorEcc, permutedPh1x, a)));
-//            return peqtPrf.getBytes(binaryElement);
-//                }).collect(Collectors.toList());
-//        Collections.shuffle(peqtList, secureRandom);
-//        // 构建过滤器
-//        Filter<byte[]> peqtFilter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
-//        peqtList.forEach(peqtFilter::put);
-//        return peqtFilter.toByteArrayList();
-        return null;
+        byte[][] storage = polyPayload.toArray(new byte[0][]);
+        Hash keyHash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        int peqtByteLength = 2 * CommonConstants.BLOCK_BYTE_LENGTH;
+        Stream<T> elementStream = serverElementArrayList.stream();
+        elementStream = parallel ? elementStream.parallel() : elementStream;
+        List<byte[]> peqtList = elementStream.map(element -> {
+            byte[] binaryElement = ObjectUtils.objectToByteArray(element);
+            //  P(H1(x))
+            byte[] ph1x = dOkvs.decode(storage, ByteBuffer.wrap(h1.digestToBytes(binaryElement)));
+            // prp(P(H1(x)))
+            ByteBuffer permutedPh1xByteBuffer = ByteBuffer.allocate(ph1x.length);
+            IntStream.range(0, prpNum).forEach(i -> permutedPh1xByteBuffer.put(prpList.get(i).prp(Arrays.copyOfRange(ph1x,
+                i * CommonConstants.BLOCK_BYTE_LENGTH, (i + 1) * CommonConstants.BLOCK_BYTE_LENGTH))));
+            // K = H2(x, KA.key(a, prp(P(H1(x))))
+            Prf peqtPrf = PrfFactory.createInstance(envType, peqtByteLength);
+            peqtPrf.setKey(keyHash.digestToBytes(Rt21ElligatorPsiUtils.generateKaKey(byteMulElligatorEcc, permutedPh1xByteBuffer.array(), a)));
+            return peqtPrf.getBytes(binaryElement);
+        }).collect(Collectors.toList());
+        Collections.shuffle(peqtList, secureRandom);
+        // 构建过滤器
+        Filter<byte[]> peqtFilter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
+        peqtList.forEach(peqtFilter::put);
+        return peqtFilter.toByteArrayList();
     }
 
 }

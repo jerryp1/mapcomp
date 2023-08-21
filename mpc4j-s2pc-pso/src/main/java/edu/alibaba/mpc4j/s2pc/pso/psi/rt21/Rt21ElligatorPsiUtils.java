@@ -1,10 +1,15 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi.rt21;
 
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulElligatorEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.utils.X25519ByteEccUtils;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 
 import java.security.SecureRandom;
 
 public class Rt21ElligatorPsiUtils {
+
+    public final static  Hash hash = HashFactory.createInstance(HashFactory.HashType.JDK_SHA256, X25519ByteEccUtils.POINT_BYTES);
 
 
     /**
@@ -31,5 +36,11 @@ public class Rt21ElligatorPsiUtils {
     
     public static byte[] generateKaKey (ByteMulElligatorEcc byteMulElligatorEcc, byte[] point, byte[] input) {
         return byteMulElligatorEcc.uniformMul(point, input);
+    }
+
+    public static byte[] hashToCurve(byte[] message) {
+        byte[] p = hash.digestToBytes(message);
+        p[X25519ByteEccUtils.POINT_BYTES - 1] &= 0x7F;
+        return p;
     }
 }

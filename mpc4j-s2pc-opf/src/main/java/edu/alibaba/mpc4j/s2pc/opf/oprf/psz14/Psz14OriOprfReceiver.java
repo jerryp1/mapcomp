@@ -96,9 +96,10 @@ public class Psz14OriOprfReceiver extends AbstractOprfReceiver {
         List<byte[]> prfList = new ArrayList<>();
         for (int i = 0; i < inputs.length; i++){
             // 为了避免ote中的线性关系对PRF结果随机性的影响，需要对ot结果先hash消除线性关系再xor
-            prfList.add(h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE)));
+            byte[] tmp = h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE));
             for(int j = 1; j < l / Byte.SIZE; j++)
-                BytesUtils.xori(prfList.get(i), h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE + j)));
+                BytesUtils.xori(tmp, h2.digestToBytes(lcotReceiverOutput.getRb(i * l / Byte.SIZE + j)));
+            prfList.add(tmp);
         }
         return new OprfReceiverOutput(lcotReceiverOutput.getOutputByteLength(), inputs, prfList.toArray(new byte[inputs.length][]));
     }

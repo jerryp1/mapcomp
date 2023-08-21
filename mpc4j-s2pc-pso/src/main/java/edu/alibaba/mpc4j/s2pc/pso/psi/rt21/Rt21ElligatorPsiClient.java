@@ -20,7 +20,6 @@ import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 
 import java.nio.ByteBuffer;
@@ -51,11 +50,15 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
     /**
      * OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType = Gf2eDokvsType.MEGA_BIN;
+    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
     /**
      * Polynomial for encoded messages
      */
-    private Gf2eDokvs<ByteBuffer> poly;
+    private Gf2eDokvs<ByteBuffer> dOkvs;
+    /**
+     * hash函数 对应论文fig4中的h1
+     */
+    private final Hash h1;
 
     /**
      * 服务端元素的PRF结果
@@ -64,7 +67,9 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
 
     public Rt21ElligatorPsiClient(Rpc clientRpc, Party serverParty, Rt21ElligatorPsiConfig config) {
         super(Rt21ElligatorPsiPtoDesc.getInstance(), clientRpc, serverParty, config);
-            byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(X25519_ELLIGATOR_BC);
+        byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(X25519_ELLIGATOR_BC);
+        okvsType = config.getOkvsType();
+        h1 = HashFactory.createInstance(envType, byteMulElligatorEcc.pointByteLength());
     }
 
     @Override
@@ -143,29 +148,24 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         this.fVector = bVectorStream
             .mapToObj(bIndex -> {
                 byte[] mPrime = Rt21ElligatorPsiUtils.generateKaMessage(byteMulElligatorEcc, bVector.get(bIndex), secureRandom);
-                byte[] f = new byte[mPrime.length];
-                byte[] src = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-                for(int i = 0; i < prpNum; i++){
-                    System.arraycopy(mPrime, i * CommonConstants.BLOCK_BYTE_LENGTH, src, 0, CommonConstants.BLOCK_BYTE_LENGTH);
-                    byte[] dst = prpList.get(i).invPrp(src);
-                    System.arraycopy(dst, 0, f, i * CommonConstants.BLOCK_BYTE_LENGTH, CommonConstants.BLOCK_BYTE_LENGTH);
-                }
-                return f;
+                ByteBuffer tmp = ByteBuffer.allocate(mPrime.length);
+                IntStream.range(0, prpNum).forEach(i -> tmp.put(prpList.get(i).invPrp(Arrays.copyOfRange(mPrime,
+                        i * CommonConstants.BLOCK_BYTE_LENGTH, (i + 1) * CommonConstants.BLOCK_BYTE_LENGTH))));
+                return tmp.array();
             }).collect(Collectors.toCollection(Vector::new));
         // 初始化OKVS
         byte[][] okvsKeys = initPayload.subList(prpNum + 1, initPayload.size()).toArray(new byte[0][]);
-        this.poly = Gf2eDokvsFactory.createInstance(envType, okvsType, Math.max(2, maxClientElementSize), byteMulElligatorEcc.pointByteLength() * Byte.SIZE, okvsKeys);
+        this.dOkvs = Gf2eDokvsFactory.createInstance(envType, okvsType, Math.max(2, maxClientElementSize), byteMulElligatorEcc.pointByteLength() * Byte.SIZE, okvsKeys);
     }
 
     private List<byte[]> generatePolynomialPayload() {
-//        // P = encode ( H1(y). f )
-//        Map<ByteBuffer, byte[]> map = new HashMap<>();
-//        IntStream.range(0, clientElementSize).forEach(index -> {
-//            byte[] h1y = byteMulElligatorEcc.hashToCurve(ObjectUtils.objectToByteArray(clientElementArrayList.get(index)));
-//            map.put(ByteBuffer.wrap(h1y), fVector.get(index));
-//        });
-//        return Arrays.asList(poly.encode(map));
-        return null;
+        // P = encode ( H1(y). f )
+        Map<ByteBuffer, byte[]> map = new HashMap<>();
+        IntStream.range(0, clientElementSize).forEach(index -> {
+            byte[] h1y = h1.digestToBytes(ObjectUtils.objectToByteArray(clientElementArrayList.get(index)));
+            map.put(ByteBuffer.wrap(h1y), fVector.get(index));
+        });
+        return Arrays.asList(dOkvs.encode(map, true));
     }
 
     private Set<T> handlePeqtPayload(List<byte[]> peqtPayload) throws MpcAbortException {

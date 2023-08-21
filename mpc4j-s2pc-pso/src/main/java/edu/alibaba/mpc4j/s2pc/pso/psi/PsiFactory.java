@@ -20,6 +20,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiServer;
 
 /**
  * PSI协议工厂。
@@ -128,6 +131,8 @@ public class PsiFactory implements PtoFactory {
                 return new Prty19FastPsiServer<>(serverRpc, clientParty, (Prty19FastPsiConfig) config);
             case PRTY19_LOW:
                 return new Prty19LowPsiServer<>(serverRpc, clientParty, (Prty19LowPsiConfig) config);
+            case RT21:
+                return new Rt21ElligatorPsiServer<>(serverRpc, clientParty, (Rt21ElligatorPsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -168,6 +173,8 @@ public class PsiFactory implements PtoFactory {
                 return new Prty19FastPsiClient<>(clientRpc, serverParty, (Prty19FastPsiConfig) config);
             case PRTY19_LOW:
                 return new Prty19LowPsiClient<>(clientRpc, serverParty, (Prty19LowPsiConfig) config);
+            case RT21:
+                return new Rt21ElligatorPsiClient<>(clientRpc, serverParty, (Rt21ElligatorPsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
