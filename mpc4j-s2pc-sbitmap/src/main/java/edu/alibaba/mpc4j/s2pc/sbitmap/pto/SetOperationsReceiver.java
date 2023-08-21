@@ -82,6 +82,7 @@ public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements Sb
         // generate bitmap
         stopWatch.start();
         bitmapData = SbitmapUtils.createBitmapForNominals(dataFrame);
+        System.out.println(bitmapData);
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

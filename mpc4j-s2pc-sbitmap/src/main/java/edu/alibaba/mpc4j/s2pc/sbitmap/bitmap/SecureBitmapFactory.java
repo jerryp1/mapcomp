@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap;
+package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 import org.roaringbitmap.RoaringBitmap;
 
@@ -39,6 +39,10 @@ public class SecureBitmapFactory {
      */
     public enum SecureBitmapType {
         /**
+         * Plain
+         */
+        PLAIN,
+        /**
          * fully share the Bitmap.
          */
         FULL,
@@ -58,10 +62,10 @@ public class SecureBitmapFactory {
      */
     public static SecureBitmap createFromBitMap(SecureBitmapType type, int totalBitNum, RoaringBitmap bitmap) {
         switch (type) {
-            case FULL:
-                return FullSecureBitmap.fromBitmap(totalBitNum, bitmap);
-            case ROARING:
-                return RoaringSecureBitmap.fromBitmap(totalBitNum, bitmap);
+//            case FULL:
+//                return FullSecureBitmap.fromBitmap(totalBitNum, bitmap);
+//            case ROARING:
+//                return RoaringSecureBitmap.fromBitmap(totalBitNum, bitmap);
             default:
                 throw new IllegalArgumentException("Invalid " + SecureBitmapType.class.getSimpleName() + " type: " + type.name());
         }
@@ -84,10 +88,10 @@ public class SecureBitmapFactory {
      */
     public static SecureBitmap createOfRange(SecureBitmapType type, int totalBitNum, int rangeStart, int rangeEnd) {
         switch (type) {
-            case FULL:
-                return FullSecureBitmap.ofRange(totalBitNum, rangeStart, rangeEnd);
-            case ROARING:
-                return RoaringSecureBitmap.ofRange(totalBitNum, rangeStart, rangeEnd);
+//            case FULL:
+//                return FullSecureBitmap.ofRange(totalBitNum, rangeStart, rangeEnd);
+//            case ROARING:
+//                return RoaringSecureBitmap.ofRange(totalBitNum, rangeStart, rangeEnd);
             default:
                 throw new IllegalArgumentException("Invalid " + SecureBitmapType.class.getSimpleName() + " type: " + type.name());
         }
@@ -96,18 +100,18 @@ public class SecureBitmapFactory {
     /**
      * Create a (plain) secure bitmap with all 1's in bit positions.
      *
-     * @param type        the secure bitmap type.
      * @param totalBitNum max number of bits.
      * @return the created secure bitmap.
      */
-    public static SecureBitmap createOnes(SecureBitmapType type, int totalBitNum) {
-        switch (type) {
-            case FULL:
-                return FullSecureBitmap.ones(totalBitNum);
-            case ROARING:
-                return RoaringSecureBitmap.ones(totalBitNum);
-            default:
-                throw new IllegalArgumentException("Invalid " + SecureBitmapType.class.getSimpleName() + " type: " + type.name());
-        }
+    public static SecureBitmap createOnes(int totalBitNum) {
+//        switch (type) {
+////            case FULL:
+////                return FullSecureBitmap.ones(totalBitNum);
+////            case ROARING:
+////                return RoaringSecureBitmap.ones(totalBitNum);
+//            default:
+//                throw new IllegalArgumentException("Invalid " + SecureBitmapType.class.getSimpleName() + " type: " + type.name());
+//        }
+        return null;
     }
 }

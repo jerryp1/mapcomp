@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.s2pc.sbitmap.SecureBitmapFactory;
-import edu.alibaba.mpc4j.s2pc.sbitmap.SecureBitmapFactory.SecureBitmapType;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SecureBitmapFactory;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SecureBitmapFactory.SecureBitmapType;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;

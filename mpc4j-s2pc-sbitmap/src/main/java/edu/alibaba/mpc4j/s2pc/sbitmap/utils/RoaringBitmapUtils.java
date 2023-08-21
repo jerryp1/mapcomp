@@ -11,6 +11,7 @@ import org.roaringbitmap.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * Utilities for RoaringBitmap.
@@ -235,6 +236,46 @@ public class RoaringBitmapUtils {
     }
 
     /**
+     * Fill the empty container slots with empty ArrayContainers.
+     * TODO to be tested
+     *
+     * @param roaringBitmap roaringBitmap.
+     */
+    public static RoaringBitmap toFullRoaringBitmap(RoaringBitmap roaringBitmap) {
+        RoaringBitmap roaringBitmapClone = roaringBitmap.clone();
+        ContainerPointer containerPointer = roaringBitmapClone.getContainerPointer();
+        int containerIndex = 0;
+        while (containerPointer.getContainer() == null) {
+            // append when container is null.
+            roaringBitmapClone.append((char)containerIndex, new ArrayContainer());
+            containerIndex += 1;
+            containerPointer.advance();
+        }
+        return roaringBitmapClone;
+    }
+
+    /**
+     * Random flip the empty containers with dp-bounded probability.
+     * TODO to be tested
+     *
+     * @param roaringBitmap roaringBitmap.
+     */
+    public static RoaringBitmap toDpRandomRoaringBitmap(RoaringBitmap roaringBitmap, double epsilon) {
+        RoaringBitmap roaringBitmapClone = roaringBitmap.clone();
+        ContainerPointer containerPointer = roaringBitmapClone.getContainerPointer();
+        int containerIndex = 0;
+        while (containerPointer.getContainer() != null) {
+            if (DpUtils.sample(epsilon)) {
+                // append when dp occurs.
+                roaringBitmapClone.append((char)containerIndex, new ArrayContainer());
+            }
+            containerIndex += 1;
+            containerPointer.advance();
+        }
+        return roaringBitmapClone;
+    }
+
+    /**
      * Expand the bitmap to bit vectors with roaring format.
      *
      * @param totalBitNum the total number of bits.
@@ -278,6 +319,8 @@ public class RoaringBitmapUtils {
         }
         return bitVectors;
     }
+
+
 
     /**
      * Compress the bit vectors with roaring format to a RoaringBitmap.

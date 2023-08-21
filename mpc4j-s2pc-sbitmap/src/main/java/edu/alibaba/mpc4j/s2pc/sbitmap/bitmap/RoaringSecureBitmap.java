@@ -1,6 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap;
+package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -39,65 +40,75 @@ public class RoaringSecureBitmap implements SecureBitmap {
     /**
      * the keys
      */
-    private char[] keys;
+    private int[] keys;
     /**
      * the non-plain bitmap
      */
     private SquareZ2Vector[] sbitVectors;
-
     /**
-     * Create a roaring secure bitmap in plain state.
-     *
-     * @param totalBitNum total number of bits.
-     * @param bitmap      the plain bitmap.
-     * @return the created secure bitmap.
+     * flag of full secure mode.
      */
-    public static RoaringSecureBitmap fromBitmap(int totalBitNum, RoaringBitmap bitmap) {
-        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
-        RoaringSecureBitmap secureBitmap = new RoaringSecureBitmap();
-        secureBitmap.setTotalBitNum(totalBitNum);
-        secureBitmap.plain = true;
-        secureBitmap.bitmap = bitmap;
-        secureBitmap.keys = null;
-        secureBitmap.sbitVectors = null;
-
-        return secureBitmap;
-    }
-
+    private boolean full;
     /**
-     * Create a (plain) roaring secure bitmap with all 1's in the given range [rangeStart, rangeEnd).
-     * The input range must be valid, that is,
-     * <p>
-     * <li>rangeEnd should be in range (0, totalBitNum)</li>
-     * <li>rangeStart should be in range [0, rangeEnd)</li>
-     * </p>
-     *
-     * @param totalBitNum max number of bits.
-     * @param rangeStart  inclusive beginning of range.
-     * @param rangeEnd    exclusive ending of range.
-     * @return the created secure bitmap.
+     * number of containers.
      */
-    public static RoaringSecureBitmap ofRange(int totalBitNum, int rangeStart, int rangeEnd) {
-        // check if range is valid
-        MathPreconditions.checkPositiveInRange("rangeEnd", rangeEnd, totalBitNum);
-        MathPreconditions.checkNonNegativeInRange("rangeStart", rangeStart, rangeEnd);
-        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(rangeStart, rangeEnd);
+    private int containerNum;
 
-        return fromBitmap(totalBitNum, roaringBitmap);
-    }
+    private int blockSize;
 
-    /**
-     * Create a (plain) roaring secure bitmap with all 1's in bit positions.
-     *
-     * @param totalBitNum total number of bits.
-     * @return the created secure bitmap.
-     */
-    public static RoaringSecureBitmap ones(int totalBitNum) {
-        RoaringBitmapUtils.checkValidMaxBitNum(totalBitNum);
-        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, totalBitNum);
+//    /**
+//     * Create a roaring secure bitmap in plain state.
+//     *
+//     * @param totalBitNum total number of bits.
+//     * @param bitmap      the plain bitmap.
+//     * @return the created secure bitmap.
+//     */
+//    public static RoaringSecureBitmap fromBitmap(int totalBitNum, RoaringBitmap bitmap) {
+//        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
+//        RoaringSecureBitmap secureBitmap = new RoaringSecureBitmap();
+//        secureBitmap.setTotalBitNum(totalBitNum);
+//        secureBitmap.plain = true;
+//        secureBitmap.bitmap = bitmap;
+//        secureBitmap.keys = null;
+//        secureBitmap.sbitVectors = null;
+//
+//        return secureBitmap;
+//    }
 
-        return fromBitmap(totalBitNum, roaringBitmap);
-    }
+//    /**
+//     * Create a (plain) roaring secure bitmap with all 1's in the given range [rangeStart, rangeEnd).
+//     * The input range must be valid, that is,
+//     * <p>
+//     * <li>rangeEnd should be in range (0, totalBitNum)</li>
+//     * <li>rangeStart should be in range [0, rangeEnd)</li>
+//     * </p>
+//     *
+//     * @param totalBitNum max number of bits.
+//     * @param rangeStart  inclusive beginning of range.
+//     * @param rangeEnd    exclusive ending of range.
+//     * @return the created secure bitmap.
+//     */
+//    public static RoaringSecureBitmap ofRange(int totalBitNum, int rangeStart, int rangeEnd) {
+//        // check if range is valid
+//        MathPreconditions.checkPositiveInRange("rangeEnd", rangeEnd, totalBitNum);
+//        MathPreconditions.checkNonNegativeInRange("rangeStart", rangeStart, rangeEnd);
+//        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(rangeStart, rangeEnd);
+//
+//        return fromBitmap(totalBitNum, roaringBitmap);
+//    }
+
+//    /**
+//     * Create a (plain) roaring secure bitmap with all 1's in bit positions.
+//     *
+//     * @param totalBitNum total number of bits.
+//     * @return the created secure bitmap.
+//     */
+//    public static RoaringSecureBitmap ones(int totalBitNum) {
+//        RoaringBitmapUtils.checkValidMaxBitNum(totalBitNum);
+//        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, totalBitNum);
+//
+//        return fromBitmap(totalBitNum, roaringBitmap);
+//    }
 
     /**
      * Create a roaring secure bitmap in non-plain state.
@@ -107,14 +118,18 @@ public class RoaringSecureBitmap implements SecureBitmap {
      * @param vectors     the secure bit vectors.
      * @return the created secure bitmap.
      */
-    public static RoaringSecureBitmap fromSbitVectors(int totalBitNum, char[] keys, SquareZ2Vector[] vectors) {
+    public static SecureBitmap fromSbitVectors(int totalBitNum, int[] keys, SquareZ2Vector[] vectors, boolean full) {
+        assert keys.length == vectors.length : "Length of keys and bitVectors not match";
         RoaringSecureBitmap secureBitmap = new RoaringSecureBitmap();
         secureBitmap.setTotalBitNum(totalBitNum);
         MathPreconditions.checkEqual("keys.length", "vectors.length", keys.length, vectors.length);
         // check all keys are in range [0, totalContainerNum)
-        for (char key : keys) {
-            MathPreconditions.checkNonNegativeInRange("key", key, secureBitmap.totalContainerNum);
+        if (!full) {
+            for (int key : keys) {
+                MathPreconditions.checkNonNegativeInRange("key", key, secureBitmap.totalContainerNum);
+            }
         }
+
         // check that all vectors are non-plain
         Arrays.stream(vectors).forEach(vector ->
             Preconditions.checkArgument(!vector.isPlain(), "all vectors must in non-plain state")
@@ -123,8 +138,15 @@ public class RoaringSecureBitmap implements SecureBitmap {
         secureBitmap.bitmap = null;
         secureBitmap.keys = keys;
         secureBitmap.sbitVectors = vectors;
+        secureBitmap.full = full;
+        secureBitmap.containerNum = keys.length;
+        secureBitmap.blockSize = vectors[0].bitNum();
 
         return secureBitmap;
+    }
+
+    public static SecureBitmap createEmpty(int totalBitNum) {
+        return fromSbitVectors(totalBitNum, new int[0], new SquareZ2Vector[0], false);
     }
 
     private void setTotalBitNum(int totalBitNum) {
@@ -139,7 +161,8 @@ public class RoaringSecureBitmap implements SecureBitmap {
      *
      * @return the keys.
      */
-    public char[] getKeys() {
+    @Override
+    public int[] getKeys() {
         return keys;
     }
 
@@ -175,7 +198,7 @@ public class RoaringSecureBitmap implements SecureBitmap {
         return SecureBitmapFactory.SecureBitmapType.ROARING;
     }
 
-    @Override
+//    @Override
     public int totalContainerNum() {
         return totalContainerNum;
     }
@@ -196,8 +219,19 @@ public class RoaringSecureBitmap implements SecureBitmap {
     }
 
     @Override
-    public RoaringBitmap toBitmap() {
-        Preconditions.checkArgument(plain, "secure bitmap must be in plain state");
-        return bitmap;
+    public boolean isFull() {
+        return full;
     }
+
+    @Override
+    public int getContainerSize() {
+        return blockSize;
+    }
+
+    @Override
+    public SquareZ2Vector[] getContainers() {
+        return sbitVectors;
+    }
+
+
 }
