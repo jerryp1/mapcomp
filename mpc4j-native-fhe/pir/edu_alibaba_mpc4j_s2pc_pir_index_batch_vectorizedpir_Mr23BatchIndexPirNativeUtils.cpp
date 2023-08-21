@@ -146,15 +146,21 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23Ba
     // second dimension
     vector<Ciphertext> second_dimension_cipher;
     for (int32_t idx = 0; idx < first_dimension_ciphers.size(); idx += third_dimension_size) {
-        evaluator.multiply(query[1], first_dimension_ciphers[idx], ct_acc);
-        evaluator.mod_switch_to_next_inplace(ct_acc);
-        evaluator.relinearize_inplace(ct_acc, relin_keys);
+        if (first_dimension_ciphers[idx].is_transparent()) {
+            encryptor.encrypt_zero(ct_acc);
+            evaluator.mod_switch_to_next_inplace(ct_acc);
+        } else {
+            evaluator.multiply(query[1], first_dimension_ciphers[idx], ct_acc);
+            evaluator.relinearize_inplace(ct_acc, relin_keys);
+        }
+
         for (int32_t i = 1; i < third_dimension_size; i++) {
-            evaluator.multiply(query[1], first_dimension_ciphers[idx + i], ct1);
-            evaluator.mod_switch_to_next_inplace(ct1);
-            evaluator.relinearize_inplace(ct1, relin_keys);
-            evaluator.rotate_rows_inplace(ct1, -i * g, *galois_keys);
-            evaluator.add_inplace(ct_acc, ct1);
+            if (!first_dimension_ciphers[idx + i].is_transparent()) {
+                evaluator.multiply(query[1], first_dimension_ciphers[idx + i], ct1);
+                evaluator.relinearize_inplace(ct1, relin_keys);
+                evaluator.rotate_rows_inplace(ct1, -i * g, *galois_keys);
+                evaluator.add_inplace(ct_acc, ct1);
+            }
         }
         second_dimension_cipher.push_back(ct_acc);
     }
