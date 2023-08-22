@@ -90,18 +90,12 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
         // OKVS init
         int hashNum = Gf2eDokvsFactory.getHashKeyNum(type);
         this.binNum = binNum;
-
         Gf2eDokvs<ByteBuffer>[] tmpOkvsArray = new Gf2eDokvs[binNum];
         IntStream binStream = IntStream.range(0, binNum);
         binStream = parallel ? binStream.parallel() : binStream;
         binStream.forEach(index -> tmpOkvsArray[index] = Gf2eDokvsFactory.createInstance(envType, type, maxBinSize,
             this.prfByteLength * Byte.SIZE, Arrays.copyOfRange(keys, index * hashNum, (index + 1) * hashNum)));
         okvsList = Arrays.stream(tmpOkvsArray).collect(Collectors.toList());
-//        IntStream binStream = IntStream.range(0, binNum);
-//        binStream = parallel ? binStream.parallel() : binStream;
-//        okvsList = binStream.mapToObj(index ->
-//                        Gf2eDokvsFactory.createInstance(envType, type, maxBinSize, this.prfByteLength * Byte.SIZE, Arrays.copyOfRange(keys, index * hashNum, (index + 1) * hashNum)))
-//                .collect(Collectors.toList());
         this.qs = Arrays.stream(qs)
                 .peek(q -> {
                     assert q.length == CommonConstants.BLOCK_BYTE_LENGTH;
@@ -112,12 +106,11 @@ public class Prty19FastMpOprfSenderOutput implements MpOprfSenderOutput {
         IntStream initPrfStream = IntStream.range(0,l);
         initPrfStream = parallel ? initPrfStream.parallel() : initPrfStream;
         // 初始化伪随机函数
-        this.fList = initPrfStream.mapToObj(index -> PrfFactory.createInstance(envType, 1)).collect(Collectors.toList());
-        IntStream keyPrfStream = IntStream.range(0,l);
-        keyPrfStream = parallel ? keyPrfStream.parallel() : keyPrfStream;
-        keyPrfStream.forEach(index -> {
-            fList.get(index).setKey(this.qs[index]);
-        });
+        this.fList = initPrfStream.mapToObj(index -> {
+            Prf tmp = PrfFactory.createInstance(envType, 1);
+            tmp.setKey(this.qs[index]);
+            return tmp;
+        }).collect(Collectors.toList());
     }
 
 

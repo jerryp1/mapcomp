@@ -113,13 +113,8 @@ public class Prty19FastMpOprfReceiver extends AbstractMpOprfReceiver {
         coreCotSender.init(delta, maxL);
         this.fList = new ArrayList<>();
         int hashNum = Gf2eDokvsFactory.getHashKeyNum(okvsType);
+        // init OKVS
         this.okvsKeys = CommonUtils.generateRandomKeys(hashNum * binNum, secureRandom);
-//        IntStream binStream = IntStream.range(0, binNum);
-//        binStream = parallel ? binStream.parallel() : binStream;
-//        okvsList = binStream.mapToObj(index ->
-//                        OkvsFactory.createInstance(envType, okvsType, twoChoiceHashBin.maxBinSize(),
-//                            CommonUtils.getByteLength(maxL) * Byte.SIZE, Arrays.copyOfRange(okvsKeys, index * hashNum, (index + 1) * hashNum)))
-//                .collect(Collectors.toList());
         Gf2eDokvs<ByteBuffer>[] tmpOkvsArray = new Gf2eDokvs[binNum];
         IntStream binStream = IntStream.range(0, binNum);
         binStream = parallel ? binStream.parallel() : binStream;
@@ -230,17 +225,14 @@ public class Prty19FastMpOprfReceiver extends AbstractMpOprfReceiver {
             return Arrays.asList(okvsList.get(binIndex).encode(keyValueMap, false));
         }).collect(Collectors.toList());
         List<byte[]> storage = new ArrayList<>();
-        for (int i = 0; i < storageList.size(); i++)
-            storage.addAll(storageList.get(i));
+        for (List<byte[]> bytes : storageList) storage.addAll(bytes);
         return storage;
     }
-
 
     private MpOprfReceiverOutput generateReceiverOutput(){
         Stream<byte[]> inputStream = extendedInputs.stream();
         inputStream = parallel ? inputStream.parallel() : inputStream;
-        byte[][] inputPrf = inputStream
-                .map(input -> inputPrfMap.get(input)).toArray(byte[][]::new);
+        byte[][] inputPrf = inputStream.map(input -> inputPrfMap.get(input)).toArray(byte[][]::new);
         return new MpOprfReceiverOutput(lByteLength, inputs, inputPrf);
     }
 }
