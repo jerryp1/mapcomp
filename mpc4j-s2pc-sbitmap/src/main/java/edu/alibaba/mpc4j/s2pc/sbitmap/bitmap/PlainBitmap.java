@@ -1,33 +1,47 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.Container;
-
 /**
+ * Plain bitmap interface.
+ *
  * @author Li Peng
  * @date 2023/8/15
  */
 public interface PlainBitmap extends Bitmap {
-
-    PlainBitmap and(PlainBitmap other) throws MpcAbortException;
-
-    PlainBitmap or(PlainBitmap other) throws MpcAbortException;
-
-    int bitCount() throws MpcAbortException;
-
-    PlainBitmap resizeBlock(int blockSize);
+    /**
+     * Inner AND operation of bitmap.
+     *
+     * @param other the other operator.
+     * @return AND result.
+     */
+    PlainBitmap andi(PlainBitmap other);
 
     /**
-     * Return the containers of bitmap.
-     * @return the containers of bitmap.
+     * Inner OR operation of bitmap.
+     *
+     * @param other the other operator.
+     * @return OR result.
      */
-    BitVector[] getContainers();
+    PlainBitmap ori(PlainBitmap other);
 
     /**
-     * Return the containers of bitmap.
-     * @return the containers of bitmap.
+     * Count the number of valid bits of bitmap.
+     *
+     * @return count result.
      */
-    Container[] getContainer();
+    int bitCount();
 
+    /**
+     * Resize the containers to new containerSize.
+     *
+     * @param containerSize new size of containers.
+     * @return resized container.
+     */
+    MutablePlainBitmap resizeContainer(int containerSize);
+
+    /**
+     * Return whether the bitmap is only used in intermediate process.
+     *
+     * @return Whether the bitmap is only used in intermediate process.
+     */
+    boolean isIntermediate();
 }

@@ -1,16 +1,21 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SecureBitmapFactory.SecureBitmapType;
 import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.Container;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.PlainContainer;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.BitmapUtils;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.RoaringBitmapUtils;
 import org.roaringbitmap.RoaringBitmap;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
 /**
  * Plain bitmap
+ *
  * @author Li Peng
  * @date 2023/8/11
  */
@@ -20,27 +25,27 @@ public class RoaringPlainBitmap implements PlainBitmap {
      */
     protected int totalBitNum;
     /**
-     * total number of containers.
-     */
-    protected int totalContainerNum;
-    /**
      * total number of bytes.
      */
     protected int totalByteNum;
     /**
-     * Roaring bitmap.
+     * roaring bitmap.
      */
     private RoaringBitmap bitmap;
     /**
-     * Full state.
+     * full state.
      */
     private boolean full;
+    /**
+     * container size.
+     */
+    public static final int CONTAINER_SIZE = 1 << 16;
 
     /**
-     * Create a full secure bitmap in plain state.
+     * Create a bitmap in plain state.
      *
      * @param totalBitNum total number of bits.
-     * @param bitmap    the plain bitmap.
+     * @param bitmap      the plain bitmap.
      * @return the created secure bitmap.
      */
     public static RoaringPlainBitmap fromBitmap(int totalBitNum, RoaringBitmap bitmap) {
@@ -62,16 +67,14 @@ public class RoaringPlainBitmap implements PlainBitmap {
     public static RoaringPlainBitmap fromBitVectors(int totalBitNum, int[] keys, BitVector[] bitVectors) {
         assert keys.length == bitVectors.length : "Length of keys and bitVectors not match";
         // TODO 在调用该方法前，必须要确保bitVectors和keys的长度是标准的。
-//        RoaringBitmapUtils.toRoaringBitmap(keys, bitVectors);
-//
-//        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
-//        RoaringPlainBitmap secureBitmap = new RoaringPlainBitmap();
-//        secureBitmap.setTotalBitNum(totalBitNum);
-//        secureBitmap.bitmap = bitmap;
-//        secureBitmap.full = false;
+        RoaringBitmap bitmap = RoaringBitmapUtils.toRoaringBitmap(keys, bitVectors);
 
-//        return secureBitmap;
-        return null;
+        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
+        RoaringPlainBitmap secureBitmap = new RoaringPlainBitmap();
+        secureBitmap.setTotalBitNum(totalBitNum);
+        secureBitmap.bitmap = bitmap;
+        secureBitmap.full = false;
+        return secureBitmap;
     }
 
     public RoaringBitmap getBitmap() {
@@ -89,11 +92,6 @@ public class RoaringPlainBitmap implements PlainBitmap {
     }
 
     @Override
-    public int totalByteNum() {
-        return bitmap.getSizeInBytes();
-    }
-
-    @Override
     public boolean isPlain() {
         return true;
     }
@@ -105,17 +103,13 @@ public class RoaringPlainBitmap implements PlainBitmap {
 
     @Override
     public int getContainerSize() {
-        return 1 << 16;
+        return CONTAINER_SIZE;
     }
 
     @Override
-    public BitVector[] getContainers() {
-        return new BitVector[0];
-    }
-
-    @Override
-    public Container[] getContainer() {
-        return new Container[0];
+    public Container[] getContainers() {
+        return Arrays.stream(RoaringBitmapUtils.toRoaringBitVectors(totalBitNum, bitmap))
+            .map(PlainContainer::create).toArray(Container[]::new);
     }
 
     public void setTotalBitNum(int totalBitNum) {
@@ -131,7 +125,6 @@ public class RoaringPlainBitmap implements PlainBitmap {
     }
 
 
-
     /**
      * Create a (plain) full secure bitmap with all 1's in the given range [rangeStart, rangeEnd).
      * The input range must be valid, that is,
@@ -140,9 +133,9 @@ public class RoaringPlainBitmap implements PlainBitmap {
      * <li>rangeStart should be in range [0, rangeEnd)</li>
      * </p>
      *
-     * @param totalBitNum  total number of bits.
-     * @param rangeStart inclusive beginning of range.
-     * @param rangeEnd   exclusive ending of range.
+     * @param totalBitNum total number of bits.
+     * @param rangeStart  inclusive beginning of range.
+     * @param rangeEnd    exclusive ending of range.
      * @return the created secure bitmap.
      */
     public static RoaringPlainBitmap ofRange(int totalBitNum, int rangeStart, int rangeEnd) {
@@ -158,10 +151,11 @@ public class RoaringPlainBitmap implements PlainBitmap {
      * Create a (plain) full secure bitmap with all 1's in bit positions.
      *
      * @param totalBitNum total number of bits.
-     * @return  the created secure bitmap.
+     * @return the created secure bitmap.
      */
     public static RoaringPlainBitmap ones(int totalBitNum) {
         MathPreconditions.checkPositive("totalBitNum", totalBitNum);
+        RoaringBitmapUtils.checkValidMaxBitNum(totalBitNum);
         RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, totalBitNum);
 
         return fromBitmap(totalBitNum, roaringBitmap);
@@ -169,21 +163,24 @@ public class RoaringPlainBitmap implements PlainBitmap {
 
     /**
      * Transfer to full bitmap.
+     *
      * @return full bitmap.
      */
     public RoaringPlainBitmap toFull() {
-        RoaringPlainBitmap plainBitmap = RoaringPlainBitmap.fromBitmap(totalBitNum, RoaringBitmapUtils.toFullRoaringBitmap(bitmap));
-        plainBitmap.setFull(true);
-        return plainBitmap;
+        BitVector[] vectors = RoaringBitmapUtils.toRoaringBitVectors(totalBitNum, bitmap);
+        int totalContainerNum = CommonUtils.getUnitNum(totalBitNum, CONTAINER_SIZE);
+        int[] keys = IntStream.range(0, totalContainerNum).toArray();
+        return fromBitVectors(totalBitNum, keys, vectors);
     }
 
 
     public MutablePlainBitmap toDpRandom(double epsilon) {
-        return BitmapUtils.toWindowPlainBitmap(this, epsilon);
+        return BitmapUtils.toMutablePlainBitmap(this, epsilon);
     }
 
     /**
      * Transfer to full bitmap.
+     *
      * @return full bitmap.
      */
     public void setFull(boolean full) {
@@ -192,6 +189,7 @@ public class RoaringPlainBitmap implements PlainBitmap {
 
     /**
      * Get keys of containers.
+     *
      * @return keys of containers.
      */
     @Override
@@ -204,37 +202,49 @@ public class RoaringPlainBitmap implements PlainBitmap {
     }
 
     @Override
-    public PlainBitmap and(PlainBitmap other) throws MpcAbortException {
-        assert other!=null : "bitmap must not be null.";
+    public PlainBitmap andi(PlainBitmap other) {
+        assert other != null : "bitmap must not be null.";
         if (other instanceof RoaringPlainBitmap) {
             // direct AND bitmap
             bitmap.and(((RoaringPlainBitmap) other).getBitmap());
             return this;
         } else {
             // must resize to right size before AND
-            return resizeBlock(other.getContainerSize()).and(other);
+            return resizeContainer(other.getContainerSize()).andi(other);
         }
     }
 
     @Override
-    public PlainBitmap or(PlainBitmap other) throws MpcAbortException {
-        assert other!=null : "bitmap must not be null.";
+    public PlainBitmap ori(PlainBitmap other) {
+        assert other != null : "bitmap must not be null.";
         if (other instanceof RoaringPlainBitmap) {
             bitmap.or(((RoaringPlainBitmap) other).getBitmap());
             return this;
         } else {
-            return resizeBlock(other.getContainerSize()).or(other);
+            return resizeContainer(other.getContainerSize()).ori(other);
         }
     }
 
     @Override
-    public int bitCount() throws MpcAbortException {
+    public int bitCount() {
         return bitmap.getCardinality();
     }
 
+    private MutablePlainBitmap toMutablePlainBitmap() {
+        BitVector[] vectors = RoaringBitmapUtils.toRoaringBitVectors(totalBitNum, bitmap);
+        return MutablePlainBitmap.create(totalBitNum, getKeys(), vectors);
+    }
+
     @Override
-    public MutablePlainBitmap resizeBlock(int blockSize) {
-        // TODO 非常重要
-        return null;
+    public MutablePlainBitmap resizeContainer(int newContainerSize) {
+        // transfer to MutablePlainBitmap
+        MutablePlainBitmap mutablePlainBitmap = toMutablePlainBitmap();
+        // resize
+        return BitmapUtils.resize(mutablePlainBitmap, newContainerSize);
+    }
+
+    @Override
+    public boolean isIntermediate() {
+        return true;
     }
 }

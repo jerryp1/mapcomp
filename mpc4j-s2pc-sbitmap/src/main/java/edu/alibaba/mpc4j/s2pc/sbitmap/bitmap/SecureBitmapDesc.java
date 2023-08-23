@@ -2,48 +2,51 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
-import edu.alibaba.mpc4j.s2pc.pcg.vole.zp.core.kos16.Kos16ZpCoreVolePtoDesc;
-
-import java.io.Serializable;
 
 /**
+ * Secure bitmap description.
+ *
  * @author Li Peng
  * @date 2023/8/17
  */
-public class SecureBitmapDesc implements PtoDesc, Serializable {
+public class SecureBitmapDesc implements PtoDesc {
     /**
-     * 协议ID。
+     * protocol id.
      */
     private static final int PTO_ID = Math.abs((int) 2047864806225283373L);
     /**
-     * 协议名称。
+     * protocol name.
      */
-    private static final String PTO_NAME = "KOS16_ZP_CORE_VOLE";
+    private static final String PTO_NAME = "SECURE_BITMAP";
 
     /**
-     * 协议步骤
+     * Protocol step.
      */
     enum PtoStep {
         /**
-         * 发送方发送矩阵
+         * sender send keys of bitmap in share process.
          */
-        SENDER_SEND_KEYS,
+        SENDER_SEND_KEYS_SHARES,
+        /**
+         * sender send keys of bitmap in reveal process.
+         */
+        SENDER_SEND_KEYS_REVEAL,
     }
 
     /**
-     * 单例模式。
+     * singleton mode.
      */
     private static final SecureBitmapDesc INSTANCE = new SecureBitmapDesc();
 
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private SecureBitmapDesc() {
         // empty
     }
 
     /**
-     * 获取静态实例。
+     * get static instance.
      */
     public static PtoDesc getInstance() {
         return INSTANCE;

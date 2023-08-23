@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import org.roaringbitmap.RoaringBitmap;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.SecureContainer;
 
 /**
  * SecureBitmap data structure interface.
@@ -19,12 +17,6 @@ public interface SecureBitmap extends Bitmap {
     @Override
     SecureBitmapFactory.SecureBitmapType getType();
 
-//    /**
-//     * Returns the total number of containers allowed in the secure bitmap.
-//     *
-//     * @return the total number of containers allowed in the secure bitmap.
-//     */
-//    int totalContainerNum();
 
     /**
      * Returns the total number of bits stored in the secure bitmap.
@@ -60,13 +52,17 @@ public interface SecureBitmap extends Bitmap {
 
     /**
      * Return the containers.
+     *
      * @return containers.
      */
-    SquareZ2Vector[] getContainers();
+    @Override
+    SecureContainer[] getContainers();
 
     /**
      * Return the keys.
+     *
      * @return containers.
      */
+    @Override
     int[] getKeys();
 }

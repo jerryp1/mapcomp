@@ -18,16 +18,20 @@ public interface BitmapOperations {
      * @throws MpcAbortException if the protocol aborts.
      */
     Bitmap and(Bitmap x, Bitmap y) throws MpcAbortException;
+
     /**
      * Or operation.
+     *
      * @param x bitmap input.
      * @param y bitmap input.
      * @return result.
      * @throws MpcAbortException if the protocol aborts.
      */
     Bitmap or(Bitmap x, Bitmap y) throws MpcAbortException;
+
     /**
      * Bitcount operation.
+     *
      * @param x bitmap input.
      * @return result.
      * @throws MpcAbortException if the protocol aborts.

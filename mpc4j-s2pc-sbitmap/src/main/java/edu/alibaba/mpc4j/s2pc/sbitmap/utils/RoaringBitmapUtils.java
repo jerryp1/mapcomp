@@ -6,12 +6,14 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import org.roaringbitmap.*;
+import org.roaringbitmap.BitmapContainer;
+import org.roaringbitmap.Container;
+import org.roaringbitmap.ContainerPointer;
+import org.roaringbitmap.RoaringBitmap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 /**
  * Utilities for RoaringBitmap.
@@ -46,6 +48,16 @@ public class RoaringBitmapUtils {
             throw new IllegalArgumentException("maxBitNum (" + maxBitNum + ") must divide " + BitmapContainer.MAX_CAPACITY);
         }
         return maxBitNum;
+    }
+
+    /**
+     * Check if the key of roaring bitmap is valid. A valid key must < 1 << 16.
+     *
+     * @return the maximal number of bits.
+     * @throws IllegalArgumentException if the number of bits is invalid.
+     */
+    public static void checkValidKeyIndex(int[] keys) {
+        Arrays.stream(keys).peek(key -> MathPreconditions.checkLess("key", key, 1 << 16));
     }
 
     /**
@@ -236,46 +248,6 @@ public class RoaringBitmapUtils {
     }
 
     /**
-     * Fill the empty container slots with empty ArrayContainers.
-     * TODO to be tested
-     *
-     * @param roaringBitmap roaringBitmap.
-     */
-    public static RoaringBitmap toFullRoaringBitmap(RoaringBitmap roaringBitmap) {
-        RoaringBitmap roaringBitmapClone = roaringBitmap.clone();
-        ContainerPointer containerPointer = roaringBitmapClone.getContainerPointer();
-        int containerIndex = 0;
-        while (containerPointer.getContainer() == null) {
-            // append when container is null.
-            roaringBitmapClone.append((char)containerIndex, new ArrayContainer());
-            containerIndex += 1;
-            containerPointer.advance();
-        }
-        return roaringBitmapClone;
-    }
-
-    /**
-     * Random flip the empty containers with dp-bounded probability.
-     * TODO to be tested
-     *
-     * @param roaringBitmap roaringBitmap.
-     */
-    public static RoaringBitmap toDpRandomRoaringBitmap(RoaringBitmap roaringBitmap, double epsilon) {
-        RoaringBitmap roaringBitmapClone = roaringBitmap.clone();
-        ContainerPointer containerPointer = roaringBitmapClone.getContainerPointer();
-        int containerIndex = 0;
-        while (containerPointer.getContainer() != null) {
-            if (DpUtils.sample(epsilon)) {
-                // append when dp occurs.
-                roaringBitmapClone.append((char)containerIndex, new ArrayContainer());
-            }
-            containerIndex += 1;
-            containerPointer.advance();
-        }
-        return roaringBitmapClone;
-    }
-
-    /**
      * Expand the bitmap to bit vectors with roaring format.
      *
      * @param totalBitNum the total number of bits.
@@ -320,6 +292,22 @@ public class RoaringBitmapUtils {
         return bitVectors;
     }
 
+    /**
+     * Compress the bit vectors with roaring format to a RoaringBitmap.
+     *
+     * @param bitVectors bit vectors with roaring format.
+     * @return the resulting RoaringBitmap.
+     * @throws IllegalArgumentException if key num does not match the vector length, or the number of bits contained in
+     *                                  each bit vector is invalid.
+     */
+    public static RoaringBitmap toRoaringBitmap(int[] keys, BitVector[] bitVectors) {
+        checkValidKeyIndex(keys);
+        char[] keysChar = new char[keys.length];
+        for (int i = 0; i < keys.length; i++) {
+            keysChar[i] = (char) keys[i];
+        }
+        return toRoaringBitmap(keysChar, bitVectors);
+    }
 
 
     /**

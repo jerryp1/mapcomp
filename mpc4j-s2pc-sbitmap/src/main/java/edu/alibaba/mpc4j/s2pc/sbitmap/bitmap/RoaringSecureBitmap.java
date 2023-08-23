@@ -1,12 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.SecureContainer;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.RoaringBitmapUtils;
-import org.roaringbitmap.RoaringBitmap;
 
 import java.util.Arrays;
 
@@ -34,17 +32,13 @@ public class RoaringSecureBitmap implements SecureBitmap {
      */
     protected boolean plain;
     /**
-     * the plain bitmap
-     */
-    protected RoaringBitmap bitmap;
-    /**
      * the keys
      */
     private int[] keys;
     /**
-     * the non-plain bitmap
+     * Secure Containers.
      */
-    private SquareZ2Vector[] sbitVectors;
+    private SecureContainer[] containers;
     /**
      * flag of full secure mode.
      */
@@ -53,62 +47,10 @@ public class RoaringSecureBitmap implements SecureBitmap {
      * number of containers.
      */
     private int containerNum;
-
-    private int blockSize;
-
-//    /**
-//     * Create a roaring secure bitmap in plain state.
-//     *
-//     * @param totalBitNum total number of bits.
-//     * @param bitmap      the plain bitmap.
-//     * @return the created secure bitmap.
-//     */
-//    public static RoaringSecureBitmap fromBitmap(int totalBitNum, RoaringBitmap bitmap) {
-//        RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
-//        RoaringSecureBitmap secureBitmap = new RoaringSecureBitmap();
-//        secureBitmap.setTotalBitNum(totalBitNum);
-//        secureBitmap.plain = true;
-//        secureBitmap.bitmap = bitmap;
-//        secureBitmap.keys = null;
-//        secureBitmap.sbitVectors = null;
-//
-//        return secureBitmap;
-//    }
-
-//    /**
-//     * Create a (plain) roaring secure bitmap with all 1's in the given range [rangeStart, rangeEnd).
-//     * The input range must be valid, that is,
-//     * <p>
-//     * <li>rangeEnd should be in range (0, totalBitNum)</li>
-//     * <li>rangeStart should be in range [0, rangeEnd)</li>
-//     * </p>
-//     *
-//     * @param totalBitNum max number of bits.
-//     * @param rangeStart  inclusive beginning of range.
-//     * @param rangeEnd    exclusive ending of range.
-//     * @return the created secure bitmap.
-//     */
-//    public static RoaringSecureBitmap ofRange(int totalBitNum, int rangeStart, int rangeEnd) {
-//        // check if range is valid
-//        MathPreconditions.checkPositiveInRange("rangeEnd", rangeEnd, totalBitNum);
-//        MathPreconditions.checkNonNegativeInRange("rangeStart", rangeStart, rangeEnd);
-//        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(rangeStart, rangeEnd);
-//
-//        return fromBitmap(totalBitNum, roaringBitmap);
-//    }
-
-//    /**
-//     * Create a (plain) roaring secure bitmap with all 1's in bit positions.
-//     *
-//     * @param totalBitNum total number of bits.
-//     * @return the created secure bitmap.
-//     */
-//    public static RoaringSecureBitmap ones(int totalBitNum) {
-//        RoaringBitmapUtils.checkValidMaxBitNum(totalBitNum);
-//        RoaringBitmap roaringBitmap = RoaringBitmap.bitmapOfRange(0, totalBitNum);
-//
-//        return fromBitmap(totalBitNum, roaringBitmap);
-//    }
+    /**
+     * container size.
+     */
+    private int containerSize;
 
     /**
      * Create a roaring secure bitmap in non-plain state.
@@ -129,18 +71,16 @@ public class RoaringSecureBitmap implements SecureBitmap {
                 MathPreconditions.checkNonNegativeInRange("key", key, secureBitmap.totalContainerNum);
             }
         }
-
         // check that all vectors are non-plain
         Arrays.stream(vectors).forEach(vector ->
             Preconditions.checkArgument(!vector.isPlain(), "all vectors must in non-plain state")
         );
         secureBitmap.plain = false;
-        secureBitmap.bitmap = null;
         secureBitmap.keys = keys;
-        secureBitmap.sbitVectors = vectors;
+        secureBitmap.containers = Arrays.stream(vectors).map(SecureContainer::create).toArray(SecureContainer[]::new);
         secureBitmap.full = full;
         secureBitmap.containerNum = keys.length;
-        secureBitmap.blockSize = vectors[0].bitNum();
+        secureBitmap.containerSize = vectors[0].bitNum();
 
         return secureBitmap;
     }
@@ -167,40 +107,17 @@ public class RoaringSecureBitmap implements SecureBitmap {
     }
 
     /**
-     * Returns the secure bit vectors. The plain state is identical to the plain state of the secure bitmap.
-     *
-     * @return the secure bit vectors.
-     */
-    public SquareZ2Vector[] getSbitVectors() {
-        if (plain) {
-            // convert the bitmap to be a bit vector array, then create its corresponding secure bit vector array.
-            BitVector[] bitVectors = RoaringBitmapUtils.toRoaringBitVectors(totalBitNum, bitmap);
-            return Arrays.stream(bitVectors)
-                .map(bitVector -> SquareZ2Vector.create(bitVector, plain))
-                .toArray(SquareZ2Vector[]::new);
-        } else {
-            // directly return the secure bit vector array.
-            return sbitVectors;
-        }
-    }
-
-    /**
      * Returns the number of containers in the secure bit vectors.
      *
      * @return the number of containers in the secure bit vectors.
      */
     public int containerNum() {
-        return sbitVectors.length;
+        return containerNum;
     }
 
     @Override
     public SecureBitmapFactory.SecureBitmapType getType() {
         return SecureBitmapFactory.SecureBitmapType.ROARING;
-    }
-
-//    @Override
-    public int totalContainerNum() {
-        return totalContainerNum;
     }
 
     @Override
@@ -225,12 +142,12 @@ public class RoaringSecureBitmap implements SecureBitmap {
 
     @Override
     public int getContainerSize() {
-        return blockSize;
+        return containerSize;
     }
 
     @Override
-    public SquareZ2Vector[] getContainers() {
-        return sbitVectors;
+    public SecureContainer[] getContainers() {
+        return containers;
     }
 
 

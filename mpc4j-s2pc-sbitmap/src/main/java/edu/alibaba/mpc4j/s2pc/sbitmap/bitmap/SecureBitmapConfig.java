@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapSecurityMode;
 
 /**
  * Secure Bitmap Config.
+ *
  * @author Li Peng
  * @date 2023/8/16
  */
@@ -16,33 +17,39 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
     /**
      * Z2 circuit config.
      */
-    private Z2cConfig z2cConfig;
+    private final Z2cConfig z2cConfig;
     /**
      * secure mode.
      */
-    private SbitmapSecurityMode securityMode;
+    private final SbitmapSecurityMode securityMode;
     /**
-     * window size.
+     * container size.
      */
-    private int w;
+    private final int containerSize;
     /**
-     * window num.
+     * container num.
      */
-    private int windowNum;
+    private final int containerNum;
     /**
      * total bit num.
      */
-    private int totalBitNum;
+    private final int totalBitNum;
     /**
      * env type.
      */
     private EnvType envType;
+    /**
+     * party id, 0 for sender, 1 for receiver.
+     */
+    private final int partyId;
 
     private SecureBitmapConfig(SecureBitmapConfig.Builder builder) {
         this.z2cConfig = builder.z2cConfig;
-        this.w = builder.w;
-        this.windowNum = builder.windowNum;
+        this.containerSize = builder.containerSize;
+        this.containerNum = builder.containerNum;
         this.securityMode = builder.securityMode;
+        this.totalBitNum = builder.totalBitNum;
+        this.partyId = builder.partyId;
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -53,16 +60,20 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
         return securityMode;
     }
 
-    public int getW() {
-        return w;
+    public int getContainerSize() {
+        return containerSize;
     }
 
-    public int getWindowNum() {
-        return windowNum;
+    public int getContainerNum() {
+        return containerNum;
     }
 
     public int getTotalBitNum() {
         return totalBitNum;
+    }
+
+    public int getPartyId() {
+        return partyId;
     }
 
     @Override
@@ -90,29 +101,38 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
          */
         private SbitmapSecurityMode securityMode;
         /**
-         * window size
+         * container size
          */
-        private int w;
+        private final int containerSize;
+        /**
+         * container num.
+         */
+        private final int containerNum;
         /**
          * total bit num.
          */
-        private int windowNum;
+        private final int totalBitNum;
         /**
-         * total bit num.
+         * party id, 0 for sender, 1 for receiver.
          */
-        private int totalBitNum;
+        private final int partyId;
 
-        public Builder(SbitmapSecurityMode securityMode, int w, int windowNum, int totalbitNum) {
-            this.securityMode = securityMode;
-            this.w = w;
-            this.windowNum = windowNum;
-            this.totalBitNum = totalbitNum;
+        public Builder(int containerSize, int containerNum, int totalBitNum, int partyId) {
+            this.containerSize = containerSize;
+            this.containerNum = containerNum;
+            this.totalBitNum = totalBitNum;
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            this.partyId = partyId;
+            this.securityMode = SbitmapSecurityMode.FULL_SECURE;
         }
 
         public SecureBitmapConfig.Builder setZ2cConfig(Z2cConfig z2cConfig) {
             this.z2cConfig = z2cConfig;
             return this;
+        }
+
+        public void setSecurityMode(SbitmapSecurityMode securityMode) {
+            this.securityMode = securityMode;
         }
 
         @Override

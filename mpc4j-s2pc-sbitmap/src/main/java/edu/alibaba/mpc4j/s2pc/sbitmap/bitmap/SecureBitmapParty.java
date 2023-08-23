@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import org.roaringbitmap.RoaringBitmap;
 
 /**
  * SecureBitMap party interface.
@@ -34,12 +33,12 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
     /**
      * Check the range [rangeStart, rangeEnd) is valid, that is,
      * <p>
-     *     <li>rangeEnd should be in range (0, maxBitNum)</li>
-     *     <li>rangeStart should be in range [0, rangeEnd)</li>
+     * <li>rangeEnd should be in range (0, maxBitNum)</li>
+     * <li>rangeStart should be in range [0, rangeEnd)</li>
      * </p>
      *
      * @param rangeStart inclusive beginning of range.
-     * @param rangeEnd exclusive ending of range.
+     * @param rangeEnd   exclusive ending of range.
      * @throws IllegalArgumentException if the range is invalid.
      */
     default void rangeSanityCheck(final int rangeStart, final int rangeEnd) {
@@ -70,36 +69,14 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
      * @return the shared secure bitmap.
      * @throws MpcAbortException if the protocol aborts.
      */
-    SecureBitmap revealOwn(SecureBitmap secureBitmap) throws MpcAbortException;
+    PlainBitmap revealOwn(SecureBitmap secureBitmap) throws MpcAbortException;
 
     /**
      * Reveal other's bitmap.
      *
      * @param secureBitmap the bitmap to be revealed.
-     * @return the shared secure bitmap.
-     * @throws MpcAbortException if the protocol aborts.
      */
-    SecureBitmap revealOther(SecureBitmap secureBitmap) throws MpcAbortException;
-
-//    /**
-//     * Bitwise AND (intersection) operation. The provided secure bitmaps are *not* modified.
-//     *
-//     * @param xi the first secure bitmap.
-//     * @param yi the other secure bitmap.
-//     * @return result of the operation.
-//     * @throws MpcAbortException if the protocol aborts.
-//     */
-//    SecureBitmap and(final SecureBitmap xi, final SecureBitmap yi) throws MpcAbortException;
-//
-//    /**
-//     * Bitwise XOR (symmetric difference) operation. The provided secure bitmaps are *not* modified.
-//     *
-//     * @param xi the first secure bitmap.
-//     * @param yi the other secure bitmap.
-//     * @return result of the operation.
-//     * @throws MpcAbortException if the protocol aborts.
-//     */
-//    SecureBitmap xor(final SecureBitmap xi, final SecureBitmap yi) throws MpcAbortException;
+    void revealOther(SecureBitmap secureBitmap);
 
     /**
      * Returns the number of distinct integers added to the secure bitmap (e.g., number of bits set).
@@ -177,28 +154,9 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
 //        return xor(xor(xi, yi), and(xi, yi));
 //    }
 
-//    /**
-//     * Bitwise NOT operation. The provided secure bitmaps are *not* modified.
-//     *
-//     * @param xi the secure bitmap.
-//     * @return result of the operation.
-//     * @throws MpcAbortException if the protocol aborts.
-//     */
-//    default SecureBitmap not(final SecureBitmap xi) throws MpcAbortException {
-//        return xor(xi, SecureBitmapFactory.createOnes(maxBitNum()));
-//    }
-
-    @Override
-    Bitmap and(Bitmap x, Bitmap y) throws MpcAbortException;
-
-    @Override
-    Bitmap or(Bitmap x, Bitmap y) throws MpcAbortException;
-
-    @Override
-    int bitCount(Bitmap x);
-
     /**
      * Plain bitmap to full secure bimap
+     *
      * @param plainBitmap plain bitmap
      * @return full secure bimap
      * @throws MpcAbortException if the protocol aborts.
@@ -210,6 +168,7 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
 
     /**
      * Plain bitmap to full secure bimap
+     *
      * @return full secure bimap
      * @throws MpcAbortException if the protocol aborts.
      */
@@ -219,6 +178,7 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
 
     /**
      * Plain bitmap to dp secure bimap
+     *
      * @param plainBitmap plain bitmap
      * @return dp secure bimap
      * @throws MpcAbortException if the protocol aborts.
@@ -232,6 +192,7 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
 
     /**
      * Plain bitmap to dp secure bimap
+     *
      * @return dp secure bimap
      * @throws MpcAbortException if the protocol aborts.
      */
