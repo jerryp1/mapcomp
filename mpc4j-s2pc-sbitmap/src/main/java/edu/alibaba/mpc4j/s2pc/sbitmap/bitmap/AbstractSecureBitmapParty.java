@@ -307,7 +307,7 @@ public abstract class AbstractSecureBitmapParty extends AbstractMultiPartyPto im
         if (x instanceof PlainBitmap) {
             return ((PlainBitmap) x).bitCount();
         } else {
-            // TODO
+            // TODO @风笛 加入count的实现
             return 0;
         }
     }

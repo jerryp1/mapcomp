@@ -142,4 +142,6 @@ public interface SecureBitmapParty extends TwoPartyPto, BitmapOperations {
     default SecureBitmap plainToDpSecure() throws MpcAbortException {
         return shareOther();
     }
+
+    // TODO 加入Sum的接口和实现，传入bitmap和待sum的字段，输出sum内积结果
 }

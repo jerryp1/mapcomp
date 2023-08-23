@@ -89,6 +89,8 @@ public class GroupAggregationsSender extends AbstractSbitmapPtoParty implements 
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 5, ldpTime);
 
+        // TODO 加入聚合算子操作（count/sum）@风笛
+
         stopWatch.start();
 //        List<byte[]> slaveDataPayload = generateSlaveDataPayload();
         DataPacketHeader slaveDataHeader = new DataPacketHeader(
