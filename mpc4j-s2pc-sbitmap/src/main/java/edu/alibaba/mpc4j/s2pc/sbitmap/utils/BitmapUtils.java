@@ -36,11 +36,14 @@ public class BitmapUtils {
      * @param bitmap roaringBitmap.
      */
     public static MutablePlainBitmap toDpMutablePlainBitmap(RoaringPlainBitmap bitmap, int containerSize, double epsilon) {
+        // to full bitmap
         RoaringPlainBitmap roaringBitmap = bitmap.toFull();
+        // resize
         MutablePlainBitmap mutablePlainBitmap = roaringBitmap.resizeContainer(containerSize);
-        PlainContainer[] oldContainers = Arrays.stream(mutablePlainBitmap.getContainers()).map(v -> (PlainContainer) v).toArray(PlainContainer[]::new);
+        // re-organize containers and keys
+        PlainContainer[] oldContainers = Arrays.stream(mutablePlainBitmap.getContainers())
+            .map(v -> (PlainContainer) v).toArray(PlainContainer[]::new);
         int[] oldKeys = mutablePlainBitmap.getKeys();
-
         List<Container> newContainers = new ArrayList<>();
         List<Integer> newKeys = new ArrayList<>();
         for (int i = 0; i < mutablePlainBitmap.getContainerNum(); i++) {
@@ -50,7 +53,8 @@ public class BitmapUtils {
             newContainers.add(oldContainers[i]);
             newKeys.add(oldKeys[i]);
         }
-        return MutablePlainBitmap.create(mutablePlainBitmap.totalBitNum(), newKeys.stream().mapToInt(i -> i).toArray(), newContainers.toArray(new Container[0]));
+        return MutablePlainBitmap.create(mutablePlainBitmap.totalBitNum(),
+            newKeys.stream().mapToInt(i -> i).toArray(), newContainers.toArray(new Container[0]));
     }
 
 
@@ -65,7 +69,8 @@ public class BitmapUtils {
         if (oldBitmap.getContainerSize() == newContainerSize) {
             return oldBitmap.clone();
         }
-        BitVector[] oldVectors = Arrays.stream(oldBitmap.getContainers()).map(Container::getBitVector).toArray(BitVector[]::new);
+        BitVector[] oldVectors = Arrays.stream(oldBitmap.getContainers())
+            .map(Container::getBitVector).toArray(BitVector[]::new);
         int oldContainerSize = oldBitmap.getContainerSize();
         int[] oldKeys = oldBitmap.getKeys();
         List<Integer> newKeysList = new ArrayList<>();

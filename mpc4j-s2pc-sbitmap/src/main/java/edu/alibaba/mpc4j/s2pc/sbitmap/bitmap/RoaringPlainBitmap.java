@@ -25,10 +25,6 @@ public class RoaringPlainBitmap implements PlainBitmap {
      */
     protected int totalBitNum;
     /**
-     * total number of bytes.
-     */
-    protected int totalByteNum;
-    /**
      * roaring bitmap.
      */
     private RoaringBitmap bitmap;
@@ -66,7 +62,6 @@ public class RoaringPlainBitmap implements PlainBitmap {
      */
     public static RoaringPlainBitmap fromBitVectors(int totalBitNum, int[] keys, BitVector[] bitVectors) {
         assert keys.length == bitVectors.length : "Length of keys and bitVectors not match";
-        // TODO 在调用该方法前，必须要确保bitVectors和keys的长度是标准的。
         RoaringBitmap bitmap = RoaringBitmapUtils.toRoaringBitmap(keys, bitVectors);
 
         RoaringBitmapUtils.checkContainValidBits(totalBitNum, bitmap);
@@ -114,10 +109,6 @@ public class RoaringPlainBitmap implements PlainBitmap {
 
     public void setTotalBitNum(int totalBitNum) {
         this.totalBitNum = totalBitNum;
-    }
-
-    public void setTotalByteNum(int totalByteNum) {
-        this.totalByteNum = totalByteNum;
     }
 
     public void setBitmap(RoaringBitmap bitmap) {
