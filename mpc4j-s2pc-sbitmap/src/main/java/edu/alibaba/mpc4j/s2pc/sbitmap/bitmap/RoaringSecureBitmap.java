@@ -126,11 +126,6 @@ public class RoaringSecureBitmap implements SecureBitmap {
     }
 
     @Override
-    public int totalByteNum() {
-        return totalByteNum;
-    }
-
-    @Override
     public boolean isPlain() {
         return plain;
     }

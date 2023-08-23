@@ -27,14 +27,6 @@ public interface SecureBitmap extends Bitmap {
     int totalBitNum();
 
     /**
-     * Returns the total number of bytes stored in the secure bitmap.
-     *
-     * @return the total number of bytes stored in the secure bitmap.
-     */
-    @Override
-    int totalByteNum();
-
-    /**
      * Return whether the secure bitmap is in plain state or not.
      *
      * @return whether the secure bitmap is in plain state or not.
