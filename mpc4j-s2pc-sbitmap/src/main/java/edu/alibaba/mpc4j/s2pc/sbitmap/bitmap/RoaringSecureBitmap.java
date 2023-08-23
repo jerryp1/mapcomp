@@ -16,6 +16,10 @@ import java.util.Arrays;
  */
 public class RoaringSecureBitmap implements SecureBitmap {
     /**
+     * Serial Version UID
+     */
+    private static final long serialVersionUID = -5755874084688742399L;
+    /**
      * total number of bits.
      */
     protected int totalBitNum;

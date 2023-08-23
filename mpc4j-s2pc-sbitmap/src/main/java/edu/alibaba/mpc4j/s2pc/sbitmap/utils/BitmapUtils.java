@@ -21,12 +21,13 @@ import java.util.List;
  */
 public class BitmapUtils {
 
+
     /**
      * Random flip the empty containers with dp-bounded probability.
      *
      * @param bitmap roaringBitmap.
      */
-    public static MutablePlainBitmap toMutablePlainBitmap(RoaringPlainBitmap bitmap, double epsilon) {
+    public static MutablePlainBitmap toDpMutablePlainBitmap(RoaringPlainBitmap bitmap, double epsilon) {
         return toDpMutablePlainBitmap(bitmap, RoaringPlainBitmap.CONTAINER_SIZE, epsilon);
     }
 
@@ -98,7 +99,8 @@ public class BitmapUtils {
 
                 if (newStart <= oldEnd) {
                     // 情况2
-                    newVector.add(oldVectors[oldIndex].copy().split(oldEnd - newStart));
+                    newVector.add(oldVectors[oldIndex]
+                        .copy().split(oldEnd - newStart));
                 } else {
                     //情况1
                     continue;

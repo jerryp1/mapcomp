@@ -19,6 +19,10 @@ import java.util.Arrays;
  */
 public class MutablePlainBitmap implements PlainBitmap, Cloneable {
     /**
+     * Serial Version UID
+     */
+    private static final long serialVersionUID = 7422497101755330471L;
+    /**
      * total number of bits.
      */
     private int totalBitNum;

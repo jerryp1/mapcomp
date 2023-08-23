@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * 回归OpXgBoost单从机测试。
+ * Sbitmap protocol test.
  *
- * @author Weiran Liu
- * @date 2021/10/08
+ * @author Li Peng
+ * @date 2023/8/15
  */
 @RunWith(Parameterized.class)
 public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {

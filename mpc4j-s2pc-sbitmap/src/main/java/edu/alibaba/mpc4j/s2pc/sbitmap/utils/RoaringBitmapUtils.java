@@ -92,7 +92,7 @@ public class RoaringBitmapUtils {
     public static void checkContainValidBits(int totalBitNum, RoaringBitmap bitmap) {
         if (!bitmap.isEmpty()) {
             MathPreconditions.checkNonNegative("first element", bitmap.first());
-            MathPreconditions.checkLess("last element", bitmap.last(), totalBitNum);
+            MathPreconditions.checkLessOrEqual("last element", bitmap.last(), totalBitNum);
         }
     }
 
@@ -113,7 +113,7 @@ public class RoaringBitmapUtils {
             // empty RoaringBitmap, create an all-zero BitVector.
             return BitVectorFactory.createZeros(totalBitNum);
         }
-        // expend the RoaringBitmap, fill BitmapContainer with all-zero values for the missing keys.
+        // expand the RoaringBitmap, fill BitmapContainer with all-zero values for the missing keys.
         ContainerPointer containerPointer = roaringBitmap.getContainerPointer();
         // create an BitmapContainer array that stores maximal number of bitmapContainers.
         // Note that we must use BitmapContainer, since other Containers.writeArray() would write compressed format.

@@ -47,9 +47,9 @@ public class SetOperationsSender extends AbstractSbitmapPtoParty implements Sbit
     /**
      * Protocol steps.
      *
-     * @param dataFrame
-     * @param config
-     * @throws MpcAbortException
+     * @param dataFrame dataset
+     * @param config    config
+     * @throws MpcAbortException if the protocol aborts.
      */
     @Override
     public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
@@ -88,7 +88,7 @@ public class SetOperationsSender extends AbstractSbitmapPtoParty implements Sbit
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 5, ldpTime);
 
-        // secret shar
+        // secret share
         stopWatch.start();
 //        List<byte[]> senderDataSizePayload = generateSlaveDataPayload();
         DataPacketHeader slaveDataHeader = new DataPacketHeader(

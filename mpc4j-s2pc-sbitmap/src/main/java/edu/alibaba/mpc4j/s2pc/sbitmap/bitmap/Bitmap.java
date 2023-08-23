@@ -2,13 +2,15 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.container.Container;
 
+import java.io.Serializable;
+
 /**
  * Bitmap interface.
  *
  * @author Li Peng
  * @date 2023/8/11
  */
-public interface Bitmap {
+public interface Bitmap extends Cloneable, Serializable {
     /**
      * Returns the SecureBitMap type.
      *
@@ -68,5 +70,4 @@ public interface Bitmap {
         return getContainers().length;
     }
 
-    ;
 }

@@ -21,6 +21,10 @@ import java.util.stream.IntStream;
  */
 public class RoaringPlainBitmap implements PlainBitmap {
     /**
+     * Serial Version UID
+     */
+    private static final long serialVersionUID = -3567894834063605593L;
+    /**
      * total number of bits.
      */
     protected int totalBitNum;
@@ -52,6 +56,16 @@ public class RoaringPlainBitmap implements PlainBitmap {
         secureBitmap.full = false;
 
         return secureBitmap;
+    }
+
+    /**
+     * Create a full secure bitmap in plain state.
+     *
+     * @param totalBitNum total number of bits.
+     * @return the created secure bitmap.
+     */
+    public static RoaringPlainBitmap fromBitVectors(int totalBitNum, int[] keys, Container[] containers) {
+        return fromBitVectors(totalBitNum, keys, Arrays.stream(containers).map(Container::getBitVector).toArray(BitVector[]::new));
     }
 
     /**
@@ -166,7 +180,7 @@ public class RoaringPlainBitmap implements PlainBitmap {
 
 
     public MutablePlainBitmap toDpRandom(double epsilon) {
-        return BitmapUtils.toMutablePlainBitmap(this, epsilon);
+        return BitmapUtils.toDpMutablePlainBitmap(this, epsilon);
     }
 
     /**
