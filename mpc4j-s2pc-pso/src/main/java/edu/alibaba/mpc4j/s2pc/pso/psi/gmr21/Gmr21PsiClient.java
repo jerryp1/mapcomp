@@ -141,22 +141,22 @@ public class Gmr21PsiClient<T> extends AbstractPsiClient<T> {
         IntStream clientVectorStream = IntStream.range(0, clientVector.length);
         clientVectorStream = parallel ? clientVectorStream.parallel() : clientVectorStream;
         Set<ByteBuffer> serverIntersectionSet = clientVectorStream.mapToObj(index -> {
-                    if(clientVector[index]) {
-                        SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotReceiverOutput.getRb(index)), JDK_AES_ALGORITHM_NAME);
-                        Cipher decryptCipher;
-                        try{
-                            decryptCipher = Cipher.getInstance(JDK_AES_MODE_NAME);
-                            decryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-                            return ByteBuffer.wrap(decryptCipher.doFinal(serverPayload.get(index)));
-                        } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-                            throw new IllegalStateException("System does not support " + JDK_AES_MODE_NAME);
-                        } catch (InvalidKeyException e) {
-                            throw new IllegalStateException(String.format("Invalid AES key length"));
-                        } catch (IllegalBlockSizeException | BadPaddingException e) {
-                            throw new IllegalStateException(String.format("Invalid plaintext length"));
-                        }
-                    } else return null;
-                }).collect(Collectors.toSet());
+            if(clientVector[index]) {
+                SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash.digestToBytes(cotReceiverOutput.getRb(index)), JDK_AES_ALGORITHM_NAME);
+                Cipher decryptCipher;
+                try{
+                    decryptCipher = Cipher.getInstance(JDK_AES_MODE_NAME);
+                    decryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+                    return ByteBuffer.wrap(decryptCipher.doFinal(serverPayload.get(index)));
+                } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
+                    throw new IllegalStateException("System does not support " + JDK_AES_MODE_NAME);
+                } catch (InvalidKeyException e) {
+                    throw new IllegalStateException(String.format("Invalid AES key length"));
+                } catch (IllegalBlockSizeException | BadPaddingException e) {
+                    throw new IllegalStateException(String.format("Invalid plaintext length"));
+                }
+            } else return null;
+        }).collect(Collectors.toSet());
         serverIntersectionSet.removeIf(Objects::isNull);
         IntStream clientElementStream = IntStream.range(0, clientElementSize);
         clientElementStream = parallel ? clientElementStream.parallel() : clientElementStream;
