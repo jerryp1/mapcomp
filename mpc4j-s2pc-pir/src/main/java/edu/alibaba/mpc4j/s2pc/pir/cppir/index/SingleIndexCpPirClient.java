@@ -20,7 +20,7 @@ public interface SingleIndexCpPirClient extends TwoPartyPto {
     void init(int n, int l) throws MpcAbortException;
 
     /**
-     * Client executes the protocol.
+     * Client executes the protocol. We note that x should be chosen at random.
      *
      * @param x index value.
      * @return retrieval result.
