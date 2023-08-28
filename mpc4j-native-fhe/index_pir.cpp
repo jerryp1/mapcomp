@@ -629,11 +629,6 @@ vector<Ciphertext> merge_response(const SEALContext& context, const GaloisKeys& 
     auto current_fill = g * num_slots_per_entry;
     size_t num_buckets_merged = row_size / current_fill;
     if (ceil(num_slots_per_entry * 1.0 / max_empty_slots) > 1 || num_buckets_merged <= 1 || chunk_response.size() == 1) {
-        for (auto & i : chunk_response) {
-            if (i.parms_id() != context.last_parms_id()) {
-                evaluator.mod_switch_to_next_inplace(i);
-            }
-        }
         return chunk_response;
     }
     current_fill = g * (int32_t) num_slots_per_entry_rounded;
@@ -664,11 +659,6 @@ vector<Ciphertext> merge_response(const SEALContext& context, const GaloisKeys& 
             }
         }
         chunk_bucket_responses.push_back(ct_acc);
-    }
-    for (auto & i : chunk_bucket_responses) {
-        if (i.parms_id() != context.last_parms_id()) {
-            evaluator.mod_switch_to_next_inplace(i);
-        }
     }
     return chunk_bucket_responses;
 }

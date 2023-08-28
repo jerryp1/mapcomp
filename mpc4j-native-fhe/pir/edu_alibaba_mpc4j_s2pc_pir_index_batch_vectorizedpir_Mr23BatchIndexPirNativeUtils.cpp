@@ -12,30 +12,6 @@ using namespace std;
 using namespace seal;
 
 [[maybe_unused]] JNIEXPORT
-jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_generateEncryptionParams(
-        JNIEnv *env, jclass, jint poly_modulus_degree, jint plain_modulus_size) {
-    EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
-    parms.set_poly_modulus_degree(poly_modulus_degree);
-    parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size));
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {55, 55, 48, 60}));
-    SEALContext context = SEALContext(parms);
-    jclass exception = env->FindClass("java/lang/Exception");
-    if (!context.parameters_set()) {
-        env->ThrowNew(exception, "SEAL parameters not valid.");
-        return nullptr;
-    }
-    if (!context.first_context_data()->qualifiers().using_batching) {
-        env->ThrowNew(exception, "SEAL parameters do not support batching.");
-        return nullptr;
-    }
-    if (!context.using_keyswitching()) {
-        env->ThrowNew(exception, "SEAL parameters do not support key switching.");
-        return nullptr;
-    }
-    return serialize_encryption_parms(env, parms);
-}
-
-[[maybe_unused]] JNIEXPORT
 jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23BatchIndexPirNativeUtils_keyGen(
         JNIEnv *env, jclass, jbyteArray parms_bytes) {
     EncryptionParameters parms = deserialize_encryption_parms(env, parms_bytes);
@@ -173,6 +149,11 @@ jobject JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr23Ba
         result.push_back(ct);
     }
     vector<Ciphertext> merged_result = merge_response(context, *galois_keys, result, num_slots_per_entry, first_two_dimension_size);
+    for (auto & i : merged_result) {
+        while (i.parms_id() != context.last_parms_id()) {
+            evaluator.mod_switch_to_next_inplace(i);
+        }
+    }
     return serialize_ciphertexts(env, merged_result);
 }
 
@@ -198,7 +179,7 @@ jlongArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_batch_vectorizedpir_Mr2
     uint32_t degree = context.first_context_data()->parms().poly_modulus_degree();
     jlongArray jarr = env->NewLongArray((jsize) degree);
     jlong *arr = env->GetLongArrayElements(jarr, JNI_FALSE);
-    for(uint32_t i = 0; i < degree; i++){
+    for(uint32_t i = 0; i < degree; i++) {
         arr[i] = (jlong) vec[i];
     }
     env->ReleaseLongArrayElements(jarr, arr, 0);

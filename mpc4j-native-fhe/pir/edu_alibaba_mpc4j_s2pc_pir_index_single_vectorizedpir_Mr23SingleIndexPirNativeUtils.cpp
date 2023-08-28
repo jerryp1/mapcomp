@@ -15,7 +15,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr
     EncryptionParameters parms = EncryptionParameters(scheme_type::bfv);
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, plain_modulus_size));
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree, sec_level_type::tc128));
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {55, 55, 48, 60}));
     SEALContext context = SEALContext(parms);
     jclass exception = env->FindClass("java/lang/Exception");
     if (!context.parameters_set()) {
@@ -147,7 +147,7 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_pir_index_single_vectorizedpir_Mr
     evaluator.mod_switch_to_inplace(query[2], second_dimension_cipher.parms_id());
     evaluator.multiply_inplace(second_dimension_cipher, query[2]);
     evaluator.relinearize_inplace(second_dimension_cipher, relin_keys);
-    if (second_dimension_cipher.parms_id() != context.last_parms_id()) {
+    while (second_dimension_cipher.parms_id() != context.last_parms_id()) {
         evaluator.mod_switch_to_next_inplace(second_dimension_cipher);
     }
     return serialize_ciphertext(env, second_dimension_cipher);
