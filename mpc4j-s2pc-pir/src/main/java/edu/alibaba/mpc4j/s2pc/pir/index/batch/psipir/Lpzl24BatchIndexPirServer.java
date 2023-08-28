@@ -58,11 +58,11 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * encoded database
      */
-    private List<List<byte[]>> dbPlaintexts;
+    private List<List<byte[]>> plaintexts;
     /**
      * max bin size
      */
-    private int[] maxBinSize;
+    private int[] binSize;
     /**
      * encryption params
      */
@@ -113,15 +113,15 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashNum(), secureRandom);
         alpha = BigIntegerUtils.randomPositive(EccFactory.createInstance(envType).getN(), secureRandom);
-        maxBinSize = new int[partitionSize];
-        dbPlaintexts = IntStream.range(0, partitionSize)
+        binSize = new int[partitionSize];
+        plaintexts = (parallel ? IntStream.range(0, partitionSize).parallel() : IntStream.range(0, partitionSize))
             .mapToObj(i -> {
                 // compute PRF
                 List<ByteBuffer> elementPrf = computeElementPrf(i);
                 // complete hash bin
                 List<List<HashBinEntry<ByteBuffer>>> hashBins = generateCompleteHashBin(elementPrf, i);
                 // compute coefficients
-                List<long[][]> coeffs = upsiServer.encodeDatabase(hashBins, maxBinSize[i]);
+                List<long[][]> coeffs = upsiServer.encodeDatabase(hashBins, binSize[i]);
                 IntStream intStream = IntStream.range(0, coeffs.size());
                 intStream = parallel ? intStream.parallel() : intStream;
                 return intStream
@@ -229,23 +229,17 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      */
     private List<List<HashBinEntry<ByteBuffer>>> generateCompleteHashBin(List<ByteBuffer> elementList,
                                                                          int partitionIndex) {
-        RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(
-            envType, upsiServer.params.getBinNum(), num, hashKeys
-        );
+        int binNum = upsiServer.params.getBinNum();
+        RandomPadHashBin<ByteBuffer> completeHash = new RandomPadHashBin<>(envType, binNum, num, hashKeys);
         completeHash.insertItems(elementList);
-        maxBinSize[partitionIndex] = completeHash.binSize(0);
-        for (int i = 1; i < completeHash.binNum(); i++) {
-            if (completeHash.binSize(i) > maxBinSize[partitionIndex]) {
-                maxBinSize[partitionIndex] = completeHash.binSize(i);
-            }
-        }
+        binSize[partitionIndex] = IntStream.range(0, binNum).map(completeHash::binSize).max().orElse(0);
         List<List<HashBinEntry<ByteBuffer>>> completeHashBins = new ArrayList<>();
         byte[] randomBytes = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(randomBytes);
         HashBinEntry<ByteBuffer> paddingEntry = HashBinEntry.fromEmptyItem(ByteBuffer.wrap(randomBytes));
-        for (int i = 0; i < completeHash.binNum(); i++) {
+        for (int i = 0; i < binNum; i++) {
             List<HashBinEntry<ByteBuffer>> binItems = new ArrayList<>(completeHash.getBin(i));
-            int paddingNum = maxBinSize[partitionIndex] - completeHash.binSize(i);
+            int paddingNum = binSize[partitionIndex] - completeHash.binSize(i);
             IntStream.range(0, paddingNum).mapToObj(j -> paddingEntry).forEach(binItems::add);
             completeHashBins.add(binItems);
         }
@@ -302,17 +296,17 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @return server response.
      */
     private List<byte[]> computeResponse(List<byte[]> clientQuery, int[][] powerDegree, int partitionIndex) {
-        int binSize = CommonUtils.getUnitNum(maxBinSize[partitionIndex], upsiServer.params.getMaxPartitionSizePerBin());
-        int partitionCount = dbPlaintexts.size() / partitionSize;
+        int count = CommonUtils.getUnitNum(binSize[partitionIndex], upsiServer.params.getMaxPartitionSizePerBin());
+        int partitionCount = plaintexts.size() / partitionSize;
         IntStream intStream = IntStream.range(0, upsiServer.params.getCiphertextNum());
         if (upsiServer.params.getPsLowDegree() > 0) {
             return intStream
                 .mapToObj(i ->
-                    (parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize))
+                    (parallel ? IntStream.range(0, count).parallel() : IntStream.range(0, count))
                         .mapToObj(j -> Lpzl24BatchIndexPirNativeUtils.optComputeMatches(
                             encryptionParams,
                             relinKeys,
-                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionCount),
+                            plaintexts.get(i * count + j + partitionIndex * partitionCount),
                             clientQuery.subList(i * powerDegree.length, (i + 1) * powerDegree.length),
                             upsiServer.params.getPsLowDegree()
                             ))
@@ -322,10 +316,10 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
         } else {
             return intStream
                 .mapToObj(i ->
-                    (parallel ? IntStream.range(0, binSize).parallel() : IntStream.range(0, binSize))
+                    (parallel ? IntStream.range(0, count).parallel() : IntStream.range(0, count))
                         .mapToObj(j -> Lpzl24BatchIndexPirNativeUtils.naiveComputeMatches(
                             encryptionParams,
-                            dbPlaintexts.get(i * binSize + j + partitionIndex * partitionCount),
+                            plaintexts.get(i * count + j + partitionIndex * partitionCount),
                             clientQuery.subList(i * powerDegree.length, (i + 1) * powerDegree.length)
                             ))
                         .toArray(byte[][]::new))

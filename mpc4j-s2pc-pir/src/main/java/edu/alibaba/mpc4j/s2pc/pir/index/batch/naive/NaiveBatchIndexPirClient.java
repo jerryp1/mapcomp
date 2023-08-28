@@ -26,12 +26,12 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
     /**
      * single index PIR client
      */
-    private final SingleIndexPirClient indexPirClient;
+    private final SingleIndexPirClient client;
 
     public NaiveBatchIndexPirClient(Rpc clientRpc, Party serverParty, NaiveBatchIndexPirConfig config) {
         super(getInstance(), clientRpc, serverParty, config);
-        indexPirClient = SingleIndexPirFactory.createClient(clientRpc, serverParty, config.getSingleIndexPirConfig());
-        addSubPtos(indexPirClient);
+        client = SingleIndexPirFactory.createClient(clientRpc, serverParty, config.getSingleIndexPirConfig());
+        addSubPtos(client);
     }
 
     @Override
@@ -41,11 +41,11 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         stopWatch.start();
         // client init single index PIR client
-        indexPirClient.init(serverElementSize, elementBitLength);
+        client.init(serverElementSize, elementBitLength);
         stopWatch.stop();
-        long initIndexPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initIndexPirTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -60,7 +60,7 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
         IntStream queryStream = IntStream.range(0, retrievalSize);
         queryStream = parallel ? queryStream.parallel() : queryStream;
         List<byte[]> clientQueryPayload = queryStream
-            .mapToObj(i -> indexPirClient.generateQuery(indexList.get(i)))
+            .mapToObj(i -> client.generateQuery(indexList.get(i)))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
@@ -89,7 +89,7 @@ public class NaiveBatchIndexPirClient extends AbstractBatchIndexPirClient {
         intStream.forEach(i -> {
             byte[] item;
             try {
-                item = indexPirClient.decodeResponse(
+                item = client.decodeResponse(
                     serverResponsePayload.subList(i * count, (i + 1) * count), indexList.get(i)
                 );
                 result.put(indexList.get(i), item);

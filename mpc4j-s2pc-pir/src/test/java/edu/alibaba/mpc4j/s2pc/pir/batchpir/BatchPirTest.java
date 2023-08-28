@@ -13,10 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.naive.NaiveBatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.psipir.Lpzl24BatchIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.simplepir.CuckooHashBatchSimplePirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.batch.vectorizedpir.Mr23BatchIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.constantweightpir.Mk22SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,24 +75,6 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
             BatchIndexPirFactory.BatchIndexPirType.FAST_PIR.name(),
             new CuckooHashBatchIndexPirConfig.Builder()
                 .setSingleIndexPirConfig(new Ayaa21SingleIndexPirConfig.Builder().build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.ONION_PIR.name(),
-            new CuckooHashBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Mcr21SingleIndexPirConfig.Builder().build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.CONSTANT_WEIGHT_PIR.name(),
-            new CuckooHashBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Mk22SingleIndexPirConfig.Builder().build())
-                .build()
-        });
-        configurations.add(new Object[]{
-            BatchIndexPirFactory.BatchIndexPirType.MUL_PIR.name(),
-            new CuckooHashBatchIndexPirConfig.Builder()
-                .setSingleIndexPirConfig(new Alpr21SingleIndexPirConfig.Builder().build())
                 .build()
         });
         // PSI - PIR

@@ -39,7 +39,7 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * single index PIR server
      */
-    private final SingleIndexPirServer singleIndexPirServer;
+    private final SingleIndexPirServer server;
     /**
      * bin num
      */
@@ -47,7 +47,7 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
 
     public CuckooHashBatchIndexPirServer(Rpc serverRpc, Party clientParty, CuckooHashBatchIndexPirConfig config) {
         super(CuckooHashBatchIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
-        singleIndexPirServer = SingleIndexPirFactory.createServer(serverRpc, clientParty, config.getSingleIndexPirConfig());
+        server = SingleIndexPirFactory.createServer(serverRpc, clientParty, config.getSingleIndexPirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
     }
 
@@ -81,11 +81,11 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         stopWatch.start();
         // init single index PIR server
-        singleIndexPirServer.setParallel(parallel);
-        singleIndexPirServer.setDefaultParams();
-        singleIndexPirServer.setPublicKey(publicKeyPayload);
+        server.setParallel(parallel);
+        server.setDefaultParams();
+        server.setPublicKey(publicKeyPayload);
         encodedDatabase = IntStream.range(0, binNum)
-            .mapToObj(i -> singleIndexPirServer.serverSetup(binDatabase[i]))
+            .mapToObj(i -> server.serverSetup(binDatabase[i]))
             .collect(Collectors.toList());
         stopWatch.stop();
         long initIndexPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -114,7 +114,7 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
         List<byte[]> responsePayload = IntStream.range(0, binNum)
             .mapToObj(i -> {
                 try {
-                    return singleIndexPirServer.generateResponse(
+                    return server.generateResponse(
                         clientQueryPayload.subList(i * binQuerySize, (i + 1) * binQuerySize), encodedDatabase.get(i));
                 } catch (MpcAbortException e) {
                     e.printStackTrace();
@@ -148,12 +148,7 @@ public class CuckooHashBatchIndexPirServer extends AbstractBatchIndexPirServer {
         int[] totalIndex = IntStream.range(0, num).toArray();
         IntHashBin intHashBin = new SimpleIntHashBin(envType, binNum, num, hashKeys);
         intHashBin.insertItems(totalIndex);
-        int maxBinSize = intHashBin.binSize(0);
-        for (int i = 1; i < binNum; i++) {
-            if (intHashBin.binSize(i) > maxBinSize) {
-                maxBinSize = intHashBin.binSize(i);
-            }
-        }
+        int maxBinSize = IntStream.range(0, binNum).map(intHashBin::binSize).max().orElse(0);
         byte[][][] paddingCompleteHashBin = new byte[binNum][maxBinSize][elementByteLength];
         byte[] paddingEntry = BytesUtils.randomByteArray(elementByteLength, elementBitLength, secureRandom);
         for (int i = 0; i < binNum; i++) {
