@@ -27,11 +27,8 @@ public class Gf2kTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // GF2K
-        Gf2kType[] gf2kTypes = new Gf2kType[]{Gf2kType.COMBINED, Gf2kType.NTL, Gf2kType.BC, Gf2kType.RINGS};
-        for (Gf2kType type : gf2kTypes) {
-            configurations.add(new Object[]{
-                type.name(), type,
-            });
+        for (Gf2kType type : Gf2kType.values()) {
+            configurations.add(new Object[]{type.name(), type,});
         }
 
         return configurations;

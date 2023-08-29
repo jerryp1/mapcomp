@@ -50,8 +50,7 @@ public class BytesFieldEfficiencyTest {
         LOGGER.info("{}\t{}\t{}\t{}\t{}",
             "                type", "         l", "   mul(us)", "   div(us)", "   inv(us)"
         );
-        Gf2kType[] gf2kTypes = new Gf2kType[]{Gf2kType.COMBINED, Gf2kType.NTL, Gf2kType.BC, Gf2kType.RINGS};
-        for (Gf2kType type : gf2kTypes) {
+        for (Gf2kType type : Gf2kType.values()) {
             Gf2k gf2k = Gf2kFactory.createInstance(EnvType.STANDARD, type);
             testEfficiency(gf2k);
         }

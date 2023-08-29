@@ -41,6 +41,8 @@ public class Gf2kConsistencyTest {
         configurations.add(new Object[]{"BC V.S. COMBINED", Gf2kType.BC, Gf2kType.COMBINED});
         // BC V.S. NTL
         configurations.add(new Object[]{"BC V.S. NTL", Gf2kType.BC, Gf2kType.NTL});
+        // BC V.S. JDK
+        configurations.add(new Object[]{"BC V.S. JDK", Gf2kType.BC, Gf2kType.JDK});
         // BC V.S. RINGS
         configurations.add(new Object[]{"BC V.S. RINGS", Gf2kType.BC, Gf2kType.RINGS});
 
