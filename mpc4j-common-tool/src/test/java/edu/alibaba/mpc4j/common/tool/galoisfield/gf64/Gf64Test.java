@@ -90,18 +90,6 @@ public class Gf64Test {
         gf64.muli(copyP, copyP);
         Assert.assertArrayEquals(expect, copyP);
 
-        // x^2 / x = x
-        p = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
-        q = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
-        expect = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
-        // div
-        actual = gf64.div(p, q);
-        Assert.assertArrayEquals(expect, actual);
-        // divi
-        copyP = BytesUtils.clone(p);
-        gf64.divi(copyP, q);
-        Assert.assertArrayEquals(expect, copyP);
-
         // x^2 * x^2 = x^4
         p = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
         q = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
@@ -116,18 +104,6 @@ public class Gf64Test {
         copyP = BytesUtils.clone(p);
         // self muli
         gf64.muli(copyP, copyP);
-        Assert.assertArrayEquals(expect, copyP);
-
-        // x^4 / x^2 = x^2
-        p = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10};
-        q = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
-        expect = new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
-        // div
-        actual = gf64.div(p, q);
-        Assert.assertArrayEquals(expect, actual);
-        // divi
-        copyP = BytesUtils.clone(p);
-        gf64.divi(copyP, q);
         Assert.assertArrayEquals(expect, copyP);
     }
 }

@@ -1,28 +1,28 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
+package edu.alibaba.mpc4j.common.tool.galoisfield.gf64;
 
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory.Gf2kType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf64.Gf64Factory.Gf64Type;
 
 /**
- * NTL GF(2^128).
+ * NTL GF(2^64).
  *
  * @author Weiran Liu
- * @date 2022/4/27
+ * @date 2023/8/28
  */
-class NtlGf2k extends AbstractGf2k {
+class NtlGf64 extends AbstractGf64 {
 
     static {
         System.loadLibrary(CommonConstants.MPC4J_NATIVE_TOOL_NAME);
     }
 
-    NtlGf2k(EnvType envType) {
+    NtlGf64(EnvType envType) {
         super(envType);
     }
 
     @Override
-    public Gf2kType getGf2kType() {
-        return Gf2kType.NTL;
+    public Gf64Type getGf64Type() {
+        return Gf64Type.NTL;
     }
 
     @Override

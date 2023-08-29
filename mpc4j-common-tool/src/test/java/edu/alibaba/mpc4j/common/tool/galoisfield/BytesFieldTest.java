@@ -46,6 +46,7 @@ public class BytesFieldTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // GF64
         for (Gf64Type type : Gf64Type.values()) {
             configurations.add(new Object[]{
                 Gf64Type.class.getSimpleName() + " (" + type.name() + ")",

@@ -20,18 +20,18 @@ public class Gf64Factory {
      * GF(2^64) type.
      */
     public enum Gf64Type {
-//        /**
-//         * combined
-//         */
-//        COMBINED,
-//        /**
-//         * NTL
-//         */
-//        NTL,
-//        /**
-//         * JDK
-//         */
-//        JDK,
+        /**
+         * combined
+         */
+        COMBINED,
+        /**
+         * JDK
+         */
+        JDK,
+        /**
+         * NTL
+         */
+        NTL,
         /**
          * Rings
          */
@@ -47,6 +47,12 @@ public class Gf64Factory {
      */
     public static Gf64 createInstance(EnvType envType, Gf64Type type) {
         switch (type) {
+            case COMBINED:
+                return new CombinedGf64(envType);
+            case JDK:
+                return new JdkGf64(envType);
+            case NTL:
+                return new NtlGf64(envType);
             case RINGS:
                 return new RingsGf64(envType);
             default:

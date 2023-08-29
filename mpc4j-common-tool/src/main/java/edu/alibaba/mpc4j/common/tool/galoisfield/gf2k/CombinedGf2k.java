@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 
 /**
- * combined GF(2^κ).
+ * combined GF(2^128).
  *
  * @author Weiran Liu
  * @date 2023/7/2

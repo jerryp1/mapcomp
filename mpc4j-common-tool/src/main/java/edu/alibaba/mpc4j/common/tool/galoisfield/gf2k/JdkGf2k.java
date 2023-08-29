@@ -7,7 +7,7 @@ import org.bouncycastle.util.Longs;
 import org.bouncycastle.util.Pack;
 
 /**
- * GF(2^κ) using pure Java.
+ * GF(2^128) using pure Java.
  *
  * @author Weiran Liu
  * @date 2023/8/27
@@ -63,7 +63,7 @@ public class JdkGf2k extends AbstractGf2k {
         long z1  = h1 ^ h2 ^ h0 ^ h4;
         //noinspection UnnecessaryLocalVariable
         long z0  = h0;
-        // 2. reduction modulo P(X) = X^128 + X^7 + X2 + X + 1
+        // 2. reduction modulo P(X) = X^128 + X^7 + X^2 + X + 1
         // Denote the input operand by [X3 : X2 : X1 : X0] where X3, X2, X1 and X0 are 64 bit long each.
         // Step 1: shift X3 by 63, 62 and 57-bit positions to the right, i.e., compute:
         //  A = X3 >> 63, B = X3 >> 62, C = X3 >> 57
@@ -73,11 +73,11 @@ public class JdkGf2k extends AbstractGf2k {
         // Step 3: shift [X3 : D] by 1, 2 and 7 bit positions to the left, i.e., compute the following numbers:
         // [E1 : E0] = [X3 : D] << 1, [F1 : F0] = [X3 : D] << 2, [G1 : G0] = [X3 : D] << 7
         long e0 = d << 1;
-        long e1 = (z3 << 1) ^ (d >>> Long.SIZE - 1);
+        long e1 = (z3 << 1) ^ (d >>> 63);
         long f0 = d << 2;
-        long f1 = (z3 << 2) ^ (d >>> Long.SIZE - 2);
+        long f1 = (z3 << 2) ^ (d >>> 62);
         long g0 = d << 7;
-        long g1 = (z3 << 7) ^ (d >>> Long.SIZE - 7);
+        long g1 = (z3 << 7) ^ (d >>> 57);
         // Step 4: XOR [E1 : E0], [F1 : F0], and [G1 : G0] with each other and [X3 : D], i.e., compute the following:
         // [H1 : H0] = [X3 ⊕ E1 ⊕ F1 ⊕ G1 : D ⊕ E0 ⊕ F0 ⊕ G0]
         long i1 = z3 ^ e1 ^ f1 ^ g1;
@@ -91,7 +91,7 @@ public class JdkGf2k extends AbstractGf2k {
     @Override
     public byte[] inv(byte[] p) {
         assert validateNonZeroElement(p);
-        // The order of GF(2^κ) = 2^κ. We can calculate p^{-1} as p^{2^{128}-2} so that p^{-1} * p = p^{2^{128}-1} = 1
+        // The order of GF(2^128) = 2^128. We can calculate p^{-1} as p^{2^{128}-2} so that p^{-1} * p = p^{2^{128}-1} = 1
         // The addition chain below requires 142 mul/sqr operations total.
         byte[] a = BytesUtils.clone(p);
         byte[] r = new byte[BYTE_L];

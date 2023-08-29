@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory.Gf2eType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2k;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.gf2k.Gf2kFactory.Gf2kType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf64.Gf64;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf64.Gf64Factory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.gf64.Gf64Factory.Gf64Type;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
@@ -44,6 +47,18 @@ public class BytesFieldEfficiencyTest {
      * the stop watch
      */
     private static final StopWatch STOP_WATCH = new StopWatch();
+
+    @Test
+    public void testGf64Efficiency() {
+        LOGGER.info("{}\t{}\t{}\t{}\t{}",
+            "                type", "         l", "   mul(us)", "   div(us)", "   inv(us)"
+        );
+        for (Gf64Type type : Gf64Type.values()) {
+            Gf64 gf64 = Gf64Factory.createInstance(EnvType.STANDARD, type);
+            testEfficiency(gf64);
+        }
+        LOGGER.info(StringUtils.rightPad("", 60, '-'));
+    }
 
     @Test
     public void testGf2kEfficiency() {

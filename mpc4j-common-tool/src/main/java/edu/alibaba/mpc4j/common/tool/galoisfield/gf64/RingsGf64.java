@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.RingsUtils;
  * @author Weiran Liu
  * @date 2023/8/28
  */
-public class RingsGf64 extends AbstractGf64 {
+class RingsGf64 extends AbstractGf64 {
     /**
      * GF(2^64) default finite field
      */
