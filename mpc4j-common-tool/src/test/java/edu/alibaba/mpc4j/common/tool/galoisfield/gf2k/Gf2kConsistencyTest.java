@@ -50,11 +50,11 @@ public class Gf2kConsistencyTest {
     }
 
     /**
-     * this GF(2^κ)
+     * this GF(2^128)
      */
     private final Gf2k thisGf2k;
     /**
-     * that GF(2^κ)
+     * that GF(2^128)
      */
     private final Gf2k thatGf2k;
 

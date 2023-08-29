@@ -1,6 +1,5 @@
-package edu.alibaba.mpc4j.common.tool.galoisfield.gf2k;
+package edu.alibaba.mpc4j.common.tool.galoisfield.gf64;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
@@ -11,20 +10,20 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import java.security.SecureRandom;
 
 /**
- * abstract GF(2^128).
+ * abstract GF(2^64).
  *
  * @author Weiran Liu
- * @date 2023/2/17
+ * @date 2023/8/28
  */
-abstract class AbstractGf2k implements Gf2k {
+abstract class AbstractGf64 implements Gf64 {
     /**
-     * l = 128 (in bit length)
+     * l = 64 (in bit length)
      */
-    private static final int L = CommonConstants.BLOCK_BIT_LENGTH;
+    private static final int L = 64;
     /**
-     * l = 128 (in byte length)
+     * l = 64 (in byte length)
      */
-    protected static final int BYTE_L = CommonConstants.BLOCK_BYTE_LENGTH;
+    protected static final int BYTE_L = 8;
     /**
      * the zero element
      */
@@ -42,7 +41,7 @@ abstract class AbstractGf2k implements Gf2k {
      */
     private final Prg prg;
 
-    public AbstractGf2k(EnvType envType) {
+    public AbstractGf64(EnvType envType) {
         zero = createZero();
         one = createOne();
         kdf = KdfFactory.createInstance(envType);
@@ -200,14 +199,14 @@ abstract class AbstractGf2k implements Gf2k {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AbstractGf2k that = (AbstractGf2k) o;
+        AbstractGf64 that = (AbstractGf64) o;
         // KDF and PRG can be different, all GF2K instance are the same
         return this.getL() == that.getL();
     }
 
     @Override
     public int hashCode() {
-        return "GF2K".hashCode();
+        return "GF64".hashCode();
     }
 
     @Override
