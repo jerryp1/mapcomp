@@ -106,12 +106,12 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         stopWatch.start();
         // init primary hints and backup hints data structure
         primaryHints = IntStream.range(0, m1)
-            .mapToObj(index -> new PianoDirectPrimaryHint(envType, chunkSize, chunkNum, l, secureRandom))
+            .mapToObj(index -> new PianoDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom))
             .toArray(PianoPrimaryHint[]::new);
         backupHintGroup = IntStream.range(0, chunkNum)
             .mapToObj(chunkId ->
                 IntStream.range(0, m2PerGroup)
-                    .mapToObj(index -> new PianoBackupHint(envType, chunkSize, chunkNum, l, chunkId, secureRandom))
+                    .mapToObj(index -> new PianoBackupHint(chunkSize, chunkNum, l, chunkId, secureRandom))
                     .collect(Collectors.toCollection(ArrayList::new))
             )
             .collect(Collectors.toCollection(ArrayList::new));

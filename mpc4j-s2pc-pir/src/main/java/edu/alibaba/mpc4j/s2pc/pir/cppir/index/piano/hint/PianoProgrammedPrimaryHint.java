@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 
 /**
  * programmed primary hint for PIANO PIR, which contains a PRF key, a parity, and a programmed index. Indexes in the set
@@ -23,7 +22,7 @@ public class PianoProgrammedPrimaryHint extends AbstractPianoHint implements Pia
     private final int programmedOffset;
 
     public PianoProgrammedPrimaryHint(PianoBackupHint backupHint, int x, byte[] parity) {
-        super(backupHint.envType, backupHint.chunkSize, backupHint.chunkNum, backupHint.l);
+        super(backupHint.chunkSize, backupHint.chunkNum, backupHint.l);
         MathPreconditions.checkNonNegativeInRange("x", x, chunkSize * chunkNum);
         programmedChunkId = x / chunkSize;
         MathPreconditions.checkEqual(
@@ -32,7 +31,7 @@ public class PianoProgrammedPrimaryHint extends AbstractPianoHint implements Pia
         );
         programmedOffset = Math.abs(x % chunkSize);
         Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(parity, byteL, l));
-        prf.setKey(backupHint.prf.getKey());
+        BytesUtils.xori(hintId, backupHint.hintId);
         // newly generated parity is 0, just xor the backup hint parity
         BytesUtils.xori(this.parity, backupHint.parity);
         // xor x's parity
@@ -45,8 +44,7 @@ public class PianoProgrammedPrimaryHint extends AbstractPianoHint implements Pia
         if (chunkId == programmedChunkId) {
             return programmedOffset;
         } else {
-            byte[] chunkIdByteArray = IntUtils.intToByteArray(chunkId);
-            return prf.getInteger(chunkIdByteArray, chunkSize);
+            return getInteger(chunkId);
         }
     }
 }

@@ -1,12 +1,15 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
-import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
+import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+
+import java.nio.ByteBuffer;
 
 /**
  * abstract hint for PIANO.
@@ -16,9 +19,14 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
  */
 public abstract class AbstractPianoHint implements PianoHint {
     /**
-     * environment
+     * PRP with a fixed key
      */
-    protected final EnvType envType;
+    protected static final Prp PRP = PrpFactory.createInstance(PrpType.JDK_AES);
+
+    static {
+        PRP.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
+    }
+
     /**
      * chunk size
      */
@@ -36,16 +44,15 @@ public abstract class AbstractPianoHint implements PianoHint {
      */
     protected final int byteL;
     /**
-     * PRF
+     * hint ID
      */
-    protected final Prf prf;
+    protected final byte[] hintId;
     /**
      * parity
      */
     protected final byte[] parity;
 
-    protected AbstractPianoHint(EnvType envType, int chunkSize, int chunkNum, int l) {
-        this.envType = envType;
+    protected AbstractPianoHint(int chunkSize, int chunkNum, int l) {
         MathPreconditions.checkPositive("chunkSize", chunkSize);
         this.chunkSize = chunkSize;
         MathPreconditions.checkPositive("chunkNum", chunkNum);
@@ -53,10 +60,24 @@ public abstract class AbstractPianoHint implements PianoHint {
         MathPreconditions.checkPositive("l", l);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        // initialize a PRF
-        prf = PrfFactory.createInstance(envType, Integer.BYTES);
+        // initialize the hint ID
+        hintId = new byte[CommonConstants.BLOCK_BYTE_LENGTH - Integer.BYTES];
         // initialize the parity to zero
         parity = new byte[byteL];
+    }
+
+    /**
+     * Gets the integer based on the hint ID and the chunk ID.
+     *
+     * @param chunkId chunk ID.
+     * @return the integer.
+     */
+    protected int getInteger(int chunkId) {
+        byte[] prpInput = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
+            .put(hintId)
+            .putInt(chunkId)
+            .array();
+        return Math.abs(ByteBuffer.wrap(prpInput).getInt()) % chunkSize;
     }
 
     @Override
