@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.dp.service.fo;
 
 import edu.alibaba.mpc4j.dp.service.LdpTestDataUtils;
-import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.fo.FoLdpFactory.FoLdpType;
+import edu.alibaba.mpc4j.dp.service.fo.config.FoLdpConfig;
 import edu.alibaba.mpc4j.dp.service.tool.StreamDataUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -51,11 +51,11 @@ public class FoLdpEfficiencyTest {
     /**
      * ε array
      */
-    private static final double[] EPSILONS = new double[] {1, 2, 4, 8, 16};
+    private static final double[] EPSILONS = new double[]{1, 2, 4, 8, 16};
     /**
      * the type
      */
-    private static final FoLdpType[] TYPES = new FoLdpType[] {
+    private static final FoLdpType[] TYPES = new FoLdpType[]{
         // Apple's Hadamard Count Mean Sketch
         FoLdpType.APPLE_HCMS,
         // Apple's Count Mean Sketch
@@ -84,6 +84,8 @@ public class FoLdpEfficiencyTest {
         FoLdpType.DE_INDEX,
         // Direct Encoding via String Encoding
         FoLdpType.DE_STRING,
+        //  Utility-optimized randomized response.
+        FoLdpType.RR_ULDP,
     };
 
     public FoLdpEfficiencyTest() {

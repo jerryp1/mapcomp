@@ -17,6 +17,8 @@ import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.ue.OueFoLdpServer;
 import edu.alibaba.mpc4j.dp.service.fo.ue.SueFoLdpClient;
 import edu.alibaba.mpc4j.dp.service.fo.ue.SueFoLdpServer;
+import edu.alibaba.mpc4j.dp.service.fo.uldp.RrUldpClient;
+import edu.alibaba.mpc4j.dp.service.fo.uldp.RrUldpServer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -95,6 +97,10 @@ public class FoLdpFactory {
          * Apple's Hadamard Count Mean Sketch (HCMS)
          */
         APPLE_HCMS,
+        /**
+         * Utility-optimized randomized response.
+         */
+        RR_ULDP,
     }
 
 
@@ -110,6 +116,7 @@ public class FoLdpFactory {
             case DE_STRING:
             case SUE:
             case HR_HIGH_EPSILON:
+            case RR_ULDP:
                 return true;
             case OUE:
             case RAPPOR:
@@ -147,6 +154,7 @@ public class FoLdpFactory {
             case HM_LOW_EPSILON:
             case APPLE_CMS:
             case APPLE_HCMS:
+            case RR_ULDP:
                 // although many schemes support much larger ε, we manually restrict a maximal one.
                 return 128;
             case OLH:
@@ -188,6 +196,8 @@ public class FoLdpFactory {
                 return new AppleCmsFoLdpConfig.Builder(type, domainSet, epsilon).build();
             case APPLE_HCMS:
                 return new AppleHcmsFoLdpConfig.Builder(type, domainSet, epsilon).build();
+            case RR_ULDP:
+                return new RrUldpConfig.Builder(type, domainSet, epsilon).build();
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -230,6 +240,8 @@ public class FoLdpFactory {
                 return new AppleCmsFoLdpServer(config);
             case APPLE_HCMS:
                 return new AppleHcmsFoLdpServer(config);
+            case RR_ULDP:
+                return new RrUldpServer(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
@@ -272,6 +284,8 @@ public class FoLdpFactory {
                 return new AppleCmsFoLdpClient(config);
             case APPLE_HCMS:
                 return new AppleHcmsFoLdpClient(config);
+            case RR_ULDP:
+                return new RrUldpClient(config);
             default:
                 throw new IllegalArgumentException("Invalid " + FoLdpType.class.getSimpleName() + ": " + type.name());
         }
