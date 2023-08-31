@@ -110,6 +110,11 @@ public class BatchPirTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
+    public void test1BitLength() {
+        testPto(1 << 10, 1 << 2, 10, true);
+    }
+
+    @Test
     public void testSmallBitLength() {
         testPto(DEFAULT_SERVER_ELEMENT_SIZE, DEFAULT_RETRIEVAL_SIZE, SMALL_BIT_LENGTH, true);
     }

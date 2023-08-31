@@ -5,8 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -71,11 +71,16 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * relinearization keys
      */
     private byte[] relinKeys;
+    /**
+     * ecc
+     */
+    private final ByteFullEcc ecc;
 
     public Lpzl24BatchIndexPirServer(Rpc serverRpc, Party clientParty, Lpzl24BatchIndexPirConfig config) {
         super(Lpzl24BatchIndexPirPtoDesc.getInstance(), serverRpc, clientParty, config);
         upsiServer = new Cmg21UpsiServer<>(serverRpc, clientParty, (Cmg21UpsiConfig) config.getUpsiConfig());
         addSubPtos(upsiServer);
+        ecc = ByteEccFactory.createFullInstance(envType);
     }
 
     @Override
@@ -112,7 +117,7 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         stopWatch.start();
         hashKeys = CommonUtils.generateRandomKeys(params.getCuckooHashNum(), secureRandom);
-        alpha = BigIntegerUtils.randomPositive(EccFactory.createInstance(envType).getN(), secureRandom);
+        alpha = BigIntegerUtils.randomPositive(ecc.getN(), secureRandom);
         binSize = new int[partitionSize];
         plaintexts = (parallel ? IntStream.range(0, partitionSize).parallel() : IntStream.range(0, partitionSize))
             .mapToObj(i -> {
@@ -205,15 +210,13 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      * @return element prf.
      */
     private List<ByteBuffer> computeElementPrf(int partitionIndex) {
-        Ecc ecc = EccFactory.createInstance(envType);
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
         IntStream intStream = IntStream.range(0, databases[partitionIndex].rows());
         intStream = parallel ? intStream.parallel() : intStream;
         return intStream
             .mapToObj(i -> ecc.hashToCurve(databases[partitionIndex].getBytesData(i)))
-            .map(hash -> ecc.multiply(hash, alpha))
-            .map(prf -> ecc.encode(prf, false))
+            .map(hash -> ecc.mul(hash, alpha))
             .map(kdf::deriveKey)
             .map(prg::extendToBytes)
             .map(ByteBuffer::wrap)
@@ -255,13 +258,10 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
      */
     private List<byte[]> handleBlindPayload(List<byte[]> blindElements) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(blindElements.size() > 0);
-        Ecc ecc = EccFactory.createInstance(envType);
         Stream<byte[]> blindStream = blindElements.stream();
         blindStream = parallel ? blindStream.parallel() : blindStream;
         return blindStream
-            .map(ecc::decode)
-            .map(element -> ecc.multiply(element, alpha))
-            .map(element -> ecc.encode(element, true))
+            .map(element -> ecc.mul(element, alpha))
             .collect(Collectors.toList());
     }
 

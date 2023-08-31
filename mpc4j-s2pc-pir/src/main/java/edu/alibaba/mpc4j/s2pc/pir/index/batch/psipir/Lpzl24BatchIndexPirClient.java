@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.EccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteFullEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.Kdf;
 import edu.alibaba.mpc4j.common.tool.crypto.kdf.KdfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -19,7 +19,6 @@ import edu.alibaba.mpc4j.s2pc.pir.index.batch.AbstractBatchIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiClient;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiConfig;
 import edu.alibaba.mpc4j.s2pc.upso.upsi.cmg21.Cmg21UpsiParams;
-import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -56,11 +55,16 @@ public class Lpzl24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * hash keys
      */
     private byte[][] hashKeys;
+    /**
+     * ecc
+     */
+    private final ByteFullEcc ecc;
 
     public Lpzl24BatchIndexPirClient(Rpc clientRpc, Party serverParty, Lpzl24BatchIndexPirConfig config) {
         super(getInstance(), clientRpc, serverParty, config);
         upsiClient = new Cmg21UpsiClient<>(clientRpc, serverParty, (Cmg21UpsiConfig) config.getUpsiConfig());
         addSubPtos(upsiClient);
+        ecc = ByteEccFactory.createFullInstance(envType);
     }
 
     @Override
@@ -240,7 +244,6 @@ public class Lpzl24BatchIndexPirClient extends AbstractBatchIndexPirClient {
      * @return blind element list.
      */
     private List<byte[]> generateBlindPayload(List<ByteBuffer> indicesByteBuffer) {
-        Ecc ecc = EccFactory.createInstance(envType);
         BigInteger n = ecc.getN();
         inverseBetas = new BigInteger[retrievalSize];
         IntStream retrievalIntStream = IntStream.range(0, retrievalSize);
@@ -250,10 +253,9 @@ public class Lpzl24BatchIndexPirClient extends AbstractBatchIndexPirClient {
                 BigInteger beta = BigIntegerUtils.randomPositive(n, secureRandom);
                 inverseBetas[index] = beta.modInverse(n);
                 // hash to point
-                ECPoint element = ecc.hashToCurve(indicesByteBuffer.get(index).array());
-                return ecc.multiply(element, beta);
+                byte[] element = ecc.hashToCurve(indicesByteBuffer.get(index).array());
+                return ecc.mul(element, beta);
             })
-            .map(element -> ecc.encode(element, true))
             .collect(Collectors.toList());
     }
 
@@ -269,15 +271,10 @@ public class Lpzl24BatchIndexPirClient extends AbstractBatchIndexPirClient {
         Kdf kdf = KdfFactory.createInstance(envType);
         Prg prg = PrgFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH * 2);
         byte[][] blindPrfArray = blindPrf.toArray(new byte[0][]);
-        Ecc ecc = EccFactory.createInstance(envType);
         IntStream batchIntStream = IntStream.range(0, retrievalSize);
         batchIntStream = parallel ? batchIntStream.parallel() : batchIntStream;
         return batchIntStream
-            .mapToObj(index -> {
-                ECPoint element = ecc.decode(blindPrfArray[index]);
-                return ecc.multiply(element, inverseBetas[index]);
-            })
-            .map(element -> ecc.encode(element, false))
+            .mapToObj(index -> ecc.mul(blindPrfArray[index], inverseBetas[index]))
             .map(kdf::deriveKey)
             .map(prg::extendToBytes)
             .map(ByteBuffer::wrap)
