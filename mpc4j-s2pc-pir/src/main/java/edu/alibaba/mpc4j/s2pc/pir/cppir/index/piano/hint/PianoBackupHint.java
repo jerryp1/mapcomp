@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
 /**
@@ -21,7 +20,7 @@ public class PianoBackupHint extends AbstractPianoHint {
     private final int puncturedChunkId;
 
     /**
-     * Creates the hints with a random hint ID.
+     * Creates a hint with a random hint ID.
      *
      * @param chunkSize    chunk size.
      * @param chunkNum     chunk num.
@@ -57,7 +56,7 @@ public class PianoBackupHint extends AbstractPianoHint {
             .append(chunkSize)
             .append(chunkNum)
             .append(l)
-            .append(ByteBuffer.wrap(hintId))
+            .append(hintId)
             .append(parity)
             .append(puncturedChunkId)
             .hashCode();
@@ -71,12 +70,12 @@ public class PianoBackupHint extends AbstractPianoHint {
         if (this == obj) {
             return true;
         }
-        PianoBackupHint that = (PianoBackupHint)obj;
+        PianoBackupHint that = (PianoBackupHint) obj;
         return new EqualsBuilder()
             .append(this.chunkSize, that.chunkSize)
             .append(this.chunkNum, that.chunkNum)
             .append(this.l, that.l)
-            .append(ByteBuffer.wrap(this.hintId), ByteBuffer.wrap(that.hintId))
+            .append(this.hintId, that.hintId)
             .append(this.parity, that.parity)
             .append(this.puncturedChunkId, that.puncturedChunkId)
             .isEquals();

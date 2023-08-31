@@ -220,11 +220,11 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             int puncturedChunkId = x / chunkSize;
             for (int i = 0; i < chunkNum; i++) {
                 if (i < puncturedChunkId) {
-                    puncturedOffsets[i] = Math.abs(offsets[i] % chunkSize);
+                    puncturedOffsets[i] = offsets[i];
                 } else if (i == puncturedChunkId) {
                     // skip the punctured chunk ID
                 } else {
-                    puncturedOffsets[i - 1] = Math.abs(offsets[i] % chunkSize);
+                    puncturedOffsets[i - 1] = offsets[i];
                 }
             }
             // send the punctured set to the server

@@ -5,8 +5,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 /**
- * programmed primary hint for PIANO PIR, which contains a PRF key, a parity, and a programmed index. Indexes in the set
- * are all from the PRF key except the programmed index.
+ * programmed primary hint for PIANO.
  *
  * @author Weiran Liu
  * @date 2023/8/25
@@ -21,6 +20,13 @@ public class PianoProgrammedPrimaryHint extends AbstractPianoHint implements Pia
      */
     private final int programmedOffset;
 
+    /**
+     * Creates a hint from a backup hint.
+     *
+     * @param backupHint backup hint.
+     * @param x          programmed x.
+     * @param parity     programmed parity.
+     */
     public PianoProgrammedPrimaryHint(PianoBackupHint backupHint, int x, byte[] parity) {
         super(backupHint.chunkSize, backupHint.chunkNum, backupHint.l);
         MathPreconditions.checkNonNegativeInRange("x", x, chunkSize * chunkNum);

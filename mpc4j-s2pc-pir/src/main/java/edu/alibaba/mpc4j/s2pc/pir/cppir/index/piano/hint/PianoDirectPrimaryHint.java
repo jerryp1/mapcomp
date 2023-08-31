@@ -5,15 +5,14 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import java.security.SecureRandom;
 
 /**
- * directly generated primary hint for PIANO PIR, which contains a PRF key and a parity and indexes in the set are all
- * from the PRF key.
+ * directly generated primary hint for PIANO.
  *
  * @author Weiran Liu
  * @date 2023/8/25
  */
 public class PianoDirectPrimaryHint extends AbstractPianoHint implements PianoPrimaryHint {
     /**
-     * Creates the hints with a random PRF key.
+     * Creates a hint with a random hint ID.
      *
      * @param chunkSize    chunk size.
      * @param chunkNum     chunk num.

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
@@ -6,18 +6,17 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory.PrpType;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.nio.ByteBuffer;
 
 /**
- * abstract hint for PIANO.
+ * abstract hint for SPAM.
  *
  * @author Weiran Liu
- * @date 2023/8/25
+ * @date 2023/8/30
  */
-public abstract class AbstractPianoHint implements PianoHint {
+public abstract class AbstractSpamHint implements SpamHint {
     /**
      * PRP with a fixed key
      */
@@ -47,27 +46,24 @@ public abstract class AbstractPianoHint implements PianoHint {
      * hint ID
      */
     protected final byte[] hintId;
-    /**
-     * parity
-     */
-    protected final byte[] parity;
 
-    protected AbstractPianoHint(int chunkSize, int chunkNum, int l) {
+    protected AbstractSpamHint(int chunkSize, int chunkNum, int l) {
         MathPreconditions.checkPositive("chunkSize", chunkSize);
         this.chunkSize = chunkSize;
         MathPreconditions.checkPositive("chunkNum", chunkNum);
+        // we require chunk num is an even number
+        Preconditions.checkArgument(chunkNum % 2 == 0);
         this.chunkNum = chunkNum;
         MathPreconditions.checkPositive("l", l);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        // initialize the hint ID, the PRG input is "Hint ID || (short) Chunk ID"
-        hintId = new byte[CommonConstants.BLOCK_BYTE_LENGTH - Short.BYTES];
-        // initialize the parity to zero
-        parity = new byte[byteL];
+        // initialize the hint ID
+        // the PRG input is "Hint ID || (short) Chunk ID || (short) 0" or "Hint ID || (short) Chunk ID || (short) 1"
+        hintId = new byte[CommonConstants.BLOCK_BYTE_LENGTH - Short.BYTES - Short.BYTES];
     }
 
     /**
-     * Gets the integer based on the hint ID and the chunk ID.
+     * Gets an integer value based on the hint ID and the chunk ID.
      *
      * @param chunkId chunk ID.
      * @return the integer.
@@ -76,19 +72,27 @@ public abstract class AbstractPianoHint implements PianoHint {
         byte[] prpInput = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
             .put(hintId)
             .putShort((short) chunkId)
+            // 1 for "offset"
+            .putShort((short) 1)
             .array();
         return Math.abs(ByteBuffer.wrap(prpInput).getInt()) % chunkSize;
     }
 
-    @Override
-    public byte[] getParity() {
-        return parity;
-    }
-
-    @Override
-    public void xori(byte[] otherParity) {
-        Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(otherParity, byteL, l));
-        BytesUtils.xori(parity, otherParity);
+    /**
+     * Gets a double value based on the hint ID and the chunk ID.
+     *
+     * @param chunkId chunk ID.
+     * @return a double value.
+     */
+    protected double getDouble(int chunkId) {
+        byte[] prpInput = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
+            .put(hintId)
+            .putShort((short) chunkId)
+            // 0 for "select"
+            .putShort((short) 0)
+            .array();
+        // return a positive double value
+        return Math.abs(ByteBuffer.wrap(prpInput).getDouble());
     }
 
     @Override
@@ -110,4 +114,17 @@ public abstract class AbstractPianoHint implements PianoHint {
     public int getByteL() {
         return byteL;
     }
+
+    @Override
+    public int expandOffset(int chunkId) {
+        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
+        return getInteger(chunkId);
+    }
+
+    /**
+     * Gets the cutoff value ^v.
+     *
+     * @return the cutoff value ^v.
+     */
+    protected abstract double getCutoff();
 }

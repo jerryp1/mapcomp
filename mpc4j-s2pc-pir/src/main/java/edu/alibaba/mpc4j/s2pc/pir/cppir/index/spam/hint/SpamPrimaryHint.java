@@ -1,14 +1,14 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
- * primary hint for PIANO.
+ * primary hint for SPAM.
  *
  * @author Weiran Liu
- * @date 2023/8/25
+ * @date 2023/8/31
  */
-public interface PianoPrimaryHint extends PianoHint {
+public interface SpamPrimaryHint extends SpamHint {
     /**
      * Expands all offsets for all chunks. The total number of indexes are chunkNum.
      *
@@ -40,4 +40,18 @@ public interface PianoPrimaryHint extends PianoHint {
 
         return offset == expandOffset;
     }
+
+    /**
+     * Gets the parity.
+     *
+     * @return the parity.
+     */
+    byte[] getParity();
+
+    /**
+     * Inplace XOR the current parity with the other parity.
+     *
+     * @param otherParity other parity.
+     */
+    void xori(byte[] otherParity);
 }
