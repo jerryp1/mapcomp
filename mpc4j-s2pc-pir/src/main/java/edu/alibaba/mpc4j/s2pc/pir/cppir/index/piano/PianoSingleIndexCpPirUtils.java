@@ -25,8 +25,9 @@ public class PianoSingleIndexCpPirUtils {
      */
     public static int getChunkSize(int n) {
         MathPreconditions.checkPositive("n", n);
-        // ChunkSize is 2√n and round up to the next power of 2. Here we use a more generalized ChunkSize.
-        return (int) Math.ceil(2 * Math.sqrt(n));
+        // ChunkSize is 2√n and round up to the next power of 2.
+        // Here we use a more generalized ChunkSize, and we require ChunkSize must be greater than 1
+        return Math.max((int) Math.ceil(Math.sqrt(n)), 2);
     }
 
     /**

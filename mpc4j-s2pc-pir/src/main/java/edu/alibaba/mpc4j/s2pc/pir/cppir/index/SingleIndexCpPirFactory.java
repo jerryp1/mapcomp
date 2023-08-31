@@ -30,9 +30,9 @@ public class SingleIndexCpPirFactory implements PtoFactory {
          */
         ZPSZ23_PIANO,
         /**
-         * MIR23
+         * MIR23 (SPAM)
          */
-        MIR23,
+        MIR23_SPAM,
     }
 
     /**
@@ -48,7 +48,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
         switch (type) {
             case ZPSZ23_PIANO:
                 return new PianoSingleIndexCpPsiServer(serverRpc, clientParty, (PianoSingleIndexCpPirConfig) config);
-            case MIR23:
+            case MIR23_SPAM:
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
@@ -69,7 +69,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
         switch (type) {
             case ZPSZ23_PIANO:
                 return new PianoSingleIndexCpPsiClient(clientRpc, serverParty, (PianoSingleIndexCpPirConfig) config);
-            case MIR23:
+            case MIR23_SPAM:
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
