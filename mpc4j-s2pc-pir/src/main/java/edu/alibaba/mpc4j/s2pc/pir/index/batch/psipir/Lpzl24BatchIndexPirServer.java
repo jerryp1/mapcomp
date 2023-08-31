@@ -85,26 +85,40 @@ public class Lpzl24BatchIndexPirServer extends AbstractBatchIndexPirServer {
 
     @Override
     public void init(NaiveDatabase database, int maxRetrievalSize) throws MpcAbortException {
+        setInitInput(database, maxRetrievalSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         // UPSI params
         Cmg21UpsiParams params = null;
-        if (maxRetrievalSize <= 256) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
-        } else if (maxRetrievalSize <= 512) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_CMP;
-        } else if (maxRetrievalSize <= 1024) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_CMP;
-        } else if (maxRetrievalSize <= 2048) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_CMP;
-        } else if (maxRetrievalSize <= 4096) {
-            params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_CMP;
+        if (num <= 1 << 20) {
+            if (maxRetrievalSize <= 256) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_256;
+            } else if (maxRetrievalSize <= 512) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_512_COM;
+            } else if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_1K_COM;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_2K_COM;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_1M_CLIENT_MAX_4K_COM;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
         } else {
-            MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            if (maxRetrievalSize <= 1024) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_1024;
+            } else if (maxRetrievalSize <= 2048) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_2048;
+            } else if (maxRetrievalSize <= 4096) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_4096;
+            } else if (maxRetrievalSize <= 11041) {
+                params = Cmg21UpsiParams.SERVER_16M_CLIENT_MAX_11041;
+            } else {
+                MpcAbortPreconditions.checkArgument(false, "retrieval size is larger than the upper bound.");
+            }
         }
         assert params != null;
         upsiServer.init(params);
-        setInitInput(database, maxRetrievalSize);
 
         DataPacketHeader bfvParamsHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
