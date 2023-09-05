@@ -107,10 +107,14 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
     private void preprocessing() throws MpcAbortException {
         stopWatch.start();
         // init primary hints and backup hints
-        primaryHints = IntStream.range(0, m1)
+        IntStream primaryHintIntStream = IntStream.range(0, m1);
+        primaryHintIntStream = parallel ? primaryHintIntStream.parallel() : primaryHintIntStream;
+        primaryHints = primaryHintIntStream
             .mapToObj(index -> new SpamDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom))
             .toArray(SpamPrimaryHint[]::new);
-        backupHints = IntStream.range(0, m2)
+        IntStream backupHintIntStream = IntStream.range(0, m2);
+        backupHintIntStream = parallel ? backupHintIntStream.parallel() : backupHintIntStream;
+        backupHints = backupHintIntStream
             .mapToObj(index -> new SpamBackupHint(chunkSize, chunkNum, l, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();

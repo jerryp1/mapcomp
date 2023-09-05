@@ -104,10 +104,14 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
     private void preprocessing() throws MpcAbortException {
         stopWatch.start();
         // init primary hints and backup hints data structure
-        primaryHints = IntStream.range(0, m1)
+        IntStream primaryHintIntStream = IntStream.range(0, m1);
+        primaryHintIntStream = parallel ? primaryHintIntStream.parallel() : primaryHintIntStream;
+        primaryHints = primaryHintIntStream
             .mapToObj(index -> new PianoDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom))
             .toArray(PianoPrimaryHint[]::new);
-        backupHintGroup = IntStream.range(0, chunkNum)
+        IntStream backupHintGroupIntStream = IntStream.range(0, chunkNum);
+        backupHintGroupIntStream = parallel ? backupHintGroupIntStream.parallel() : backupHintGroupIntStream;
+        backupHintGroup = backupHintGroupIntStream
             .mapToObj(chunkId ->
                 IntStream.range(0, m2PerGroup)
                     .mapToObj(index -> new PianoBackupHint(chunkSize, chunkNum, l, chunkId, secureRandom))
@@ -144,7 +148,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             // update the parity for the primary hints
             // hitMap is irrelevant to the scheme. We want to know if any indices are missed.
             boolean[] hitMap = new boolean[chunkSize];
-            IntStream primaryHintIntStream = IntStream.range(0, m1);
+            primaryHintIntStream = IntStream.range(0, m1);
             primaryHintIntStream = parallel ? primaryHintIntStream.parallel() : primaryHintIntStream;
             primaryHintIntStream.forEach(primaryHintIndex -> {
                 PianoPrimaryHint primaryHint = primaryHints[primaryHintIndex];
@@ -154,7 +158,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
                 primaryHint.xori(chunkDataArray[offset]);
             });
             // update the parity for the backup hints
-            IntStream backupHintGroupIntStream = IntStream.range(0, chunkNum);
+            backupHintGroupIntStream = IntStream.range(0, chunkNum);
             backupHintGroupIntStream = parallel ? backupHintGroupIntStream.parallel() : backupHintGroupIntStream;
             backupHintGroupIntStream.forEach(backupHintGroupIndex -> {
                 // we need to ignore the group for the chunk ID.
