@@ -4,8 +4,6 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
-import java.util.stream.IntStream;
-
 /**
  * programmed primary hint for SPAM.
  *
@@ -64,7 +62,6 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
             // if < is still "less than", xor the left backup hint parity
             BytesUtils.xori(this.parity, backupHint.getLeftParity());
         }
-        assert IntStream.range(0, chunkNum).filter(this::containsChunkId).count() == chunkNum / 2 + 1;
     }
 
     @Override
@@ -75,7 +72,7 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
         }
         // The other case is the selection process involving the median cutoff. For each hint j, the client computes
         // v_{j, l} and checks if v_{j, l} is < (!flip) or > (flip) ^v_j. If so, it means hint j selects partition l.
-        long vl = getLong(chunkId);
+        double vl = getDouble(chunkId);
         return flip ? vl > cutoff : vl < cutoff;
     }
 

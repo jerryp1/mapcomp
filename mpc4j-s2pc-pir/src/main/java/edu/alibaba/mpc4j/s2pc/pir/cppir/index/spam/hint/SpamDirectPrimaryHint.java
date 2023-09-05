@@ -7,7 +7,6 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.security.SecureRandom;
-import java.util.stream.IntStream;
 
 /**
  * directly generated primary hint for SPAM PIR, which contains a PRF key and a parity and indexes in the set are all
@@ -40,7 +39,7 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         // so is to simply keep picking random Chunk IDs and checking if the Chunk ID is already selected.
         TIntSet vectorV = new TIntHashSet(chunkNum / 2);
         for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
-            long v = getLong(chunkId);
+            double v = getDouble(chunkId);
             if (v < cutoff) {
                 vectorV.add(chunkId);
             }
@@ -55,7 +54,6 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         extraChunkId = tryExtraChunkId;
         // initialize the parity to zero
         parity = new byte[byteL];
-        assert IntStream.range(0, chunkNum).filter(this::containsChunkId).count() == chunkNum / 2 + 1;
     }
 
     @Override
@@ -66,7 +64,7 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         }
         // The other case is the selection process involving the median cutoff. For each hint j, the client computes
         // v_{j, l} and checks if v_{j, l} is smaller than ^v_j. If so, it means hint j selects partition l.
-        long vl = getLong(chunkId);
+        double vl = getDouble(chunkId);
         return vl < cutoff;
     }
 

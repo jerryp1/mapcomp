@@ -82,9 +82,9 @@ public abstract class AbstractSpamHint implements SpamHint {
      * Gets a double value based on the hint ID and the chunk ID.
      *
      * @param chunkId chunk ID.
-     * @return a double value.
+     * @return a double value in range [0, 1).
      */
-    protected long getLong(int chunkId) {
+    protected double getDouble(int chunkId) {
         byte[] prpInput = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
             .put(hintId)
             .putShort((short) chunkId)
@@ -92,7 +92,7 @@ public abstract class AbstractSpamHint implements SpamHint {
             .putShort((short) 0)
             .array();
         // return a positive double value
-        return Math.abs(ByteBuffer.wrap(PRP.prp(prpInput)).getLong());
+        return (double) Math.abs(ByteBuffer.wrap(PRP.prp(prpInput)).getLong()) / Long.MAX_VALUE;
     }
 
     @Override

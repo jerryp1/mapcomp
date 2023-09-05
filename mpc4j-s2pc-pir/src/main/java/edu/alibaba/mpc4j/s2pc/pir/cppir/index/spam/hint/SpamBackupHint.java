@@ -7,7 +7,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.security.SecureRandom;
-import java.util.stream.IntStream;
 
 /**
  * backup hint for SPAM.
@@ -38,7 +37,6 @@ public class SpamBackupHint extends AbstractRandomCutoffSpamHint {
         // initialize the parity to zero
         leftParity = new byte[byteL];
         rightParity = new byte[byteL];
-        assert IntStream.range(0, chunkNum).filter(this::containsChunkId).count() == chunkNum / 2;
     }
 
     @Override
@@ -48,7 +46,7 @@ public class SpamBackupHint extends AbstractRandomCutoffSpamHint {
 
     @Override
     public boolean containsChunkId(int chunkId) {
-        long vl = getLong(chunkId);
+        double vl = getDouble(chunkId);
         return vl < cutoff;
     }
 
