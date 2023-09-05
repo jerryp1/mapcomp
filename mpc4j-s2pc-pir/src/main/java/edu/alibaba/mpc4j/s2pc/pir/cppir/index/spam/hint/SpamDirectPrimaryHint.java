@@ -1,11 +1,13 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.security.SecureRandom;
+import java.util.stream.IntStream;
 
 /**
  * directly generated primary hint for SPAM PIR, which contains a PRF key and a parity and indexes in the set are all
@@ -34,12 +36,12 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
      */
     public SpamDirectPrimaryHint(int chunkSize, int chunkNum, int l, SecureRandom secureRandom) {
         super(chunkSize, chunkNum, l, secureRandom);
-        secureRandom.nextBytes(hintId);
         // We need to find a random Chunk ID among the ChunkNum / 2 unselected chunks. An easy and effective way to do
         // so is to simply keep picking random Chunk IDs and checking if the Chunk ID is already selected.
         TIntSet vectorV = new TIntHashSet(chunkNum / 2);
         for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
-            if (getDouble(chunkId) < cutoff) {
+            long v = getLong(chunkId);
+            if (v < cutoff) {
                 vectorV.add(chunkId);
             }
         }
@@ -53,6 +55,7 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         extraChunkId = tryExtraChunkId;
         // initialize the parity to zero
         parity = new byte[byteL];
+        assert IntStream.range(0, chunkNum).filter(this::containsChunkId).count() == chunkNum / 2 + 1;
     }
 
     @Override
@@ -63,8 +66,14 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         }
         // The other case is the selection process involving the median cutoff. For each hint j, the client computes
         // v_{j, l} and checks if v_{j, l} is smaller than ^v_j. If so, it means hint j selects partition l.
-        double vl = getDouble(chunkId);
+        long vl = getLong(chunkId);
         return vl < cutoff;
+    }
+
+    @Override
+    public int expandOffset(int chunkId) {
+        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
+        return getInteger(chunkId);
     }
 
     @Override

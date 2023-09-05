@@ -75,7 +75,7 @@ public abstract class AbstractSpamHint implements SpamHint {
             // 1 for "offset"
             .putShort((short) 1)
             .array();
-        return Math.abs(ByteBuffer.wrap(prpInput).getInt()) % chunkSize;
+        return Math.abs(ByteBuffer.wrap(PRP.prp(prpInput)).getInt()) % chunkSize;
     }
 
     /**
@@ -84,7 +84,7 @@ public abstract class AbstractSpamHint implements SpamHint {
      * @param chunkId chunk ID.
      * @return a double value.
      */
-    protected double getDouble(int chunkId) {
+    protected long getLong(int chunkId) {
         byte[] prpInput = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH)
             .put(hintId)
             .putShort((short) chunkId)
@@ -92,7 +92,7 @@ public abstract class AbstractSpamHint implements SpamHint {
             .putShort((short) 0)
             .array();
         // return a positive double value
-        return Math.abs(ByteBuffer.wrap(prpInput).getDouble());
+        return Math.abs(ByteBuffer.wrap(PRP.prp(prpInput)).getLong());
     }
 
     @Override
@@ -113,12 +113,6 @@ public abstract class AbstractSpamHint implements SpamHint {
     @Override
     public int getByteL() {
         return byteL;
-    }
-
-    @Override
-    public int expandOffset(int chunkId) {
-        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
-        return getInteger(chunkId);
     }
 
     /**

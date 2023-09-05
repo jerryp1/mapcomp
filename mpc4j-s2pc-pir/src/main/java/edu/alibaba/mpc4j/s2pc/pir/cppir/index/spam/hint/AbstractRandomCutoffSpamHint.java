@@ -20,21 +20,22 @@ public abstract class AbstractRandomCutoffSpamHint extends AbstractSpamHint {
         super(chunkSize, chunkNum, l);
         // sample ^v
         boolean success = false;
-        double tryCutoff = 0.0;
+        double tryCutoff = 0L;
         while (!success) {
             secureRandom.nextBytes(hintId);
             // compute V = [v_0, v_1, ..., v_{ChunkNum}]
-            double[] vs = IntStream.range(0, chunkNum)
-                .mapToDouble(this::getDouble)
+            long[] vs = IntStream.range(0, chunkNum)
+                .mapToLong(this::getLong)
                 .toArray();
             // we need all v in vs are distinct
             long count = Arrays.stream(vs).distinct().count();
             if (count == vs.length) {
                 // all v in vs are distinct, find the median
                 Arrays.sort(vs);
-                double left = vs[chunkNum / 2 - 1];
-                double right = vs[chunkNum / 2];
-                tryCutoff = (left + right) / 2;
+                long left = vs[chunkNum / 2 - 1];
+                long right = vs[chunkNum / 2];
+                // divide then add, otherwise we may meet overflow
+                tryCutoff = (double) left / 2 + (double) right / 2;
                 success = true;
             }
         }

@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPsiClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPsiServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPsiClient;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPsiServer;
 
 /**
  * Single Index Client-specific Preprocessing PIR factory.
@@ -49,6 +52,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
             case ZPSZ23_PIANO:
                 return new PianoSingleIndexCpPsiServer(serverRpc, clientParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
+                return new SpamSingleIndexCpPsiServer(serverRpc, clientParty, (SpamSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
@@ -70,6 +74,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
             case ZPSZ23_PIANO:
                 return new PianoSingleIndexCpPsiClient(clientRpc, serverParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
+                return new SpamSingleIndexCpPsiClient(clientRpc, serverParty, (SpamSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()

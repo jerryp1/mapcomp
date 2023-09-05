@@ -72,7 +72,7 @@ public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer 
         logStepInfo(
             PtoState.PTO_STEP, 0, 1, paddingTime,
             String.format(
-                "Server sets params: n = %d, ChunkSize = %d, n(pad) = %d, ChunkNum = %d, Q = %d",
+                "Server sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum
             )
         );

@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
+import java.util.stream.IntStream;
+
 /**
  * programmed primary hint for SPAM.
  *
@@ -19,6 +21,10 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
      * the extra one more chunk ID
      */
     private final int extraChunkId;
+    /**
+     * the extra one more offset
+     */
+    private final int extraOffset;
     /**
      * parity
      */
@@ -40,8 +46,9 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
         MathPreconditions.checkNonNegativeInRange("x", x, chunkSize * chunkNum);
         // add index x to the subset as the extra index
         extraChunkId = x / chunkSize;
+        extraOffset = x % chunkSize;
         // the client picks the half that does not select the Chunk ID l that index x belongs to
-        flip = (!backupHint.containsChunkId(extraChunkId));
+        flip = backupHint.containsChunkId(extraChunkId);
         Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(parity, byteL, l));
         BytesUtils.xori(hintId, backupHint.hintId);
         // initialize ^v and e
@@ -57,6 +64,7 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
             // if < is still "less than", xor the left backup hint parity
             BytesUtils.xori(this.parity, backupHint.getLeftParity());
         }
+        assert IntStream.range(0, chunkNum).filter(this::containsChunkId).count() == chunkNum / 2 + 1;
     }
 
     @Override
@@ -67,8 +75,18 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
         }
         // The other case is the selection process involving the median cutoff. For each hint j, the client computes
         // v_{j, l} and checks if v_{j, l} is < (!flip) or > (flip) ^v_j. If so, it means hint j selects partition l.
-        double vl = getDouble(chunkId);
+        long vl = getLong(chunkId);
         return flip ? vl > cutoff : vl < cutoff;
+    }
+
+    @Override
+    public int expandOffset(int chunkId) {
+        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
+        if (chunkId == extraChunkId) {
+            return extraOffset;
+        } else {
+            return getInteger(chunkId);
+        }
     }
 
     @Override

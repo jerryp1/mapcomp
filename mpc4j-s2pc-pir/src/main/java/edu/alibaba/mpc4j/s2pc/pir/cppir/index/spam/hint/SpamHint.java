@@ -44,6 +44,20 @@ public interface SpamHint {
     int expandOffset(int chunkId);
 
     /**
+     * Expands all offsets for all chunks. The total number of indexes are chunkNum.
+     *
+     * @return all offsets for all chunks.
+     */
+    default int[] expandOffset() {
+        int chunkNum = getChunkNum();
+        int[] offsets = new int[chunkNum];
+        for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
+            offsets[chunkId] = expandOffset(chunkId);
+        }
+        return offsets;
+    }
+
+    /**
      * Gets if the backup hint contains the given chunk ID.
      *
      * @param chunkId chunk ID.
