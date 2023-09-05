@@ -84,7 +84,6 @@ class BcGf2k extends AbstractGf2k {
 
     @Override
     public void invi(byte[] p) {
-        assert validateNonZeroElement(p);
         byte[] y = inv(p);
         System.arraycopy(y, 0, p, 0, BYTE_L);
     }
