@@ -39,8 +39,7 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         // so is to simply keep picking random Chunk IDs and checking if the Chunk ID is already selected.
         TIntSet vectorV = new TIntHashSet(chunkNum / 2);
         for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
-            double v = getDouble(chunkId);
-            if (v < cutoff) {
+            if (vs[chunkId] < cutoff) {
                 vectorV.add(chunkId);
             }
         }
@@ -54,6 +53,8 @@ public class SpamDirectPrimaryHint extends AbstractRandomCutoffSpamHint implemen
         extraChunkId = tryExtraChunkId;
         // initialize the parity to zero
         parity = new byte[byteL];
+        // clean vs
+        vs = null;
     }
 
     @Override

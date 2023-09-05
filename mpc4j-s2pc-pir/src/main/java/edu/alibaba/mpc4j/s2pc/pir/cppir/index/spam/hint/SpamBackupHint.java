@@ -37,6 +37,8 @@ public class SpamBackupHint extends AbstractRandomCutoffSpamHint {
         // initialize the parity to zero
         leftParity = new byte[byteL];
         rightParity = new byte[byteL];
+        // clean vs
+        vs = null;
     }
 
     @Override

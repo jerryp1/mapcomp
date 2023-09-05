@@ -29,6 +29,10 @@ public abstract class AbstractRandomCutoffSpamHint extends AbstractSpamHint {
      * the cutoff ^v
      */
     protected final double cutoff;
+    /**
+     * vs
+     */
+    protected double[] vs;
 
     protected AbstractRandomCutoffSpamHint(int chunkSize, int chunkNum, int l, SecureRandom secureRandom) {
         super(chunkSize, chunkNum, l);
@@ -38,27 +42,29 @@ public abstract class AbstractRandomCutoffSpamHint extends AbstractSpamHint {
         while (!success) {
             secureRandom.nextBytes(hintId);
             // compute V = [v_0, v_1, ..., v_{ChunkNum}]
-            double[] vs = IntStream.range(0, chunkNum)
+            vs = IntStream.range(0, chunkNum)
                 .mapToDouble(this::getDouble)
                 .toArray();
             // we need all v in vs are distinct
             long count = Arrays.stream(vs).distinct().count();
             if (count == vs.length) {
                 // all v in vs are distinct, find the median
+                double[] copy = Arrays.copyOf(vs, vs.length);
                 if (vs.length <= CUTOFF_CHUNK_NUM) {
-                    Arrays.sort(vs);
-                    double left = vs[chunkNum / 2 - 1];
-                    double right = vs[chunkNum / 2];
+                    // copy and sort
+                    Arrays.sort(copy);
+                    double left = copy[chunkNum / 2 - 1];
+                    double right = copy[chunkNum / 2];
                     // divide then add, otherwise we may meet overflow
                     tryCutoff = left / 2 + right / 2;
                 } else {
                     // We think of the random values as numbers between 0 and 1, choose two filtering bounds as 1/2 ± 1/16
-                    int smallFilterCount = (int) Arrays.stream(vs).filter(v -> v < CUTOFF_LOWER_BOUND).count();
-                    int largeFilterCount = (int) Arrays.stream(vs).filter(v -> v > CUTOFF_UPPER_BOUND).count();
+                    int smallFilterCount = (int) Arrays.stream(copy).filter(v -> v < CUTOFF_LOWER_BOUND).count();
+                    int largeFilterCount = (int) Arrays.stream(copy).filter(v -> v > CUTOFF_UPPER_BOUND).count();
                     if (smallFilterCount >= chunkNum / 2 - 1 || largeFilterCount >= chunkNum / 2 - 1) {
                         continue;
                     }
-                    double[] filterVs = Arrays.stream(vs)
+                    double[] filterVs = Arrays.stream(copy)
                         .filter(v -> v >= CUTOFF_LOWER_BOUND && v <= CUTOFF_UPPER_BOUND)
                         .toArray();
                     Arrays.sort(filterVs);
