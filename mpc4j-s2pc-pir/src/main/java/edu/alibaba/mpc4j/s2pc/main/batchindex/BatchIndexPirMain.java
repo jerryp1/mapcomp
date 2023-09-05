@@ -169,13 +169,14 @@ public class BatchIndexPirMain {
                            byte[][] serverElementArray, int maxRetrievalSize, int elementBitLength,
                            PrintWriter printWriter) throws MpcAbortException {
         int serverElementSize = serverElementArray.length;
+        boolean parallel = false;
         LOGGER.info(
             "{}: serverElementSize = {}, maxRetrievalSize = {}, parallel = {}",
-            serverRpc.ownParty().getPartyName(), serverElementSize, maxRetrievalSize, true
+            serverRpc.ownParty().getPartyName(), serverElementSize, maxRetrievalSize, parallel
         );
         BatchIndexPirServer server = createServer(serverRpc, clientParty, config);
         server.setTaskId(taskId);
-        server.setParallel(true);
+        server.setParallel(parallel);
         NaiveDatabase database = NaiveDatabase.create(elementBitLength, serverElementArray);
         server.getRpc().synchronize();
         server.getRpc().reset();
@@ -311,13 +312,14 @@ public class BatchIndexPirMain {
                            List<Integer> clientIndexList, int serverElementSize, int elementBitLength,
                            PrintWriter printWriter) throws MpcAbortException {
         int retrievalSize = clientIndexList.size();
+        boolean parallel = false;
         LOGGER.info(
             "{}: serverElementSize = {}, retrievalSize = {}, parallel = {}",
-            clientRpc.ownParty().getPartyName(), serverElementSize, retrievalSize, true
+            clientRpc.ownParty().getPartyName(), serverElementSize, retrievalSize, parallel
         );
         BatchIndexPirClient client = createClient(clientRpc, serverParty, config);
         client.setTaskId(taskId);
-        client.setParallel(true);
+        client.setParallel(parallel);
         client.getRpc().synchronize();
         client.getRpc().reset();
         // init protocol
