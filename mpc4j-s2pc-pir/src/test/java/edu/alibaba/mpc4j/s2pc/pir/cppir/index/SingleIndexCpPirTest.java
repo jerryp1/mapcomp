@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.index;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
@@ -14,7 +13,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -133,7 +131,7 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
         SingleIndexCpPirClient client = SingleIndexCpPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
-        SingleIndexCpPirServerThread serverThread = new SingleIndexCpPirServerThread(server, database);
+        SingleIndexCpPirServerThread serverThread = new SingleIndexCpPirServerThread(server, database, queryNum);
         SingleIndexCpPirClientThread clientThread = new SingleIndexCpPirClientThread(client, n, l, queryNum);
         try {
             serverThread.start();

@@ -119,46 +119,45 @@ public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer 
     @Override
     public void pir() throws MpcAbortException {
         setPtoInput();
-        boolean end = false;
 
-        while (!end) {
-            DataPacketHeader queryRequestHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
-            );
-            List<byte[]> queryRequestPayload = rpc.receive(queryRequestHeader).getPayload();
-            int queryRequestSize = queryRequestPayload.size();
-            MpcAbortPreconditions.checkArgument(queryRequestSize == 0 || queryRequestSize == 1);
-            stopWatch.start();
-            if (queryRequestSize == 1) {
-                logPhaseInfo(PtoState.PTO_BEGIN);
-                // response query
-                respondQuery(queryRequestPayload);
-                // increase current query num
-                currentQueryNum++;
-                extraInfo++;
-                stopWatch.stop();
-                long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-                stopWatch.reset();
-                logStepInfo(PtoState.PTO_STEP, 1, 1, responseTime, "Server responses query");
-                // when query num exceeds the maximum, rerun preprocessing.
-                if (currentQueryNum >= roundQueryNum) {
-                    preprocessing();
-                }
-                logPhaseInfo(PtoState.PTO_END);
-            } else {
-                // response end
-                DataPacketHeader queryResponseHeader = new DataPacketHeader(
-                    encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                    rpc.ownParty().getPartyId(), otherParty().getPartyId()
-                );
-                rpc.send(DataPacket.fromByteArrayList(queryResponseHeader, new LinkedList<>()));
-                end = true;
-            }
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryRequestPayload = rpc.receive(queryRequestHeader).getPayload();
+        int queryRequestSize = queryRequestPayload.size();
+        MpcAbortPreconditions.checkArgument(queryRequestSize == 0 || queryRequestSize == 1);
+
+        if (queryRequestSize == 0) {
+            // response missing query
+            responseMissingQuery();
+        } else {
+            // response actual query
+            respondActualQuery(queryRequestPayload);
         }
     }
 
-    private void respondQuery(List<byte[]> queryRequestPayload) throws MpcAbortException {
+    private void responseMissingQuery() {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryResponseHeader, new LinkedList<>()));
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 1, responseTime, "Server responses miss query");
+
+        logPhaseInfo(PtoState.PTO_END);
+    }
+
+    private void respondActualQuery(List<byte[]> queryRequestPayload) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
         byte[] queryByteArray = queryRequestPayload.get(0);
         MpcAbortPreconditions.checkArgument(queryByteArray.length == Short.BYTES * (chunkNum - 1));
         ByteBuffer queryByteBuffer = ByteBuffer.wrap(queryByteArray);
@@ -202,5 +201,17 @@ public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer 
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(queryResponseHeader, queryResponsePayload));
+        // increase current query num
+        currentQueryNum++;
+        extraInfo++;
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 1, responseTime, "Server responses actual query");
+        // when query num exceeds the maximum, rerun preprocessing.
+        if (currentQueryNum >= roundQueryNum) {
+            preprocessing();
+        }
+        logPhaseInfo(PtoState.PTO_END);
     }
 }

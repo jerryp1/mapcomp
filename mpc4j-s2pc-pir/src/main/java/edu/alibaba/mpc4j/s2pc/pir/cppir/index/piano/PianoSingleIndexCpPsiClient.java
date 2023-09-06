@@ -62,10 +62,6 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
      * missing entries
      */
     private TIntObjectMap<byte[]> missingEntries;
-    /**
-     * retrieved entries
-     */
-    private TIntObjectMap<byte[]> localCacheEntries;
 
     public PianoSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
         super(PianoSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
@@ -119,7 +115,6 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             )
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();
-        localCacheEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
         long allocateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -195,116 +190,128 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
     @Override
     public byte[] pir(int x) throws MpcAbortException {
         setPtoInput(x);
-
-        if (localCacheEntries.containsKey(x)) {
-            // local cache contains x
-            return localCacheEntries.get(x);
-        } else if (missingEntries.containsKey(x)) {
-            // missing contains x
-            return missingEntries.get(x);
+        if (missingEntries.containsKey(x)) {
+            return requestMissingQuery(x);
         } else {
-            logPhaseInfo(PtoState.PTO_BEGIN);
-            stopWatch.start();
-            // client finds a primary hint that contains x
-            int primaryHintId = -1;
-            for (int i = 0; i < m1; i++) {
-                if (primaryHints[i].contains(x)) {
-                    primaryHintId = i;
-                    break;
-                }
-            }
-            // if still no hit set found, then fail.
-            MpcAbortPreconditions.checkArgument(primaryHintId >= 0);
-            // expand the set
-            PianoPrimaryHint primaryHint = primaryHints[primaryHintId];
-            int[] offsets = primaryHint.expandOffset();
-            int[] puncturedOffsets = new int[chunkNum - 1];
-            // puncture the set by removing x from the offset vector
-            int puncturedChunkId = x / chunkSize;
-            for (int i = 0; i < chunkNum; i++) {
-                if (i < puncturedChunkId) {
-                    puncturedOffsets[i] = offsets[i];
-                } else if (i == puncturedChunkId) {
-                    // skip the punctured chunk ID
-                } else {
-                    puncturedOffsets[i - 1] = offsets[i];
-                }
-            }
-            // send the punctured set to the server
-            ByteBuffer queryByteBuffer = ByteBuffer.allocate(Short.BYTES * (chunkNum - 1));
-            for (int i = 0; i < chunkNum - 1; i++) {
-                queryByteBuffer.putShort((short) puncturedOffsets[i]);
-            }
-            List<byte[]> queryRequestPayload = Collections.singletonList(queryByteBuffer.array());
-            DataPacketHeader queryRequestHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-                rpc.ownParty().getPartyId(), otherParty().getPartyId()
-            );
-            rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, queryRequestPayload));
-            stopWatch.stop();
-            long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests query");
-
-            DataPacketHeader queryResponseHeader = new DataPacketHeader(
-                encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-                otherParty().getPartyId(), rpc.ownParty().getPartyId()
-            );
-            List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
-
-            stopWatch.start();
-            MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
-            byte[] responseByteArray = queryResponsePayload.get(0);
-            MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * chunkNum);
-            // pick the correct guess
-            byte[] value = Arrays.copyOfRange(responseByteArray, puncturedChunkId * byteL, (puncturedChunkId + 1) * byteL);
-            // get value and update the local cache
-            BytesUtils.xori(value, primaryHint.getParity());
-            localCacheEntries.put(x, value);
-            stopWatch.stop();
-            long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles response");
-
-            stopWatch.start();
-            // pick one set from the Chunk ID group.
-            ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(puncturedChunkId);
-            MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
-            PianoBackupHint backupHint = backupHints.remove(0);
-            // adds the x to the set and adds the set to the local set list
-            primaryHints[primaryHintId] = new PianoProgrammedPrimaryHint(backupHint, x, value);
-            currentQueryNum++;
-            extraInfo++;
-            stopWatch.stop();
-            long refreshTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 3, 3, refreshTime, "Client refreshes hint");
-
-            // when query num exceeds the maximum, rerun preprocessing.
-            if (currentQueryNum >= roundQueryNum) {
-                preprocessing();
-            }
-
-            logPhaseInfo(PtoState.PTO_END);
-            return value;
+            return requestActualQuery(x);
         }
     }
 
-    @Override
-    public void end() throws MpcAbortException {
-        // send end request
-        DataPacketHeader endRequestHeader = new DataPacketHeader(
+    private byte[] requestMissingQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(endRequestHeader, new LinkedList<>()));
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, new LinkedList<>()));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests miss query");
 
-        // receive end response
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
         MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 0);
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles miss response");
+
+        logPhaseInfo(PtoState.PTO_END);
+        return missingEntries.get(x);
+    }
+
+    private byte[] requestActualQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        // client finds a primary hint that contains x
+        int primaryHintId = -1;
+        for (int i = 0; i < m1; i++) {
+            if (primaryHints[i].contains(x)) {
+                primaryHintId = i;
+                break;
+            }
+        }
+        // if still no hit set found, then fail.
+        MpcAbortPreconditions.checkArgument(primaryHintId >= 0);
+        // expand the set
+        PianoPrimaryHint primaryHint = primaryHints[primaryHintId];
+        int[] offsets = primaryHint.expandOffset();
+        int[] puncturedOffsets = new int[chunkNum - 1];
+        // puncture the set by removing x from the offset vector
+        int puncturedChunkId = x / chunkSize;
+        for (int i = 0; i < chunkNum; i++) {
+            if (i < puncturedChunkId) {
+                puncturedOffsets[i] = offsets[i];
+            } else if (i == puncturedChunkId) {
+                // skip the punctured chunk ID
+            } else {
+                puncturedOffsets[i - 1] = offsets[i];
+            }
+        }
+        // send the punctured set to the server
+        ByteBuffer queryByteBuffer = ByteBuffer.allocate(Short.BYTES * (chunkNum - 1));
+        for (int i = 0; i < chunkNum - 1; i++) {
+            queryByteBuffer.putShort((short) puncturedOffsets[i]);
+        }
+        List<byte[]> queryRequestPayload = Collections.singletonList(queryByteBuffer.array());
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, queryRequestPayload));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests actual query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
+        byte[] responseByteArray = queryResponsePayload.get(0);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * chunkNum);
+        // pick the correct guess
+        byte[] value = Arrays.copyOfRange(responseByteArray, puncturedChunkId * byteL, (puncturedChunkId + 1) * byteL);
+        // get value and update the local cache
+        BytesUtils.xori(value, primaryHint.getParity());
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles actual response");
+
+        stopWatch.start();
+        // pick one set from the Chunk ID group.
+        ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(puncturedChunkId);
+        MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
+        PianoBackupHint backupHint = backupHints.remove(0);
+        // adds the x to the set and adds the set to the local set list
+        primaryHints[primaryHintId] = new PianoProgrammedPrimaryHint(backupHint, x, value);
+        currentQueryNum++;
+        extraInfo++;
+        stopWatch.stop();
+        long refreshTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 3, refreshTime, "Client refreshes hint");
+
+        // when query num exceeds the maximum, rerun preprocessing.
+        if (currentQueryNum >= roundQueryNum) {
+            preprocessing();
+        }
+
+        logPhaseInfo(PtoState.PTO_END);
+        return value;
     }
 }

@@ -21,10 +21,15 @@ class SingleIndexCpPirServerThread extends Thread {
      * database
      */
     private final ZlDatabase database;
+    /**
+     * query num
+     */
+    private final int queryNum;
 
-    SingleIndexCpPirServerThread(SingleIndexCpPirServer server, ZlDatabase database) {
+    SingleIndexCpPirServerThread(SingleIndexCpPirServer server, ZlDatabase database, int queryNum) {
         this.server = server;
         this.database = database;
+        this.queryNum = queryNum;
     }
 
     @Override
@@ -37,7 +42,9 @@ class SingleIndexCpPirServerThread extends Thread {
             server.getRpc().synchronize();
             server.getRpc().reset();
 
-            server.pir();
+            for (int i = 0; i < queryNum; i++) {
+                server.pir();
+            }
             LOGGER.info(
                 "Server: The Online Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
