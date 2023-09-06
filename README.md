@@ -150,6 +150,16 @@ When using or developing `mpc4j` on `aarch64` systems (like MacBook M1),  you ma
 
 We recommend using Java 17 (or higher versions) to run or develop `mpc4j` on `aarch64` systems. If you still want to use Java with versions less than 17, we test many JVMs and found that [Azul Zulu](https://www.azul.com/downloads/) fully supports `aarch64`.
 
+### Notes for Errors on FourQlib
+
+When you run `make test` for `mpc4j-native-fourq`, you possibly meet test failures. The reason is that the original [FourQlib](https://github.com/microsoft/FourQlib) have some unknown bugs when running on some platforms (but currently we do not know which platforms you may meet the bug). See [Issue #9](https://github.com/microsoft/FourQlib/issues/9) in FourQlib and [Issue #16](https://github.com/alibaba-edu/mpc4j/issues/16) in `mpc4j`.
+
+Simply ignoring the error is OK, but many test cases in `mpc4j` would fail since `mpc4j` uses FourQ EC curve by default. You need to change the default EC curve from FourQ to ED25519 (also see [Issue #16](https://github.com/alibaba-edu/mpc4j/issues/16) in `mpc4j` for more details):
+
+1. In module `mpc4j-common-tool`, find `ByteEccFactory` in package `edu.alibaba.mpc4j.common.tool.crypto.ecc`.
+2. Find the function `public static ByteFullEcc createFullInstance(EnvType envType)`.
+3. Change `return createFullInstance(ByteEccType.FOUR_Q);` to `return createFullInstance(ByteEccType.ED25519_SODIUM);`.
+
 ## Development
 
 We develop `mpc4j` using [Intellij IDEA](https://www.jetbrains.com/idea/) and [CLion](https://www.jetbrains.com/clion/). Here are some guidelines.
