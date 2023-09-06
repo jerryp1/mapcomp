@@ -170,7 +170,7 @@ After successfully compiling `mpc4j-native-tool` and `mpc4j-native-fhe`, you nee
 1. Open `Run->Edit Configurations...`
 2. Open `Edit Configuration templates...`
 3. Select `JUnit`.
-4. Add the following command into `VM Options`:
+4. Add the following command into `VM Options`. Note that **do not remove `-ea`**, which means enabling `assert` in unit tests. If so, some test cases (related to input verifications) would fail.
 
 ```text
 -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release
