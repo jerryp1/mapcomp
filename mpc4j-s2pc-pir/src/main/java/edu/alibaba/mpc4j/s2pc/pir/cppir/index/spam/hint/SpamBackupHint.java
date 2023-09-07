@@ -37,12 +37,8 @@ public class SpamBackupHint extends AbstractRandomCutoffSpamHint {
         // initialize the parity to zero
         leftParity = new byte[byteL];
         rightParity = new byte[byteL];
-    }
-
-    @Override
-    public int expandOffset(int chunkId) {
-        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
-        return getInteger(chunkId);
+        // clean vs
+        vs = null;
     }
 
     @Override
@@ -54,6 +50,12 @@ public class SpamBackupHint extends AbstractRandomCutoffSpamHint {
     public boolean containsChunkId(int chunkId) {
         double vl = getDouble(chunkId);
         return vl < cutoff;
+    }
+
+    @Override
+    public int expandOffset(int chunkId) {
+        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
+        return getInteger(chunkId);
     }
 
     /**

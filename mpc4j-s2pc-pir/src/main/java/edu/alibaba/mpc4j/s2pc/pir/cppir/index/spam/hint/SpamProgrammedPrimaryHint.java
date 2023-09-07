@@ -20,6 +20,10 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
      */
     private final int extraChunkId;
     /**
+     * the extra one more offset
+     */
+    private final int extraOffset;
+    /**
      * parity
      */
     private final byte[] parity;
@@ -40,8 +44,9 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
         MathPreconditions.checkNonNegativeInRange("x", x, chunkSize * chunkNum);
         // add index x to the subset as the extra index
         extraChunkId = x / chunkSize;
+        extraOffset = x % chunkSize;
         // the client picks the half that does not select the Chunk ID l that index x belongs to
-        flip = (!backupHint.containsChunkId(extraChunkId));
+        flip = backupHint.containsChunkId(extraChunkId);
         Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(parity, byteL, l));
         BytesUtils.xori(hintId, backupHint.hintId);
         // initialize ^v and e
@@ -69,6 +74,16 @@ public class SpamProgrammedPrimaryHint extends AbstractSpamHint implements SpamP
         // v_{j, l} and checks if v_{j, l} is < (!flip) or > (flip) ^v_j. If so, it means hint j selects partition l.
         double vl = getDouble(chunkId);
         return flip ? vl > cutoff : vl < cutoff;
+    }
+
+    @Override
+    public int expandOffset(int chunkId) {
+        MathPreconditions.checkNonNegativeInRange("chunk ID", chunkId, chunkNum);
+        if (chunkId == extraChunkId) {
+            return extraOffset;
+        } else {
+            return getInteger(chunkId);
+        }
     }
 
     @Override

@@ -27,11 +27,4 @@ public interface SingleIndexCpPirClient extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     byte[] pir(int x) throws MpcAbortException;
-
-    /**
-     * Client ends the protocol.
-     *
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    void end() throws MpcAbortException;
 }

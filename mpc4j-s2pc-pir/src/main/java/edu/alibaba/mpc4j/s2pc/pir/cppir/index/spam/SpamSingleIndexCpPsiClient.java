@@ -1,15 +1,17 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.AbstractSingleIndexCpPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint.PianoBackupHint;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint.PianoDirectPrimaryHint;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint.PianoPrimaryHint;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.hint.PianoProgrammedPrimaryHint;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint.SpamBackupHint;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint.SpamDirectPrimaryHint;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint.SpamPrimaryHint;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.hint.SpamProgrammedPrimaryHint;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -18,14 +20,15 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
- * PIANO client-specific preprocessing PIR client.
+ * SPAM client-specific preprocessing PIR client.
  *
  * @author Weiran Liu
- * @date 2023/8/25
+ * @date 2023/9/4
  */
-public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
+public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
     /**
      * chunk size
      */
@@ -47,24 +50,24 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
      */
     private int m1;
     /**
-     * M2 (per group), the number of backup hints for each Chunk ID.
+     * M2, the total number of backup hints.
      */
-    private int m2PerGroup;
+    private int m2;
     /**
      * primary hints
      */
-    private PianoPrimaryHint[] primaryHints;
+    private SpamPrimaryHint[] primaryHints;
     /**
-     * backup hint group
+     * backup hints
      */
-    private ArrayList<ArrayList<PianoBackupHint>> backupHintGroup;
+    private ArrayList<SpamBackupHint> backupHints;
     /**
      * missing entries
      */
     private TIntObjectMap<byte[]> missingEntries;
 
-    public PianoSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
-        super(PianoSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
+    public SpamSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, SpamSingleIndexCpPirConfig config) {
+        super(SpamSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
     }
 
     @Override
@@ -73,21 +76,21 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        chunkSize = PianoSingleIndexCpPirUtils.getChunkSize(n);
-        chunkNum = PianoSingleIndexCpPirUtils.getChunkNum(n);
+        chunkSize = SpamSingleIndexCpPirUtils.getChunkSize(n);
+        chunkNum = SpamSingleIndexCpPirUtils.getChunkNum(n);
         assert chunkSize * chunkNum >= n
             : "chunkSize * chunkNum must be greater than or equal to n (" + n + "): " + chunkSize * chunkNum;
-        roundQueryNum = PianoSingleIndexCpPirUtils.getRoundQueryNum(n);
-        m1 = PianoSingleIndexCpPirUtils.getM1(n);
-        m2PerGroup = PianoSingleIndexCpPirUtils.getM2PerGroup(n);
+        roundQueryNum = SpamSingleIndexCpPirUtils.getRoundQueryNum(n);
+        m1 = SpamSingleIndexCpPirUtils.getM1(n);
+        m2 = SpamSingleIndexCpPirUtils.getM2(n);
         stopWatch.stop();
         long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
             PtoState.PTO_STEP, 0, 1, paramTime,
             String.format(
-                "Client sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d, M1 = %d, M2 (per group) = %d",
-                n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum, m1, m2PerGroup
+                "Client sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d, M1 = %d, M2 = %d",
+                n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum, m1, m2
             )
         );
 
@@ -99,20 +102,16 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
 
     private void preprocessing() throws MpcAbortException {
         stopWatch.start();
-        // init primary hints and backup hints data structure
+        // init primary hints and backup hints
         IntStream primaryHintIntStream = IntStream.range(0, m1);
         primaryHintIntStream = parallel ? primaryHintIntStream.parallel() : primaryHintIntStream;
         primaryHints = primaryHintIntStream
-            .mapToObj(index -> new PianoDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom))
-            .toArray(PianoPrimaryHint[]::new);
-        IntStream backupHintGroupIntStream = IntStream.range(0, chunkNum);
-        backupHintGroupIntStream = parallel ? backupHintGroupIntStream.parallel() : backupHintGroupIntStream;
-        backupHintGroup = backupHintGroupIntStream
-            .mapToObj(chunkId ->
-                IntStream.range(0, m2PerGroup)
-                    .mapToObj(index -> new PianoBackupHint(chunkSize, chunkNum, l, chunkId, secureRandom))
-                    .collect(Collectors.toCollection(ArrayList::new))
-            )
+            .mapToObj(index -> new SpamDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom))
+            .toArray(SpamPrimaryHint[]::new);
+        IntStream backupHintIntStream = IntStream.range(0, m2);
+        backupHintIntStream = parallel ? backupHintIntStream.parallel() : backupHintIntStream;
+        backupHints = backupHintIntStream
+            .mapToObj(index -> new SpamBackupHint(chunkSize, chunkNum, l, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
@@ -124,7 +123,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         // stream receiving the database
         for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
             final int finalChunkId = chunkId;
-            // receive stream request
+            // download DB[k * √N : (k + 1) * √N - 1] from the server
             DataPacketHeader streamRequestHeader = new DataPacketHeader(
                 encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_STREAM_DATABASE_REQUEST.ordinal(), extraInfo,
                 otherParty().getPartyId(), rpc.ownParty().getPartyId()
@@ -140,29 +139,30 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             for (int j = 0; j < chunkSize; j++) {
                 byteBuffer.get(chunkDataArray[j]);
             }
-            // update the parity for the primary hints
+            // update the parity for the primary hints (for j = 0, 1, 2, ..., M)
             // hitMap is irrelevant to the scheme. We want to know if any indices are missed.
             boolean[] hitMap = new boolean[chunkSize];
-            primaryHintIntStream = IntStream.range(0, m1);
-            primaryHintIntStream = parallel ? primaryHintIntStream.parallel() : primaryHintIntStream;
-            primaryHintIntStream.forEach(primaryHintIndex -> {
-                PianoPrimaryHint primaryHint = primaryHints[primaryHintIndex];
+            Stream<SpamPrimaryHint> primaryHintStream = Arrays.stream(primaryHints);
+            primaryHintStream = parallel ? primaryHintStream.parallel() : primaryHintStream;
+            primaryHintStream.forEach(primaryHint -> {
                 int offset = primaryHint.expandOffset(finalChunkId);
-                hitMap[offset] = true;
-                // XOR parity
-                primaryHint.xori(chunkDataArray[offset]);
+                if (primaryHint.containsChunkId(finalChunkId)) {
+                    // if v_{j,k} < ˆv_j then P_j = P_j ⊕ x, here we also include the case for the extra index e_j
+                    hitMap[offset] = true;
+                    primaryHint.xori(chunkDataArray[offset]);
+                }
             });
-            // update the parity for the backup hints
-            backupHintGroupIntStream = IntStream.range(0, chunkNum);
-            backupHintGroupIntStream = parallel ? backupHintGroupIntStream.parallel() : backupHintGroupIntStream;
-            backupHintGroupIntStream.forEach(backupHintGroupIndex -> {
-                // we need to ignore the group for the chunk ID.
-                if (backupHintGroupIndex != finalChunkId) {
-                    ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(backupHintGroupIndex);
-                    for (PianoBackupHint backupHint : backupHints) {
-                        int offset = backupHint.expandOffset(finalChunkId);
-                        backupHint.xori(chunkDataArray[offset]);
-                    }
+            // update the parity for the backup hints (for j = M + 1, ..., 1.5M - 1)
+            Stream<SpamBackupHint> backupHintStream = backupHints.stream();
+            backupHintStream = parallel ? backupHintStream.parallel() : backupHintStream;
+            backupHintStream.forEach(backupHint -> {
+                int offset = backupHint.expandOffset(finalChunkId);
+                if (backupHint.containsChunkId(finalChunkId)) {
+                    // if v_{j,k} < ˆv_j then P_j = P_j ⊕ x
+                    backupHint.xoriLeftParity(chunkDataArray[offset]);
+                } else {
+                    // else P'_j = P'_j ⊕ x
+                    backupHint.xoriRightParity(chunkDataArray[offset]);
                 }
             });
             // if some indices are missed, we need to fetch the corresponding elements
@@ -190,6 +190,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
     @Override
     public byte[] pir(int x) throws MpcAbortException {
         setPtoInput(x);
+
         if (missingEntries.containsKey(x)) {
             return requestMissingQuery(x);
         } else {
@@ -199,8 +200,6 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
 
     private byte[] requestMissingQuery(int x) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
-
-        stopWatch.start();
         DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -230,7 +229,6 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
-
         stopWatch.start();
         // client finds a primary hint that contains x
         int primaryHintId = -1;
@@ -242,27 +240,32 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         }
         // if still no hit set found, then fail.
         MpcAbortPreconditions.checkArgument(primaryHintId >= 0);
-        // expand the set
-        PianoPrimaryHint primaryHint = primaryHints[primaryHintId];
-        int[] offsets = primaryHint.expandOffset();
-        int[] puncturedOffsets = new int[chunkNum - 1];
-        // puncture the set by removing x from the offset vector
-        int puncturedChunkId = x / chunkSize;
-        for (int i = 0; i < chunkNum; i++) {
-            if (i < puncturedChunkId) {
-                puncturedOffsets[i] = offsets[i];
-            } else if (i == puncturedChunkId) {
-                // skip the punctured chunk ID
-            } else {
-                puncturedOffsets[i - 1] = offsets[i];
+        // expand the set and compute the query
+        SpamPrimaryHint primaryHint = primaryHints[primaryHintId];
+        int targetChunkId = x / chunkSize;
+        BitVector bitVector = BitVectorFactory.createZeros(chunkNum);
+        for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
+            if (chunkId != targetChunkId) {
+                bitVector.set(chunkId, primaryHint.containsChunkId(chunkId));
             }
         }
-        // send the punctured set to the server
-        ByteBuffer queryByteBuffer = ByteBuffer.allocate(Short.BYTES * (chunkNum - 1));
-        for (int i = 0; i < chunkNum - 1; i++) {
-            queryByteBuffer.putShort((short) puncturedOffsets[i]);
+        // randomly shuffle the two sets
+        boolean flip = secureRandom.nextBoolean();
+        if (flip) {
+            BitVector flipBitVector = BitVectorFactory.createOnes(chunkNum);
+            bitVector.xori(flipBitVector);
         }
-        List<byte[]> queryRequestPayload = Collections.singletonList(queryByteBuffer.array());
+        byte[] bitVectorByteArray = bitVector.getBytes();
+        // real subset S and dummy subset S' share the same offset vector r
+        int[] offsets = primaryHint.expandOffset();
+        // send the punctured set to the server
+        ByteBuffer offsetByteBuffer = ByteBuffer.allocate(Short.BYTES * chunkNum);
+        for (int i = 0; i < chunkNum; i++) {
+            offsetByteBuffer.putShort((short) offsets[i]);
+        }
+        List<byte[]> queryRequestPayload = new LinkedList<>();
+        queryRequestPayload.add(bitVectorByteArray);
+        queryRequestPayload.add(offsetByteBuffer.array());
         DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -271,7 +274,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests actual query");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -282,23 +285,24 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         stopWatch.start();
         MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
         byte[] responseByteArray = queryResponsePayload.get(0);
-        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * chunkNum);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * 2);
         // pick the correct guess
-        byte[] value = Arrays.copyOfRange(responseByteArray, puncturedChunkId * byteL, (puncturedChunkId + 1) * byteL);
+        byte[] value = flip
+            ? Arrays.copyOfRange(responseByteArray, byteL, byteL * 2)
+            : Arrays.copyOfRange(responseByteArray, 0, byteL);
         // get value and update the local cache
         BytesUtils.xori(value, primaryHint.getParity());
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles actual response");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles response");
 
         stopWatch.start();
-        // pick one set from the Chunk ID group.
-        ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(puncturedChunkId);
+        // pick one backup hint
         MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
-        PianoBackupHint backupHint = backupHints.remove(0);
+        SpamBackupHint backupHint = backupHints.remove(0);
         // adds the x to the set and adds the set to the local set list
-        primaryHints[primaryHintId] = new PianoProgrammedPrimaryHint(backupHint, x, value);
+        primaryHints[primaryHintId] = new SpamProgrammedPrimaryHint(backupHint, x, value);
         currentQueryNum++;
         extraInfo++;
         stopWatch.stop();

@@ -72,7 +72,6 @@ class SingleIndexCpPirClientThread extends Thread {
             LOGGER.info(
                 "Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );
-            client.end();
             client.getRpc().synchronize();
             client.getRpc().reset();
         } catch (MpcAbortException e) {

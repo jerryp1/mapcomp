@@ -1,11 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.index;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleIndexCpPirType;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import gnu.trove.map.TIntObjectMap;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.IntStream;
 
@@ -41,6 +43,10 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // SPAM
+        configurations.add(new Object[]{
+            SingleIndexCpPirType.MIR23_SPAM.name(), new SpamSingleIndexCpPirConfig.Builder().build()
+        });
         // PIANO
         configurations.add(new Object[]{
             SingleIndexCpPirType.ZPSZ23_PIANO.name(), new PianoSingleIndexCpPirConfig.Builder().build()
@@ -76,12 +82,12 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testLargeQueryNum() {
-        testPto(11, DEFAULT_L, 11, false);
+        testPto(11, DEFAULT_L, 22, false);
     }
 
     @Test
     public void testSpecificValue() {
-        testPto(11, 11, DEFAULT_QUERY_NUM, false);
+        testPto(DEFAULT_N, 11, DEFAULT_QUERY_NUM, false);
     }
 
     @Test
@@ -118,14 +124,14 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
         int byteL = CommonUtils.getByteLength(l);
         byte[][] dataByteArrays = IntStream.range(0, n)
             .parallel()
-            .mapToObj(x -> BytesUtils.randomByteArray(byteL, l, SECURE_RANDOM))
+            .mapToObj(x -> Arrays.copyOf(IntUtils.intToByteArray(x), byteL))
             .toArray(byte[][]::new);
         ZlDatabase database = ZlDatabase.create(l, dataByteArrays);
         SingleIndexCpPirServer server = SingleIndexCpPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
         SingleIndexCpPirClient client = SingleIndexCpPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
-        SingleIndexCpPirServerThread serverThread = new SingleIndexCpPirServerThread(server, database);
+        SingleIndexCpPirServerThread serverThread = new SingleIndexCpPirServerThread(server, database, queryNum);
         SingleIndexCpPirClientThread clientThread = new SingleIndexCpPirClientThread(client, n, l, queryNum);
         try {
             serverThread.start();
