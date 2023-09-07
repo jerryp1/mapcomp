@@ -4,41 +4,42 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CM20-PSI协议信息。论文来源：
+ * CM20-PSI protocol description. The protocol comes from the following paper:
  * <p>
  * Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
  * pp. 34-63.
  * <p>
  *
  * @author Ziyuan Liang, Feng Han
- * @date 2022/03/03
+ * @date 2023/08/10
  */
-public class Cm20PsiPtoDesc implements PtoDesc {
+class Cm20PsiPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) 8849499987257147091L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "CM20_PSI";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送PRF
+         * server sends PRFs
          */
         SERVER_SEND_PRFS,
     }
+
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final Cm20PsiPtoDesc INSTANCE = new Cm20PsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Cm20PsiPtoDesc() {
         // empty

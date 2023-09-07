@@ -15,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiPtoDesc.PtoStep;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,29 +25,26 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * CM20-PSI client.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/10
+ */
 public class Cm20PsiClient<T> extends AbstractPsiClient<T> {
     /**
-     * OPRF接收方
+     * OPRF receiver
      */
-    private final MpOprfReceiver oprfReceiver;
+    private final MpOprfReceiver mpOprfReceiver;
     /**
-     * 客户端元素的PRF结果
-     */
-    private ArrayList<byte[]> clientOprfArrayList;
-    /**
-     * 服务端元素的PRF结果
-     */
-    Filter<byte[]> serverPrfFilter;
-    /**
-     * PEQT哈希函数
+     * PEQT hash
      */
     private Hash peqtHash;
 
-
     public Cm20PsiClient(Rpc clientRpc, Party serverParty, Cm20PsiConfig config) {
         super(Cm20PsiPtoDesc.getInstance(), clientRpc, serverParty, config);
-        oprfReceiver = OprfFactory.createMpOprfReceiver(clientRpc, serverParty, config.getMpOprfConfig());
-        addSubPtos(oprfReceiver);
+        mpOprfReceiver = OprfFactory.createMpOprfReceiver(clientRpc, serverParty, config.getMpOprfConfig());
+        addSubPtos(mpOprfReceiver);
     }
 
     @Override
@@ -55,7 +53,7 @@ public class Cm20PsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        oprfReceiver.init(maxClientElementSize);
+        mpOprfReceiver.init(maxClientElementSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -72,47 +70,34 @@ public class Cm20PsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.start();
         int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+        byte[][] clientElementByteArrays = clientElementArrayList.stream()
+            .map(ObjectUtils::objectToByteArray)
+            .toArray(byte[][]::new);
+        stopWatch.stop();
+        long prepareInputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, prepareInputTime, "Client prepares tools and inputs");
 
-        MpOprfReceiverOutput oprfReceiverOutput = oprfReceiver.oprf(
-            clientElementArrayList.stream()
-                .map(ObjectUtils::objectToByteArray)
-                .toArray(byte[][]::new));
+        stopWatch.start();
+        MpOprfReceiverOutput oprfReceiverOutput = mpOprfReceiver.oprf(clientElementByteArrays);
         IntStream oprfIndexIntStream = IntStream.range(0, clientElementSize);
         oprfIndexIntStream = parallel ? oprfIndexIntStream.parallel() : oprfIndexIntStream;
-        clientOprfArrayList = oprfIndexIntStream
+        ArrayList<byte[]> clientOprfArrayList = oprfIndexIntStream
             .mapToObj(index -> peqtHash.digestToBytes(oprfReceiverOutput.getPrf(index)))
             .collect(Collectors.toCollection(ArrayList::new));
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, oprfTime, "Client runs OPRFs and hash outputs");
 
-        stopWatch.start();
-        // 接收服务端哈希桶PRF过滤器
         DataPacketHeader serverPrfHeader = new DataPacketHeader(
-            this.getTaskId(), getPtoDesc().getPtoId(), Cm20PsiPtoDesc.PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> serverPrfPayload = rpc.receive(serverPrfHeader).getPayload();
-        extraInfo++;
 
-        Set<T> intersection = handleServerPrfPayload(serverPrfPayload);
-        stopWatch.stop();
-        long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, serverPrfTime);
-
-        logPhaseInfo(PtoState.PTO_END);
-        return intersection;
-    }
-
-
-    private Set<T> handleServerPrfPayload(List<byte[]> serverPrfPayload) throws MpcAbortException {
-        try {
-            serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
-        } catch (IllegalArgumentException e) {
-            throw new MpcAbortException();
-        }
+        stopWatch.start();
+        Filter<byte[]> serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
         Set<T> intersection = IntStream.range(0, clientElementSize)
             .mapToObj(elementIndex -> {
                 T element = clientElementArrayList.get(elementIndex);
@@ -121,8 +106,12 @@ public class Cm20PsiClient<T> extends AbstractPsiClient<T> {
             })
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-        serverPrfFilter = null;
-        clientOprfArrayList = null;
+        stopWatch.stop();
+        long intersectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 3, intersectionTime, "Client computes the intersection");
+
+        logPhaseInfo(PtoState.PTO_END);
         return intersection;
     }
 }

@@ -10,12 +10,14 @@ import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiPtoDesc.PtoStep;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,23 +26,25 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * CM20-PSI server.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/10
+ */
 public class Cm20PsiServer<T> extends AbstractPsiServer<T> {
     /**
-     * OPRF发送方
+     * OPRF sender
      */
     private final MpOprfSender oprfSender;
     /**
-     * PEQT哈希函数
+     * filter type
+     */
+    private final FilterType filterType;
+    /**
+     * PEQT hash
      */
     private Hash peqtHash;
-    /**
-     * 过滤器类型
-     */
-    private final FilterFactory.FilterType filterType;
-    /**
-     * OPRF发送方输出
-     */
-    private MpOprfSenderOutput oprfSenderOutput;
 
     public Cm20PsiServer(Rpc serverRpc, Party clientParty, Cm20PsiConfig config) {
         super(Cm20PsiPtoDesc.getInstance(), serverRpc, clientParty, config);
@@ -72,32 +76,19 @@ public class Cm20PsiServer<T> extends AbstractPsiServer<T> {
         stopWatch.start();
         int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+        stopWatch.stop();
+        long prepareInputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, prepareInputTime, "Server prepares tools");
 
-        oprfSenderOutput = oprfSender.oprf(clientElementSize);
+        stopWatch.start();
+        MpOprfSenderOutput oprfSenderOutput = oprfSender.oprf(clientElementSize);
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, oprfTime, "Server runs OPRFs");
 
         stopWatch.start();
-        // 发送服务端CM20PRF过滤器
-        List<byte[]> serverPrfPayload = generatePrfPayload();
-        DataPacketHeader serverPrfHeader = new DataPacketHeader(
-            this.getTaskId(), getPtoDesc().getPtoId(), Cm20PsiPtoDesc.PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(serverPrfHeader, serverPrfPayload));
-        extraInfo++;
-        oprfSenderOutput = null;
-        stopWatch.stop();
-        long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, serverPrfTime);
-
-        logPhaseInfo(PtoState.PTO_END);
-    }
-
-    private List<byte[]> generatePrfPayload() {
         Stream<T> serverElementStream = serverElementArrayList.stream();
         serverElementStream = parallel ? serverElementStream.parallel() : serverElementStream;
         List<byte[]> prfList = serverElementStream
@@ -108,9 +99,20 @@ public class Cm20PsiServer<T> extends AbstractPsiServer<T> {
             })
             .collect(Collectors.toList());
         Collections.shuffle(prfList, secureRandom);
-        // 构建过滤器
+        // construct the filter
         Filter<byte[]> prfFilter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
         prfList.forEach(prfFilter::put);
-        return prfFilter.toByteArrayList();
+        List<byte[]> serverPrfPayload = prfFilter.toByteArrayList();
+        DataPacketHeader serverPrfHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(serverPrfHeader, serverPrfPayload));
+        stopWatch.stop();
+        long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 3, serverPrfTime, "Server sends PRF filter");
+
+        logPhaseInfo(PtoState.PTO_END);
     }
 }

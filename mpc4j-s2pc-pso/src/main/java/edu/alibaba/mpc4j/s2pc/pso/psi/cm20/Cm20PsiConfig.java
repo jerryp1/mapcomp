@@ -2,31 +2,27 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.cm20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
- * CM20-PSI协议配置项。
- * <p>
- * Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
- * pp. 34-63.
- * <p>
+ * CM20-PSI config.
  *
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/10
  */
 public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
     /**
-     * MPOPRF配置项
+     * MP-OPRF config
      */
     private final MpOprfConfig mpOprfConfig;
     /**
-     * 过滤器类型
+     * filter type
      */
-    private final FilterFactory.FilterType filterType;
+    private final FilterType filterType;
 
     private Cm20PsiConfig(Cm20PsiConfig.Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.mpOprfConfig);
@@ -43,31 +39,26 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
         return mpOprfConfig;
     }
 
-    public FilterFactory.FilterType getFilterType() {
+    public FilterType getFilterType() {
         return filterType;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Cm20PsiConfig> {
         /**
-         * OPRF类型
+         * MP-OPRF config
          */
-        private MpOprfConfig mpOprfConfig;
+        private final MpOprfConfig mpOprfConfig;
         /**
-         * 过滤器类型
+         * filter type
          */
-        private FilterFactory.FilterType filterType;
+        private FilterType filterType;
 
         public Builder() {
             mpOprfConfig = new Cm20MpOprfConfig.Builder().build();
-            filterType = FilterFactory.FilterType.SET_FILTER;
+            filterType = FilterType.SET_FILTER;
         }
 
-        public Builder setMpOprfConfig(MpOprfConfig mpOprfConfig) {
-            this.mpOprfConfig = mpOprfConfig;
-            return this;
-        }
-
-        public Builder setFilterType(FilterFactory.FilterType filterType) {
+        public Builder setFilterType(FilterType filterType) {
             this.filterType = filterType;
             return this;
         }
