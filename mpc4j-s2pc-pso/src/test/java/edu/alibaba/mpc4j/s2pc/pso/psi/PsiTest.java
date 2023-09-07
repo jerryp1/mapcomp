@@ -183,16 +183,6 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         testPto(LARGE_SIZE, LARGE_SIZE, true);
     }
 
-//    @Test
-//    public void testHuge() {
-//        testPto(HUGE_SIZE, HUGE_SIZE, false);
-//    }
-//
-//    @Test
-//    public void testParallelHuge() {
-//        testPto(HUGE_SIZE, HUGE_SIZE, true);
-//    }
-
     private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
         PsiServer<ByteBuffer> server = PsiFactory.createServer(firstRpc, secondRpc.ownParty(), config);
         PsiClient<ByteBuffer> client = PsiFactory.createClient(secondRpc, firstRpc.ownParty(), config);

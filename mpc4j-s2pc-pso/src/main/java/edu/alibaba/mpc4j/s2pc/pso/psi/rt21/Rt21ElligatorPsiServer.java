@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory.ByteEccType;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulElligatorEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.engine.Rijndael256Engine;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -21,8 +22,6 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiPtoDesc.PtoStep;
-import org.bouncycastle.crypto.engines.RijndaelEngine;
-import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -62,6 +61,10 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
      */
     private final Prf h2;
     /**
+     * 256-bit encryption engine
+     */
+    private final Rijndael256Engine encEngine;
+    /**
      * a ← KA.R
      */
     private byte[] a;
@@ -79,6 +82,12 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
         h1 = HashFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
         h2 = PrfFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
         h2.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
+        encEngine = new Rijndael256Engine();
+        MathPreconditions.checkEqual(
+            "block_byte_length", "field_byte_length",
+            encEngine.getBlockByteLength(), Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH
+        );
+        encEngine.init(true, new byte[encEngine.getKeyByteLength()]);
     }
 
     @Override
@@ -168,10 +177,7 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
                 //  P(H1(x))
                 byte[] ph1x = dokvs.decode(storage, ByteBuffer.wrap(h1.digestToBytes(elementByteArray)));
                 // prp(P(H1(x)))
-                RijndaelEngine rijndaelEngine = new RijndaelEngine(Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH);
-                rijndaelEngine.init(true, new KeyParameter(new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH]));
-                byte[] prpPh1x = new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH];
-                rijndaelEngine.processBlock(ph1x, 0, prpPh1x, 0);
+                byte[] prpPh1x = encEngine.doFinal(ph1x);
                 // KA.key(a, prp(P(H1(x)))
                 byte[] ki = byteMulEcc.uniformMul(prpPh1x, a);
                 // K = H2(x, KA.key(a, prp(P(H1(x))))

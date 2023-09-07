@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulElligatorEcc;
+import edu.alibaba.mpc4j.common.tool.crypto.engine.Rijndael256Engine;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
@@ -20,8 +21,6 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiPtoDesc.PtoStep;
-import org.bouncycastle.crypto.engines.RijndaelEngine;
-import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -63,6 +62,10 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
      */
     private final Prf h2;
     /**
+     * 256-bit decryption engine
+     */
+    private final Rijndael256Engine decEngine;
+    /**
      * b_i
      */
     private byte[][] bArray;
@@ -79,6 +82,12 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         h1 = HashFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
         h2 = PrfFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
         h2.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
+        decEngine = new Rijndael256Engine();
+        MathPreconditions.checkEqual(
+            "block_byte_length", "field_byte_length",
+            decEngine.getBlockByteLength(), Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH
+        );
+        decEngine.init(false, new byte[decEngine.getKeyByteLength()]);
     }
 
     @Override
@@ -188,11 +197,7 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
                         success =  byteMulEcc.baseMul(bArray[index], point, mpi);
                     }
                     // f_i = PRP^{-1}(m'_i)
-                    RijndaelEngine rijndaelEngine = new RijndaelEngine(Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH);
-                    rijndaelEngine.init(false, new KeyParameter(new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH]));
-                    byte[] fi = new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH];
-                    rijndaelEngine.processBlock(mpi, 0, fi, 0);
-                    return fi;
+                    return decEngine.doFinal(mpi);
                 })
             );
         // P = encode(H1(y), f)
