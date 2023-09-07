@@ -177,7 +177,7 @@ class Ywl20NcCotPtoDesc implements PtoDesc {
     private static final TIntObjectMap<LpnParams> YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP = new TIntObjectHashMap<>();
 
     static {
-        YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP.put(12, LpnParams.create(10262, 2688, 266));
+        YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP.put(12, LpnParams.create(10271, 2816, 252));
         YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP.put(13, LpnParams.create(10582, 2816, 261));
         YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP.put(14, LpnParams.create(11898, 2816, 299));
         YWL20_SH_YWL20_UNI_SETUP_LPN_PARAMS_MAP.put(15, LpnParams.create(15058, 2944, 371));
