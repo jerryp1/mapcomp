@@ -444,7 +444,7 @@ public class PirUtils {
      * @param input input.
      * @return bit length.
      */
-    public static int getBitLength(int input) {
+    public static int getBitLength(long input) {
         int count = 0;
         while (input != 0) {
             count++;
