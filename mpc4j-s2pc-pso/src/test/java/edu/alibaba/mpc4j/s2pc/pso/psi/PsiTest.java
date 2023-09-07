@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -21,7 +22,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * PSI协议测试。
+ * PSI tests.
  *
  * @author Weiran Liu
  * @date 2022/9/19
@@ -40,11 +41,7 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     /**
      * large size
      */
-    private static final int LARGE_SIZE = 1 << 12;
-    /**
-     * large size
-     */
-    private static final int HUGE_SIZE = 1 << 20;
+    private static final int LARGE_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -54,10 +51,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.RT21.name(), new Rt21ElligatorPsiConfig.Builder().build(),
         });
-//        // CM20
-//        configurations.add(new Object[] {
-//            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
-//        });
+        // CM20
+        configurations.add(new Object[] {
+            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
+        });
 //        // CZZ22
 //        configurations.add(new Object[] {
 //            PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),

@@ -1,26 +1,27 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi.rt21;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.PtoState;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteMulElligatorEcc;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
 import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
-import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
-import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiPtoDesc.PtoStep;
+import org.bouncycastle.crypto.engines.RijndaelEngine;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -30,46 +31,54 @@ import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.common.tool.crypto.ecc.ByteEccFactory.ByteEccType.X25519_ELLIGATOR_BC;
 
+/**
+ * RT21-PSI client.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/8/10
+ */
 public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
     /**
-     * 字节Elligator椭圆曲线
+     * Elligator ECC instance
      */
-    private final ByteMulElligatorEcc byteMulElligatorEcc;
-    /**
-     * 客户端b Vector
-     */
-    private Vector<byte[]> bVector;
-    /**
-     * 客户端Permuted encoded b vector
-     */
-    private Vector<byte[]> fVector;
-    /**
-     * message of a
-     */
-    private byte[] m;
+    private final ByteMulElligatorEcc byteMulEcc;
     /**
      * OKVS type
      */
-    private final Gf2eDokvsFactory.Gf2eDokvsType okvsType;
+    private final Gf2eDokvsType okvsType;
     /**
-     * Polynomial for encoded messages
+     * OKVS key num
      */
-    private Gf2eDokvs<ByteBuffer> dOkvs;
+    private final int okvsKeyNum;
     /**
-     * hash函数 对应论文fig4中的h1
+     * m
+     */
+    private byte[] m;
+    /**
+     * H1: {0, 1}^* → F
      */
     private final Hash h1;
-
     /**
-     * 服务端元素的PRF结果
+     * H2: {0, 1}^* × F → {0, 1}^{2κ}
      */
-    Filter<byte[]> serverPrfFilter;
+    private final Prf h2;
+    /**
+     * b_i
+     */
+    private byte[][] bArray;
 
     public Rt21ElligatorPsiClient(Rpc clientRpc, Party serverParty, Rt21ElligatorPsiConfig config) {
         super(Rt21ElligatorPsiPtoDesc.getInstance(), clientRpc, serverParty, config);
-        byteMulElligatorEcc = ByteEccFactory.createMulElligatorInstance(X25519_ELLIGATOR_BC);
+        byteMulEcc = ByteEccFactory.createMulElligatorInstance(X25519_ELLIGATOR_BC);
+        MathPreconditions.checkEqual(
+            "point_byte_length", "field_byte_length",
+            byteMulEcc.pointByteLength(), Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH
+        );
         okvsType = config.getOkvsType();
-        h1 = HashFactory.createInstance(envType, byteMulElligatorEcc.pointByteLength());
+        okvsKeyNum = Gf2eDokvsFactory.getHashKeyNum(okvsType);
+        h1 = HashFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
+        h2 = PrfFactory.createInstance(envType, Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH);
+        h2.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
     }
 
     @Override
@@ -77,13 +86,15 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         setInitInput(maxClientElementSize, maxServerElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
-        stopWatch.start();
-        DataPacketHeader initHeader = new DataPacketHeader(
-        this.encodeTaskId, getPtoDesc().getPtoId(), Rt21ElligatorPsiPtoDesc.PtoStep.SERVER_SEND_INIT.ordinal(), extraInfo,
+        DataPacketHeader msgHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_INIT.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
-        List<byte[]> initPayload = rpc.receive(initHeader).getPayload();
-        handleInitPayload(initPayload, maxClientElementSize);
+        List<byte[]> msgPayload = rpc.receive(msgHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(msgPayload.size() == 1);
+        m = msgPayload.get(0);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -98,96 +109,114 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 客户端计算并发送Polynomial(OKVS Encoding)
-        List<byte[]> polyPayload = generatePolynomialPayload();
-        DataPacketHeader polyHeader = new DataPacketHeader(
-            this.encodeTaskId, getPtoDesc().getPtoId(), Rt21ElligatorPsiPtoDesc.PtoStep.CLIENT_SEND_POLY.ordinal(), extraInfo,
+        // generate OKVS key
+        byte[][] okvsKeys = CommonUtils.generateRandomKeys(okvsKeyNum, secureRandom);
+        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
+        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        rpc.send(DataPacket.fromByteArrayList(polyHeader, polyPayload));
+        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
         stopWatch.stop();
-        long polyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long okvsKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, polyTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, okvsKeyTime, "Client generates OKVS keys");
 
         stopWatch.start();
+        // generate OKVS
+        List<byte[]> okvsPayload = generateOkvsPayload(okvsKeys);
+        DataPacketHeader polyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(polyHeader, okvsPayload));
+        stopWatch.stop();
+        long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 4, okvsTime, "Client generates OKVS");
+
+        stopWatch.start();
+        IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
+        clientElementIntStream = parallel ? clientElementIntStream.parallel() : clientElementIntStream;
+        byte[][] kArray = clientElementIntStream
+            .mapToObj(index -> {
+                byte[] bi = bArray[index];
+                return byteMulEcc.uniformMul(m, bi);
+            })
+            .toArray(byte[][]::new);
+        bArray = null;
+        stopWatch.stop();
+        long kTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 4, kTime, "Client generates key_2");
+
         DataPacketHeader peqtHeader = new DataPacketHeader(
-            this.encodeTaskId, getPtoDesc().getPtoId(), Rt21ElligatorPsiPtoDesc.PtoStep.SERVER_SEND_KEYS.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> peqtPayload = rpc.receive(peqtHeader).getPayload();
-        Set<T> intersection = handlePeqtPayload(peqtPayload);
 
+        stopWatch.start();
+        Set<T> intersection = handlePeqtPayload(kArray, peqtPayload);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, peqtTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime, "Client computes intersection");
 
         logPhaseInfo(PtoState.PTO_END);
         return intersection;
-        }
-
-
-    private void handleInitPayload(List<byte[]> initPayload, int maxClientElementSize) {
-        // 构造交换映射
-        int prpNum = byteMulElligatorEcc.pointByteLength() / CommonConstants.BLOCK_BYTE_LENGTH;
-        List<Prp> prpList = IntStream.range(0, prpNum).mapToObj(index -> {
-            Prp prp = PrpFactory.createInstance(envType);
-            prp.setKey(initPayload.get(index));
-            return prp;
-        }).collect(Collectors.toList());
-        // 构造 {msg(b)}
-        this.m = initPayload.get(prpNum);
-        this.bVector = IntStream.range(0, maxClientElementSize).mapToObj(index ->
-            new byte[byteMulElligatorEcc.scalarByteLength()])
-            .collect(Collectors.toCollection(Vector::new));
-        // m' = KA.msg(b, m)
-        // f = invPrp (m')
-        IntStream bVectorStream = IntStream.range(0,maxClientElementSize);
-        bVectorStream = parallel ? bVectorStream.parallel() : bVectorStream;
-        this.fVector = bVectorStream
-            .mapToObj(bIndex -> {
-                byte[] mPrime = Rt21ElligatorPsiUtils.generateKaMessage(byteMulElligatorEcc, bVector.get(bIndex), secureRandom);
-                ByteBuffer tmp = ByteBuffer.allocate(mPrime.length);
-                IntStream.range(0, prpNum).forEach(i -> tmp.put(prpList.get(i).invPrp(Arrays.copyOfRange(mPrime,
-                        i * CommonConstants.BLOCK_BYTE_LENGTH, (i + 1) * CommonConstants.BLOCK_BYTE_LENGTH))));
-                return tmp.array();
-            }).collect(Collectors.toCollection(Vector::new));
-        // 初始化OKVS
-        byte[][] okvsKeys = initPayload.subList(prpNum + 1, initPayload.size()).toArray(new byte[0][]);
-        this.dOkvs = Gf2eDokvsFactory.createInstance(envType, okvsType, Math.max(2, maxClientElementSize), byteMulElligatorEcc.pointByteLength() * Byte.SIZE, okvsKeys);
     }
 
-    private List<byte[]> generatePolynomialPayload() {
-        // P = encode ( H1(y). f )
-        Map<ByteBuffer, byte[]> map = new HashMap<>();
-        IntStream.range(0, clientElementSize).forEach(index -> {
-            byte[] h1y = h1.digestToBytes(ObjectUtils.objectToByteArray(clientElementArrayList.get(index)));
-            map.put(ByteBuffer.wrap(h1y), fVector.get(index));
-        });
-        return Arrays.asList(dOkvs.encode(map, true));
+    private List<byte[]> generateOkvsPayload(byte[][] okvsKeys) {
+        bArray = new byte[clientElementSize][];
+        IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
+        clientElementIntStream = parallel ? clientElementIntStream.parallel() : clientElementIntStream;
+        Map<ByteBuffer, byte[]> map = clientElementIntStream
+            .boxed()
+            .collect(Collectors.toMap(
+                index -> {
+                    byte[] elementByteArray = ObjectUtils.objectToByteArray(clientElementArrayList.get(index));
+                    return ByteBuffer.wrap(h1.digestToBytes(elementByteArray));
+                },
+                index -> {
+                    byte[] point = new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH];
+                    byte[] mpi = new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH];
+                    boolean success = false;
+                    while (!success) {
+                        // b_i ← KA.R, m'_i = KA.msg_2(b_i, m)
+                        bArray[index] = byteMulEcc.randomScalar(secureRandom);
+                        success =  byteMulEcc.baseMul(bArray[index], point, mpi);
+                    }
+                    // f_i = PRP^{-1}(m'_i)
+                    RijndaelEngine rijndaelEngine = new RijndaelEngine(Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH);
+                    rijndaelEngine.init(false, new KeyParameter(new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH]));
+                    byte[] fi = new byte[Rt21ElligatorPsiPtoDesc.FIELD_BYTE_LENGTH];
+                    rijndaelEngine.processBlock(mpi, 0, fi, 0);
+                    return fi;
+                })
+            );
+        // P = encode(H1(y), f)
+        Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(
+            envType, okvsType, clientElementSize, Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH, okvsKeys
+        );
+        return Arrays.asList(dokvs.encode(map, true));
     }
 
-    private Set<T> handlePeqtPayload(List<byte[]> peqtPayload) throws MpcAbortException {
-        try {
-            this.serverPrfFilter = FilterFactory.createFilter(envType, peqtPayload);
-        } catch (IllegalArgumentException e) {
-            throw new MpcAbortException();
-        }
-
-        //  初始化PEQT哈希 {0, 1}^* * F -> {0, 1}^2k
-        int peqtByteLength = 2 * CommonConstants.BLOCK_BYTE_LENGTH;
-        Hash keyHash = HashFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
-
-        IntStream elementStream = IntStream.range(0, clientElementSize);
-        elementStream = parallel ? elementStream.parallel() : elementStream;
-        Set<T> intersection = elementStream.mapToObj(index -> {
-            T element = clientElementArrayList.get(index);
-            Prf peqtPrf = PrfFactory.createInstance(envType, peqtByteLength);
-            peqtPrf.setKey(keyHash.digestToBytes(Rt21ElligatorPsiUtils.generateKaKey(byteMulElligatorEcc, m, bVector.get(index))));
-            return serverPrfFilter.mightContain(peqtPrf.getBytes(ObjectUtils.objectToByteArray(element))) ? element : null;
-        }).filter(Objects::nonNull).collect(Collectors.toSet());
-        serverPrfFilter = null;
-        return intersection;
+    private Set<T> handlePeqtPayload(byte[][] kArray, List<byte[]> peqtPayload) {
+        Filter<byte[]> peqtFilter = FilterFactory.createFilter(envType, peqtPayload);
+        IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
+        clientElementIntStream = parallel ? clientElementIntStream.parallel() : clientElementIntStream;
+        return clientElementIntStream
+            .mapToObj(index -> {
+                T element = clientElementArrayList.get(index);
+                byte[] elementByteArray = ObjectUtils.objectToByteArray(element);
+                byte[] h2Input = ByteBuffer.allocate(kArray[index].length + elementByteArray.length)
+                    .put(kArray[index])
+                    .put(elementByteArray)
+                    .array();
+                return peqtFilter.mightContain(h2.getBytes(h2Input)) ? element : null;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
     }
 }

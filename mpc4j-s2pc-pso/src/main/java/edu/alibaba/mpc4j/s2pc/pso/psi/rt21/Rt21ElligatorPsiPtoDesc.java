@@ -4,51 +4,53 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * RT21-PSI协议信息。论文来源：
+ * RT21-PSI protocol description. The protocol comes from the following paper:
  * <p>
- * Mike Rosulek and Ni Trieu. 2021.
- * Compact and Malicious Private Set Intersection for Small Sets.
- * In Proceedings of the 2021 ACM SIGSAC Conference on Computer and Communications Security (CCS '21).
+ * Mike Rosulek and Ni Trieu. 2021. Compact and Malicious Private Set Intersection for Small Sets. CCS 2021.
  * </p>
  *
- * @author Weiran Liu
- * @date 2022/9/19
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/8/10
  */
-public class Rt21ElligatorPsiPtoDesc implements PtoDesc {
+class Rt21ElligatorPsiPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -600495959111237630L);
+    private static final int PTO_ID = Math.abs((int) 600495959111237630L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "RT21_PSI";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送msg(a)
+         * server sends msg(a)
          */
         SERVER_SEND_INIT,
         /**
-         * 客户端发送P
+         * client sends OKVS key
          */
-        CLIENT_SEND_POLY,
+        CLIENT_SEND_OKVS_KEY,
         /**
-         * 服务端发送K
+         * client sends OKVS
          */
-        SERVER_SEND_KEYS,
+        CLIENT_SEND_OKVS,
+        /**
+         * server sends K
+         */
+        SERVER_SEND_KS,
     }
 
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final Rt21ElligatorPsiPtoDesc INSTANCE = new Rt21ElligatorPsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Rt21ElligatorPsiPtoDesc() {
         // empty
@@ -71,4 +73,13 @@ public class Rt21ElligatorPsiPtoDesc implements PtoDesc {
     public String getPtoName() {
         return PTO_NAME;
     }
+
+    /**
+     * field bit length
+     */
+    static final int FIELD_BIT_LENGTH = 256;
+    /**
+     * field byte length
+     */
+    static final int FIELD_BYTE_LENGTH = FIELD_BIT_LENGTH / Byte.SIZE;
 }
