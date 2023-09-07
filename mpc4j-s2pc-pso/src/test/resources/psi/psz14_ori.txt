@@ -1,0 +1,16 @@
+# 协议类型
+pto_type = PSI
+
+# 元素字节长度
+element_byte_length = 8
+
+# 对数集合大小（log(n)）
+server_log_set_size = 12,10
+client_log_set_size = 12,10
+
+# 方案配置项
+oprf_type = PSZ14_ORI
+append_string = _ori
+
+# 协议名称
+psi_pto_name = PSZ14

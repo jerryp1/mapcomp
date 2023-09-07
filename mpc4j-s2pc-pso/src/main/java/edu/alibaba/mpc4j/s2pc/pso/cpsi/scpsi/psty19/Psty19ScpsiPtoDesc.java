@@ -22,7 +22,7 @@ class Psty19ScpsiPtoDesc implements PtoDesc {
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "PRTY19-SCPSI";
+    private static final String PTO_NAME = "PSTY19-SCPSI";
     /**
      * the singleton mode
      */
