@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -87,15 +89,15 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[] {
 //            PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),
 //        });
-//        // PRTY19_FAST
-//        configurations.add(new Object[] {
-//            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
-//        });
-//        // PRTY19_LOW
-//        configurations.add(new Object[] {
-//            PsiType.PRTY19_LOW.name() + "_MEGA_BIN", new Prty19LowPsiConfig.Builder().setOkvsType(Gf2eDokvsType.MEGA_BIN).build(),
-//        });
-//
+        // PRTY19_FAST
+        configurations.add(new Object[] {
+            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
+        });
+        // PRTY19_LOW
+        configurations.add(new Object[] {
+            PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
+        });
+
 //        // KKRT16 (no-stash)
 //        configurations.add(new Object[] {
 //            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",

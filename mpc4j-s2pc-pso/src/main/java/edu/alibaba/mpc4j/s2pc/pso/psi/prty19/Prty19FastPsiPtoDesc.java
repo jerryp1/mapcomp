@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * PRTY19_FAST_PSI协议信息。论文来源：
+ * PRTY19-PSI (fast computation) protocol description. The protocol comes from the following paper:
  * <p>
  * Benny Pinkas, Mike Rosulek, et al. SpOT-Light- Lightweight Private Set Intersection from Sparse OT Extension.
  * CRYPTO 2019, pp. 401–431.
@@ -13,34 +13,45 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/17
  */
-public class Prty19FastPsiPtoDesc implements PtoDesc {
+class Prty19FastPsiPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -5838309125365213426L);
+    private static final int PTO_ID = Math.abs((int) 5838309125365213426L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "PRTY19_FAST_PSI";
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 服务端发送PRF
+         * client sends two-choice hash key
+         */
+        CLIENT_SEND_TWO_CHOICE_HASH_KEY,
+        /**
+         * client sends polynomials
+         */
+        CLIENT_SEND_POLYNOMIALS,
+        /**
+         * server sends the first PRFs
          */
         SERVER_SEND_PRFS_0,
-
+        /**
+         * server sends the second PRFs
+         */
         SERVER_SEND_PRFS_1,
     }
+
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final Prty19FastPsiPtoDesc INSTANCE = new Prty19FastPsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Prty19FastPsiPtoDesc() {
         // empty

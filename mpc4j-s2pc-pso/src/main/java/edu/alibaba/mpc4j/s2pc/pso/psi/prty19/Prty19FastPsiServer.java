@@ -1,51 +1,80 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi.prty19;
 
-import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.PtoState;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory.CrhfType;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prp.Prp;
+import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.TwoChoiceHashBin;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSender;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSenderOutput;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.RotReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiPtoDesc.PtoStep;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
-public class Prty19FastPsiServer <T> extends AbstractPsiServer<T> {
+/**
+ * PRTY19-PSI (fast computation) server.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/17
+ */
+public class Prty19FastPsiServer<T> extends AbstractPsiServer<T> {
     /**
-     * OPRF发送方
+     * core COT receiver
      */
-    private final MpOprfSender oprfSender;
+    private final CoreCotReceiver coreCotReceiver;
     /**
-     * PEQT哈希函数
+     * two-choice Hash keys
+     */
+    private byte[][] twoChoiceHashKeys;
+    /**
+     * filter type
+     */
+    private final FilterType filterType;
+    /**
+     * x || 0 (in GF(2^l))
+     */
+    private byte[][] x0s;
+    /**
+     * x || 1 (in GF(2^l))
+     */
+    private byte[][] x1s;
+    /**
+     * GF(2^l) polynomial instance
+     */
+    private Gf2ePoly gf2ePoly;
+    /**
+     * PEQT hash
      */
     private Hash peqtHash;
-    /**
-     * 过滤器类型
-     */
-    private final FilterFactory.FilterType filterType;
-    /**
-     * OPRF发送方输出
-     */
-    private MpOprfSenderOutput oprfSenderOutput;
 
     public Prty19FastPsiServer(Rpc serverRpc, Party clientParty, Prty19FastPsiConfig config) {
         super(Prty19FastPsiPtoDesc.getInstance(), serverRpc, clientParty, config);
-        oprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
-        addSubPtos(oprfSender);
+        coreCotReceiver = CoreCotFactory.createReceiver(serverRpc, clientParty, config.getCoreCotConfig());
+        addSubPtos(coreCotReceiver);
         filterType = config.getFilterType();
     }
 
@@ -55,7 +84,17 @@ public class Prty19FastPsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        oprfSender.init(maxClientElementSize);
+        // init COT
+        int maxL = Prty19PsiUtils.getFastL(maxServerElementSize);
+        coreCotReceiver.init(maxL);
+        // receive two-choice hash keys
+        DataPacketHeader twoChoiceHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_TWO_CHOICE_HASH_KEY.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> keyPayload = rpc.receive(twoChoiceHashKeyHeader).getPayload();
+        MpcAbortPreconditions.checkArgument(keyPayload.size() == 2);
+        twoChoiceHashKeys = keyPayload.toArray(new byte[0][]);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -70,54 +109,148 @@ public class Prty19FastPsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
+        // init PEQT hash
         int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
-
-        oprfSenderOutput = oprfSender.oprf(clientElementSize);
+        // init Finite field l
+        int l = Prty19PsiUtils.getFastL(serverElementSize);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);
+        int byteL = gf2ePoly.getByteL();
+        int offsetL = byteL * Byte.SIZE - l;
+        Prp[] qPrps = IntStream.range(0, l)
+            .mapToObj(i -> PrpFactory.createInstance(envType))
+            .toArray(Prp[]::new);
+        boolean[] s = new boolean[l];
+        IntStream.range(0, l).forEach(i -> s[i] = secureRandom.nextBoolean());
+        // Δ = s_1 || ... || s_l
+        byte[] delta = BinaryUtils.binaryToRoundByteArray(s);
+        initServerElements();
         stopWatch.stop();
-        long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long setupTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, setupTime, "Server setups parameters");
 
         stopWatch.start();
-        // 发送服务端PRF0过滤器
-        List<byte[]> serverPrf0Payload = generatePrfPayload(0);
+        // Alice and Bob invoke l instances of Random OT, Alice receives output q_1, ..., q_l
+        CotReceiverOutput cotReceiverOutput = coreCotReceiver.receive(s);
+        RotReceiverOutput rotReceiverOutput = new RotReceiverOutput(envType, CrhfType.MMO, cotReceiverOutput);
+        // init PRFs
+        IntStream.range(0, l).forEach(i -> qPrps[i].setKey(rotReceiverOutput.getRb(i)));
+        stopWatch.stop();
+        long rotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 4, rotTime, "Server runs " + l + " Random OT");
+
+        stopWatch.start();
+        int binNum = TwoChoiceHashBin.expectedBinNum(clientElementSize);
+        int binSize = TwoChoiceHashBin.expectedMaxBinSize(clientElementSize);
+        // Alice computes Q_b(x) = F(q_1, x || b) || F(q_2, x || b) || ... || F(q_l, x || b)
+        byte[][] q0s = new byte[serverElementSize][byteL];
+        byte[][] q1s = new byte[serverElementSize][byteL];
+        IntStream serverElementIntStream = IntStream.range(0, serverElementSize);
+        serverElementIntStream = parallel ? serverElementIntStream.parallel() : serverElementIntStream;
+        serverElementIntStream.forEach(index -> {
+            for (int i = 0; i < l; i++) {
+                boolean q0i = (qPrps[i].prp(x0s[index])[0] & 0x01) != 0;
+                BinaryUtils.setBoolean(q0s[index], offsetL + i, q0i);
+                boolean q1i = (qPrps[i].prp(x1s[index])[0] & 0x01) != 0;
+                BinaryUtils.setBoolean(q1s[index], offsetL + i, q1i);
+            }
+        });
+        stopWatch.stop();
+        long qsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 4, qsTime, "Server computes Q1(x) and Q2(x)");
+
+        DataPacketHeader polynomialsHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.CLIENT_SEND_POLYNOMIALS.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> polynomialsPayload = rpc.receive(polynomialsHeader).getPayload();
+
+        stopWatch.start();
+        int coefficientNum = Gf2ePolyFactory.getCoefficientNum(envType, binSize);
+        MpcAbortPreconditions.checkArgument(polynomialsPayload.size() == coefficientNum * binNum);
+        byte[][] flattenPolynomials = polynomialsPayload.toArray(new byte[0][]);
+        byte[][][] polynomials = IntStream.range(0, binNum)
+            .mapToObj(binIndex -> {
+                byte[][] polynomial = new byte[coefficientNum][];
+                System.arraycopy(flattenPolynomials, binIndex * coefficientNum, polynomial, 0, coefficientNum);
+                return polynomial;
+            })
+            .toArray(byte[][][]::new);
+        // compute and send filter 0
+        List<byte[]> serverPrf0Payload = generatePrfPayload(0, x0s, q0s, delta, polynomials);
         DataPacketHeader serverPrf0Header = new DataPacketHeader(
-                this.encodeTaskId, getPtoDesc().getPtoId(), Prty19FastPsiPtoDesc.PtoStep.SERVER_SEND_PRFS_0.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRFS_0.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverPrf0Header, serverPrf0Payload));
-        // 发送服务端PRF1过滤器
-        List<byte[]> serverPrf1Payload = generatePrfPayload(1);
+        // compute and send filter 1
+        List<byte[]> serverPrf1Payload = generatePrfPayload(1, x1s, q1s, delta, polynomials);
         DataPacketHeader serverPrf1Header = new DataPacketHeader(
-                this.encodeTaskId, getPtoDesc().getPtoId(), Prty19FastPsiPtoDesc.PtoStep.SERVER_SEND_PRFS_1.ordinal(), extraInfo,
-                ownParty().getPartyId(), otherParty().getPartyId()
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRFS_1.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverPrf1Header, serverPrf1Payload));
-        extraInfo++;
-        oprfSenderOutput = null;
+        x0s = null;
+        x1s = null;
         stopWatch.stop();
         long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, serverPrfTime);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, serverPrfTime, "Server computes PRF");
 
         logPhaseInfo(PtoState.PTO_END);
     }
 
-    private List<byte[]> generatePrfPayload(int index) {
-        Stream<T> serverElementStream = serverElementArrayList.stream();
-        serverElementStream = parallel ? serverElementStream.parallel() : serverElementStream;
-        List<byte[]> prfList = serverElementStream
-                .map(element -> {
-                    byte[] elementByteArray = ObjectUtils.objectToByteArray(element);
-                    byte[] prf = oprfSenderOutput.getPrf(index, elementByteArray);
-                    return peqtHash.digestToBytes(prf);
-                })
-                .collect(Collectors.toList());
-        Collections.shuffle(prfList, secureRandom);
-        // 构建过滤器
+    private void initServerElements() {
+        // init server elements
+        x0s = new byte[serverElementSize][];
+        x1s = new byte[serverElementSize][];
+        Prf elementPrf = PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        elementPrf.setKey(new byte[CommonConstants.BLOCK_BYTE_LENGTH]);
+        IntStream elementIndexIntStream = IntStream.range(0, serverElementSize);
+        elementIndexIntStream = parallel ? elementIndexIntStream.parallel() : elementIndexIntStream;
+        elementIndexIntStream.forEach(index -> {
+            byte[] x = ObjectUtils.objectToByteArray(serverElementArrayList.get(index));
+            byte[] x0 = new byte[x.length + 1];
+            x0[0] = 0;
+            System.arraycopy(x, 0, x0, 1, x.length);
+            x0s[index] = elementPrf.getBytes(x0);
+            byte[] x1 = new byte[x.length + 1];
+            x1[0] = 1;
+            System.arraycopy(x, 0, x1, 1, x.length);
+            x1s[index] = elementPrf.getBytes(x1);
+        });
+    }
+
+    private List<byte[]> generatePrfPayload(int hashIndex, byte[][] xs, byte[][] qs, byte[] delta, byte[][][] polynomials) {
+        int byteL = gf2ePoly.getByteL();
+        int binNum = polynomials.length;
+        Prf binHash = PrfFactory.createInstance(envType, Integer.BYTES);
+        binHash.setKey(twoChoiceHashKeys[hashIndex]);
+        IntStream serverElementIntStream = IntStream.range(0, serverElementSize);
+        serverElementIntStream = parallel ? serverElementIntStream.parallel() : serverElementIntStream;
+        List<byte[]> serverElementPrfs = serverElementIntStream
+            .mapToObj(index -> {
+                byte[] elementByteArray = ObjectUtils.objectToByteArray(serverElementArrayList.get(index));
+                byte[] x = xs[index];
+                byte[] ex = new byte[byteL];
+                System.arraycopy(x, 0, ex, byteL - x.length, x.length);
+                int binIndex = binHash.getInteger(elementByteArray, binNum);
+                // P(x)
+                byte[] prf = gf2ePoly.evaluate(polynomials[binIndex], ex);
+                // s · P(x)
+                BytesUtils.andi(prf, delta);
+                // Q(x) ⊕ s · P(x)
+                BytesUtils.xori(prf, qs[index]);
+                return peqtHash.digestToBytes(prf);
+            })
+            .collect(Collectors.toList());
+        Collections.shuffle(serverElementPrfs, secureRandom);
+        // create filter
         Filter<byte[]> prfFilter = FilterFactory.createFilter(envType, filterType, serverElementSize, secureRandom);
-        prfList.forEach(prfFilter::put);
+        serverElementPrfs.forEach(prfFilter::put);
         return prfFilter.toByteArrayList();
     }
 }

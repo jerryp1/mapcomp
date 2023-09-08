@@ -65,6 +65,10 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
      */
     private final Rijndael256Engine encEngine;
     /**
+     * OKVS key
+     */
+    private byte[][] okvsKey;
+    /**
      * a ← KA.R
      */
     private byte[] a;
@@ -111,6 +115,14 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(msgHeader, msgPayload));
+        // Server receives OKVS key
+        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> okvsKeyPayload = rpc.receive(okvsKeyHeader).getPayload();
+        MpcAbortPreconditions.checkArgument(okvsKeyPayload.size() == okvsKeyNum);
+        okvsKey = okvsKeyPayload.toArray(new byte[0][]);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -125,19 +137,10 @@ public class Rt21ElligatorPsiServer<T> extends AbstractPsiServer<T> {
         setPtoInput(serverElementSet, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // server receives OKVS key
-        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> okvsKeyPayload = rpc.receive(okvsKeyHeader).getPayload();
-
         stopWatch.start();
         // server init OKVS
-        MpcAbortPreconditions.checkArgument(okvsKeyPayload.size() == okvsKeyNum);
-        byte[][] okvsKeys = okvsKeyPayload.toArray(new byte[0][]);
         Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(
-            envType, okvsType, clientElementSize, Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH, okvsKeys
+            envType, okvsType, clientElementSize, Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH, okvsKey
         );
         stopWatch.stop();
         long okvsInitTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

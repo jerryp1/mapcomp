@@ -71,6 +71,10 @@ public class PsiFactory implements PtoFactory {
          */
         PRTY19_FAST,
         /**
+         * PRTY19 低通信量方案
+         */
+        PRTY19_LOW,
+        /**
          * 使用PaXoS的PSI方案
          */
         PRTY20,
@@ -125,6 +129,8 @@ public class PsiFactory implements PtoFactory {
                 return new Psz14PsiServer<>(serverRpc, clientParty, (Psz14PsiConfig) config);
             case PRTY19_FAST:
                 return new Prty19FastPsiServer<>(serverRpc, clientParty, (Prty19FastPsiConfig) config);
+            case PRTY19_LOW:
+                return new Prty19LowPsiServer<>(serverRpc, clientParty, (Prty19LowPsiConfig) config);
             case RT21:
                 return new Rt21ElligatorPsiServer<>(serverRpc, clientParty, (Rt21ElligatorPsiConfig) config);
             default:
@@ -165,6 +171,8 @@ public class PsiFactory implements PtoFactory {
                 return new Psz14PsiClient<>(clientRpc, serverParty, (Psz14PsiConfig) config);
             case PRTY19_FAST:
                 return new Prty19FastPsiClient<>(clientRpc, serverParty, (Prty19FastPsiConfig) config);
+            case PRTY19_LOW:
+                return new Prty19LowPsiClient<>(clientRpc, serverParty, (Prty19LowPsiConfig) config);
             case RT21:
                 return new Rt21ElligatorPsiClient<>(clientRpc, serverParty, (Rt21ElligatorPsiConfig) config);
             default:

@@ -50,6 +50,10 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
      */
     private final int okvsKeyNum;
     /**
+     * OKVS key
+     */
+    private byte[][] okvsKey;
+    /**
      * m
      */
     private byte[] m;
@@ -95,6 +99,20 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         setInitInput(maxClientElementSize, maxServerElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        stopWatch.start();
+        // generate OKVS key
+        okvsKey = CommonUtils.generateRandomKeys(okvsKeyNum, secureRandom);
+        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKey).collect(Collectors.toList());
+        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
+        stopWatch.stop();
+        long okvsKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, okvsKeyTime);
+
         DataPacketHeader msgHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_INIT.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
@@ -105,9 +123,9 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         MpcAbortPreconditions.checkArgument(msgPayload.size() == 1);
         m = msgPayload.get(0);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long msgTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, msgTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -118,22 +136,8 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // generate OKVS key
-        byte[][] okvsKeys = CommonUtils.generateRandomKeys(okvsKeyNum, secureRandom);
-        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKeys).collect(Collectors.toList());
-        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
-        stopWatch.stop();
-        long okvsKeyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 4, okvsKeyTime, "Client generates OKVS keys");
-
-        stopWatch.start();
         // generate OKVS
-        List<byte[]> okvsPayload = generateOkvsPayload(okvsKeys);
+        List<byte[]> okvsPayload = generateOkvsPayload();
         DataPacketHeader polyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
@@ -142,7 +146,7 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long okvsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 4, okvsTime, "Client generates OKVS");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, okvsTime, "Client generates OKVS");
 
         stopWatch.start();
         IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
@@ -157,7 +161,7 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         stopWatch.stop();
         long kTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 4, kTime, "Client generates key_2");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, kTime, "Client generates key_2");
 
         DataPacketHeader peqtHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_KS.ordinal(), extraInfo,
@@ -176,7 +180,7 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
         return intersection;
     }
 
-    private List<byte[]> generateOkvsPayload(byte[][] okvsKeys) {
+    private List<byte[]> generateOkvsPayload() {
         bArray = new byte[clientElementSize][];
         IntStream clientElementIntStream = IntStream.range(0, clientElementSize);
         clientElementIntStream = parallel ? clientElementIntStream.parallel() : clientElementIntStream;
@@ -202,7 +206,7 @@ public class Rt21ElligatorPsiClient<T> extends AbstractPsiClient<T> {
             );
         // P = encode(H1(y), f)
         Gf2eDokvs<ByteBuffer> dokvs = Gf2eDokvsFactory.createInstance(
-            envType, okvsType, clientElementSize, Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH, okvsKeys
+            envType, okvsType, clientElementSize, Rt21ElligatorPsiPtoDesc.FIELD_BIT_LENGTH, okvsKey
         );
         return Arrays.asList(dokvs.encode(map, true));
     }

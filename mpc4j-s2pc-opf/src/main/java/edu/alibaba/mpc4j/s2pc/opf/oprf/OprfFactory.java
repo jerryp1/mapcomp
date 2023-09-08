@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.*;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.prty19.*;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfSender;
@@ -78,14 +77,6 @@ public class OprfFactory implements PtoFactory {
          * RA17方案
          */
         RA17,
-        /**
-         * PRTY19 FAST方案
-         */
-        PRTY19_FAST,
-        /**
-         * PRTY19 低通信量方案
-         */
-        PRTY19_LOW,
     }
 
     /**
@@ -187,8 +178,6 @@ public class OprfFactory implements PtoFactory {
                 return new Prty20MpOprfSender(senderRpc, receiverParty, (Prty20MpOprfConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfMpOprfSender(senderRpc, receiverParty, (Psz14GbfMpOprfConfig) config);
-            case PRTY19_FAST:
-                return new Prty19FastMpOprfSender(senderRpc, receiverParty, (Prty19FastMpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -215,8 +204,6 @@ public class OprfFactory implements PtoFactory {
                 return new Prty20MpOprfReceiver(receiverRpc, senderParty, (Prty20MpOprfConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfMpOprfReceiver(receiverRpc, senderParty, (Psz14GbfMpOprfConfig) config);
-            case PRTY19_FAST:
-                return new Prty19FastMpOprfReceiver(receiverRpc, senderParty, (Prty19FastMpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
