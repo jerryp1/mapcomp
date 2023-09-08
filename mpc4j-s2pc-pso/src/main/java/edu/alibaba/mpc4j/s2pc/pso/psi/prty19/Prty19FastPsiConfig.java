@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
@@ -22,10 +21,6 @@ public class Prty19FastPsiConfig extends AbstractMultiPartyPtoConfig implements 
      */
     private final CoreCotConfig coreCotConfig;
     /**
-     * OKVS type
-     */
-    private final Gf2eDokvsType okvsType;
-    /**
      * filter type
      */
     private final FilterType filterType;
@@ -33,7 +28,6 @@ public class Prty19FastPsiConfig extends AbstractMultiPartyPtoConfig implements 
     private Prty19FastPsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.coreCotConfig);
         coreCotConfig = builder.coreCotConfig;
-        okvsType = builder.okvsType;
         filterType = builder.filterType;
     }
 
@@ -46,10 +40,6 @@ public class Prty19FastPsiConfig extends AbstractMultiPartyPtoConfig implements 
         return coreCotConfig;
     }
 
-    public Gf2eDokvsType getOkvsType() {
-        return okvsType;
-    }
-
     public FilterType getFilterType() {
         return filterType;
     }
@@ -60,27 +50,17 @@ public class Prty19FastPsiConfig extends AbstractMultiPartyPtoConfig implements 
          */
         private CoreCotConfig coreCotConfig;
         /**
-         * OKVS type
-         */
-        private Gf2eDokvsType okvsType;
-        /**
          * filter type
          */
         private FilterType filterType;
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT;
             filterType = FilterFactory.FilterType.SET_FILTER;
         }
 
         public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {
             this.coreCotConfig = coreCotConfig;
-            return this;
-        }
-
-        public Builder setOkvsType(Gf2eDokvsType okvsType) {
-            this.okvsType = okvsType;
             return this;
         }
 

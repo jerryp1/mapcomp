@@ -18,12 +18,11 @@ import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.TwoChoiceHashBin;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePoly;
+import edu.alibaba.mpc4j.common.tool.polynomial.gf2e.Gf2ePolyFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvs;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.RotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
@@ -32,7 +31,6 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiPtoDesc.PtoStep;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -50,21 +48,21 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
      */
     private final CoreCotSender coreCotSender;
     /**
-     * OKVS type
-     */
-    private final Gf2eDokvsType okvsType;
-    /**
-     * OKVS key num
-     */
-    private final int okvsKeyNum;
-    /**
      * two-choice Hash keys
      */
     private byte[][] twoChoiceHashKeys;
     /**
-     * OKVS key array
+     * l
      */
-    private byte[][] okvsKey;
+    private int l;
+    /**
+     * l (in byte)
+     */
+    private int byteL;
+    /**
+     * polynomial operation in GF(2^l). Appendix D states: For our fast protocol, we operate on GF(2^l).
+     */
+    private Gf2ePoly gf2ePoly;
     /**
      * PEQT hash
      */
@@ -74,8 +72,6 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
         super(Prty19FastPsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         coreCotSender = CoreCotFactory.createSender(clientRpc, serverParty, config.getCoreCotConfig());
         addSubPtos(coreCotSender);
-        okvsType = config.getOkvsType();
-        okvsKeyNum = Gf2eDokvsFactory.getHashKeyNum(okvsType);
     }
 
     @Override
@@ -97,14 +93,6 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(twoChoiceHashKeyHeader, twoChoiceHashKeyPayload));
-        // generate and send OKVS key
-        okvsKey = CommonUtils.generateRandomKeys(okvsKeyNum, secureRandom);
-        List<byte[]> okvsKeyPayload = Arrays.stream(okvsKey).collect(Collectors.toList());
-        DataPacketHeader okvsKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_OKVS_KEY.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(okvsKeyHeader, okvsKeyPayload));
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -123,8 +111,9 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
         int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         // init Finite field l
-        int l = Prty19PsiUtils.getFastL(serverElementSize);
-        int byteL = CommonUtils.getByteLength(l);
+        l = Prty19PsiUtils.getFastL(serverElementSize);
+        gf2ePoly = Gf2ePolyFactory.createInstance(envType, l);
+        byteL = gf2ePoly.getByteL();
         int offsetL = byteL * Byte.SIZE - l;
         Prp[] tPrps = IntStream.range(0, l)
             .mapToObj(i -> PrpFactory.createInstance(envType))
@@ -169,8 +158,6 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
         binIndexIntStream = parallel ? binIndexIntStream.parallel() : binIndexIntStream;
         List<byte[]> polynomialsPayload = binIndexIntStream
             .mapToObj(binIndex -> {
-                Gf2eDokvs<ByteBuffer> okvs = Gf2eDokvsFactory.createInstance(envType, okvsType, binSize, l, okvsKey);
-                okvs.setParallelEncode(parallel);
                 Collection<HashBinEntry<T>> hashBinEntries = twoChoiceHashBin.getBin(binIndex);
                 tys[binIndex] = new byte[binSize][];
                 byte[][] yArray = hashBinEntries.stream()
@@ -204,13 +191,15 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
                         return ry;
                     })
                     .toArray(byte[][]::new);
-                Map<ByteBuffer, byte[]> keyValueMap = IntStream.range(0, binSize)
-                    .boxed()
-                    .collect(Collectors.toMap(
-                        index -> ByteBuffer.wrap(yArray[index]),
-                        index -> rArray[index]
-                    ));
-                return okvs.encode(keyValueMap, false);
+                byte[][] eyArray = Arrays.stream(yArray)
+                    .map(y -> {
+                        // note that l is always greater than 128
+                        byte[] ey = new byte[byteL];
+                        System.arraycopy(y, 0, ey, ey.length - y.length, y.length);
+                        return ey;
+                    })
+                    .toArray(byte[][]::new);
+                return gf2ePoly.interpolate(binSize, eyArray, rArray);
             })
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
