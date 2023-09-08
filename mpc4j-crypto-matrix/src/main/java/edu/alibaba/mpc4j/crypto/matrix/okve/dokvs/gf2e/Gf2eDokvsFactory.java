@@ -73,10 +73,6 @@ public class Gf2eDokvsFactory {
          * MegaBin
          */
         MEGA_BIN,
-        /**
-         * Polynomial
-         */
-        POLYNOMIAL,
     }
 
     /**
@@ -116,8 +112,6 @@ public class Gf2eDokvsFactory {
                 return new RandomGbfGf2eDokvs<>(envType, n, l, keys[0]);
             case MEGA_BIN:
                 return new MegaBinGf2eDokvs<>(envType, n, l, keys);
-            case POLYNOMIAL:
-                return new PolynomialGf2eDokvs<>(envType, n, l, keys[0]);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -144,7 +138,6 @@ public class Gf2eDokvsFactory {
             case RANDOM_GBF:
                 return true;
             case MEGA_BIN:
-            case POLYNOMIAL:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
@@ -212,7 +205,6 @@ public class Gf2eDokvsFactory {
             case H2_NAIVE_CLUSTER_BLAZE_GCT:
             case H3_NAIVE_CLUSTER_BLAZE_GCT:
             case MEGA_BIN:
-            case POLYNOMIAL:
                 return false;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
@@ -281,8 +273,6 @@ public class Gf2eDokvsFactory {
                 return AbstractGbfGf2eDokvs.HASH_KEY_NUM;
             case MEGA_BIN:
                 return MegaBinGf2eDokvs.HASH_KEY_NUM;
-            case POLYNOMIAL:
-                return PolynomialGf2eDokvs.HASH_KEY_NUM;
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }
@@ -319,8 +309,6 @@ public class Gf2eDokvsFactory {
                 return AbstractGbfGf2eDokvs.getM(n);
             case MEGA_BIN:
                 return MegaBinGf2eDokvs.getM(envType, n);
-            case POLYNOMIAL:
-                return PolynomialGf2eDokvs.getM(envType, n);
             default:
                 throw new IllegalArgumentException("Invalid " + Gf2eDokvsType.class.getSimpleName() + ": " + type.name());
         }

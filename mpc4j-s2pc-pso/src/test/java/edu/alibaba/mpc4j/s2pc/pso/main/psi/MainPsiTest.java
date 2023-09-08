@@ -78,10 +78,6 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.PRTY19_FAST.name(), "psi/prty19_fast.txt",
         });
-        // PRTY19_LOW
-        configurations.add(new Object[] {
-            PsiType.PRTY19_LOW.name(), "psi/prty19_low.txt",
-        });
         // PRTY20
         configurations.add(new Object[] {
             PsiType.PRTY20.name(), "psi/prty20.txt",

@@ -15,7 +15,6 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
@@ -46,8 +45,6 @@ public class PsiConfigUtils {
                 return createRa17PsiConfig(properties);
             case PRTY20:
                 return createPrty20PsiConfig(properties);
-            case PRTY19_LOW:
-                return createPrty19LowPsiConfig(properties);
             case PRTY19_FAST:
                 return createPrty19FastPsiConfig(properties);
             case GMR21:
@@ -102,17 +99,9 @@ public class PsiConfigUtils {
         return new Prty20PsiConfig.Builder().setBinaryOkvsType(okvsType).build();
     }
 
-    private static PsiConfig createPrty19LowPsiConfig(Properties properties) {
-        // OKVS类型
-        String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type",
-            Gf2eDokvsType.POLYNOMIAL.toString());
-        Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
-        return new Prty19LowPsiConfig.Builder().setOkvsType(okvsType).build();
-    }
-
     private static PsiConfig createPrty19FastPsiConfig(Properties properties) {
         String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type",
-            Gf2eDokvsType.POLYNOMIAL.toString());
+            Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT.toString());
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
         return new Prty19FastPsiConfig.Builder().setOkvsType(okvsType).build();
     }

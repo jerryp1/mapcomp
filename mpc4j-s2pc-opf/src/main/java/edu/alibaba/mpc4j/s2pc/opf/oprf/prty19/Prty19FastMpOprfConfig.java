@@ -49,7 +49,7 @@ public class Prty19FastMpOprfConfig extends AbstractMultiPartyPtoConfig implemen
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-            okvsType = Gf2eDokvsType.POLYNOMIAL;
+            okvsType = Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT;
         }
 
         public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {

@@ -142,6 +142,7 @@ public class Prty19FastMpOprfReceiver extends AbstractMpOprfReceiver {
         logPhaseInfo(PtoState.INIT_END);
     }
 
+    @Override
     public MpOprfReceiverOutput oprf(byte[][] inputs) throws MpcAbortException {
         setPtoInput(inputs);
         logPhaseInfo(PtoState.PTO_BEGIN);
@@ -230,8 +231,9 @@ public class Prty19FastMpOprfReceiver extends AbstractMpOprfReceiver {
             return Arrays.asList(okvsList.get(binIndex).encode(keyValueMap, false));
         }).collect(Collectors.toList());
         List<byte[]> storage = new ArrayList<>();
-        for (int i = 0; i < storageList.size(); i++)
-            storage.addAll(storageList.get(i));
+        for (List<byte[]> bytes : storageList) {
+            storage.addAll(bytes);
+        }
         return storage;
     }
 
