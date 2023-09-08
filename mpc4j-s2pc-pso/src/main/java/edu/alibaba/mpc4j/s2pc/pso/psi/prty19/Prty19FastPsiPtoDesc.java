@@ -32,9 +32,13 @@ class Prty19FastPsiPtoDesc implements PtoDesc {
          */
         CLIENT_SEND_TWO_CHOICE_HASH_KEY,
         /**
-         * client sends polynomials
+         * CLient sends OKVS keys
          */
-        CLIENT_SEND_POLYNOMIALS,
+        CLIENT_SEND_OKVS_KEY,
+        /**
+         * client sends OKVS array
+         */
+        CLIENT_SEND_OKVS_ARRAY,
         /**
          * server sends the first PRFs
          */
