@@ -1,36 +1,43 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.cm20;
+package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CM20-PSI protocol description. The protocol comes from the following paper:
- * <p>
- * Chase M, Miao P. Private Set Intersection in the Internet Setting from Lightweight Oblivious PRF. CRYPTO 2020.
- * pp. 34-63.
- * <p>
+ * mp-OPRF-based PSI protocol description.
  *
- * @author Ziyuan Liang, Feng Han
- * @date 2023/08/10
+ * @author Weiran Liu
+ * @date 2023/9/10
  */
-class Cm20PsiPtoDesc implements PtoDesc {
+class MpOprfPsiPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 8849499987257147091L);
+    private static final int PTO_ID = Math.abs((int) 8864409522249251355L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "CM20_PSI";
+    private static final String PTO_NAME = "MP_OPRF_PSI";
+
+    /**
+     * protocol step
+     */
+    enum PtoStep {
+        /**
+         * server sends PRFs
+         */
+        SERVER_SEND_PRFS,
+    }
+    
     /**
      * singleton mode
      */
-    private static final Cm20PsiPtoDesc INSTANCE = new Cm20PsiPtoDesc();
+    private static final MpOprfPsiPtoDesc INSTANCE = new MpOprfPsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Cm20PsiPtoDesc() {
+    private MpOprfPsiPtoDesc() {
         // empty
     }
 

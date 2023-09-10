@@ -59,10 +59,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[] {
 //            PsiType.RT21.name(), new Rt21ElligatorPsiConfig.Builder().build(),
 //        });
-//        // CM20
-//        configurations.add(new Object[] {
-//            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
-//        });
+        // CM20
+        configurations.add(new Object[] {
+            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
+        });
         // CZZ22
         configurations.add(new Object[] {
             PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),

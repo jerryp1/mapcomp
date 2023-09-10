@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.MpOprfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/10
  */
-public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprfPsiConfig {
     /**
      * MP-OPRF config
      */
@@ -35,10 +35,12 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
         return PsiFactory.PsiType.CM20;
     }
 
+    @Override
     public MpOprfConfig getMpOprfConfig() {
         return mpOprfConfig;
     }
 
+    @Override
     public FilterType getFilterType() {
         return filterType;
     }
