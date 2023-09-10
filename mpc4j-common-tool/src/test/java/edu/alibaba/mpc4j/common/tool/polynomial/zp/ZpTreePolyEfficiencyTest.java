@@ -115,7 +115,7 @@ public class ZpTreePolyEfficiencyTest {
             );
         }
         for (ZpPolyFactory.ZpTreePolyType type : ZP_TREE_POLY_TYPES) {
-            ZpTreePoly zpTreePoly = ZpPolyFactory.createInstance(type, l);
+            ZpTreePoly zpTreePoly = ZpPolyFactory.createTreeInstance(type, l);
             STOP_WATCH.start();
             zpTreePoly.prepareInterpolateBinaryTree(xArray);
             STOP_WATCH.stop();

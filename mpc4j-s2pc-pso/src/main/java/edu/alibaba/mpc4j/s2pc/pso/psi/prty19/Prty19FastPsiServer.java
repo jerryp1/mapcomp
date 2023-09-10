@@ -175,7 +175,7 @@ public class Prty19FastPsiServer<T> extends AbstractPsiServer<T> {
         logStepInfo(PtoState.PTO_STEP, 3, 4, qsTime, "Server computes Q1(x) and Q2(x)");
 
         DataPacketHeader polynomialsHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.CLIENT_SEND_OKVS_ARRAY.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.CLIENT_SEND_POLYNOMIALS.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> polynomialsPayload = rpc.receive(polynomialsHeader).getPayload();

@@ -204,7 +204,7 @@ public class Prty19FastPsiClient<T> extends AbstractPsiClient<T> {
             .flatMap(Arrays::stream)
             .collect(Collectors.toList());
         DataPacketHeader polynomialsHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.CLIENT_SEND_OKVS_ARRAY.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.CLIENT_SEND_POLYNOMIALS.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(polynomialsHeader, polynomialsPayload));

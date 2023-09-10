@@ -2,9 +2,13 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
@@ -98,34 +102,34 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
             PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
         });
 
-//        // KKRT16 (no-stash)
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
-//            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
-//        });
-//        // KKRT16 (4 hash)
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
-//            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
-//        });
-//        // KKRT16
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.KKRT16.name(), new Kkrt16PsiConfig.Builder().build(),
-//        });
-//        // HFH99_BYTE_ECC
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
-//        });
-//        // HFH99_ECC (compress)
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
-//            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
-//        });
-//        // HFH99_ECC (uncompress)
-//        configurations.add(new Object[] {
-//            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
-//            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
-//        });
+        // KKRT16 (no-stash)
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
+            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
+        });
+        // KKRT16 (4 hash)
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
+            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+        });
+        // KKRT16
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.KKRT16.name(), new Kkrt16PsiConfig.Builder().build(),
+        });
+        // HFH99_BYTE_ECC
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
+        });
+        // HFH99_ECC (compress)
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
+            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
+        });
+        // HFH99_ECC (uncompress)
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
+            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
+        });
 
         return configurations;
     }
