@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,7 +12,6 @@ import java.util.Arrays;
  * @date 2023/8/5
  */
 public class UintArithmeticSmallModTest {
-
 
 
 
@@ -132,12 +132,19 @@ public class UintArithmeticSmallModTest {
     public void moduloUintModTest() {
 
         long[] values = new long[4];
+        long[] valuesCopy = Arrays.copyOf(values, values.length);
 
         Modulus mod = new Modulus(2);
         UintArithmeticSmallMod.moduloUintInplace(values, 3, mod);
         Assert.assertEquals(0, values[0]);
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
+
+        long res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(res, 0);
+
+
+
 
         values[0] = 1;
         values[1] = 0;
@@ -147,6 +154,11 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
 
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(1, res);
+
+
         values[0] = 2;
         values[1] = 0;
         values[2] = 0;
@@ -155,6 +167,10 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
 
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(0, res);
+
         values[0] = 3;
         values[1] = 0;
         values[2] = 0;
@@ -162,6 +178,11 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(1, values[0]);
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
+
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(1, res);
+
 
         mod.setValue(0xFFFFL);
         values[0] = 0X850717BF66F1FDB4L; // 9585656442714717620
@@ -172,6 +193,12 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
 
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(65143L, res);
+
+
+
         mod.setValue(0x1000);
         values[0] = 0X850717BF66F1FDB4L; // 9585656442714717620
         values[1] = 1817697005049051848L;
@@ -180,6 +207,10 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(0xDB4, values[0]);
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
+
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 3, mod);
+        Assert.assertEquals(0xDB4, res);
 
         mod.setValue(0xFFFFFFFFC001L);
         values[0] = 0X850717BF66F1FDB4L; // 9585656442714717620
@@ -191,6 +222,12 @@ public class UintArithmeticSmallModTest {
         Assert.assertEquals(0, values[1]);
         Assert.assertEquals(0, values[2]);
         Assert.assertEquals(0, values[3]);
+
+
+        valuesCopy = Arrays.copyOf(values, values.length);
+        res = UintArithmeticSmallMod.moduloUint(valuesCopy, 4, mod);
+        Assert.assertEquals(124510066632001L, res);
+
 
 
     }

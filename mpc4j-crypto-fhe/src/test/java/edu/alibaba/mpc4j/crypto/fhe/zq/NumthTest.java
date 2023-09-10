@@ -1,11 +1,10 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -133,6 +132,21 @@ public class NumthTest {
         Assert.assertTrue(Numth.tryInvertUintMod(input, modulus, res));
         Assert.assertEquals(5, res[0]);
 
+    }
+
+
+    @Test
+    public void gcdTest() {
+
+        Assert.assertEquals(1, Numth.gcd(1, 1));
+        Assert.assertEquals(1, Numth.gcd(2, 1));
+        Assert.assertEquals(1, Numth.gcd(1, 2));
+        Assert.assertEquals(2, Numth.gcd(2, 2));
+        Assert.assertEquals(3, Numth.gcd(6, 15));
+        Assert.assertEquals(3, Numth.gcd(15, 6));
+        Assert.assertEquals(1, Numth.gcd(7, 15));
+        Assert.assertEquals(1, Numth.gcd(15, 7));
+        Assert.assertEquals(3, Numth.gcd(11112, 44445));
     }
 
     @Test

@@ -1,9 +1,10 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
-import com.sun.tools.internal.jxc.ap.Const;
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 
-import java.util.List;
+import java.math.BigInteger;
 import java.util.Random;
 
 /**
@@ -12,6 +13,14 @@ import java.util.Random;
  * @date 2023/8/9
  */
 public class Numth {
+
+
+    public static boolean isPrime(long a) {
+        if (a == 2) {
+            return true;
+        }
+        return BigInteger.valueOf(a).isProbablePrime(CommonConstants.STATS_BIT_LENGTH);
+    }
 
     /**
      *  Try to find the smallest (as integer) primitive degree-th root of
@@ -106,7 +115,7 @@ public class Numth {
 
 
     /**
-     *
+     * Generate a vector of primes with "bit_size" bits that are congruent to 1 modulo "factor"
      * @param factor
      * @param bitSize bit-size of prime value
      * @return A Modulus object with prime value
@@ -117,11 +126,11 @@ public class Numth {
 
 
     /**
-     *
-     * @param factor
-     * @param bitSize bit size of prime value
+     * Generate a vector of primes with "bit_size" bits that are congruent to 1 modulo "factor"
+     * @param factor factor
+     * @param bitSize bit-size of prime value
      * @param count number of Modulus
-     * @return Modulus[] with length count, and every modulus's value is a prime number.
+     * @return Modulus[] with length count, and every modulus's value is a prime number, and are congruent to 1 modulo "factor"
      */
     public static Modulus[] getPrimes(long factor, int bitSize, int count) {
 
@@ -145,9 +154,42 @@ public class Numth {
             value -= factor;
         }
         if (count > 0) {
-            throw new RuntimeException("failed to find enough qualifying primes, please check factor and bitSize");
+            throw new IllegalArgumentException("failed to find enough qualifying primes, please check factor and bitSize");
         }
         return modArray;
+    }
+
+
+    /**
+     *
+     * @param x a number
+     * @param y a number
+     * @return gcd(x, y)
+     */
+    public static long gcd(long x, long y) {
+        assert x != 0;
+//        assert y != 0;
+        if (x < y) {
+            return gcd(y, x);
+        }else if (y == 0) {
+            return x;
+        }else {
+            long f = x % y;
+            if (f == 0) {
+                return y;
+            }else {
+                return gcd(y, f);
+            }
+        }
+    }
+
+    /**
+     * @param x a value
+     * @param y a value
+     * @return if gcd(x, y) = 1, return true, else return false
+     */
+    public static boolean areCoPrime(long x, long y) {
+        return !(gcd(x, y) > 1);
     }
 
     /**
@@ -188,9 +230,9 @@ public class Numth {
      * Compute a^{-1} mod b using Extended Gcd, basic idea is that
      * gdc(a, b) = ax + by, if gcd(a, b) = 1, then 1 = ax + by ,  both sides mod b:
      *  1 mod b = ax mod b  , so a^{-1} mod b = x mod b
-     * @param value
-     * @param modulus
-     * @param result
+     * @param value input
+     * @param modulus modulus
+     * @param result Array length is 1, store the value's inverse
      * @return value * value^{-1} = 1 mod modulus
      */
     public static boolean tryInvertUintMod(long value, long modulus, long[] result) {
@@ -215,9 +257,5 @@ public class Numth {
         }
 
     }
-
-
-
-
 
 }

@@ -164,16 +164,14 @@ public class UintArithmetic {
 
         assert uint64Count > 0;
 
-        long[] tmp;
+        long[] tmp = new long[1];
         long carry;
-        tmp = addUint64(~as[0], 1);
+        carry = addUint64(~as[0], 1, tmp);
         result[0] = tmp[0];
-        carry = tmp[1];
         int i = 1;
         while (--uint64Count > 0) {
-            tmp = addUint64(~as[i], 0, carry);
+            carry = addUint64(~as[i], 0, carry, tmp);
             result[i] = tmp[0];
-            carry = tmp[1];
             i++;
         }
     }
@@ -203,21 +201,24 @@ public class UintArithmetic {
 
 
     /**
-     * @param as
-     * @param bs
-     * @param result
+     *
+     * @param as 128-bit
+     * @param bs 128-bit
+     * @param result sum of 128-bit + 128-bit
+     * @return carry
      */
     public static long addUint128(long[] as, long[] bs, long[] result) {
         assert as.length == 2;
         assert as.length == bs.length;
         assert result.length == 2;
 
-        long[] tmp = addUint64(as[0], bs[0]);
+        long[] tmp = new long[1];
+
+        long carry = addUint64(as[0], bs[0], tmp);
         result[0] = tmp[0];
-        long carry = tmp[1];
-        tmp = addUint64(as[1], bs[1], carry);
+        carry = addUint64(as[1], bs[1], carry, tmp);
         result[1] = tmp[0];
-        carry = tmp[1];
+
         return carry;
     }
 
@@ -296,10 +297,12 @@ public class UintArithmetic {
             for (; bsIndex < bsIndexMax; bsIndex++) {
                 long[] tempResult = new long[2];
                 multiplyUint64(as[asIndex], innerBs[bsIndex], tempResult);
-                long[] addTemp = addUint64(tempResult[0], carry, 0);
-                carry = tempResult[1] + addTemp[1];
-                long[] addTemp2 = addUint64(innerResult[bsIndex], addTemp[0], 0);
-                carry += addTemp2[1];
+                long[] addTemp = new long[1];
+                long tmpCarry = addUint64(tempResult[0], carry, 0, addTemp);
+                carry = tempResult[1] + tmpCarry;
+                long[] addTemp2 = new long[1];
+                long tmpCarry2 = addUint64(innerResult[bsIndex], addTemp[0], 0, addTemp2);
+                carry += tmpCarry2;
                 innerResult[bsIndex] = addTemp2[0];
             }
             // Write carry if there is room in result
@@ -345,8 +348,9 @@ public class UintArithmetic {
             long[] mulTemp = new long[2];// index = 0 is the low-64bit, index = 1 is the high 64 bits
             multiplyUint64(as[asIndex], b, mulTemp);
             // addTemp[0] is the add result, addTemp[1] is the add carry
-            long[] addTemp = addUint64(mulTemp[0], carry, 0);
-            carry = mulTemp[1] + addTemp[1];
+            long[] addTemp = new long[1];
+            long carryTmp = addUint64(mulTemp[0], carry, 0, addTemp);
+            carry = mulTemp[1] + carryTmp;
             result[asIndex] = addTemp[0];
         }
         if (asIndexMax < resultUint64Count) {
@@ -363,7 +367,7 @@ public class UintArithmetic {
     public static void multiplyManyUint64(long[] operands, int count, long[] result) {
 
         assert operands.length >= count;
-        assert result.length >= count;
+//        assert result.length >= count;
 
         if (count == 0){
             return;
@@ -431,10 +435,9 @@ public class UintArithmetic {
 
         long middle1 = a * bRight;
         long middle, carry;
-        long[] tmp;
-        tmp = addUint64(middle1, b * aRight);
+        long[] tmp = new long[1];
+        carry = addUint64(middle1, b * aRight, tmp);
         middle = tmp[0];
-        carry = tmp[1];
 
         long left = a * b + (carry << 32);
         long right = aRight * bRight;
@@ -475,10 +478,9 @@ public class UintArithmetic {
 
 
         long middle, carry;
-        long[] tmp;
-        tmp = addUint64(middle1, b * aRight);
+        long[] tmp = new long[1];
+        carry = addUint64(middle1, b * aRight, tmp);
         middle = tmp[0];
-        carry = tmp[1];
 //        System.out.println("b * aRight: " + Long.toHexString(b * aRight));
 //        System.out.println("middle1 + b * aRight: " + Long.toHexString(middle));
 //        System.out.println("middle1 + b * aRight(carry): " + Long.toHexString(carry));
@@ -623,7 +625,7 @@ public class UintArithmetic {
 
 
     /**
-     * 128 bits / 64 bits = long[3] / long
+     * 128 bits / 64 bits = long[2] / long
      * @param numerator
      * @param denominator
      * @param quotient
@@ -986,112 +988,116 @@ public class UintArithmetic {
         }
     }
 
-    public static long[] subUint64(long a, long b) {
-        long[] res = new long[2];
-        res[0] = a - b;
+    /**
+     *
+     * @param a
+     * @param b
+     * @param result Array length is 1, store a - b
+     * @return (a-b)'s borrow, 0 or 1
+     */
+    public static long subUint64(long a, long b, long[] result) {
+        assert result.length == 1;
+        result[0] = a - b;
 
+        return Long.compareUnsigned(b, a) > 0 ? 1 : 0;
+    }
+//
+//    public static long[] subUint64(long a, long b) {
+//        long[] res = new long[2];
+//        res[0] = a - b;
+//
+//        // if b > a, then must be borrow
+//        res[1] = Long.compareUnsigned(b, a) > 0 ? 1 : 0;
+//
+//        return res;
+//    }
 
-        // 0 is the smallest, borrow = 1
-        if (a == 0 && b != 0) {
-            res[1] = 1;
-            return res;
-        }
-
-        if (a > 0 && b > 0) {
-            res[1] = a < b ? 1 : 0;
-            return res;
-        }
-        if (a < 0 && b < 0) {
-            res[1] = (a < b) ? 1 : 0;
-            return res;
-        }
-        if (a > 0 && b < 0) {
-            res[1] = 1;
-            return res;
-        }
-
-        // 0 is the smallest, borrow = 1
+//    public static long[] subUint64(long a, long b) {
+//        long[] res = new long[2];
+//        res[0] = a - b;
+//
+//
+//        // 0 is the smallest, borrow = 1
 //        if (a == 0 && b != 0) {
 //            res[1] = 1;
 //            return res;
 //        }
 //
-//        if (res[0] > 0) {
-//            // pos - neg , diff > 0, small - bigger , so borrow = 1
-//            // pos - pos, diff > 0, big - small, so borrow = 0
-//            // neg - neg, diff > 0, big - small, -1 - (-2) , borrow = 0, omit
-//            if (a >= 0 && b < 0) {
-//                res[1] = 1;
-//                return res;
-//            }
-//        } else if (res[0] < 0) {// res[0] < 0
-//            if (a >= 0 && b > 0) {
-//                res[1] = 1;
-//                return res;
-//            } else if (a < 0 && b < 0) {
-//                // b will be bigger , such as -2 - (-1) = -1 < 0, but -1 is bigger, so borrow = 1
-//                res[1] = 1;
-//                return res;
-//            }
+//        if (a > 0 && b > 0) {
+//            res[1] = a < b ? 1 : 0;
+//            return res;
 //        }
-        return res;
+//        if (a < 0 && b < 0) {
+//            res[1] = (a < b) ? 1 : 0;
+//            return res;
+//        }
+//        if (a > 0 && b < 0) {
+//            res[1] = 1;
+//            return res;
+//        }
+//
+//        return res;
+//    }
+
+    /**
+     *
+     * @param a
+     * @param b
+     * @param borrow
+     * @param result Array length is 1, store a - b - borrow
+     * @return (a - b - borrow)'s borrow, 0 or 1
+     */
+    public static long subUint64(long a, long b, long borrow, long[] result) {
+        assert result.length == 1;
+        long diff = a - b;
+        result[0] = diff - borrow;
+        // diff > a, must produce borrow, diff < borrow, only borrow = 1, diff = 0, will produce new borrow
+        return (Long.compareUnsigned(diff, a) > 0 || Long.compareUnsigned(diff, borrow) < 0) ? 1 : 0;
     }
 
-    public static long[] subUint64(long a, long b, long borrow) {
-        long[] res = new long[2];
-        long diff = a - b;
-        res[0] = diff - borrow;
-        // must consider that inputs will be negative, and diff will be negative
 
-        // 0 is the smallest, borrow = 1
-        if (a == 0 && b != 0) {
-            res[1] = 1;
-            return res;
-        }
-        if (diff == 0) {
-            res[1] = borrow;
-            return res;
-        }
+//    public static long[] subUint64(long a, long b, long borrow) {
+//        long[] res = new long[2];
+//        long diff = a - b;
+//        res[0] = diff - borrow;
+//        // diff > a, must produce borrow, diff < borrow, only borrow = 1, diff = 0, will produce new borrow
+//        long borrowOut = (Long.compareUnsigned(diff, a) > 0 || Long.compareUnsigned(diff, borrow) < 0) ? 1 : 0;
+//        res[1] = borrowOut;
+//
+//        return res;
+//    }
 
-        if (a > 0 && b > 0) {
-            res[1] = a < b ? 1 : 0;
-            return res;
-        }
-        if (a < 0 && b < 0) {
-            res[1] = (a < b) ? 1 : 0;
-            return res;
-        }
-        if (a > 0 && b < 0) {
-            res[1] = 1;
-            return res;
-        }
-        // a < 0 && b > 0 , no borrow
-
+//
+//    public static long[] subUint64(long a, long b, long borrow) {
+//        long[] res = new long[2];
+//        long diff = a - b;
+//        res[0] = diff - borrow;
+//        // must consider that inputs will be negative, and diff will be negative
+//
+//        // 0 is the smallest, borrow = 1
+//        if (a == 0 && b != 0) {
+//            res[1] = 1;
+//            return res;
+//        }
 //        if (diff == 0) {
 //            res[1] = borrow;
 //            return res;
-//        }else if (diff > 0) {
-//            // consider each condition will lead to diff > 0
-//            // a < 0 && b < 0 , res[1] = 0, can be omitted， same as a > 0 && b >0
-//            // a < 0 && b > 0 can not lead to diff > 0
-//            if ( a >= 0 && b < 0) {
-//                res[1] = 1;
-//                return res;
-//            }
-//        }else { // diff < 0
-//            if (a >=0 && b > 0) {
-//                res[1] = 1;
-//                return res;
-//            }else if (a < 0 && b < 0) {
-//                // b will be bigger , such as -2 - (-1) = -1 < 0, but -1 is bigger, so borrow = 1
-//                res[1] = 1;
-//                return res;
-//            } // a < 0 && b > 0, res[1] = 0 , can be omitted
-//            // a > 0 & b < 0 can not lead to diff < 0
 //        }
-
-        return res;
-    }
+//
+//        if (a > 0 && b > 0) {
+//            res[1] = a < b ? 1 : 0;
+//            return res;
+//        }
+//        if (a < 0 && b < 0) {
+//            res[1] = (a < b) ? 1 : 0;
+//            return res;
+//        }
+//        if (a > 0 && b < 0) {
+//            res[1] = 1;
+//            return res;
+//        }
+//        return res;
+//    }
 
     /**
      * @param as
@@ -1103,17 +1109,15 @@ public class UintArithmetic {
     public static long subUint(long[] as, int uint64Count, long b, long[] result) {
 
         assert uint64Count > 0;
-        long[] tmp;
+        long[] tmp = new long[1];
         long borrow;
-        tmp = subUint64(as[0], b);
+        borrow = subUint64(as[0], b, tmp);
         result[0] = tmp[0];
-        borrow = tmp[1];
 
         int i = 1;
         while (--uint64Count > 0) {
-            tmp = subUint64(as[i], 0, borrow);
+            borrow = subUint64(as[i], 0, borrow, tmp);
             result[i] = tmp[0];
-            borrow = tmp[1];
             i++;
         }
         return borrow;
@@ -1123,15 +1127,13 @@ public class UintArithmetic {
     public static long subUint(long[] as, long[] bs, int uint64Count, long[] result) {
 
         assert uint64Count > 0;
-
-        long[] tmp = subUint64(as[0], bs[0]);
+        long[] tmp = new long[1];
+        long borrow = subUint64(as[0], bs[0], tmp);
         result[0] = tmp[0];
-        long borrow = tmp[1];
         int i = 1;
         while (--uint64Count > 0) {
-            tmp = subUint64(as[i], bs[i], borrow);
+            borrow = subUint64(as[i], bs[i], borrow, tmp);
             result[i] = tmp[0];
-            borrow = tmp[1];
             i++;
         }
         return borrow;
@@ -1139,15 +1141,15 @@ public class UintArithmetic {
 
     public static long subUint(long[] as, int asUint64Count, long[] bs, int bsUint64Count, long borrow, int uint64Count, long[] result) {
         assert uint64Count > 0;
-        long[] tmp;
+        long[] tmp = new long[1];
         for (int i = 0; i < uint64Count; i++) {
-            tmp = subUint64(
+            borrow = subUint64(
                     i < asUint64Count ? as[i] : 0,
                     i < bsUint64Count ? bs[i] : 0,
-                    borrow
+                    borrow,
+                    tmp
             );
             result[i] = tmp[0];
-            borrow = tmp[1];
         }
         return borrow;
     }
@@ -1165,71 +1167,100 @@ public class UintArithmetic {
      * @param b
      * @return
      */
-    public static long[] addUint64(long a, long b) {
-        long[] res = new long[2];
-        res[0] = a + b;
-        // 似乎加法进位的判断会简单很多，neg + neg 一定溢出，因为 msb = 1,
-        // neg + neg, carry must be 1, because both msb = 1
-        // pos + pos, never > 2^64 - 1, (2^63 - 1) + (2^63 - 1) = 2^64 - 2 < 2^64 - 1
-        if (a < 0 && b < 0) {
-            res[1] = 1;
-            return res;
-        }
-        // neg + pos or pos + neg maybe produce carry
-        // when res is pos, must produce carry, because -1 = 0xFFFF...FF is the largest neg
-        // when res > 0xFFF...FF， res will >= 0, so carry produce
-        // note that , a * b < 0 不能表示 a < 0 b > 0 or a > 0 b < 0 ,因为还是可能会"溢出" long, 即 neg * pos 可能为正数
-        if ((a < 0 && b > 0) || (a > 0 && b < 0)) {
-            if (res[0] >= 0) {
-                res[1] = 1;
-                return res;
-            }
-        }
+//    public static long[] addUint64(long a, long b) {
+//        long[] res = new long[2];
+//        res[0] = a + b;
+//
+//        // (x, y) x > y return 1, x = y return 0, x < y return -1
+//        // if res[0] < a, will produce carry
+//        long carry = Long.compareUnsigned(res[0], a) < 0 ? 1: 0;
+//        res[1] = carry;
+//
+//        return res;
+//    }
 
-        return res;
+    /**
+     *
+     * @param a
+     * @param b
+     * @param result store a + b
+     * @return (a + b)'s carry
+     */
+    public static long addUint64(long a, long b, long[] result) {
+        assert result.length == 1;
+        result[0] = a + b;
+        return Long.compareUnsigned(result[0], a) < 0 ? 1: 0;
     }
 
-    public static long[] addUint64(long a, long b, long carry) {
-        long[] res = new long[2];
+    /**
+     *
+     * @param a
+     * @param b
+     * @param carry
+     * @param result Array of length 1, save the (a + b + carry)
+     * @return (a + b + carry)'s carry
+     */
+    public static long addUint64(long a, long b, long carry, long[] result) {
+        assert result.length == 1;
         long sum = a + b;
-        res[0] = sum + carry;
+        result[0] = sum + carry;
+        return (Long.compareUnsigned(sum, a) < 0 || (sum == - 1 && carry == 1) ) ? 1: 0;
+    }
 
-        // neg + neg, carry must be 1, because both msb = 1
-        // pos + pos, may be, needs further judge
-        // neg + neg, carry must be 1, because both msb = 1
-        // pos + pos, never > 2^64 - 1, (2^63 - 1) + (2^63 - 1) = 2^64 - 2 < 2^64 - 1
-        if (a < 0 && b < 0) {
-            res[1] = 1;
-            return res;
-        }
-        if ((a < 0 && b > 0) || (a > 0 && b < 0)) {
-            if (sum >= 0) {
-                res[1] = 1;
-                return res;
-            }
-        }
-        // neg + pos , may be overflow
-        if (a * b < 0) {
-            if (UintCore.getSignificantBitCount(sum) < UintCore.getSignificantBitCount(a)) {
-                res[1] = 1;
-                return res;
-            }
-        }
+
+//    public static long[] addUint64(long a, long b, long carry) {
+//        long[] res = new long[2];
+//        long sum = a + b;
+//        res[0] = sum + carry;
 //
-        // when a b are not same sign, and a + b = 0, carry = 1
-//        if (sum == 0 && a * b < 0) {
+//        long condition1 = Long.compareUnsigned(sum, a) < 0 ? 1 : 0;
+//        long condition2 = (sum == - 1 && carry == 1) ? 1 : 0;
+//        res[1] = (condition1 > 0 || condition2 > 0) ? 1 : 0;
+//
+//        return res;
+//    }
+//
+//    public static long[] addUint64(long a, long b, long carry) {
+//        long[] res = new long[2];
+//        long sum = a + b;
+//        res[0] = sum + carry;
+//
+//        // neg + neg, carry must be 1, because both msb = 1
+//        // pos + pos, may be, needs further judge
+//        // neg + neg, carry must be 1, because both msb = 1
+//        // pos + pos, never > 2^64 - 1, (2^63 - 1) + (2^63 - 1) = 2^64 - 2 < 2^64 - 1
+//        if (a < 0 && b < 0) {
 //            res[1] = 1;
 //            return res;
 //        }
-//        // consider input carry, only when sum = -1(0xFFFFF...), carry = 1 will overflow
-
-        // other case all no carry
-        if (sum == -1 && carry == 1) {
-            res[1] = 1;
-            return res;
-        }
-        return res;
-    }
+//        if ((a < 0 && b > 0) || (a > 0 && b < 0)) {
+//            if (sum >= 0) {
+//                res[1] = 1;
+//                return res;
+//            }
+//        }
+//        // neg + pos , may be overflow
+//        if (a * b < 0) {
+//            if (UintCore.getSignificantBitCount(sum) < UintCore.getSignificantBitCount(a)) {
+//                res[1] = 1;
+//                return res;
+//            }
+//        }
+////
+//        // when a b are not same sign, and a + b = 0, carry = 1
+////        if (sum == 0 && a * b < 0) {
+////            res[1] = 1;
+////            return res;
+////        }
+////        // consider input carry, only when sum = -1(0xFFFFF...), carry = 1 will overflow
+//
+//        // other case all no carry
+//        if (sum == -1 && carry == 1) {
+//            res[1] = 1;
+//            return res;
+//        }
+//        return res;
+//    }
 
 
     /**
@@ -1237,19 +1268,18 @@ public class UintArithmetic {
      * @param uint64Count
      * @param b
      * @param result
-     * @return long[] + long
+     * @return long[] + long's carry
      */
     public static long addUint(long[] as, int uint64Count, long b, long[] result) {
 
         assert uint64Count > 0;
-        long[] tmp = addUint64(as[0], b);
-        long carry = tmp[1];
+        long[] tmp = new long[1];
+        long carry = addUint64(as[0], b, tmp);
         result[0] = tmp[0];
         int i = 1;
         while (--uint64Count > 0) {
-            tmp = addUint64(as[i], 0, carry);
+            carry = addUint64(as[i], 0, carry, tmp);
             result[i] = tmp[0];
-            carry = tmp[1];
             i++;
         }
         return carry;
@@ -1259,34 +1289,32 @@ public class UintArithmetic {
 
         assert uint64Count > 0;
 
-        long[] tmp;
+        long[] tmp = new long[1];
         long carry;
-        tmp = addUint64(as[0], bs[0]);
+        carry = addUint64(as[0], bs[0], tmp);
         result[0] = tmp[0];
-        carry = tmp[1];
+
         int i = 1;
         while (--uint64Count > 0) {
-            tmp = addUint64(as[i], bs[i], carry);
+            carry = addUint64(as[i], bs[i], carry, tmp);
             result[i] = tmp[0];
-            carry = tmp[1];
             i++;
         }
         return carry;
-
     }
 
 
     public static long addUint(long[] as, int asUint64Count, long[] bs, int bsUint64Count, long carry, int uint64Count, long[] result) {
         assert uint64Count > 0;
-        long[] tmp;
+        long[] tmp = new long[1];
         for (int i = 0; i < uint64Count; i++) {
-            tmp = addUint64(
+            carry = addUint64(
                     i < asUint64Count ? as[i] : 0,
                     i < bsUint64Count ? bs[i] : 0,
-                    carry
+                    carry,
+                    tmp
             );
             result[i] = tmp[0];
-            carry = tmp[1];
         }
         return carry;
     }

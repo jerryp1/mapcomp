@@ -295,6 +295,31 @@ public class UintCore {
     }
 
 
+    /**
+     *
+     * @param value a base-2^64 value
+     * @param uint64Count the used count in value
+     * @return the number of non-zero element in value[0, uint64Count)
+     */
+    public static int getNonZeroUint64CountUint(long[] value, int uint64Count) {
+
+        assert uint64Count > 0;
+
+        int nonZeroCount = uint64Count;
+
+        int index = uint64Count - 1;
+
+        for (; uint64Count > 0; uint64Count--) {
+            if (value[index] == 0) {
+                nonZeroCount--;
+            }
+            index--;
+        }
+
+        return nonZeroCount;
+    }
+
+
 
     /**
      * the real bits in values, for example: [0, 0, 1]  63 + 63 + 1 = 127

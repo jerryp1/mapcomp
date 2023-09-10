@@ -635,6 +635,19 @@ public class UintArithmeticTest {
     }
 
     @Test
+    public void divideUintInplaceTest2() {
+
+
+        long[] a = new long[] {0, 0, 1};
+        long[] b = new long[] {2, 0, 0};
+
+        long[] res = new long[a.length];
+        UintArithmetic.divideUintInplace(a, b, 3, res);
+        System.out.println(Arrays.toString(res));
+
+    }
+
+    @Test
     public void divideUintInplaceTest() {
 
         long[] ptr = new long[4];
@@ -1174,58 +1187,59 @@ public class UintArithmeticTest {
     @Test
     public void subUint64Test() {
 
-        long[] res;
-        res = UintArithmetic.subUint64(0, 0, 0);
+        long[] res = new long[1];
+        long borrow;
+        borrow = UintArithmetic.subUint64(0, 0, 0, res);
         Assert.assertEquals(res[0], 0);
-        Assert.assertEquals(res[1], 0);
+        Assert.assertEquals(borrow, 0);
 
-        res = UintArithmetic.subUint64(1, 1, 0);
+        borrow = UintArithmetic.subUint64(1, 1, 0, res);
         Assert.assertEquals(res[0], 0);
-        Assert.assertEquals(res[1], 0);
+        Assert.assertEquals(borrow, 0);
 
-        res = UintArithmetic.subUint64(1, 0, 1);
+        borrow = UintArithmetic.subUint64(1, 0, 1, res);
         Assert.assertEquals(res[0], 0);
-        Assert.assertEquals(res[1], 0);
+        Assert.assertEquals(borrow, 0);
 
-        res = UintArithmetic.subUint64(0, 1, 1);
+        borrow = UintArithmetic.subUint64(0, 1, 1, res);
         Assert.assertEquals(0xFFFFFFFFFFFFFFFEL, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(1, 1, 1);
+        borrow = UintArithmetic.subUint64(1, 1, 1, res);
         Assert.assertEquals(0xFFFFFFFFFFFFFFFFL, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(0xFFFFFFFFFFFFFFFFL, 1, 0);
+        borrow = UintArithmetic.subUint64(0xFFFFFFFFFFFFFFFFL, 1, 0, res);
         Assert.assertEquals(0xFFFFFFFFFFFFFFFEL, res[0]);
-        Assert.assertEquals(0, res[1]);
+        Assert.assertEquals(0, borrow);
 
-        res = UintArithmetic.subUint64(1, 0xFFFFFFFFFFFFFFFFL, 0);
+        borrow = UintArithmetic.subUint64(1, 0xFFFFFFFFFFFFFFFFL, 0, res);
         Assert.assertEquals(2, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(0, 0xFFFFFFFFFFFFFFFFL, 0);
+        borrow = UintArithmetic.subUint64(0, 0xFFFFFFFFFFFFFFFFL, 0, res);
         Assert.assertEquals(1, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(1, 0xFFFFFFFFFFFFFFFFL, 1);
+        borrow = UintArithmetic.subUint64(1, 0xFFFFFFFFFFFFFFFFL, 1, res);
         Assert.assertEquals(1, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(2, 0xFFFFFFFFFFFFFFFEL, 0);
+        borrow = UintArithmetic.subUint64(2, 0xFFFFFFFFFFFFFFFEL, 0, res);
         Assert.assertEquals(4, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(2, 0xFFFFFFFFFFFFFFFEL, 1);
+        borrow = UintArithmetic.subUint64(2, 0xFFFFFFFFFFFFFFFEL, 1, res);
         Assert.assertEquals(3, res[0]);
-        Assert.assertEquals(1, res[1]);
+        Assert.assertEquals(1, borrow);
 
-        res = UintArithmetic.subUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 0);
+        borrow = UintArithmetic.subUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 0, res);
         Assert.assertEquals(0xE01E01E01E01E01FL, res[0]);
-        Assert.assertEquals(0, res[1]);
+        Assert.assertEquals(0, borrow);
 
-        res = UintArithmetic.subUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 1);
+        borrow = UintArithmetic.subUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 1, res);
         Assert.assertEquals(0xE01E01E01E01E01EL, res[0]);
-        Assert.assertEquals(0, res[1]);
+        Assert.assertEquals(0, borrow);
     }
 
     /**
@@ -1358,82 +1372,57 @@ public class UintArithmeticTest {
 
     @Test
     public void addUint64Test() {
-        long res;
+        long res[] = new long[1];
         long carry;
-        long[] tmp;
 
-        tmp = UintArithmetic.addUint64(0, 0, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0, res);
+        carry = UintArithmetic.addUint64(0, 0, 0, res);
+        Assert.assertEquals(0, res[0]);
         Assert.assertEquals(0, carry);
 
-        tmp = UintArithmetic.addUint64(1, 1, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(2, res);
+        carry = UintArithmetic.addUint64(1, 1, 0, res);
+        Assert.assertEquals(2, res[0]);
         Assert.assertEquals(0, carry);
 
-        tmp = UintArithmetic.addUint64(1, 0, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(2, res);
+        carry = UintArithmetic.addUint64(1, 0, 1, res);
+        Assert.assertEquals(2, res[0]);
         Assert.assertEquals(0, carry);
 
-        tmp = UintArithmetic.addUint64(0, 1, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(2, res);
+        carry = UintArithmetic.addUint64(0, 1, 1, res);
+        Assert.assertEquals(2, res[0]);
         Assert.assertEquals(0, carry);
 
 
-        tmp = UintArithmetic.addUint64(1, 1, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(3, res);
+        carry = UintArithmetic.addUint64(1, 1, 1, res);
+        Assert.assertEquals(3, res[0]);
         Assert.assertEquals(0, carry);
 
-        tmp = UintArithmetic.addUint64(0xFFFFFFFFFFFFFFFFL, 1, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0, res);
+        carry = UintArithmetic.addUint64(0xFFFFFFFFFFFFFFFFL, 1, 0, res);
+        Assert.assertEquals(0, res[0]);
         Assert.assertEquals(1, carry);
 
-        tmp = UintArithmetic.addUint64(1, 0xFFFFFFFFFFFFFFFFL, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0, res);
+        carry = UintArithmetic.addUint64(1, 0xFFFFFFFFFFFFFFFFL, 1, res);
+        Assert.assertEquals(1, res[0]);
         Assert.assertEquals(1, carry);
 
-        tmp = UintArithmetic.addUint64(1, 0xFFFFFFFFFFFFFFFFL, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(1, res);
+        carry = UintArithmetic.addUint64(1, 0xFFFFFFFFFFFFFFFFL, 1, res);
+        Assert.assertEquals(1, res[0]);
         Assert.assertEquals(1, carry);
 
-        tmp = UintArithmetic.addUint64(2, 0xFFFFFFFFFFFFFFFEL, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0, res);
+        carry = UintArithmetic.addUint64(2, 0xFFFFFFFFFFFFFFFEL, 0, res);
+        Assert.assertEquals(0, res[0]);
         Assert.assertEquals(1, carry);
 
-        tmp = UintArithmetic.addUint64(2, 0xFFFFFFFFFFFFFFFEL, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(1, res);
+        carry = UintArithmetic.addUint64(2, 0xFFFFFFFFFFFFFFFEL, 1, res);
+        Assert.assertEquals(1, res[0]);
         Assert.assertEquals(1, carry);
 
 
-        tmp = UintArithmetic.addUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 0);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0xFFFFFFFFFFFFFFFFL, res);
+        carry = UintArithmetic.addUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 0, res);
+        Assert.assertEquals(0xFFFFFFFFFFFFFFFFL, res[0]);
         Assert.assertEquals(0, carry);
 
-        tmp = UintArithmetic.addUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 1);
-        res = tmp[0];
-        carry = tmp[1];
-        Assert.assertEquals(0, res);
+        carry = UintArithmetic.addUint64(0xF00F00F00F00F00FL, 0x0FF0FF0FF0FF0FF0L, 1, res);
+        Assert.assertEquals(0, res[0]);
         Assert.assertEquals(1, carry);
     }
 

@@ -10,6 +10,20 @@ import java.math.BigInteger;
 public class Common {
 
 
+
+    public static boolean unsignedGt(long in1, long in2) {
+        return Long.compareUnsigned(in1, in2) > 0;
+    }
+
+    public static boolean unsignedGt(int in1, int in2) {
+        return Long.compareUnsigned((long)in1, (long) in2) > 0;
+    }
+
+
+
+
+
+
     public static long reverseBits(long operand, int bitCount) {
         assert bitCount >= 0;
         assert bitCount <= 64;

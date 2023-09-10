@@ -1,9 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
-import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
-import org.apache.commons.math3.exception.OutOfRangeException;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 
-import javax.xml.bind.annotation.XmlType;
 import java.util.Arrays;
 
 /**
@@ -169,6 +167,39 @@ public class UintArithmeticSmallMod {
         }
     }
 
+    /**
+     *
+     * @param value a base-2^64 value
+     * @param valueUint64Count how many uint64 used in values
+     * @param modulus modulus
+     * @return Uint mod modulus, long[] mod long
+     */
+    public static long moduloUint(long[] value, int valueUint64Count, Modulus modulus) {
+
+        assert valueUint64Count > 0;
+
+        if (valueUint64Count == 1) {
+            if (value[0] < modulus.getValue()) {
+                return value[0];
+            }else {
+                return barrettReduce64(value[0], modulus);
+            }
+        }
+
+        long[] tmp = new long[] {0, value[valueUint64Count - 1]};
+        // 从高位往低位依次 reduce
+        // (n-2, n-1) ---> reduce
+        // (n-3, n-2) ---> reduce、
+        // i-->0  1) i > 0; 2) i--; 3) enter the for loop
+        for (int i = valueUint64Count - 1; i-- > 0; ) {
+            tmp[0] = value[i];
+            tmp[1] = barrettReduce128(tmp, modulus);
+        }
+        return tmp[1];
+    }
+
+
+
 
     /**
      *
@@ -181,9 +212,10 @@ public class UintArithmeticSmallMod {
     public static long multiplyAddUintMod(long operand1, long operand2, long operand3, Modulus modulus) {
         long[] tmp = new long[2];
         UintArithmetic.multiplyUint64(operand1, operand2, tmp);
-        long[] addTmp = UintArithmetic.addUint64(tmp[0], operand3);
+        long[] addTmp = new long[1];
+        long carry = UintArithmetic.addUint64(tmp[0], operand3, addTmp);
         tmp[0] = addTmp[0]; // update low 64 bits
-        tmp[1] += addTmp[1]; // add carry
+        tmp[1] += carry; // add carry
         return barrettReduce128(tmp, modulus);
     }
 
@@ -231,7 +263,7 @@ public class UintArithmeticSmallMod {
      */
     public static long multiplyUintMod(long x, MultiplyUintModOperand y, Modulus modulus) {
 
-        assert y.operand < modulus.getValue();
+        assert y.operand < modulus.getValue(): "y: " + y.operand + ", modulus: " + modulus.getValue();
 
         long tmp1, tmp2;
         long p = modulus.getValue();
@@ -262,8 +294,6 @@ public class UintArithmeticSmallMod {
 
 
 
-
-
     /**
      *
      * @param input input
@@ -274,7 +304,7 @@ public class UintArithmeticSmallMod {
 
         // Reduces input using base 2^64 Barrett reduction
         // floor(2^64 / mod) == floor( floor(2^128 / mod) )
-        long q = UintArithmetic.multiplyUint64Hw64(input, modulus.getBarrettQuotient()[1]);
+        long q = UintArithmetic.multiplyUint64Hw64(input, modulus.getConstRatio()[1]);
 
         long res = input - q * modulus.getValue();
 //        System.out.println("q: " + Long.toHexString(q));
@@ -296,27 +326,28 @@ public class UintArithmeticSmallMod {
         long[] tmp2 = new long[2];
         // Round 1
         // (x0 * m0)_1 , 即 x0 * m0 的高 64 bits
-        carry = UintArithmetic.multiplyUint64Hw64(input[0], modulus.getBarrettQuotient()[0]);
+        carry = UintArithmetic.multiplyUint64Hw64(input[0], modulus.getConstRatio()[0]);
         // tmp2 = [(x0 * m1)_0, (x0 * m1)_1]
-        UintArithmetic.multiplyUint64(input[0], modulus.getBarrettQuotient()[1], tmp2);
+        UintArithmetic.multiplyUint64(input[0], modulus.getConstRatio()[1], tmp2);
         // index 0 is result, index 1 is the carry
         // x0 * m0 的高位 + x0 * m1 的低位， 对应 {(x0*m0)_1 + (x0 * m1)_0} >> 64
-        long[] addTmp = UintArithmetic.addUint64(tmp2[0], carry);
+        long[] addTmp = new long[1];
+        long carryTmp = UintArithmetic.addUint64(tmp2[0], carry, addTmp);
         // x0 * m0 的高位 + x0 * m1 的低位 的值
         tmp1 = addTmp[0];
         // tmp3 = (x0 * m1)_1 + 进位
-        tmp3 = tmp2[1] + addTmp[1]; // + add carry
+        tmp3 = tmp2[1] + carryTmp; // + add carry
 
         // Round 2
         // tmp2 = [(x1 * m0)_0, (x1 * m0)_1]
-        UintArithmetic.multiplyUint64(input[1], modulus.getBarrettQuotient()[0], tmp2);
-        addTmp = UintArithmetic.addUint64(tmp1, tmp2[0]);
+        UintArithmetic.multiplyUint64(input[1], modulus.getConstRatio()[0], tmp2);
+        carryTmp = UintArithmetic.addUint64(tmp1, tmp2[0], addTmp);
         // (x1 * m0)_1 + [ (x0 * m1)_0 + (x0 * m0)_1] +  (x1 * m0)_0 产生的进位
         // carry 其实就是 (x1 * m0)_0 / 2^64 + x1 * m0
-        carry = tmp2[1] + addTmp[1];
+        carry = tmp2[1] + carryTmp;
         // x1 * m1 + (x0 * m1)_1 + (x1 * m0)_1 + carry
         // 这里就对应最后公式求和的结果
-        tmp1 = input[1] * modulus.getBarrettQuotient()[1] + tmp3 + carry;
+        tmp1 = input[1] * modulus.getConstRatio()[1] + tmp3 + carry;
 
         // reduction
         tmp3 = input[0] - tmp1 * modulus.getValue();
@@ -333,9 +364,8 @@ public class UintArithmeticSmallMod {
      */
     public static long incrementUintMod(long operand, Modulus modulus) {
 
-        if (operand < 0 || operand > (modulus.getValue() - 1) << 1) {
-            throw new IllegalArgumentException("operand out of range");
-        }
+        assert Long.compareUnsigned(operand, (modulus.getValue() - 1) << 1) <= 0;
+
         operand++;
         return operand - (modulus.getValue() & ((operand >= modulus.getValue() ? -1 : 0)) );
     }
@@ -348,9 +378,7 @@ public class UintArithmeticSmallMod {
      */
     public static long decrementUintMod(long operand, Modulus modulus) {
 
-        if (operand < 0 || operand >= modulus.getValue() ) {
-            throw new IllegalArgumentException("operand out of range");
-        }
+        assert Long.compareUnsigned(operand, modulus.getValue()) < 0;
 
         long carry = operand == 0 ? 1 : 0;
         return operand - 1 + (modulus.getValue() & -carry);
@@ -359,13 +387,11 @@ public class UintArithmeticSmallMod {
 
     public static long negateUintMod(long operand, Modulus modulus) {
 
-        if (operand < 0 || operand >= modulus.getValue() ) {
-            throw new IllegalArgumentException("operand out of range");
-        }
+        assert Long.compareUnsigned(operand, modulus.getValue()) < 0;
 
         long nonZero = operand != 0 ? 1 : 0;
 
-        return (modulus.value - operand) & (-nonZero);
+        return (modulus.getValue() - operand) & (-nonZero);
 
     }
 
@@ -377,15 +403,14 @@ public class UintArithmeticSmallMod {
      */
     public static long div2UintMod(long operand, Modulus modulus) {
 
-        if (operand < 0 || operand >= modulus.getValue()) {
-            throw new IllegalArgumentException("operand out of range");
-        }
+        assert Long.compareUnsigned(operand, modulus.getValue()) < 0;
+
         // if operand is an odd value
         if ((operand & 1) > 0) {
-            long tmp[];
-            tmp = UintArithmetic.addUint64(operand, modulus.getValue(), 0);
+            long tmp[] = new long[1];
+            long carry = UintArithmetic.addUint64(operand, modulus.getValue(), 0, tmp);
             operand = tmp[0] >>> 1;
-            if (tmp[1] > 0) {
+            if (carry > 0) {
                 return operand | (1L << (UintArithmetic.UINT64_BITS - 1));
             }
             return operand;
@@ -404,8 +429,10 @@ public class UintArithmeticSmallMod {
      */
     public static long addUintMod(long a, long b, Modulus modulus) {
 
-        assert a >= 0 && b >= 0;
-        assert ((a + b) < modulus.getValue() << 1);
+//        assert a >= 0 && b >= 0;
+        // a + b < 2p
+        assert Long.compareUnsigned(a + b, modulus.getValue() << 1) < 0;
+//        assert ((a + b) < modulus.getValue() << 1);
 
 //        if ((a + b) >= modulus.value << 1) {
 //            throw  new IllegalArgumentException("input out of range");
@@ -424,15 +451,13 @@ public class UintArithmeticSmallMod {
      */
     public static long subUintMod(long a, long b, Modulus modulus) {
 
-        if (a < 0 || a >= modulus.getValue()) {
-            throw  new IllegalArgumentException("input out of range");
-        }
-        if (b < 0 || b >= modulus.getValue()) {
-            throw  new IllegalArgumentException("input out of range");
-        }
+        assert Long.compareUnsigned(a, modulus.getValue()) < 0;
+        assert Long.compareUnsigned(b, modulus.getValue()) < 0;
+
         // tmp[0] is sub result, tmp[1] is the borrow
-        long[] tmp = UintArithmetic.subUint64(a, b, 0);
-        return tmp[0] + (modulus.getValue() & (-tmp[1]));
+        long[] tmp = new long[1];
+        long borrow = UintArithmetic.subUint64(a, b, 0, tmp);
+        return tmp[0] + (modulus.getValue() & (-borrow));
     }
 
 

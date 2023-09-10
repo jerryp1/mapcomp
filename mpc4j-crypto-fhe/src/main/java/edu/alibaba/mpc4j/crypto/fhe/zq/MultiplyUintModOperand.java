@@ -1,9 +1,11 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
+
 /**
  *  This struct contains a operand and a precomputed quotient: (operand << 64) / modulus, for a specific modulus.
- *  When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed.
- *  Operand must be less than modulus.
+ *  When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed. Operand must be less than modulus.
+ *  In addition, this method is also called Shoup's Modular Multiplication.
  *
  * @author Qixian Zhou
  * @date 2023/8/10
@@ -28,6 +30,7 @@ public class MultiplyUintModOperand {
         assert operand < modulus.getValue();
 
         long[] wideQuotient = new long[2];
+        // operand <<= 64
         long[] wideCoeff = new long[]{0, operand};
 
         UintArithmetic.divideUint128Inplace(wideCoeff, modulus.getValue(), wideQuotient);
@@ -46,5 +49,11 @@ public class MultiplyUintModOperand {
     }
 
 
-
+    @Override
+    public String toString() {
+        return "MultiplyUintModOperand{" +
+                "operand=" + operand +
+                ", quotient=" + quotient +
+                '}';
+    }
 }
