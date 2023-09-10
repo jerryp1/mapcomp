@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * CZZ22-PSI协议信息。
+ * CZZ22-PSI protocol information. The protocol comes from the following paper:
  * <p>
  * Chen, Yu, Min Zhang, Cong Zhang, and Minglang Dong. Private Set Operations from Multi-Query Reverse Private
  * Membership Test. Cryptology ePrint Archive (2022).
@@ -15,31 +15,20 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  */
 public class Czz22PsiPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) 5022494113030939769L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "CZZ22_PSI";
-
     /**
-     * 协议步骤
-     */
-    enum PtoStep {
-        /**
-         * 发送方发送Cipher
-         */
-        SERVER_SEND_CIPHER,
-    }
-
-    /**
-     * 单例模式
+     * singleton mode
      */
     private static final Czz22PsiPtoDesc INSTANCE = new Czz22PsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Czz22PsiPtoDesc() {
         // empty

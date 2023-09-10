@@ -6,27 +6,22 @@ import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21.Gmr21MqRpmtConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.MqRpmtPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 
 /**
- * GMR21-PSI配置信息。论文来源：
- * <p>
- * Garimella G, Mohassel P, Rosulek M, et al. Private Set Operations from Oblivious Switching. PKC 2021, Springer,
- * Cham, pp. 591-617.
- * </p>
+ * GMR21-PSI config.
  *
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/11
  */
-public class Gmr21PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Gmr21PsiConfig extends AbstractMultiPartyPtoConfig implements MqRpmtPsiConfig {
     /**
-     * mqrpmt配置项
+     * mq-RPMT config
      */
     private final MqRpmtConfig mqRpmtConfig;
-
     /**
-     * cot 配置项
+     * core COT config
      */
     private final CoreCotConfig coreCotConfig;
 
@@ -37,36 +32,31 @@ public class Gmr21PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCo
     }
 
     @Override
-    public PsiFactory.PsiType getPtoType() {
-        return PsiFactory.PsiType.GMR21;
+    public PsiType getPtoType() {
+        return PsiType.GMR21;
     }
 
+    @Override
     public MqRpmtConfig getMqRpmtConfig() {
         return mqRpmtConfig;
     }
 
+    @Override
     public CoreCotConfig getCoreCotConfig() {return coreCotConfig; }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Gmr21PsiConfig> {
         /**
-         * mqrpmt类型
+         * mq-RPMT config
          */
-        private MqRpmtConfig mqRpmtConfig;
+        private final MqRpmtConfig mqRpmtConfig;
+        /**
+         * core COT config
+         */
         private CoreCotConfig coreCotConfig;
 
         public Builder() {
-            mqRpmtConfig = new Gmr21MqRpmtConfig.Builder(true).build();
+            mqRpmtConfig = new Gmr21MqRpmtConfig.Builder(false).build();
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-        }
-
-        public Builder(boolean silent) {
-            mqRpmtConfig = new Gmr21MqRpmtConfig.Builder(silent).build();
-            coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
-        }
-
-        public Builder setMqRpmtConfig(MqRpmtConfig mqRpmtConfig) {
-            this.mqRpmtConfig = mqRpmtConfig;
-            return this;
         }
 
         public Builder setCoreCotConfig(CoreCotConfig coreCotConfig) {

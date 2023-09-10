@@ -178,6 +178,7 @@ public class Prty19LowPsiClient<T> extends AbstractPsiClient<T> {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(okvsHeader, okvsPayload));
+        ys = null;
         stopWatch.stop();
         long rsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
