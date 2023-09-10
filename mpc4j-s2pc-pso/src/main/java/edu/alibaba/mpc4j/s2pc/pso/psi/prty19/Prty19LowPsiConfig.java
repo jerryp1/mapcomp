@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 
 /**
@@ -15,7 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/08/17
  */
-public class Prty19LowPsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Prty19LowPsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
      * core COT config
      */
@@ -49,6 +49,7 @@ public class Prty19LowPsiConfig extends AbstractMultiPartyPtoConfig implements P
         return okvsType;
     }
 
+    @Override
     public FilterType getFilterType() {
         return filterType;
     }

@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
@@ -13,15 +13,15 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/8/10
  */
-public class Rt21ElligatorPsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Rt21ElligatorPsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
-     * 过滤器类型
-     */
-    private final FilterType filterType;
-    /**
-     * OKVS类型
+     * OKVS type
      */
     private final Gf2eDokvsType okvsType;
+    /**
+     * filter type
+     */
+    private final FilterType filterType;
 
     private Rt21ElligatorPsiConfig(Builder builder) {
         super(SecurityModel.MALICIOUS);
@@ -34,6 +34,7 @@ public class Rt21ElligatorPsiConfig extends AbstractMultiPartyPtoConfig implemen
         return PsiFactory.PsiType.RT21;
     }
 
+    @Override
     public FilterType getFilterType() {
         return filterType;
     }

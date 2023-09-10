@@ -11,9 +11,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.*;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.prty20.Prty20MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.*;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfReceiver;
@@ -69,18 +66,10 @@ public class OprfFactory implements PtoFactory {
          * PSZ14 optimized方案
          */
         PSZ14_OPT,
-        /**
-         * PRTY20方案
-         */
-        PRTY20,
-        /**
-         * RA17方案
-         */
-        RA17,
     }
 
     /**
-     * Creates a OPRF sender.
+     * Creates an OPRF sender.
      *
      * @param senderRpc     the sender RPC.
      * @param receiverParty the receiver party.
@@ -110,7 +99,7 @@ public class OprfFactory implements PtoFactory {
     }
 
     /**
-     * Creates a OPRF receiver.
+     * Creates an OPRF receiver.
      *
      * @param receiverRpc the receiver RPC.
      * @param senderParty the sender party.
@@ -174,8 +163,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfSender(senderRpc, receiverParty, (Rs21MpOprfConfig) config);
-            case PRTY20:
-                return new Prty20MpOprfSender(senderRpc, receiverParty, (Prty20MpOprfConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfMpOprfSender(senderRpc, receiverParty, (Psz14GbfMpOprfConfig) config);
             default:
@@ -200,8 +187,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfReceiver(receiverRpc, senderParty, (Rs21MpOprfConfig) config);
-            case PRTY20:
-                return new Prty20MpOprfReceiver(receiverRpc, senderParty, (Prty20MpOprfConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfMpOprfReceiver(receiverRpc, senderParty, (Psz14GbfMpOprfConfig) config);
             default:

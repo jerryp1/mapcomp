@@ -69,10 +69,10 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         });
         // RA17
         configurations.add(new Object[] {
-            PsiType.RA17.name() + "BYTE_ECC", "psi/ra17.txt",
+            PsiType.RA17_ECC.name() + "BYTE_ECC", "psi/ra17.txt",
         });
         configurations.add(new Object[] {
-            PsiType.RA17.name() + "ECC", "psi/ra17_ecc.txt",
+            PsiType.RA17_ECC.name() + "ECC", "psi/ra17_ecc.txt",
         });
         // PRTY19_FAST
         configurations.add(new Object[] {
@@ -80,7 +80,7 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         });
         // PRTY20
         configurations.add(new Object[] {
-            PsiType.PRTY20.name(), "psi/prty20.txt",
+            PsiType.PRTY20_SEMI_HONEST.name(), "psi/prty20.txt",
         });
         // CM20
         configurations.add(new Object[] {

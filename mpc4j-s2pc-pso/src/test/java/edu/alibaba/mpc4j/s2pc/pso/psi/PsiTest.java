@@ -3,17 +3,21 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
-import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20SmPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,10 +59,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // RT21
-//        configurations.add(new Object[] {
-//            PsiType.RT21.name(), new Rt21ElligatorPsiConfig.Builder().build(),
-//        });
+        // RT21
+        configurations.add(new Object[] {
+            PsiType.RT21.name(), new Rt21ElligatorPsiConfig.Builder().build(),
+        });
         // CM20
         configurations.add(new Object[] {
             PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
@@ -71,14 +75,23 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.GMR21.name(), new Gmr21PsiConfig.Builder().build(),
         });
-//        // PRTY20
-//        configurations.add(new Object[] {
-//            PsiType.PRTY20.name(), new Prty20PsiConfig.Builder().build(),
-//        });
-//        // RA17
-//        configurations.add(new Object[] {
-//            PsiType.RA17.name() + "BYTE_ECC", new Ra17PsiConfig.Builder().build(),
-//        });
+        // PRTY20
+        configurations.add(new Object[] {
+            PsiType.PRTY20_SEMI_HONEST.name(), new Prty20SmPsiConfig.Builder().build(),
+        });
+        // PRTY20
+        configurations.add(new Object[] {
+            PsiType.PRTY20_SEMI_HONEST.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
+            new Prty20SmPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
+        });
+        // RA17_ECC
+        configurations.add(new Object[] {
+            PsiType.RA17_ECC.name(), new Ra17EccPsiConfig.Builder().build(),
+        });
+        // RA17_BYTE_ECC
+        configurations.add(new Object[] {
+            PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
+        });
 //        configurations.add(new Object[] {
 //            PsiType.RA17.name() + "ECC", new Ra17PsiConfig.Builder().
 //            setSqOprfConfig(new Ra17EccSqOprfConfig.Builder().build()).build(),

@@ -5,21 +5,20 @@ import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17EccSqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.Cm20PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20SmPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
 
 import java.util.Properties;
 
@@ -42,10 +41,10 @@ public class PsiConfigUtils {
                 return createKkrt16PsiConfig(properties);
             case CM20:
                 return createCm20PsiConfig();
-            case RA17:
-                return createRa17PsiConfig(properties);
-            case PRTY20:
-                return createPrty20PsiConfig(properties);
+            case RA17_ECC:
+                return createRa17EccPsiConfig();
+            case PRTY20_SEMI_HONEST:
+                return createPrty20SmPsiConfig(properties);
             case PRTY19_LOW:
                 return createPrty19LowPsiConfig(properties);
             case PRTY19_FAST:
@@ -85,21 +84,16 @@ public class PsiConfigUtils {
         return new Cm20PsiConfig.Builder().build();
     }
 
-    private static PsiConfig createRa17PsiConfig(Properties properties) {
-        String eccTypeString = PropertiesUtils.readString(properties, "ecc_type", "BYTE_ECC");
-        switch (eccTypeString){
-            case "BYTE_ECC": return new Ra17PsiConfig.Builder().build();
-            case "ECC" : return new Ra17PsiConfig.Builder().setSqOprfConfig(new Ra17EccSqOprfConfig.Builder().build()).build();
-            default: throw new IllegalArgumentException("Invalid eccTypeString in RA17-PSI:" + eccTypeString);
-        }
+    private static PsiConfig createRa17EccPsiConfig() {
+        return new Ra17EccPsiConfig.Builder().build();
     }
 
-    private static PsiConfig createPrty20PsiConfig(Properties properties) {
+    private static PsiConfig createPrty20SmPsiConfig(Properties properties) {
         // OKVS类型
         String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type",
                 Gf2eDokvsType.H2_SINGLETON_GCT.toString());
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
-        return new Prty20PsiConfig.Builder().setBinaryOkvsType(okvsType).build();
+        return new Prty20SmPsiConfig.Builder().setPaxosType(okvsType).build();
     }
 
     private static PsiConfig createPrty19LowPsiConfig(Properties properties) {

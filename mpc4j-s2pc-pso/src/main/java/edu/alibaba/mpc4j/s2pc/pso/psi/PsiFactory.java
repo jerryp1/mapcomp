@@ -3,43 +3,41 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.cm20.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.czz22.Czz22PsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.gmr21.Gmr21PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.ra17.Ra17PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiServer;
 
 /**
- * PSI协议工厂。
+ * PSI factory.
  *
  * @author Weiran Liu
  * @date 2022/9/19
  */
 public class PsiFactory implements PtoFactory {
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private PsiFactory() {
         // empty
     }
 
     /**
-     * PSI协议类型。
+     * PSI type
      */
     public enum PsiType {
         /**
@@ -67,17 +65,17 @@ public class PsiFactory implements PtoFactory {
          */
         GMR21,
         /**
-         * PRTY19 fast方案
+         * PRTY19 (fast computation)
          */
         PRTY19_FAST,
         /**
-         * PRTY19 低通信量方案
+         * PRTY19 (low communication)
          */
         PRTY19_LOW,
         /**
-         * 使用PaXoS的PSI方案
+         * PRTY20 (semi-honest)
          */
-        PRTY20,
+        PRTY20_SEMI_HONEST,
         /**
          * PSZ14 使用garbled BF的方案
          */
@@ -87,9 +85,13 @@ public class PsiFactory implements PtoFactory {
          */
         PSZ14,
         /**
-         * RA17方案
+         * RA17 (ECC)
          */
-        RA17,
+        RA17_ECC,
+        /**
+         * RA17 (byte ECC)
+         */
+        RA17_BYTE_ECC,
         /**
          * RT21方案
          */
@@ -97,12 +99,12 @@ public class PsiFactory implements PtoFactory {
     }
 
     /**
-     * 构建服务端。
+     * Creates a PSI server.
      *
-     * @param serverRpc   服务端通信接口。
-     * @param clientParty 客户端信息。
-     * @param config      配置项。
-     * @return 服务端。
+     * @param serverRpc   server RPC.
+     * @param clientParty client party.
+     * @param config      config.
+     * @return a PSI server.
      */
     public static <X> PsiServer<X> createServer(Rpc serverRpc, Party clientParty, PsiConfig config) {
         PsiType type = config.getPtoType();
@@ -119,10 +121,12 @@ public class PsiFactory implements PtoFactory {
                 return new Czz22PsiServer<>(serverRpc, clientParty, (Czz22PsiConfig) config);
             case GMR21:
                 return new Gmr21PsiServer<>(serverRpc, clientParty, (Gmr21PsiConfig) config);
-            case PRTY20:
-                return new Prty20PsiServer<>(serverRpc, clientParty, (Prty20PsiConfig) config);
-            case RA17:
-                return new Ra17PsiServer<>(serverRpc, clientParty, (Ra17PsiConfig) config);
+            case PRTY20_SEMI_HONEST:
+                return new Prty20SmPsiServer<>(serverRpc, clientParty, (Prty20SmPsiConfig) config);
+            case RA17_ECC:
+                return new Ra17EccPsiServer<>(serverRpc, clientParty, (Ra17EccPsiConfig) config);
+            case RA17_BYTE_ECC:
+                return new Ra17ByteEccPsiServer<>(serverRpc, clientParty, (Ra17ByteEccPsiConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfPsiServer<>(serverRpc, clientParty, (Psz14GbfPsiConfig) config);
             case PSZ14:
@@ -139,12 +143,12 @@ public class PsiFactory implements PtoFactory {
     }
 
     /**
-     * 构建客户端。
+     * Creates a client.
      *
-     * @param clientRpc   客户端通信接口。
-     * @param serverParty 服务端信息。
-     * @param config      配置项。
-     * @return 客户端。
+     * @param clientRpc   client RPC.
+     * @param serverParty server party.
+     * @param config      config.
+     * @return a client.
      */
     public static <X> PsiClient<X> createClient(Rpc clientRpc, Party serverParty, PsiConfig config) {
         PsiType type = config.getPtoType();
@@ -161,10 +165,12 @@ public class PsiFactory implements PtoFactory {
                 return new Czz22PsiClient<>(clientRpc, serverParty, (Czz22PsiConfig) config);
             case GMR21:
                 return new Gmr21PsiClient<>(clientRpc, serverParty, (Gmr21PsiConfig) config);
-            case PRTY20:
-                return new Prty20PsiClient<>(clientRpc, serverParty, (Prty20PsiConfig) config);
-            case RA17:
-                return new Ra17PsiClient<>(clientRpc, serverParty, (Ra17PsiConfig) config);
+            case PRTY20_SEMI_HONEST:
+                return new Prty20SmPsiClient<>(clientRpc, serverParty, (Prty20SmPsiConfig) config);
+            case RA17_ECC:
+                return new Ra17EccPsiClient<>(clientRpc, serverParty, (Ra17EccPsiConfig) config);
+            case RA17_BYTE_ECC:
+                return new Ra17ByteEccPsiClient<>(clientRpc, serverParty, (Ra17ByteEccPsiConfig) config);
             case PSZ14_GBF:
                 return new Psz14GbfPsiClient<>(clientRpc, serverParty, (Psz14GbfPsiConfig) config);
             case PSZ14:
