@@ -378,7 +378,7 @@ public class BytesUtils {
      * @return x1 XOR x2。
      */
     public static byte[] xor(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] ^ x2[i]);
@@ -408,7 +408,7 @@ public class BytesUtils {
      * @return x1 AND x2。
      */
     public static byte[] and(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] & x2[i]);
@@ -424,7 +424,7 @@ public class BytesUtils {
      * @param x2 第二个字节数组。
      */
     public static void andi(byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         for (int i = x1.length - 1; i >= 0; i--) {
             x1[i] = (byte) (x1[i] & x2[i]);
         }
@@ -438,7 +438,7 @@ public class BytesUtils {
      * @return x1 OR x2。
      */
     public static byte[] or(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] | x2[i]);
@@ -454,7 +454,7 @@ public class BytesUtils {
      * @param x2 第二个字节数组。
      */
     public static void ori(byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         for (int i = x1.length - 1; i >= 0; i--) {
             x1[i] = (byte) (x1[i] | x2[i]);
         }
