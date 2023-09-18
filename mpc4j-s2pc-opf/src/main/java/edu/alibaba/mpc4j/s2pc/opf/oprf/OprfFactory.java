@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.*;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.*;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfSender;
@@ -54,14 +53,6 @@ public class OprfFactory implements PtoFactory {
          * RS21
          */
         RS21,
-        /**
-         * PSZ14 origin方案
-         */
-        PSZ14_ORI,
-        /**
-         * PSZ14 optimized方案
-         */
-        PSZ14_OPT,
     }
 
     /**
@@ -85,10 +76,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfSender(senderRpc, receiverParty, (Rs21MpOprfConfig) config);
-            case PSZ14_ORI:
-                return new Psz14OriOprfSender(senderRpc, receiverParty, (Psz14OriOprfConfig) config);
-            case PSZ14_OPT:
-                return new Psz14OptOprfSender(senderRpc, receiverParty, (Psz14OptOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -115,10 +102,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfReceiver(receiverRpc, senderParty, (Rs21MpOprfConfig) config);
-            case PSZ14_ORI:
-                return new Psz14OriOprfReceiver(receiverRpc, senderParty, (Psz14OriOprfConfig) config);
-            case PSZ14_OPT:
-                return new Psz14OptOprfReceiver(receiverRpc, senderParty, (Psz14OptOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }

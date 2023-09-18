@@ -65,10 +65,6 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.DCW13.name(), "psi/dcw13.txt",
         });
-        // PSZ14_ORI
-        configurations.add(new Object[] {
-            PsiType.PSZ14.name() + "_ORI", "psi/psz14_ori.txt",
-        });
         // PSZ14
         configurations.add(new Object[] {
             PsiType.PSZ14.name(), "psi/psz14.txt",

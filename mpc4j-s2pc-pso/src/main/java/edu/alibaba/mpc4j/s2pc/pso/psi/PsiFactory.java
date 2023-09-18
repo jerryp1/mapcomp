@@ -3,27 +3,31 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.psi.hfh99.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.*;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.rt21.Rt21ElligatorPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiServer;
 
 /**
  * PSI factory.
@@ -139,7 +143,7 @@ public class PsiFactory implements PtoFactory {
             case PRTY19_LOW:
                 return new Prty19LowPsiServer<>(serverRpc, clientParty, (Prty19LowPsiConfig) config);
             case RT21:
-                return new Rt21ElligatorPsiServer<>(serverRpc, clientParty, (Rt21ElligatorPsiConfig) config);
+                return new Rt21PsiServer<>(serverRpc, clientParty, (Rt21PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -183,7 +187,7 @@ public class PsiFactory implements PtoFactory {
             case PRTY19_LOW:
                 return new Prty19LowPsiClient<>(clientRpc, serverParty, (Prty19LowPsiConfig) config);
             case RT21:
-                return new Rt21ElligatorPsiClient<>(clientRpc, serverParty, (Rt21ElligatorPsiConfig) config);
+                return new Rt21PsiClient<>(clientRpc, serverParty, (Rt21PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
