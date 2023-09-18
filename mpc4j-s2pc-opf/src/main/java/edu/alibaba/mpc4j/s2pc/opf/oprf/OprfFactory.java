@@ -55,10 +55,6 @@ public class OprfFactory implements PtoFactory {
          */
         RS21,
         /**
-         * PSZ14 GBF方案
-         */
-        PSZ14_GBF,
-        /**
          * PSZ14 origin方案
          */
         PSZ14_ORI,
@@ -163,8 +159,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfSender(senderRpc, receiverParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfSender(senderRpc, receiverParty, (Rs21MpOprfConfig) config);
-            case PSZ14_GBF:
-                return new Psz14GbfMpOprfSender(senderRpc, receiverParty, (Psz14GbfMpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }
@@ -187,8 +181,6 @@ public class OprfFactory implements PtoFactory {
                 return new Cm20MpOprfReceiver(receiverRpc, senderParty, (Cm20MpOprfConfig) config);
             case RS21:
                 return new Rs21MpOprfReceiver(receiverRpc, senderParty, (Rs21MpOprfConfig) config);
-            case PSZ14_GBF:
-                return new Psz14GbfMpOprfReceiver(receiverRpc, senderParty, (Psz14GbfMpOprfConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + OprfType.class.getSimpleName() + ": " + type.name());
         }

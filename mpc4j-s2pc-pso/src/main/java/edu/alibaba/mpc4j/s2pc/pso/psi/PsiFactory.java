@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiServer;
@@ -41,27 +44,27 @@ public class PsiFactory implements PtoFactory {
      */
     public enum PsiType {
         /**
-         * HFH99椭圆曲线方案
+         * HFH99 (ECC)
          */
         HFH99_ECC,
         /**
-         * HFH99字节椭圆曲线方案
+         * HFH99 (byte ECC)
          */
         HFH99_BYTE_ECC,
         /**
-         * KKRT16方案
+         * KKRT16
          */
         KKRT16,
         /**
-         * CM20方案
+         * CM20
          */
         CM20,
         /**
-         * CZZ22方案
+         * CZZ22
          */
         CZZ22,
         /**
-         * GMR21方案
+         * GMR21
          */
         GMR21,
         /**
@@ -77,11 +80,11 @@ public class PsiFactory implements PtoFactory {
          */
         PRTY20_SEMI_HONEST,
         /**
-         * PSZ14 使用garbled BF的方案
+         * DCW13
          */
-        PSZ14_GBF,
+        DCW13,
         /**
-         * PSZ14方案
+         * PSZ14
          */
         PSZ14,
         /**
@@ -93,7 +96,7 @@ public class PsiFactory implements PtoFactory {
          */
         RA17_BYTE_ECC,
         /**
-         * RT21方案
+         * RT21
          */
         RT21,
     }
@@ -127,8 +130,8 @@ public class PsiFactory implements PtoFactory {
                 return new Ra17EccPsiServer<>(serverRpc, clientParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccPsiServer<>(serverRpc, clientParty, (Ra17ByteEccPsiConfig) config);
-            case PSZ14_GBF:
-                return new Psz14GbfPsiServer<>(serverRpc, clientParty, (Psz14GbfPsiConfig) config);
+            case DCW13:
+                return new Dcw13PsiServer<>(serverRpc, clientParty, (Dcw13PsiConfig) config);
             case PSZ14:
                 return new Psz14PsiServer<>(serverRpc, clientParty, (Psz14PsiConfig) config);
             case PRTY19_FAST:
@@ -171,8 +174,8 @@ public class PsiFactory implements PtoFactory {
                 return new Ra17EccPsiClient<>(clientRpc, serverParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccPsiClient<>(clientRpc, serverParty, (Ra17ByteEccPsiConfig) config);
-            case PSZ14_GBF:
-                return new Psz14GbfPsiClient<>(clientRpc, serverParty, (Psz14GbfPsiConfig) config);
+            case DCW13:
+                return new Dcw13PsiClient<>(clientRpc, serverParty, (Dcw13PsiConfig) config);
             case PSZ14:
                 return new Psz14PsiClient<>(clientRpc, serverParty, (Psz14PsiConfig) config);
             case PRTY19_FAST:

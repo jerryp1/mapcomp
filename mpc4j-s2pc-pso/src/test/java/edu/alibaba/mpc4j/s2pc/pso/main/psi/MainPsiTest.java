@@ -61,9 +61,9 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiFactory.PsiType.KKRT16.name(), "psi/kkrt16_naive3hash.txt",
         });
-        // PSZ14_GBF
+        // DCW13
         configurations.add(new Object[] {
-            PsiType.PSZ14_GBF.name(), "psi/psz14_gbf.txt",
+            PsiType.DCW13.name(), "psi/dcw13.txt",
         });
         // PSZ14_ORI
         configurations.add(new Object[] {

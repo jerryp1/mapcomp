@@ -134,7 +134,6 @@ public class PsiMain {
             int serverSetSize = serverSetSizes[setSizeIndex];
             int clientSetSize = clientSetSizes[setSizeIndex];
             Set<ByteBuffer> serverElementSet = readServerElementSet(serverSetSize, elementByteLength);
-            LOGGER.info("BreakPoint 5");
             runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, clientSetSize,
                      printWriter);
             taskId++;
@@ -150,37 +149,23 @@ public class PsiMain {
 
     private Set<ByteBuffer> readServerElementSet(int setSize, int elementByteLength) throws IOException {
         LOGGER.info("Server read element set");
-        LOGGER.info("BreakPoint 01");
         InputStreamReader inputStreamReader = new InputStreamReader(
                 Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength))),
                 CommonConstants.DEFAULT_CHARSET
         );
-        LOGGER.info("BreakPoint 1");
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        LOGGER.info("BreakPoint 2");
         Set<ByteBuffer> serverElementSet = bufferedReader.lines()
                 .map(Hex::decode)
                 .map(ByteBuffer::wrap)
                 .collect(Collectors.toSet());
-        LOGGER.info("BreakPoint 3");
         bufferedReader.close();
-        LOGGER.info("BreakPoint 4");
         inputStreamReader.close();
-        LOGGER.info("BreakPoint 7");
         return serverElementSet;
     }
 
     private void warmupServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId) throws Exception {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        LOGGER.info("BreakPoint 8");
-        LOGGER.info("Breakpoint 21 {} 1 ",clientParty.getPartyName());
-        LOGGER.info("Breakpoint 21 {} ", serverRpc.ownParty().getPartyName());
-        LOGGER.info("Breakpoint 21 {} ", config.getPtoType());
-        LOGGER.info("Breakpoint 21 {} ", config.getEnvType());
-        LOGGER.info("Breakpoint 21 {} ", config.getSecurityModel());
-        //LOGGER.info("Breakpoint 21 {} ", conf;
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
-        LOGGER.info("BreakPoint 9");
         psiServer.setTaskId(taskId);
         psiServer.setParallel(false);
         psiServer.getRpc().synchronize();
@@ -199,12 +184,7 @@ public class PsiMain {
     public void runServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId, boolean parallel,
                            Set<ByteBuffer> serverElementSet, int clientSetSize,
                            PrintWriter printWriter) throws MpcAbortException {
-        LOGGER.info("BreakPoint 6");
         int serverSetSize = serverElementSet.size();
-        LOGGER.info(
-                "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-                serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
-        );
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
         psiServer.setTaskId(taskId);
         psiServer.setParallel(parallel);
@@ -303,7 +283,6 @@ public class PsiMain {
             int clientSetSize = clientSetSizes[setSizeIndex];
             // 读取输入文件
             Set<ByteBuffer> clientElementSet = readClientElementSet(clientSetSize, elementByteLength);
-            LOGGER.info("BreakPoint 102");
             // 多线程
             runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, serverSetSize,
                     printWriter);
@@ -332,7 +311,6 @@ public class PsiMain {
                 .collect(Collectors.toSet());
         bufferedReader.close();
         inputStreamReader.close();
-        LOGGER.info("BreakPoint 101");
         return clientElementSet;
     }
 

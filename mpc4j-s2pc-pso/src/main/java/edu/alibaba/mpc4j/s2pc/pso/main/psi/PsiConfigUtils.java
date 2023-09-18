@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
+import edu.alibaba.mpc4j.s2pc.pso.psi.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
@@ -16,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20SmPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
@@ -66,10 +67,10 @@ public class PsiConfigUtils {
                 return createCzz22PsiConfig();
             case PSZ14:
                 return createPsz14PsiConfig(properties);
-            case PSZ14_GBF:
-                return createPsz14GbfPsiConfig();
+            case DCW13:
+                return createDcw13PsiConfig();
             default:
-                throw new IllegalArgumentException("Invalid " + PsiFactory.PsiType.class.getSimpleName() + ": " + psiType.name());
+                throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + psiType.name());
         }
     }
 
@@ -144,7 +145,7 @@ public class PsiConfigUtils {
         }
     }
 
-    private static PsiConfig createPsz14GbfPsiConfig() {
-        return new Psz14GbfPsiConfig.Builder().build();
+    private static PsiConfig createDcw13PsiConfig() {
+        return new Dcw13PsiConfig.Builder().build();
     }
 }
