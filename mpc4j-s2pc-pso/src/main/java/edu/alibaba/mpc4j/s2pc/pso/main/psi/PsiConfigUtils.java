@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokv
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
@@ -67,6 +68,8 @@ public class PsiConfigUtils {
                 return createPsz14PsiConfig();
             case DCW13:
                 return createDcw13PsiConfig();
+            case OOS17:
+                return createOos17PsiConfig();
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + psiType.name());
         }
@@ -136,5 +139,9 @@ public class PsiConfigUtils {
 
     private static PsiConfig createDcw13PsiConfig() {
         return new Dcw13PsiConfig.Builder().build();
+    }
+
+    private static PsiConfig createOos17PsiConfig() {
+        return new Oos17PsiConfig.Builder().build();
     }
 }

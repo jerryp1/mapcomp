@@ -1,7 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.psi;
 
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+
+import java.io.IOException;
 
 /**
  * PSI main client thread.
@@ -33,7 +36,7 @@ public class MainPsiClientThread extends Thread {
     public void run() {
         try {
             psiMain.runClient(clientRpc, serverParty);
-        } catch (Exception e) {
+        } catch (MpcAbortException | IOException e) {
             e.printStackTrace();
         }
     }

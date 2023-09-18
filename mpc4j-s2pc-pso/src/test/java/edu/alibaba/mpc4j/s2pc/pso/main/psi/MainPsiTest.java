@@ -37,6 +37,10 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // OOS17
+        configurations.add(new Object[] {
+            PsiType.OOS17.name(), "psi/oos17.txt",
+        });
         // HFH99_ECC
         configurations.add(new Object[] {
             PsiType.HFH99_ECC.name() + " (uncompress)", "psi/hfh99_ecc_compress_false.txt",

@@ -79,7 +79,7 @@ public class PsiMain {
         }
     }
 
-    public void runServer(Rpc serverRpc, Party clientParty) throws Exception {
+    public void runServer(Rpc serverRpc, Party clientParty) throws MpcAbortException, IOException {
         // 读取协议参数
         LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
         // 读取元素字节长度
@@ -163,7 +163,7 @@ public class PsiMain {
         return serverElementSet;
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId) throws Exception {
+    private void warmupServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId) throws MpcAbortException, IOException {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
         psiServer.setTaskId(taskId);
@@ -228,7 +228,7 @@ public class PsiMain {
         LOGGER.info("{} finish", psiServer.ownParty().getPartyName());
     }
 
-    public void runClient(Rpc clientRpc, Party serverParty) throws Exception {
+    public void runClient(Rpc clientRpc, Party serverParty) throws MpcAbortException, IOException {
         // 读取协议参数
         LOGGER.info("{} read settings", clientRpc.ownParty().getPartyName());
         // 读取元素字节长度
@@ -314,7 +314,7 @@ public class PsiMain {
         return clientElementSet;
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PsiConfig config, int taskId) throws Exception {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PsiConfig config, int taskId) throws MpcAbortException, IOException {
         Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
         PsiClient<ByteBuffer> psiClient = PsiFactory.createClient(clientRpc, serverParty, config);
         psiClient.setTaskId(taskId);
