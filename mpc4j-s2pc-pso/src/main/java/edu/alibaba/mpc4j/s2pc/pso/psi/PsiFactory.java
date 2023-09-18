@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiServer;
@@ -50,6 +53,10 @@ public class PsiFactory implements PtoFactory {
      * PSI type
      */
     public enum PsiType {
+        /**
+         * RS21
+         */
+        RS21,
         /**
          * HFH99 (ECC)
          */
@@ -153,6 +160,8 @@ public class PsiFactory implements PtoFactory {
                 return new Prty19LowPsiServer<>(serverRpc, clientParty, (Prty19LowPsiConfig) config);
             case RT21:
                 return new Rt21PsiServer<>(serverRpc, clientParty, (Rt21PsiConfig) config);
+            case RS21:
+                return new Rs21PsiServer<>(serverRpc, clientParty, (Rs21PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -199,6 +208,8 @@ public class PsiFactory implements PtoFactory {
                 return new Prty19LowPsiClient<>(clientRpc, serverParty, (Prty19LowPsiConfig) config);
             case RT21:
                 return new Rt21PsiClient<>(clientRpc, serverParty, (Rt21PsiConfig) config);
+            case RS21:
+                return new Rs21PsiClient<>(clientRpc, serverParty, (Rs21PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }

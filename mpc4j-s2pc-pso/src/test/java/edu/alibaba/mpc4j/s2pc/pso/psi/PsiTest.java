@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi;
 
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
@@ -9,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
@@ -62,6 +64,15 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RS21
+        configurations.add(new Object[]{
+            PsiType.RS21.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+            new Rs21PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
+        configurations.add(new Object[]{
+            PsiType.RS21.name() + "(" + SecurityModel.MALICIOUS + ")",
+            new Rs21PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
         // OOS17
         configurations.add(new Object[]{
             PsiType.OOS17.name(), new Oos17PsiConfig.Builder().build(),
