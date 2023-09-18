@@ -73,13 +73,15 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         });
         // GMR21
         configurations.add(new Object[] {
-            PsiType.GMR21.name(), new Gmr21PsiConfig.Builder().build(),
+            PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(false).build(),
+        });
+        configurations.add(new Object[] {
+            PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(true).build(),
         });
         // PRTY20
         configurations.add(new Object[] {
             PsiType.PRTY20_SEMI_HONEST.name(), new Prty20SmPsiConfig.Builder().build(),
         });
-        // PRTY20
         configurations.add(new Object[] {
             PsiType.PRTY20_SEMI_HONEST.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
             new Prty20SmPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),

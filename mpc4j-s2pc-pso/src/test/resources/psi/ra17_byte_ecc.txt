@@ -9,4 +9,4 @@ server_log_set_size = 12,10
 client_log_set_size = 12,10
 
 # 协议名称
-psi_pto_name = RA17
+psi_pto_name = RA17_BYTE_ECC

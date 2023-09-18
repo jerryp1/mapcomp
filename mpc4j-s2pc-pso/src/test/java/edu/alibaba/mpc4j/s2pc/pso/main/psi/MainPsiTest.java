@@ -16,6 +16,12 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * PSI main tests.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/11
+ */
 @RunWith(Parameterized.class)
 public class MainPsiTest extends AbstractTwoPartyPtoTest {
     /**
@@ -69,18 +75,18 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         });
         // RA17
         configurations.add(new Object[] {
-            PsiType.RA17_ECC.name() + "BYTE_ECC", "psi/ra17.txt",
+            PsiType.RA17_BYTE_ECC.name(), "psi/ra17_byte_ecc.txt",
         });
         configurations.add(new Object[] {
-            PsiType.RA17_ECC.name() + "ECC", "psi/ra17_ecc.txt",
+            PsiType.RA17_ECC.name(), "psi/ra17_ecc.txt",
         });
         // PRTY19_FAST
         configurations.add(new Object[] {
             PsiType.PRTY19_FAST.name(), "psi/prty19_fast.txt",
         });
-        // PRTY20
+        // PRTY20_SEMI_HONEST
         configurations.add(new Object[] {
-            PsiType.PRTY20_SEMI_HONEST.name(), "psi/prty20.txt",
+            PsiType.PRTY20_SEMI_HONEST.name(), "psi/prty20_semi_honest.txt",
         });
         // CM20
         configurations.add(new Object[] {
@@ -102,6 +108,7 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
      * file name
      */
     private final String filePath;
+
     public MainPsiTest(String name, String filePath) {
         super(name);
         RpcManager rpcManager = new MemoryRpcManager(2);
@@ -111,8 +118,8 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
-    public void testPsi() throws Exception {
-        Properties properties = readConfig(this.filePath);
+    public void testPsi() throws InterruptedException {
+        Properties properties = readConfig(filePath);
         runTest(new PsiMain(properties));
     }
 

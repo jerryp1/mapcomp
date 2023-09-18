@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiClient;
@@ -30,26 +29,36 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * PSI main.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/11
+ */
 public class PsiMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
     /**
-     * 协议类型名称
+     * protocol type name
      */
     public static final String PTO_TYPE_NAME = "PSI";
     /**
-     * 预热元素字节长度
+     * warmup element byte length
      */
     private static final int WARMUP_ELEMENT_BYTE_LENGTH = 16;
     /**
-     * 预热
+     * warmup set size
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
     /**
-     * 秒表
+     * server stop watch
      */
-    private final StopWatch serverStopWatch, clientStopWatch;
+    private final StopWatch serverStopWatch;
     /**
-     * 配置参数
+     * client stop watch
+     */
+    private final StopWatch clientStopWatch;
+    /**
+     * properties
      */
     private final Properties properties;
 
@@ -104,7 +113,7 @@ public class PsiMain {
             + "_" + elementByteLength * Byte.SIZE
             + "_" + serverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
-            + ".txt";
+            + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
@@ -273,7 +282,7 @@ public class PsiMain {
             + "_" + elementByteLength * Byte.SIZE
             + "_" + clientRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
-            + ".txt";
+            + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件

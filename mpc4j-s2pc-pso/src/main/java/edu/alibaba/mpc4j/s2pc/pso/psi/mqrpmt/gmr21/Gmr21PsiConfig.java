@@ -54,8 +54,8 @@ public class Gmr21PsiConfig extends AbstractMultiPartyPtoConfig implements MqRpm
          */
         private CoreCotConfig coreCotConfig;
 
-        public Builder() {
-            mqRpmtConfig = new Gmr21MqRpmtConfig.Builder(false).build();
+        public Builder(boolean silent) {
+            mqRpmtConfig = new Gmr21MqRpmtConfig.Builder(silent).build();
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST);
         }
 

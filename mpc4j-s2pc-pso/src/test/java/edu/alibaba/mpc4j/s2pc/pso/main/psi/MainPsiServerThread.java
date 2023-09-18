@@ -3,7 +3,13 @@ package edu.alibaba.mpc4j.s2pc.pso.main.psi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 
-public class MainPsiServerThread extends Thread {
+/**
+ * PSI main server thread.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/11
+ */
+class MainPsiServerThread extends Thread {
     /**
      * server RPC
      */

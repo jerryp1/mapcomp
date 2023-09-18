@@ -8,9 +8,5 @@ element_byte_length = 8
 server_log_set_size = 12,10
 client_log_set_size = 12,10
 
-# 使用ecc实现
-ecc_type = ECC
-append_string = _ecc
-
 # 协议名称
-psi_pto_name = RA17
+psi_pto_name = RA17_ECC

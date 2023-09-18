@@ -18,18 +18,27 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.prty20.Prty20SmPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14GbfPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.psz14.Psz14PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
 
 import java.util.Properties;
 
+/**
+ * PSI config utilities.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/11
+ */
 public class PsiConfigUtils {
-
+    /**
+     * private constructor.
+     */
     private PsiConfigUtils() {
         // empty
     }
 
     public static PsiConfig createPsiConfig(Properties properties) {
-        // 读取协议类型
+        // read PSI type
         String psiTypeString = PropertiesUtils.readString(properties, "psi_pto_name");
         PsiFactory.PsiType psiType = PsiFactory.PsiType.valueOf(psiTypeString);
         switch (psiType) {
@@ -43,6 +52,8 @@ public class PsiConfigUtils {
                 return createCm20PsiConfig();
             case RA17_ECC:
                 return createRa17EccPsiConfig();
+            case RA17_BYTE_ECC:
+                return createRa17ByteEccPsiConfig();
             case PRTY20_SEMI_HONEST:
                 return createPrty20SmPsiConfig(properties);
             case PRTY19_LOW:
@@ -50,7 +61,7 @@ public class PsiConfigUtils {
             case PRTY19_FAST:
                 return createPrty19FastPsiConfig();
             case GMR21:
-                return createGmr21PsiConfig();
+                return createGmr21PsiConfig(properties);
             case CZZ22:
                 return createCzz22PsiConfig();
             case PSZ14:
@@ -73,9 +84,8 @@ public class PsiConfigUtils {
     }
 
     private static PsiConfig createKkrt16PsiConfig(Properties properties) {
-        // 布谷鸟哈希类型
         String cuckooHashTypeString = PropertiesUtils.readString(properties, "cuckoo_hash_bin_type",
-                CuckooHashBinFactory.CuckooHashBinType.NO_STASH_NAIVE.toString());
+            CuckooHashBinFactory.CuckooHashBinType.NO_STASH_NAIVE.toString());
         CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType = CuckooHashBinFactory.CuckooHashBinType.valueOf(cuckooHashTypeString);
         return new Kkrt16PsiConfig.Builder().setCuckooHashBinType(cuckooHashBinType).build();
     }
@@ -88,18 +98,22 @@ public class PsiConfigUtils {
         return new Ra17EccPsiConfig.Builder().build();
     }
 
+    private static PsiConfig createRa17ByteEccPsiConfig() {
+        return new Ra17ByteEccPsiConfig.Builder().build();
+    }
+
     private static PsiConfig createPrty20SmPsiConfig(Properties properties) {
-        // OKVS类型
-        String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type",
-                Gf2eDokvsType.H2_SINGLETON_GCT.toString());
+        String okvsTypeString = PropertiesUtils.readString(
+            properties, "okvs_type", Gf2eDokvsType.H2_SINGLETON_GCT.toString()
+        );
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
         return new Prty20SmPsiConfig.Builder().setPaxosType(okvsType).build();
     }
 
     private static PsiConfig createPrty19LowPsiConfig(Properties properties) {
-        // OKVS类型
-        String okvsTypeString = PropertiesUtils.readString(properties, "okvs_type",
-            Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT.toString());
+        String okvsTypeString = PropertiesUtils.readString(
+            properties, "okvs_type", Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT.toString()
+        );
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
         return new Prty19LowPsiConfig.Builder().setOkvsType(okvsType).build();
     }
@@ -108,8 +122,9 @@ public class PsiConfigUtils {
         return new Prty19FastPsiConfig.Builder().build();
     }
 
-    private static PsiConfig createGmr21PsiConfig() {
-        return new Gmr21PsiConfig.Builder().build();
+    private static PsiConfig createGmr21PsiConfig(Properties properties) {
+        boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
+        return new Gmr21PsiConfig.Builder(silent).build();
     }
 
     private static PsiConfig createCzz22PsiConfig() {
@@ -119,10 +134,13 @@ public class PsiConfigUtils {
     private static PsiConfig createPsz14PsiConfig(Properties properties) {
         String oprfTypeString = PropertiesUtils.readString(properties, "oprf_type",
             OprfType.PSZ14_OPT.toString());
-        switch (oprfTypeString){
-            case "PSZ14_OPT": return new Psz14PsiConfig.Builder().build();
-            case "PSZ14_ORI" : return new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build();
-            default: throw new IllegalArgumentException("Invalid eccTypeString in PSZ14-PSI:" + oprfTypeString);
+        switch (oprfTypeString) {
+            case "PSZ14_OPT":
+                return new Psz14PsiConfig.Builder().build();
+            case "PSZ14_ORI":
+                return new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build();
+            default:
+                throw new IllegalArgumentException("Invalid eccTypeString in PSZ14-PSI:" + oprfTypeString);
         }
     }
 
