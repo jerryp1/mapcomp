@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14;
+package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -10,12 +10,12 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 
 /**
- * PSZ14-PSI config.
+ * OOS17-PSI config.
  *
  * @author Weiran Liu
  * @date 2023/9/18
  */
-public class Psz14PsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
+public class Oos17PsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
      * LCOT config
      */
@@ -29,7 +29,7 @@ public class Psz14PsiConfig extends AbstractMultiPartyPtoConfig implements Filte
      */
     private final FilterType filterType;
 
-    private Psz14PsiConfig(Builder builder) {
+    private Oos17PsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.lcotConfig);
         lcotConfig = builder.lcotConfig;
         cuckooHashBinType = builder.cuckooHashBinType;
@@ -46,7 +46,7 @@ public class Psz14PsiConfig extends AbstractMultiPartyPtoConfig implements Filte
 
     @Override
     public PsiType getPtoType() {
-        return PsiType.PSZ14;
+        return PsiType.OOS17;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class Psz14PsiConfig extends AbstractMultiPartyPtoConfig implements Filte
         return filterType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Psz14PsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Oos17PsiConfig> {
         /**
          * LCOT config
          */
@@ -85,8 +85,8 @@ public class Psz14PsiConfig extends AbstractMultiPartyPtoConfig implements Filte
         }
 
         @Override
-        public Psz14PsiConfig build() {
-            return new Psz14PsiConfig(this);
+        public Oos17PsiConfig build() {
+            return new Oos17PsiConfig(this);
         }
     }
 }

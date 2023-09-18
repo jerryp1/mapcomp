@@ -1,27 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16;
+package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * KKRT16-PSI protocol description. The protocol comes from the following paper:
+ * OOS17-PSI protocol description. The protocol comes from the following paper:
  * <p>
- * Kolesnikov V, Kumaresan R, Rosulek M, et al. Efficient batched oblivious PRF with applications to private set
- * intersection. CCS 2016, ACM, 2016, pp. 818-829.
+ * Orrù, Michele, Emmanuela Orsini, and Peter Scholl. Actively secure 1-out-of-N OT extension with application to
+ * private set intersection. CT-RSA 2017, pp. 381-396. Springer International Publishing, 2017.
  * </p>
+ * The paper mentioned that the construction can be used to construct more efficient (semi-honest) PSI.
  *
  * @author Weiran Liu
- * @date 2022/9/19
+ * @date 2023/9/18
  */
-class Kkrt16PsiPtoDesc implements PtoDesc {
+class Oos17PsiPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 7043357406784082959L);
+    private static final int PTO_ID = Math.abs((int) 3132310804096938310L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "KKRT16_PSI";
+    private static final String PTO_NAME = "OOS17_PSI";
 
     /**
      * protocol step
@@ -44,12 +45,12 @@ class Kkrt16PsiPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Kkrt16PsiPtoDesc INSTANCE = new Kkrt16PsiPtoDesc();
+    private static final Oos17PsiPtoDesc INSTANCE = new Oos17PsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Kkrt16PsiPtoDesc() {
+    private Oos17PsiPtoDesc() {
         // empty
     }
 

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14;
+package edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -13,14 +13,13 @@ import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
-import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -32,12 +31,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * PSI14-PSI server.
+ * OOS17-PSI server.
  *
  * @author Weiran Liu
  * @date 2023/9/18
  */
-public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
+public class Oos17PsiServer<T> extends AbstractPsiServer<T> {
     /**
      * LCOT sender
      */
@@ -55,10 +54,6 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
      */
     private final FilterType filterType;
     /**
-     * l (in byte)
-     */
-    private int byteL;
-    /**
      * bin num
      */
     private int binNum;
@@ -71,8 +66,8 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
      */
     private Hash h1;
 
-    public Psz14PsiServer(Rpc serverRpc, Party clientParty, Psz14PsiConfig config) {
-        super(Psz14PsiPtoDesc.getInstance(), serverRpc, clientParty, config);
+    public Oos17PsiServer(Rpc serverRpc, Party clientParty, Oos17PsiConfig config) {
+        super(Oos17PsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         lcotSender = LcotFactory.createSender(serverRpc, clientParty, config.getLcotConfig());
         addSubPtos(lcotSender);
         cuckooHashBinType = config.getCuckooHashBinType();
@@ -88,7 +83,9 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
         stopWatch.start();
         int maxBinNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, maxClientElementSize);
         int maxStashNum = CuckooHashBinFactory.getStashSize(cuckooHashBinType, maxClientElementSize);
-        int maxByteL = PsiUtils.getSemiHonestPeqtByteLength(maxServerElementSize, maxClientElementSize);
+        int byteL = PsiUtils.getSemiHonestPeqtByteLength(maxServerElementSize, maxClientElementSize);
+        h1 = HashFactory.createInstance(envType, byteL);
+        int l = byteL * Byte.SIZE;
         // init cuckoo hash keys
         DataPacketHeader cuckooHashKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
@@ -107,7 +104,7 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
         // init LCOT
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        lcotSender.init(Byte.SIZE, (maxBinNum + maxStashNum) * maxByteL);
+        lcotSender.init(l, maxBinNum + maxStashNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -122,17 +119,15 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        byteL = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         binNum = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
         int stashSize = CuckooHashBinFactory.getStashSize(cuckooHashBinType, clientElementSize);
-        h1 = HashFactory.createInstance(envType, byteL);
         stopWatch.stop();
         long setupTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 3, setupTime, "Server inits tools");
 
         stopWatch.start();
-        LcotSenderOutput lcotSenderOutput = lcotSender.send((binNum + stashSize) * byteL);
+        LcotSenderOutput lcotSenderOutput = lcotSender.send(binNum + stashSize);
         stopWatch.stop();
         long lcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -187,12 +182,8 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
             .putInt(hashIndex)
             .array();
         hx = h1.digestToBytes(hx);
-        byte[] prf = new byte[byteL];
-        for (int byteIndex = 0; byteIndex < byteL; byteIndex++) {
-            byte[] byteIndexPrf = lcotSenderOutput.getRb(binIndex * byteL + byteIndex, new byte[] {hx[byteIndex]});
-            byteIndexPrf = h1.digestToBytes(byteIndexPrf);
-            BytesUtils.xori(prf, byteIndexPrf);
-        }
+        byte[] prf = lcotSenderOutput.getRb(binIndex, hx);
+        prf = h1.digestToBytes(prf);
         return prf;
     }
 
@@ -216,12 +207,8 @@ public class Psz14PsiServer<T> extends AbstractPsiServer<T> {
             .putInt(binNum + stashIndex)
             .array();
         hx = h1.digestToBytes(hx);
-        byte[] prf = new byte[byteL];
-        for (int byteIndex = 0; byteIndex < byteL; byteIndex++) {
-            byte[] byteIndexPrf = lcotSenderOutput.getRb((binNum + stashIndex) * byteL + byteIndex, new byte[] {hx[byteIndex]});
-            byteIndexPrf = h1.digestToBytes(byteIndexPrf);
-            BytesUtils.xori(prf, byteIndexPrf);
-        }
+        byte[] prf = lcotSenderOutput.getRb(binNum + stashIndex, hx);
+        prf = h1.digestToBytes(prf);
         return prf;
     }
 }

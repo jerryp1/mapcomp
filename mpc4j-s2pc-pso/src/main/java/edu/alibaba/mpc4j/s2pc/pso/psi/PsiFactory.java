@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.pso.psi;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiServer;
@@ -84,6 +87,10 @@ public class PsiFactory implements PtoFactory {
          */
         PRTY20_SEMI_HONEST,
         /**
+         * OOS17
+         */
+        OOS17,
+        /**
          * DCW13
          */
         DCW13,
@@ -134,6 +141,8 @@ public class PsiFactory implements PtoFactory {
                 return new Ra17EccPsiServer<>(serverRpc, clientParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccPsiServer<>(serverRpc, clientParty, (Ra17ByteEccPsiConfig) config);
+            case OOS17:
+                return new Oos17PsiServer<>(serverRpc, clientParty, (Oos17PsiConfig) config);
             case DCW13:
                 return new Dcw13PsiServer<>(serverRpc, clientParty, (Dcw13PsiConfig) config);
             case PSZ14:
@@ -178,6 +187,8 @@ public class PsiFactory implements PtoFactory {
                 return new Ra17EccPsiClient<>(clientRpc, serverParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
                 return new Ra17ByteEccPsiClient<>(clientRpc, serverParty, (Ra17ByteEccPsiConfig) config);
+            case OOS17:
+                return new Oos17PsiClient<>(clientRpc, serverParty, (Oos17PsiConfig) config);
             case DCW13:
                 return new Dcw13PsiClient<>(clientRpc, serverParty, (Dcw13PsiConfig) config);
             case PSZ14:

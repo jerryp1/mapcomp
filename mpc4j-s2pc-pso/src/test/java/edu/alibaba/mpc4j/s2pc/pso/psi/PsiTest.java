@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
+import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
@@ -61,87 +62,87 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // OOS17
+        configurations.add(new Object[]{
+            PsiType.OOS17.name(), new Oos17PsiConfig.Builder().build(),
+        });
         // PSZ14
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),
         });
         // DCW13
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.DCW13.name(), new Dcw13PsiConfig.Builder().build(),
         });
         // RT21
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.RT21.name(), new Rt21PsiConfig.Builder().build(),
         });
         // CM20
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
         });
         // CZZ22
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),
         });
         // GMR21
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(false).build(),
         });
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(true).build(),
         });
         // PRTY20
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.PRTY20_SEMI_HONEST.name(), new Prty20SmPsiConfig.Builder().build(),
         });
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.PRTY20_SEMI_HONEST.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
             new Prty20SmPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
         });
         // RA17_ECC
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.RA17_ECC.name(), new Ra17EccPsiConfig.Builder().build(),
         });
         // RA17_BYTE_ECC
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
         });
-//        // PSZ14_ORI
-//        configurations.add(new Object[] {
-//            PsiType.PSZ14.name() + "_ORI", new Psz14PsiConfig.Builder().setOprfConfig(new Psz14OriOprfConfig.Builder().build()).build(),
-//        });
         // PRTY19_FAST
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
         });
         // PRTY19_LOW
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
         });
 
         // KKRT16 (no-stash)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
             new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
         });
         // KKRT16 (4 hash)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
             new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
         // KKRT16
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.KKRT16.name(), new Kkrt16PsiConfig.Builder().build(),
         });
         // HFH99_BYTE_ECC
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
         });
         // HFH99_ECC (compress)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
             new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
         });
         // HFH99_ECC (uncompress)
-        configurations.add(new Object[] {
+        configurations.add(new Object[]{
             PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
             new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
         });
@@ -155,7 +156,7 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     private final PsiConfig config;
 
     public PsiTest(String name, PsiConfig config) {
-       super(name);
+        super(name);
         this.config = config;
     }
 
