@@ -25,6 +25,10 @@ class MainPsiServerThread extends Thread {
      * main PSU
      */
     private final PsiMain psiMain;
+    /**
+     * success
+     */
+    private boolean success;
 
     MainPsiServerThread(Rpc serverRpc, Party clientParty, PsiMain psiMain) {
         this.serverRpc = serverRpc;
@@ -32,10 +36,15 @@ class MainPsiServerThread extends Thread {
         this.psiMain = psiMain;
     }
 
+    boolean getSuccess() {
+        return success;
+    }
+
     @Override
     public void run() {
         try {
             psiMain.runServer(serverRpc, clientParty);
+            success = true;
         } catch (MpcAbortException | IOException e) {
             e.printStackTrace();
         }

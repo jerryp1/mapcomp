@@ -21,7 +21,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
@@ -59,8 +59,8 @@ public class PsiConfigUtils {
                 return createRa17EccPsiConfig();
             case RA17_BYTE_ECC:
                 return createRa17ByteEccPsiConfig();
-            case PRTY20_SEMI_HONEST:
-                return createPrty20ShPsiConfig(properties);
+            case PRTY20:
+                return createPrty20PsiConfig(properties);
             case PRTY19_LOW:
                 return createPrty19LowPsiConfig(properties);
             case PRTY19_FAST:
@@ -115,12 +115,16 @@ public class PsiConfigUtils {
         return new Ra17ByteEccPsiConfig.Builder().build();
     }
 
-    private static PsiConfig createPrty20ShPsiConfig(Properties properties) {
+    private static PsiConfig createPrty20PsiConfig(Properties properties) {
         String okvsTypeString = PropertiesUtils.readString(
-            properties, "okvs_type", Gf2eDokvsType.H2_SINGLETON_GCT.toString()
+            properties, "okvs_type", Gf2eDokvsType.H2_TWO_CORE_GCT.toString()
         );
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
-        return new Prty20ShPsiConfig.Builder().setPaxosType(okvsType).build();
+        String securityModelString = PropertiesUtils.readString(
+            properties, "security_model", SecurityModel.MALICIOUS.toString()
+        );
+        SecurityModel securityModel = SecurityModel.valueOf(securityModelString);
+        return new Prty20PsiConfig.Builder(securityModel).setPaxosType(okvsType).build();
     }
 
     private static PsiConfig createPrty19LowPsiConfig(Properties properties) {

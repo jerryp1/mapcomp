@@ -28,9 +28,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.*;
@@ -99,7 +99,7 @@ public class PsiFactory implements PtoFactory {
         /**
          * PRTY20 (semi-honest)
          */
-        PRTY20_SEMI_HONEST,
+        PRTY20,
         /**
          * OOS17
          */
@@ -149,8 +149,8 @@ public class PsiFactory implements PtoFactory {
                 return new Czz22PsiServer<>(serverRpc, clientParty, (Czz22PsiConfig) config);
             case GMR21:
                 return new Gmr21PsiServer<>(serverRpc, clientParty, (Gmr21PsiConfig) config);
-            case PRTY20_SEMI_HONEST:
-                return new Prty20ShPsiServer<>(serverRpc, clientParty, (Prty20ShPsiConfig) config);
+            case PRTY20:
+                return new Prty20PsiServer<>(serverRpc, clientParty, (Prty20PsiConfig) config);
             case RA17_ECC:
                 return new Ra17EccPsiServer<>(serverRpc, clientParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
@@ -199,8 +199,8 @@ public class PsiFactory implements PtoFactory {
                 return new Czz22PsiClient<>(clientRpc, serverParty, (Czz22PsiConfig) config);
             case GMR21:
                 return new Gmr21PsiClient<>(clientRpc, serverParty, (Gmr21PsiConfig) config);
-            case PRTY20_SEMI_HONEST:
-                return new Prty20ShPsiClient<>(clientRpc, serverParty, (Prty20ShPsiConfig) config);
+            case PRTY20:
+                return new Prty20PsiClient<>(clientRpc, serverParty, (Prty20PsiConfig) config);
             case RA17_ECC:
                 return new Ra17EccPsiClient<>(clientRpc, serverParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:

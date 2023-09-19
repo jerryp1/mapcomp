@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -107,7 +108,13 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         });
         // PRTY20
         configurations.add(new Object[] {
-            PsiType.PRTY20_SEMI_HONEST.name(), "psi/prty20_semi_honest.txt",
+            PsiType.PRTY20.name() + "(" + SecurityModel.SEMI_HONEST + ")", "psi/prty20_semi_honest.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.PRTY20.name() + "(" + SecurityModel.MALICIOUS + ")", "psi/prty20_malicious.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.PRTY20.name() + "(" + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")", "psi/prty20_h3_binary_blaze_gct.txt",
         });
         // CM20
         configurations.add(new Object[] {
@@ -155,6 +162,8 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         clientThread.start();
         serverThread.join();
         clientThread.join();
+        Assert.assertTrue(serverThread.getSuccess());
+        Assert.assertTrue(clientThread.getSuccess());
     }
 
     private Properties readConfig(String path) {

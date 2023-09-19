@@ -25,6 +25,10 @@ public class MainPsiClientThread extends Thread {
      * main PSI
      */
     private final PsiMain psiMain;
+    /**
+     * success
+     */
+    private boolean success;
 
     MainPsiClientThread(Rpc clientRpc, Party serverParty, PsiMain psiMain) {
         this.clientRpc = clientRpc;
@@ -32,10 +36,15 @@ public class MainPsiClientThread extends Thread {
         this.psiMain = psiMain;
     }
 
+    boolean getSuccess() {
+        return success;
+    }
+
     @Override
     public void run() {
         try {
             psiMain.runClient(clientRpc, serverParty);
+            success = true;
         } catch (MpcAbortException | IOException e) {
             e.printStackTrace();
         }

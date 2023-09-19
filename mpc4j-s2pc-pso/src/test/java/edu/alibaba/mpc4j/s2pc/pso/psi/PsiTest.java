@@ -19,7 +19,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
@@ -118,18 +118,25 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         });
         // GMR21
         configurations.add(new Object[]{
-            PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(false).build(),
+            PsiType.GMR21.name() + "(no silent)", new Gmr21PsiConfig.Builder(false).build(),
         });
         configurations.add(new Object[]{
-            PsiType.GMR21.name(), new Gmr21PsiConfig.Builder(true).build(),
+            PsiType.GMR21.name() + "(silent)", new Gmr21PsiConfig.Builder(true).build(),
         });
         // PRTY20
         configurations.add(new Object[]{
-            PsiType.PRTY20_SEMI_HONEST.name(), new Prty20ShPsiConfig.Builder().build(),
+            PsiType.PRTY20.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
         });
         configurations.add(new Object[]{
-            PsiType.PRTY20_SEMI_HONEST.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
-            new Prty20ShPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
+            PsiType.PRTY20.name() + "(" + SecurityModel.MALICIOUS + ")",
+            new Prty20PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        configurations.add(new Object[]{
+            PsiType.PRTY20.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
+            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST)
+                .setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT)
+                .build(),
         });
         // RA17_ECC
         configurations.add(new Object[]{
@@ -147,7 +154,6 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
         });
-
         // KKRT16 (no-stash)
         configurations.add(new Object[]{
             PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
@@ -158,9 +164,9 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
             PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
             new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
         });
-        // KKRT16
+        // KKRT16 (3 hash)
         configurations.add(new Object[]{
-            PsiFactory.PsiType.KKRT16.name(), new Kkrt16PsiConfig.Builder().build(),
+            PsiFactory.PsiType.KKRT16.name() + "(3 hash)", new Kkrt16PsiConfig.Builder().build(),
         });
         // HFH99_BYTE_ECC
         configurations.add(new Object[]{
