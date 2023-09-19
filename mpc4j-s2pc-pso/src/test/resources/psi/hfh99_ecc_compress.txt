@@ -9,4 +9,8 @@ server_log_set_size = 12,10
 client_log_set_size = 12,10
 
 # protocol name
-psi_pto_name = PSZ14
+psi_pto_name = HFH99_ECC
+
+# specific config
+compress_encode = true
+append_string = _compress

@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiPtoDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -32,7 +32,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/9/10
  */
-public class Prty20SmPsiClient<T> extends AbstractPsiClient<T> {
+public class Prty20ShPsiClient<T> extends AbstractPsiClient<T> {
     /**
      * LOT receiver
      */
@@ -58,8 +58,8 @@ public class Prty20SmPsiClient<T> extends AbstractPsiClient<T> {
      */
     private byte[][] paxosKeys;
 
-    public Prty20SmPsiClient(Rpc clientRpc, Party serverParty, Prty20SmPsiConfig config) {
-        super(Prty20SmPsiPtoDesc.getInstance(), clientRpc, serverParty, config);
+    public Prty20ShPsiClient(Rpc clientRpc, Party serverParty, Prty20ShPsiConfig config) {
+        super(Prty20ShPsiPtoDesc.getInstance(), clientRpc, serverParty, config);
         lcotReceiver = LcotFactory.createReceiver(clientRpc, serverParty, config.getLcotConfig());
         addSubPtos(lcotReceiver);
         paxosType = config.getPaxosType();
@@ -72,7 +72,7 @@ public class Prty20SmPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        maxL = Prty20SmPsiPtoDesc.getLcotInputBitLength(maxServerElementSize, maxClientElementSize);
+        maxL = Prty20ShPsiPtoDesc.getLcotInputBitLength(maxServerElementSize, maxClientElementSize);
         int maxByteL = CommonUtils.getByteLength(maxL);
         h1 = HashFactory.createInstance(envType, maxByteL);
         int maxM = Gf2eDokvsFactory.getM(envType, paxosType, maxClientElementSize);

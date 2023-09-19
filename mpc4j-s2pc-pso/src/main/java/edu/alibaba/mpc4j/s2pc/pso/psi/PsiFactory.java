@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22.Rr22PsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22.Rr22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22.Rr22PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiServer;
@@ -25,9 +28,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.*;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiClient;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.*;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.*;
@@ -53,6 +56,10 @@ public class PsiFactory implements PtoFactory {
      * PSI type
      */
     public enum PsiType {
+        /**
+         * RR22
+         */
+        RR22,
         /**
          * RS21
          */
@@ -143,7 +150,7 @@ public class PsiFactory implements PtoFactory {
             case GMR21:
                 return new Gmr21PsiServer<>(serverRpc, clientParty, (Gmr21PsiConfig) config);
             case PRTY20_SEMI_HONEST:
-                return new Prty20SmPsiServer<>(serverRpc, clientParty, (Prty20SmPsiConfig) config);
+                return new Prty20ShPsiServer<>(serverRpc, clientParty, (Prty20ShPsiConfig) config);
             case RA17_ECC:
                 return new Ra17EccPsiServer<>(serverRpc, clientParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
@@ -162,6 +169,8 @@ public class PsiFactory implements PtoFactory {
                 return new Rt21PsiServer<>(serverRpc, clientParty, (Rt21PsiConfig) config);
             case RS21:
                 return new Rs21PsiServer<>(serverRpc, clientParty, (Rs21PsiConfig) config);
+            case RR22:
+                return new Rr22PsiServer<>(serverRpc, clientParty, (Rr22PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }
@@ -191,7 +200,7 @@ public class PsiFactory implements PtoFactory {
             case GMR21:
                 return new Gmr21PsiClient<>(clientRpc, serverParty, (Gmr21PsiConfig) config);
             case PRTY20_SEMI_HONEST:
-                return new Prty20SmPsiClient<>(clientRpc, serverParty, (Prty20SmPsiConfig) config);
+                return new Prty20ShPsiClient<>(clientRpc, serverParty, (Prty20ShPsiConfig) config);
             case RA17_ECC:
                 return new Ra17EccPsiClient<>(clientRpc, serverParty, (Ra17EccPsiConfig) config);
             case RA17_BYTE_ECC:
@@ -210,6 +219,8 @@ public class PsiFactory implements PtoFactory {
                 return new Rt21PsiClient<>(clientRpc, serverParty, (Rt21PsiConfig) config);
             case RS21:
                 return new Rs21PsiClient<>(clientRpc, serverParty, (Rs21PsiConfig) config);
+            case RR22:
+                return new Rr22PsiClient<>(clientRpc, serverParty, (Rr22PsiConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + type.name());
         }

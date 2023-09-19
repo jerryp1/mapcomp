@@ -2,9 +2,11 @@ package edu.alibaba.mpc4j.s2pc.pso.main.psi;
 
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcManager;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.impl.memory.MemoryRpcManager;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import org.junit.Test;
@@ -37,33 +39,51 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RR22
+        configurations.add(new Object[] {
+            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ")", "psi/rr22_semi_honest.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ")", "psi/rr22_malicious.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.RR22.name() + "(" + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")", "psi/rr22_h3_binary_blaze_gct.txt",
+        });
+        // RS21
+        configurations.add(new Object[] {
+            PsiType.RS21.name() + "(" + SecurityModel.SEMI_HONEST + ")", "psi/rs21_semi_honest.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.RS21.name() + "(" + SecurityModel.MALICIOUS + ")", "psi/rs21_malicious.txt",
+        });
+        // RT21
+        configurations.add(new Object[] {
+            PsiType.RT21.name(), "psi/rt21.txt",
+        });
         // OOS17
         configurations.add(new Object[] {
             PsiType.OOS17.name(), "psi/oos17.txt",
         });
         // HFH99_ECC
         configurations.add(new Object[] {
-            PsiType.HFH99_ECC.name() + " (uncompress)", "psi/hfh99_ecc_compress_false.txt",
+            PsiType.HFH99_ECC.name() + " (uncompress)", "psi/hfh99_ecc_uncompress.txt",
         });
-        // HFH99_BYTE_ECC
         configurations.add(new Object[] {
-            PsiType.HFH99_ECC.name() + " (compressed)", "psi/hfh99_ecc.txt",
+            PsiType.HFH99_ECC.name() + " (compress)", "psi/hfh99_ecc_compress.txt",
         });
         // HFH99_BYTE_ECC
         configurations.add(new Object[] {
             PsiType.HFH99_BYTE_ECC.name(), "psi/hfh99_byte_ecc.txt",
         });
-        // KKRT16 (no-stash)
-        configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name() + " (no-stash)", "psi/kkrt16_noStashNaive.txt",
-        });
-        // KKRT16 (4 hash)
-        configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name() + " (4 hash)", "psi/kkrt16_naive4hash.txt",
-        });
         // KKRT16
         configurations.add(new Object[] {
-            PsiFactory.PsiType.KKRT16.name(), "psi/kkrt16_naive3hash.txt",
+            PsiFactory.PsiType.KKRT16.name() + " (no-stash)", "psi/kkrt16_naive_no_stash.txt",
+        });
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.KKRT16.name() + " (4 hash)", "psi/kkrt16_naive_4_hash.txt",
+        });
+        configurations.add(new Object[] {
+            PsiFactory.PsiType.KKRT16.name(), "psi/kkrt16_naive_3_hash.txt",
         });
         // DCW13
         configurations.add(new Object[] {
@@ -73,10 +93,11 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.PSZ14.name(), "psi/psz14.txt",
         });
-        // RA17
+        // RA17_BYTE_ECC
         configurations.add(new Object[] {
             PsiType.RA17_BYTE_ECC.name(), "psi/ra17_byte_ecc.txt",
         });
+        // RA17_ECC
         configurations.add(new Object[] {
             PsiType.RA17_ECC.name(), "psi/ra17_ecc.txt",
         });
@@ -84,7 +105,7 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[] {
             PsiType.PRTY19_FAST.name(), "psi/prty19_fast.txt",
         });
-        // PRTY20_SEMI_HONEST
+        // PRTY20
         configurations.add(new Object[] {
             PsiType.PRTY20_SEMI_HONEST.name(), "psi/prty20_semi_honest.txt",
         });
@@ -94,7 +115,10 @@ public class MainPsiTest extends AbstractTwoPartyPtoTest {
         });
         // GMR21
         configurations.add(new Object[] {
-            PsiType.GMR21.name(), "psi/gmr21.txt",
+            PsiType.GMR21.name() + "(silent)", "psi/gmr21_silent.txt",
+        });
+        configurations.add(new Object[] {
+            PsiType.GMR21.name() + "(no-silent)", "psi/gmr21_no_silent.txt",
         });
         // CZZ22
         configurations.add(new Object[] {

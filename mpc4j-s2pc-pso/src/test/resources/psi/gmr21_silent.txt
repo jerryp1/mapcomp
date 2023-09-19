@@ -9,4 +9,8 @@ server_log_set_size = 12,10
 client_log_set_size = 12,10
 
 # protocol name
-psi_pto_name = PSZ14
+psi_pto_name = GMR21
+
+# specific config
+silent = true
+append_string = _silent

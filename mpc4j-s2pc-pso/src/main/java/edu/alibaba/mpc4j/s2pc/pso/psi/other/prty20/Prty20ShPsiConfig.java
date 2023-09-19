@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokv
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.kk13.Kk13OptLcotConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 
 /**
@@ -18,7 +17,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
  * @author Weiran Liu
  * @date 2023/9/10
  */
-public class Prty20SmPsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
+public class Prty20ShPsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
      * LCOT config
      */
@@ -33,7 +32,7 @@ public class Prty20SmPsiConfig extends AbstractMultiPartyPtoConfig implements Fi
     private final FilterType filterType;
 
 
-    private Prty20SmPsiConfig(Builder builder) {
+    private Prty20ShPsiConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.lcotConfig);
         lcotConfig = builder.lcotConfig;
         paxosType = builder.paxosType;
@@ -41,7 +40,7 @@ public class Prty20SmPsiConfig extends AbstractMultiPartyPtoConfig implements Fi
     }
 
     @Override
-    public PsiFactory.PsiType getPtoType() {
+    public PsiType getPtoType() {
         return PsiType.PRTY20_SEMI_HONEST;
     }
 
@@ -56,7 +55,7 @@ public class Prty20SmPsiConfig extends AbstractMultiPartyPtoConfig implements Fi
         return filterType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Prty20SmPsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Prty20ShPsiConfig> {
         /**
          * LCOT config
          */
@@ -88,8 +87,8 @@ public class Prty20SmPsiConfig extends AbstractMultiPartyPtoConfig implements Fi
         }
 
         @Override
-        public Prty20SmPsiConfig build() {
-            return new Prty20SmPsiConfig(this);
+        public Prty20ShPsiConfig build() {
+            return new Prty20ShPsiConfig(this);
         }
     }
 }

@@ -5,11 +5,13 @@ import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22.Rr22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
@@ -17,7 +19,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
@@ -64,6 +66,23 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RR22
+        configurations.add(new Object[]{
+            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+        });
+        configurations.add(new Object[]{
+            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
+            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+        });
+        configurations.add(new Object[]{
+            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ")",
+            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+        });
+        configurations.add(new Object[]{
+            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
+            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+        });
         // RS21
         configurations.add(new Object[]{
             PsiType.RS21.name() + "(" + SecurityModel.SEMI_HONEST + ")",
@@ -106,11 +125,11 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
         });
         // PRTY20
         configurations.add(new Object[]{
-            PsiType.PRTY20_SEMI_HONEST.name(), new Prty20SmPsiConfig.Builder().build(),
+            PsiType.PRTY20_SEMI_HONEST.name(), new Prty20ShPsiConfig.Builder().build(),
         });
         configurations.add(new Object[]{
             PsiType.PRTY20_SEMI_HONEST.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
-            new Prty20SmPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
+            new Prty20ShPsiConfig.Builder().setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT).build(),
         });
         // RA17_ECC
         configurations.add(new Object[]{

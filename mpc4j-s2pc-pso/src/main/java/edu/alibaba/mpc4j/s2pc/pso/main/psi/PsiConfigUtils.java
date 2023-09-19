@@ -1,13 +1,17 @@
 package edu.alibaba.mpc4j.s2pc.pso.main.psi;
 
-import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.oos17.Oos17PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.psz14.Psz14PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22.Rr22PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rs21.Rs21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
@@ -17,7 +21,8 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19LowPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20SmPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20ShPsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17EccPsiConfig;
 
@@ -55,7 +60,7 @@ public class PsiConfigUtils {
             case RA17_BYTE_ECC:
                 return createRa17ByteEccPsiConfig();
             case PRTY20_SEMI_HONEST:
-                return createPrty20SmPsiConfig(properties);
+                return createPrty20ShPsiConfig(properties);
             case PRTY19_LOW:
                 return createPrty19LowPsiConfig(properties);
             case PRTY19_FAST:
@@ -70,13 +75,18 @@ public class PsiConfigUtils {
                 return createDcw13PsiConfig();
             case OOS17:
                 return createOos17PsiConfig();
+            case RT21:
+                return createRt21PsiConfig();
+            case RS21:
+                return createRs21PsiConfig(properties);
+            case RR22:
+                return createRr22PsiConfig(properties);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + psiType.name());
         }
     }
 
     private static PsiConfig createHfh99EccPsiConfig(Properties properties) {
-        // 是否使用压缩编码
         boolean compressEncode = PropertiesUtils.readBoolean(properties, "compress_encode", true);
         return new Hfh99EccPsiConfig.Builder().setCompressEncode(compressEncode).build();
     }
@@ -86,9 +96,10 @@ public class PsiConfigUtils {
     }
 
     private static PsiConfig createKkrt16PsiConfig(Properties properties) {
-        String cuckooHashTypeString = PropertiesUtils.readString(properties, "cuckoo_hash_bin_type",
-            CuckooHashBinFactory.CuckooHashBinType.NO_STASH_NAIVE.toString());
-        CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType = CuckooHashBinFactory.CuckooHashBinType.valueOf(cuckooHashTypeString);
+        String cuckooHashTypeString = PropertiesUtils.readString(
+            properties, "cuckoo_hash_bin_type", CuckooHashBinType.NO_STASH_NAIVE.toString()
+        );
+        CuckooHashBinType cuckooHashBinType = CuckooHashBinType.valueOf(cuckooHashTypeString);
         return new Kkrt16PsiConfig.Builder().setCuckooHashBinType(cuckooHashBinType).build();
     }
 
@@ -104,12 +115,12 @@ public class PsiConfigUtils {
         return new Ra17ByteEccPsiConfig.Builder().build();
     }
 
-    private static PsiConfig createPrty20SmPsiConfig(Properties properties) {
+    private static PsiConfig createPrty20ShPsiConfig(Properties properties) {
         String okvsTypeString = PropertiesUtils.readString(
             properties, "okvs_type", Gf2eDokvsType.H2_SINGLETON_GCT.toString()
         );
         Gf2eDokvsType okvsType = Gf2eDokvsType.valueOf(okvsTypeString);
-        return new Prty20SmPsiConfig.Builder().setPaxosType(okvsType).build();
+        return new Prty20ShPsiConfig.Builder().setPaxosType(okvsType).build();
     }
 
     private static PsiConfig createPrty19LowPsiConfig(Properties properties) {
@@ -143,5 +154,29 @@ public class PsiConfigUtils {
 
     private static PsiConfig createOos17PsiConfig() {
         return new Oos17PsiConfig.Builder().build();
+    }
+
+    private static PsiConfig createRt21PsiConfig() {
+        return new Rt21PsiConfig.Builder().build();
+    }
+
+    private static PsiConfig createRs21PsiConfig(Properties properties) {
+        String securityModelString = PropertiesUtils.readString(
+            properties, "security_model", SecurityModel.SEMI_HONEST.toString()
+        );
+        SecurityModel securityModel = SecurityModel.valueOf(securityModelString);
+        return new Rs21PsiConfig.Builder(securityModel).build();
+    }
+
+    private static PsiConfig createRr22PsiConfig(Properties properties) {
+        String securityModelString = PropertiesUtils.readString(
+            properties, "security_model", SecurityModel.SEMI_HONEST.toString()
+        );
+        SecurityModel securityModel = SecurityModel.valueOf(securityModelString);
+        String okvsTypeString = PropertiesUtils.readString(
+            properties, "okvs_type", Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT.toString()
+        );
+        Gf2kDokvsType okvsType = Gf2kDokvsType.valueOf(okvsTypeString);
+        return new Rr22PsiConfig.Builder(securityModel, okvsType).build();
     }
 }

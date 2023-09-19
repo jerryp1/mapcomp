@@ -15,7 +15,7 @@ import edu.alibaba.mpc4j.common.tool.coder.linear.LinearCoderFactory;
  * @author Weiran Liu
  * @date 2023/9/10
  */
-class Prty20SmPsiPtoDesc implements PtoDesc {
+class Prty20ShPsiPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -41,12 +41,12 @@ class Prty20SmPsiPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Prty20SmPsiPtoDesc INSTANCE = new Prty20SmPsiPtoDesc();
+    private static final Prty20ShPsiPtoDesc INSTANCE = new Prty20ShPsiPtoDesc();
 
     /**
      * private constructor.
      */
-    private Prty20SmPsiPtoDesc() {
+    private Prty20ShPsiPtoDesc() {
         // empty
     }
 

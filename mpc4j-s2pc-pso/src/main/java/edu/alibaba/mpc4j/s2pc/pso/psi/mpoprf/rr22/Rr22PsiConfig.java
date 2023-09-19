@@ -1,20 +1,21 @@
-package edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20;
+package edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.rr22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
+import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.MpOprfPsiConfig;
 
 /**
- * CM20-PSI config.
+ * RR22-PSI config.
  *
- * @author Ziyuan Liang, Feng Han
- * @date 2023/08/10
+ * @author Weiran Liu
+ * @date 2023/9/18
  */
-public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprfPsiConfig {
+public class Rr22PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprfPsiConfig {
     /**
      * MP-OPRF config
      */
@@ -24,15 +25,15 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprf
      */
     private final FilterType filterType;
 
-    private Cm20PsiConfig(Cm20PsiConfig.Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.mpOprfConfig);
+    private Rr22PsiConfig(Builder builder) {
+        super(SecurityModel.MALICIOUS, builder.mpOprfConfig);
         mpOprfConfig = builder.mpOprfConfig;
         filterType = builder.filterType;
     }
 
     @Override
     public PsiType getPtoType() {
-        return PsiType.CM20;
+        return PsiType.RR22;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprf
         return filterType;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Cm20PsiConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Rr22PsiConfig> {
         /**
          * MP-OPRF config
          */
@@ -55,8 +56,14 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprf
          */
         private FilterType filterType;
 
-        public Builder() {
-            mpOprfConfig = new Cm20MpOprfConfig.Builder().build();
+        public Builder(SecurityModel securityModel) {
+            this(securityModel, Gf2kDokvsType.H3_CLUSTER_FIELD_BLAZE_GCT);
+        }
+
+        public Builder(SecurityModel securityModel, Gf2kDokvsType okvsType) {
+            mpOprfConfig = new Rs21MpOprfConfig.Builder(securityModel)
+                .setOkvsType(okvsType)
+                .build();
             filterType = FilterType.SET_FILTER;
         }
 
@@ -66,8 +73,8 @@ public class Cm20PsiConfig extends AbstractMultiPartyPtoConfig implements MpOprf
         }
 
         @Override
-        public Cm20PsiConfig build() {
-            return new Cm20PsiConfig(this);
+        public Rr22PsiConfig build() {
+            return new Rr22PsiConfig(this);
         }
     }
 }
