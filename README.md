@@ -108,7 +108,7 @@ This library is licensed under Apache License 2.0.
 
 ### C/C++ Modules
 
-Most of the codes are in Java, except for very efficient implementations in C/C++. You need [OpenSSL](https://www.openssl.org/), [GMP](https://gmplib.org/), [NTL](https://libntl.org/) , [MCL](https://github.com/herumi/mcl), [libsodium](https://doc.libsodium.org/installation), and FourQ that we rewrite (in `mpc4j-native-fourq`) to compile `mpc4j-native-tool` and [SEAL 4.0.0](https://github.com/microsoft/SEAL) to compile `mpc4j-native-fhe`. Please see READMD.md in `mpc4j-native-fourq`, `mpc4j-native-cool` and `mpc4j-native-fhe` on how to install C/C++ dependencies.
+Most of the codes are in Java, except for very efficient implementations in C/C++. You need [OpenSSL](https://www.openssl.org/), [GMP](https://gmplib.org/), [NTL](https://libntl.org/) , [MCL](https://github.com/herumi/mcl), [libsodium](https://doc.libsodium.org/installation), and FourQ that we rewrite (in `mpc4j-native-fourq`) to compile `mpc4j-native-tool` and [SEAL 4.0.0](https://github.com/microsoft/SEAL) to compile `mpc4j-native-fhe`. Please see README.md in `mpc4j-native-fourq`, `mpc4j-native-cool` and `mpc4j-native-fhe` on how to install C/C++ dependencies.
 
 After successfully installing C/C++ library `mpc4j-native-fourq` and obtaining the compiled C/C++ libraries (named `libmpc4j-native-tool` and `libmpc4j-native-fhe`, respectively), you need to assign the native library location when running `mpc4j` using `-Djava.library.path`.
 
@@ -166,7 +166,7 @@ Please change the following Preferences before actual development:
 
 1. Editor -> Code Style -> Java: Table size, Indent, Continuation indent are all **4**.
 2. Editor -> Code Style -> Java -> Imports: select "**Insert imports for inner classes**".
-3. Editor -> Inspections: select Java -> JVM languages, and select "**Serializable class without 'serialVersionUID'**". We note that all `PtoId` in `PtoDesc` instances are generated using serialVersionUID. When creatding a new instance of `PtoDesc`, make it `implement Serializable` , follow the warning to generate a `serialVersionUID`, paste that ID to be `PtoId`, and delete `implement Serializable` and corresponding imports.
+3. Editor -> Inspections: select Java -> JVM languages, and select "**Serializable class without 'serialVersionUID'**". We note that all `PtoId` in `PtoDesc` instances are generated using serialVersionUID. When creating a new instance of `PtoDesc`, make it `implement Serializable` , follow the warning to generate a `serialVersionUID`, paste that ID to be `PtoId`, and delete `implement Serializable` and corresponding imports.
 4. Plugins: Install and use "**Git Commit Template**" to write commit. If necessary, install and use "**Alibaba Java Coding Guidelines**" for unified code styles.
 
 ### Linking Native Libraries
@@ -237,7 +237,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 
 - Provide more documentation.
 - Translate JavaDoc and comments in English.
-- We are still adjusting our implementations on many Private Set Intersection protocols. We will soonly release the source code whenever available.
+- We are still adjusting our implementations on many Private Set Intersection protocols. We will soon release the source code whenever available.
 - More secure two-party computation (2PC) protocol implementations.
 - More secure three-party computation (3PC) protocol implementations. Specifically, release the source code of our paper "Scape: Scalable Collaborative Analytics System on Private Database with Malicious Security" accepted at [ICDE 2022](https://ieeexplore.ieee.org/document/9835540/). 
 - More differentially private algorithms and protocols, especially for the Shuffle Model implementations of our paper ["Privacy Enhancement via Dummy Points in the Shuffle Model."](https://arxiv.org/abs/2009.13738)
