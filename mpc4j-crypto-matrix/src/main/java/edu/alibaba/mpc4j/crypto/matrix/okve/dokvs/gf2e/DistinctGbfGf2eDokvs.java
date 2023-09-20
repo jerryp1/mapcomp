@@ -22,13 +22,13 @@ import java.security.SecureRandom;
  * @author Weiran Liu
  * @date 2023/7/3
  */
-class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
+public class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
 
-    DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
+    public DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
         super(envType, n, l, key, new SecureRandom());
     }
 
-    DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
+    public DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
         super(envType, n, l, key, secureRandom);
     }
 

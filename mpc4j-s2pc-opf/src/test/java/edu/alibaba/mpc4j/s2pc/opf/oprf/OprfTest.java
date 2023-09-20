@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OptOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.kkrt16.Kkrt16OriOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OptOprfConfig;
-import edu.alibaba.mpc4j.s2pc.opf.oprf.psz14.Psz14OriOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.rs21.Rs21MpOprfConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -71,15 +69,6 @@ public class OprfTest extends AbstractTwoPartyPtoTest {
         // FIPR05
         configurations.add(new Object[]{
             OprfType.FIPR05.name(), new Fipr05MpOprfConfig.Builder().build(),
-        });
-
-        // PSZ14_ORI
-        configurations.add(new Object[]{
-            OprfType.PSZ14_ORI.name(), new Psz14OriOprfConfig.Builder().build(),
-        });
-        // PSZ14_OPT
-        configurations.add(new Object[]{
-            OprfType.PSZ14_OPT.name(), new Psz14OptOprfConfig.Builder().build(),
         });
 
         return configurations;

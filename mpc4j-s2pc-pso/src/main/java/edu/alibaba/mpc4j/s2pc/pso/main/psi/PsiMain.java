@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiClient;
@@ -30,26 +29,36 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * PSI main.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/08/11
+ */
 public class PsiMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
     /**
-     * 协议类型名称
+     * protocol type name
      */
     public static final String PTO_TYPE_NAME = "PSI";
     /**
-     * 预热元素字节长度
+     * warmup element byte length
      */
     private static final int WARMUP_ELEMENT_BYTE_LENGTH = 16;
     /**
-     * 预热
+     * warmup set size
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
     /**
-     * 秒表
+     * server stop watch
      */
-    private final StopWatch serverStopWatch, clientStopWatch;
+    private final StopWatch serverStopWatch;
     /**
-     * 配置参数
+     * client stop watch
+     */
+    private final StopWatch clientStopWatch;
+    /**
+     * properties
      */
     private final Properties properties;
 
@@ -70,7 +79,7 @@ public class PsiMain {
         }
     }
 
-    public void runServer(Rpc serverRpc, Party clientParty) throws Exception {
+    public void runServer(Rpc serverRpc, Party clientParty) throws MpcAbortException, IOException {
         // 读取协议参数
         LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
         // 读取元素字节长度
@@ -104,7 +113,7 @@ public class PsiMain {
             + "_" + elementByteLength * Byte.SIZE
             + "_" + serverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
-            + ".txt";
+            + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
@@ -125,7 +134,6 @@ public class PsiMain {
             int serverSetSize = serverSetSizes[setSizeIndex];
             int clientSetSize = clientSetSizes[setSizeIndex];
             Set<ByteBuffer> serverElementSet = readServerElementSet(serverSetSize, elementByteLength);
-            LOGGER.info("BreakPoint 5");
             runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, clientSetSize,
                      printWriter);
             taskId++;
@@ -141,37 +149,23 @@ public class PsiMain {
 
     private Set<ByteBuffer> readServerElementSet(int setSize, int elementByteLength) throws IOException {
         LOGGER.info("Server read element set");
-        LOGGER.info("BreakPoint 01");
         InputStreamReader inputStreamReader = new InputStreamReader(
                 Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength))),
                 CommonConstants.DEFAULT_CHARSET
         );
-        LOGGER.info("BreakPoint 1");
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        LOGGER.info("BreakPoint 2");
         Set<ByteBuffer> serverElementSet = bufferedReader.lines()
                 .map(Hex::decode)
                 .map(ByteBuffer::wrap)
                 .collect(Collectors.toSet());
-        LOGGER.info("BreakPoint 3");
         bufferedReader.close();
-        LOGGER.info("BreakPoint 4");
         inputStreamReader.close();
-        LOGGER.info("BreakPoint 7");
         return serverElementSet;
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId) throws Exception {
+    private void warmupServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId) throws MpcAbortException, IOException {
         Set<ByteBuffer> serverElementSet = readServerElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
-        LOGGER.info("BreakPoint 8");
-        LOGGER.info("Breakpoint 21 {} 1 ",clientParty.getPartyName());
-        LOGGER.info("Breakpoint 21 {} ", serverRpc.ownParty().getPartyName());
-        LOGGER.info("Breakpoint 21 {} ", config.getPtoType());
-        LOGGER.info("Breakpoint 21 {} ", config.getEnvType());
-        LOGGER.info("Breakpoint 21 {} ", config.getSecurityModel());
-        //LOGGER.info("Breakpoint 21 {} ", conf;
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
-        LOGGER.info("BreakPoint 9");
         psiServer.setTaskId(taskId);
         psiServer.setParallel(false);
         psiServer.getRpc().synchronize();
@@ -190,12 +184,7 @@ public class PsiMain {
     public void runServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId, boolean parallel,
                            Set<ByteBuffer> serverElementSet, int clientSetSize,
                            PrintWriter printWriter) throws MpcAbortException {
-        LOGGER.info("BreakPoint 6");
         int serverSetSize = serverElementSet.size();
-        LOGGER.info(
-                "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-                serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
-        );
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
         psiServer.setTaskId(taskId);
         psiServer.setParallel(parallel);
@@ -239,7 +228,7 @@ public class PsiMain {
         LOGGER.info("{} finish", psiServer.ownParty().getPartyName());
     }
 
-    public void runClient(Rpc clientRpc, Party serverParty) throws Exception {
+    public void runClient(Rpc clientRpc, Party serverParty) throws MpcAbortException, IOException {
         // 读取协议参数
         LOGGER.info("{} read settings", clientRpc.ownParty().getPartyName());
         // 读取元素字节长度
@@ -273,7 +262,7 @@ public class PsiMain {
             + "_" + elementByteLength * Byte.SIZE
             + "_" + clientRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
-            + ".txt";
+            + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
@@ -294,7 +283,6 @@ public class PsiMain {
             int clientSetSize = clientSetSizes[setSizeIndex];
             // 读取输入文件
             Set<ByteBuffer> clientElementSet = readClientElementSet(clientSetSize, elementByteLength);
-            LOGGER.info("BreakPoint 102");
             // 多线程
             runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, serverSetSize,
                     printWriter);
@@ -323,11 +311,10 @@ public class PsiMain {
                 .collect(Collectors.toSet());
         bufferedReader.close();
         inputStreamReader.close();
-        LOGGER.info("BreakPoint 101");
         return clientElementSet;
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PsiConfig config, int taskId) throws Exception {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PsiConfig config, int taskId) throws MpcAbortException, IOException {
         Set<ByteBuffer> clientElementSet = readClientElementSet(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
         PsiClient<ByteBuffer> psiClient = PsiFactory.createClient(clientRpc, serverParty, config);
         psiClient.setTaskId(taskId);

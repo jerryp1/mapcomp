@@ -41,7 +41,7 @@ public class Cmg21KwPirTest extends AbstractTwoPartyPtoTest {
     /**
      * server element size
      */
-    private static final int SERVER_MAP_SIZE = 1 << 16;
+    private static final int SERVER_MAP_SIZE = 1 << 20;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
