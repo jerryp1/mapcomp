@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleIndexCpPirType;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import gnu.trove.map.TIntObjectMap;
 import org.junit.Assert;
@@ -50,6 +51,10 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
         // PIANO
         configurations.add(new Object[]{
             SingleIndexCpPirType.ZPSZ23_PIANO.name(), new PianoSingleIndexCpPirConfig.Builder().build()
+        });
+        // SIMPLE
+        configurations.add(new Object[]{
+            SingleIndexCpPirType.HHCM23_SIMPLE.name(), new SimpleSingleIndexCpPirConfig.Builder().build()
         });
 
         return configurations;

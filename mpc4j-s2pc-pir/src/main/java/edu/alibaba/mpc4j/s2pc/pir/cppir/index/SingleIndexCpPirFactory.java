@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPsiClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPsiServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPsiClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPsiServer;
@@ -36,6 +39,10 @@ public class SingleIndexCpPirFactory implements PtoFactory {
          * MIR23 (SPAM)
          */
         MIR23_SPAM,
+        /**
+         * HHCM23 (SIMPLE)
+         */
+        HHCM23_SIMPLE,
     }
 
     /**
@@ -53,6 +60,8 @@ public class SingleIndexCpPirFactory implements PtoFactory {
                 return new PianoSingleIndexCpPsiServer(serverRpc, clientParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPsiServer(serverRpc, clientParty, (SpamSingleIndexCpPirConfig) config);
+            case HHCM23_SIMPLE:
+                return new SimpleSingleIndexCpPirServer(serverRpc, clientParty, (SimpleSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
@@ -75,6 +84,8 @@ public class SingleIndexCpPirFactory implements PtoFactory {
                 return new PianoSingleIndexCpPsiClient(clientRpc, serverParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPsiClient(clientRpc, serverParty, (SpamSingleIndexCpPirConfig) config);
+            case HHCM23_SIMPLE:
+                return new SimpleSingleIndexCpPirClient(clientRpc, serverParty, (SimpleSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
