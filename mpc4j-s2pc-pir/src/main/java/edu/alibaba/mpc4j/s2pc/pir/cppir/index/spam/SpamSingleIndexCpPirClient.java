@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * @author Weiran Liu
  * @date 2023/9/4
  */
-public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
+public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     /**
      * chunk size
      */
@@ -70,7 +70,7 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
      */
     private TIntObjectMap<byte[]> localCacheEntries;
 
-    public SpamSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, SpamSingleIndexCpPirConfig config) {
+    public SpamSingleIndexCpPirClient(Rpc clientRpc, Party serverParty, SpamSingleIndexCpPirConfig config) {
         super(SpamSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
     }
 
@@ -91,7 +91,7 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
         long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.PTO_STEP, 0, 1, paramTime,
+            PtoState.INIT_STEP, 0, 1, paramTime,
             String.format(
                 "Client sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d, M1 = %d, M2 = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum, m1, m2

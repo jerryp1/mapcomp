@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * @author Weiran Liu
  * @date 2023/8/31
  */
-public class SpamSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer {
+public class SpamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
     /**
      * chunk size
      */
@@ -49,7 +49,7 @@ public class SpamSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer {
      */
     private int currentQueryNum;
 
-    public SpamSingleIndexCpPsiServer(Rpc serverRpc, Party clientParty, SpamSingleIndexCpPirConfig config) {
+    public SpamSingleIndexCpPirServer(Rpc serverRpc, Party clientParty, SpamSingleIndexCpPirConfig config) {
         super(SpamSingleIndexCpPirDesc.getInstance(), serverRpc, clientParty, config);
     }
 
@@ -78,7 +78,7 @@ public class SpamSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer {
         long paddingTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.PTO_STEP, 0, 1, paddingTime,
+            PtoState.INIT_STEP, 0, 1, paddingTime,
             String.format(
                 "Server sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum

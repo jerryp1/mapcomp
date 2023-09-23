@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author Weiran Liu
  * @date 2023/8/25
  */
-public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer {
+public class PianoSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
     /**
      * chunk size
      */
@@ -42,7 +42,7 @@ public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer 
      */
     private int currentQueryNum;
 
-    public PianoSingleIndexCpPsiServer(Rpc serverRpc, Party clientParty, PianoSingleIndexCpPirConfig config) {
+    public PianoSingleIndexCpPirServer(Rpc serverRpc, Party clientParty, PianoSingleIndexCpPirConfig config) {
         super(PianoSingleIndexCpPirDesc.getInstance(), serverRpc, clientParty, config);
     }
 
@@ -70,7 +70,7 @@ public class PianoSingleIndexCpPsiServer extends AbstractSingleIndexCpPirServer 
         long paddingTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.PTO_STEP, 0, 1, paddingTime,
+            PtoState.INIT_STEP, 0, 1, paddingTime,
             String.format(
                 "Server sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum

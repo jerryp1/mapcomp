@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/8/25
  */
-public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
+public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     /**
      * chunk size
      */
@@ -67,7 +67,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
      */
     private TIntObjectMap<byte[]> localCacheEntries;
 
-    public PianoSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
+    public PianoSingleIndexCpPirClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
         super(PianoSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
     }
 
@@ -88,7 +88,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.PTO_STEP, 0, 1, paramTime,
+            PtoState.INIT_STEP, 0, 1, paramTime,
             String.format(
                 "Client sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d, M1 = %d, M2 (per group) = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum, m1, m2PerGroup
