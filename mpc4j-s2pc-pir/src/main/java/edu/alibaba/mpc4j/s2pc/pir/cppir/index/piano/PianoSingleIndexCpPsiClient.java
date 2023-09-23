@@ -62,6 +62,10 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
      * missing entries
      */
     private TIntObjectMap<byte[]> missingEntries;
+    /**
+     * local cache entries
+     */
+    private TIntObjectMap<byte[]> localCacheEntries;
 
     public PianoSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
         super(PianoSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
@@ -115,6 +119,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             )
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();
+        localCacheEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
         long allocateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -192,9 +197,12 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         setPtoInput(x);
         if (missingEntries.containsKey(x)) {
             return requestMissingQuery(x);
+        } else if (localCacheEntries.containsKey(x)) {
+            return requestCacheQuery(x);
         } else {
             return requestActualQuery(x);
         }
+
     }
 
     private byte[] requestMissingQuery(int x) throws MpcAbortException {
@@ -226,6 +234,37 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
 
         logPhaseInfo(PtoState.PTO_END);
         return missingEntries.get(x);
+    }
+
+    private byte[] requestCacheQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, new LinkedList<>()));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests local query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 0);
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles local response");
+
+        logPhaseInfo(PtoState.PTO_END);
+        return localCacheEntries.get(x);
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
@@ -297,8 +336,10 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(puncturedChunkId);
         MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
         PianoBackupHint backupHint = backupHints.remove(0);
-        // adds the x to the set and adds the set to the local set list
+        // adds x to the set and adds the set to the local set list
         primaryHints[primaryHintId] = new PianoProgrammedPrimaryHint(backupHint, x, value);
+        // add x to the local cache
+        localCacheEntries.put(x, value);
         currentQueryNum++;
         extraInfo++;
         stopWatch.stop();

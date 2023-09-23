@@ -65,6 +65,10 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
      * missing entries
      */
     private TIntObjectMap<byte[]> missingEntries;
+    /**
+     * local cache entries
+     */
+    private TIntObjectMap<byte[]> localCacheEntries;
 
     public SpamSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, SpamSingleIndexCpPirConfig config) {
         super(SpamSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
@@ -114,6 +118,7 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
             .mapToObj(index -> new SpamBackupHint(chunkSize, chunkNum, l, secureRandom))
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();
+        localCacheEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
         long allocateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -192,14 +197,18 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
         setPtoInput(x);
 
         if (missingEntries.containsKey(x)) {
-            return requestMissingQuery(x);
+            return requestMissQuery(x);
+        } else if (localCacheEntries.containsKey(x)) {
+            return requestLocalQuery(x);
         } else {
             return requestActualQuery(x);
         }
     }
 
-    private byte[] requestMissingQuery(int x) throws MpcAbortException {
+    private byte[] requestMissQuery(int x) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
         DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -227,8 +236,40 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
         return missingEntries.get(x);
     }
 
+    private byte[] requestLocalQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, new LinkedList<>()));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests local query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 0);
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles local response");
+
+        logPhaseInfo(PtoState.PTO_END);
+        return localCacheEntries.get(x);
+    }
+
     private byte[] requestActualQuery(int x) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
+
         stopWatch.start();
         // client finds a primary hint that contains x
         int primaryHintId = -1;
@@ -301,8 +342,10 @@ public class SpamSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
         // pick one backup hint
         MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
         SpamBackupHint backupHint = backupHints.remove(0);
-        // adds the x to the set and adds the set to the local set list
+        // adds x to the set and adds the set to the local set list
         primaryHints[primaryHintId] = new SpamProgrammedPrimaryHint(backupHint, x, value);
+        // add x to the local cache
+        localCacheEntries.put(x, value);
         currentQueryNum++;
         extraInfo++;
         stopWatch.stop();
