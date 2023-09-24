@@ -103,7 +103,7 @@ public class BaseConverter {
                             in[i],
                             inBase.getInvPuncturedProdModBaseArray(i),
                             inBase.getBase(i)
-                            );
+                    );
                 });
         // \sum (x_i * \hat{q_i} mod q_i) * q_i^* mod m_j
         // dot product: (n, k) * (k, 1) --> (n, 1)
@@ -124,16 +124,16 @@ public class BaseConverter {
      * [x1]_{q_2} [x2]_{q_1}
      * .....
      * [x1]_{q_k} [x2]_{q_1};
-     *
+     * <p>
      * Now convert tht in matrix into a matrix with shape n*N
      * [x1]_{m_1} [x2]_{m_1}
      * [x1]_{m_2} [x2]_{m_2}
      * .....
      * [x1]_{m_n} [x2]_{m_n}.
-     *
+     * <p>
      * the core is that we treat the matrix as column vector
      *
-     * @param in k * N, N is the value number or coeff count
+     * @param in  k * N, N is the value number or coeff count
      * @param out n * N, N is the value number or coeff count
      */
     public void fastConvertArray(RnsIter in, RnsIter out) {
@@ -153,7 +153,7 @@ public class BaseConverter {
                         // no need mul
                         IntStream.range(0, count).parallel().forEach(
                                 j -> temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i)));
-                    }else {
+                    } else {
                         // need mul
                         IntStream.range(0, count).parallel().forEach(
                                 j -> temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
@@ -162,7 +162,7 @@ public class BaseConverter {
                                         inBase.getBase(i)));
                     }
                 }
-            );
+        );
 
 
         IntStream.range(0, outBase.getSize()).parallel().forEach(
@@ -175,22 +175,29 @@ public class BaseConverter {
                                                 baseChangeMatrix[i],
                                                 inBase.getSize(),
                                                 outBase.getBase(i))
-                                        );
+                                );
                             }
                     );
                 }
         );
     }
 
-    public void fastConvertArray(RnsIter in, long[][] out) {
+    /**
+     * @param in
+     * @param out treat as an array: outBasse.size * outBase.polyModulus
+     */
+    public void fastConvertArray(RnsIter in, long[] out) {
 
         assert in.getRnsBaseSize() == inBase.getSize(); // k
-        assert out.length == outBase.getSize(); // n
-        assert in.getPolyModulusDegree() == out[0].length; // N
+        assert out.length == outBase.getSize() * in.polyModulusDegree; // n
+//        assert in.getPolyModulusDegree() == out[0].length; // N
 
         int count = in.getPolyModulusDegree();
         // N * k
         long[][] temp = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
+        // 暂时没有把 temp 改为 1D Array 是因为  dotProductMod 的对应改动会比较复杂
+        // 后面尝试修改
+
         //  |x_i * \tilde{q_i}|_{q_i}  i \in [0, k), the result is length-k array
         //  Now we have N x, so need N * k array store
         IntStream.range(0, inBase.getSize()).parallel().forEach(
@@ -199,7 +206,7 @@ public class BaseConverter {
                         // no need mul
                         IntStream.range(0, count).parallel().forEach(
                                 j -> temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i)));
-                    }else {
+                    } else {
                         // need mul
                         IntStream.range(0, count).parallel().forEach(
                                 j -> temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
@@ -215,7 +222,7 @@ public class BaseConverter {
                 i -> {
                     IntStream.range(0, count).parallel().forEach(
                             j -> {
-                                out[i][j] =
+                                out[i * count + j] =
                                         UintArithmeticSmallMod.dotProductMod(
                                                 temp[j],
                                                 baseChangeMatrix[i],
@@ -227,6 +234,52 @@ public class BaseConverter {
         );
 
     }
+
+//    public void fastConvertArray(RnsIter in, long[][] out) {
+//
+//        assert in.getRnsBaseSize() == inBase.getSize(); // k
+//        assert out.length == outBase.getSize(); // n
+//        assert in.getPolyModulusDegree() == out[0].length; // N
+//
+//        int count = in.getPolyModulusDegree();
+//        // N * k
+//        long[][] temp = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
+//        //  |x_i * \tilde{q_i}|_{q_i}  i \in [0, k), the result is length-k array
+//        //  Now we have N x, so need N * k array store
+//        IntStream.range(0, inBase.getSize()).parallel().forEach(
+//                i -> {
+//                    if (inBase.getInvPuncturedProdModBaseArray(i).operand == 1) {
+//                        // no need mul
+//                        IntStream.range(0, count).parallel().forEach(
+//                                j -> temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i)));
+//                    }else {
+//                        // need mul
+//                        IntStream.range(0, count).parallel().forEach(
+//                                j -> temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
+//                                        in.getCoeff(i, j),
+//                                        inBase.getInvPuncturedProdModBaseArray(i),
+//                                        inBase.getBase(i)));
+//                    }
+//                }
+//        );
+//
+//
+//        IntStream.range(0, outBase.getSize()).parallel().forEach(
+//                i -> {
+//                    IntStream.range(0, count).parallel().forEach(
+//                            j -> {
+//                                out[i][j] =
+//                                        UintArithmeticSmallMod.dotProductMod(
+//                                                temp[j],
+//                                                baseChangeMatrix[i],
+//                                                inBase.getSize(),
+//                                                outBase.getBase(i));
+//                            }
+//                    );
+//                }
+//        );
+//
+//    }
 
 
     /**
@@ -240,8 +293,9 @@ public class BaseConverter {
      * convert a value under inBase = [q1, q2, ..., qk] to outBase = {p}
      * note that only used for outBase is one.
      * Ref: Section 2.2 in An Improved RNS Variant of the BFV Homomorphic Encryption Scheme(HPS).
+     * todo: 存在测试错误的情况
      *
-     * @param in  a value under inBase
+     * @param in a value under inBase
      */
     public long exactConvert(long[] in) {
         assert in.length == inBase.getSize();
@@ -271,10 +325,10 @@ public class BaseConverter {
         long vRounded;
         if (v == 0.5) {
             vRounded = 0;
-        }else{
+        } else {
             vRounded = Math.round(v);
         }
-        System.out.println("v: " + v + ", round(v): " + vRounded);
+//        System.out.println("v: " + v + ", round(v): " + vRounded);
 
 
         Modulus p = outBase.getBase(0);
@@ -289,8 +343,9 @@ public class BaseConverter {
 
 
     /**
+     * See "An Improved RNS Variant of the BFV Homomorphic Encryption Scheme" (CT-RSA 2019) for details
      *
-     * @param in k * N
+     * @param in  k * N
      * @param out 1 * N
      */
     public void exactConvertArray(RnsIter in, long[] out) {
@@ -298,7 +353,9 @@ public class BaseConverter {
         assert in.getRnsBaseSize() == inBase.getSize();
 
         // transpose coeffIter of in
-        long[][] inCoeffs = in.getCoeffIter();
+        // Temporarily use a two-dimensional array to do it
+        long[][] inCoeffs = RnsIter.to2dArray(in);
+//        long[][] inCoeffs = new long[0][0];
         long[][] inColumns = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
         // transpose
         IntStream.range(0, in.getPolyModulusDegree()).parallel().forEach(
@@ -313,16 +370,6 @@ public class BaseConverter {
                 i -> out[i] = exactConvert(inColumns[i])
         );
     }
-
-
-
-
-
-
-
-
-
-
 
 
     public int getInputBaseSize() {

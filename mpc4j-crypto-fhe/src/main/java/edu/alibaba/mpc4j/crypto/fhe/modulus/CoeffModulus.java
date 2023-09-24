@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.modulus;
 
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
-import edu.alibaba.mpc4j.crypto.fhe.utils.Globals;
+import edu.alibaba.mpc4j.crypto.fhe.utils.GlobalVariables;
 import edu.alibaba.mpc4j.crypto.fhe.utils.HeStdParms;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
@@ -65,7 +65,7 @@ public class CoeffModulus {
             throw new IllegalArgumentException("non-standard poly_modulus_degree");
         }
 
-        return Globals.DEFAULT_COEFF_MUDULUS_128.get(polyModulusDegree);
+        return GlobalVariables.DEFAULT_COEFF_MUDULUS_128.get(polyModulusDegree);
 
     }
 
@@ -79,11 +79,11 @@ public class CoeffModulus {
         }
         switch (securityLevel) {
             case TC128:
-                return Globals.DEFAULT_COEFF_MUDULUS_128.get(polyModulusDegree);
+                return GlobalVariables.DEFAULT_COEFF_MUDULUS_128.get(polyModulusDegree);
             case TC192:
-                return Globals.DEFAULT_COEFF_MUDULUS_192.get(polyModulusDegree);
+                return GlobalVariables.DEFAULT_COEFF_MUDULUS_192.get(polyModulusDegree);
             case TC256:
-                return Globals.DEFAULT_COEFF_MUDULUS_256.get(polyModulusDegree);
+                return GlobalVariables.DEFAULT_COEFF_MUDULUS_256.get(polyModulusDegree);
             default:
                 throw new IllegalArgumentException("invalid security level");
 

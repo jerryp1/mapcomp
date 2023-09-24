@@ -33,4 +33,5 @@ public enum SchemeType {
         }
         throw new IllegalArgumentException("no match scheme for given value");
     }
+
 }

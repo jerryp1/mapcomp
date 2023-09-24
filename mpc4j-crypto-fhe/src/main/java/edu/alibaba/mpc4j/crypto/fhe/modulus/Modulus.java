@@ -14,7 +14,7 @@ import java.util.stream.LongStream;
  * @author Qixian Zhou
  * @date 2023/8/3
  */
-public class Modulus {
+public class Modulus implements Cloneable {
 
 
     // modulus value, up to 61 bits, must be positive number
@@ -322,5 +322,18 @@ public class Modulus {
 
     public boolean isPrime() {
         return isPrime;
+    }
+
+    @Override
+    public Modulus clone() {
+        try {
+            Modulus clone = (Modulus) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            clone.constRatio = new long[3];
+            System.arraycopy(this.constRatio, 0, clone.constRatio, 0, 3);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

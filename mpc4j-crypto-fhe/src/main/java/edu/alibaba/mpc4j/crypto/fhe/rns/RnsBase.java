@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
  * @author Qixian Zhou
  * @date 2023/8/17
  */
-public class RnsBase {
+public class RnsBase implements Cloneable {
 
     // size of base, number of q_i
     private int size;
@@ -34,6 +34,10 @@ public class RnsBase {
         this.size = rnsBase.length;
         // co-prime check
         for (int i = 0; i < size; i++) {
+
+            if (rnsBase[i].isZero()) {
+                throw new IllegalArgumentException("rnbase is valid, modulus can not be zero");
+            }
             // in our implementation, a valid modulus must not be zero, so omit this check.
             for (int j = 0; j < i; j++) {
                 if (Numth.gcd(rnsBase[i].getValue(), rnsBase[j].getValue()) > 1) {
@@ -63,6 +67,11 @@ public class RnsBase {
         this.size = rnsBase.length;
         // co-prime check
         for (int i = 0; i < size; i++) {
+
+            if (rnsBase[i] == 0) {
+                throw new IllegalArgumentException("rnbase is valid, modulus can not be zero");
+            }
+
             // in our implementation, a valid modulus must not be zero, so omit this check.
             for (int j = 0; j < i; j++) {
                 if (Numth.gcd(rnsBase[i], rnsBase[j]) > 1) {
@@ -87,7 +96,7 @@ public class RnsBase {
 
         this.baseProd = new long[size];
         System.arraycopy(copy.baseProd, 0, baseProd, 0, size);
-
+        // just shallow copy
         this.invPuncturedProdModBaseArray = new MultiplyUintModOperand[size];
         System.arraycopy(copy.invPuncturedProdModBaseArray, 0, invPuncturedProdModBaseArray, 0, size);
 
@@ -113,7 +122,8 @@ public class RnsBase {
         assert value.length == size;
         if (size > 1) {
             long[] valueCopy = new long[value.length];
-            UintCore.setUint(value, size, valueCopy);
+//            UintCore.setUint(value, size, valueCopy);
+            System.arraycopy(value, 0, valueCopy, 0, value.length);
 
             IntStream.range(0, size)
                     .parallel()
@@ -133,24 +143,62 @@ public class RnsBase {
      * decompose it should by-column, [0, 1, 1]^T is a value, [1, 0, 1]^T is a value, [0, 1, 1]^T is a value.
      * the result in-place store in values.
      *
-     *
      * @param values a k * N matrix, N represent the number of values, k represent the length of value, the uint64 count is k.
      */
-    public void decomposeArray(long[][] values) {
-        assert values.length == size;
+    /**
+     * decompose k arrays, each with length N.
+     * <p>
+     * count 个value，每一个长度是 size, base-2^64
+     * {1 0 0 2 0 0} count = 2   --->
+     * 1 0 0  ---> a base-2^64 value, is 1
+     * 2 0 0 ---> a base-2^64 value, is 2
+     * 2 values, each size is 3
+     * supposing that base is {3, 5, 7}, then result is
+     * {1, 2, 1, 2, 1, 2} --->
+     * (1 mod 3) (2 mod 3)  ---> 1 2
+     * (1 mod 5) (2 mod 5) ---> 1 2
+     * (1 mod 7) (2 mod 7) ---> 1 2
+     *
+     * @param values a array with length k * N, k is the RNS base size, N is the count.
+     *               can treat as a matrix with shape (k, N)
+     * @param count  N
+     */
+    public void decomposeArray(long[] values, int count) {
+        assert values.length == count * size;
 
         if (size > 1) {
-            int count = values[0].length;
-            // copy every column, just copy every value
-            // N * k , just transpose
-            long[][] columns = new long[count][size];
-            IntStream.range(0, count).parallel().forEach(
-                    j -> {
-                        IntStream.range(0, size).parallel().forEach(
-                                i -> columns[j][i] = values[i][j]
-                        );
-                    }
-            );
+//            long[] valueCopy = new long[values.length];
+//            System.arraycopy(values, 0, valueCopy, 0, values.length);
+
+            // 这里会创建大量新的数组, 就不考虑 并行化了，直接用 for ， 这样只用创建一个数组
+
+//            // 逐个处理 value
+//            long[][] singleValues = new long[count][size];
+//            // 需要先分配所有的值，先把值给
+//            // 先把所有的值给拆出来
+//            for (int i = 0; i < count; i++) {
+//                System.arraycopy(values, i * size, singleValues[i], 0, size);
+//            }
+
+
+            // 注意 moduloUint 的函数签名，values[j * count, j *count + size) 表示每一个 single value
+            // 可以避免新开数组
+            // 还是得新开数组，因为 下面的方法 是 in-place 的， values 被修改了，第二次循环取 values 的指定区间的值就变了
+            // 不过这里的新开数组可以 新开一个 一维数组
+            long[] valuesCopy = new long[values.length];
+            System.arraycopy(values, 0, valuesCopy, 0, values.length);
+
+            // 然后固定 base[i]，一共 size 个 base
+            // 所有的值都对 同一个 base[i] 取 mod
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < count; j++) {
+                    // 放入原数组， 注意 放入的位置，参考上面的例子比较容易理解
+                    // 总共 count 个值，每一个值长度是 size，所以每一个值的起点是 j*size, 长度也是 size
+                    values[i * count + j] = UintArithmeticSmallMod.moduloUint(valuesCopy, j * size, size, base[i]);
+                }
+
+            }
+
             // now columns[i] represent a value, i \in [0, count)
 
             // now value mod q_i, the result overwrite the values
@@ -162,17 +210,6 @@ public class RnsBase {
             //               ......
             //       [ c0 mod qk, c1 mod qk, ....., cN mod qk]
 
-
-            // decompose by row
-            IntStream.range(0, size).parallel().forEach(
-                    i -> {
-                        IntStream.range(0, count).parallel().forEach(
-                                j -> {
-                                    values[i][j] = UintArithmeticSmallMod.moduloUint(columns[j], size, base[i]);
-                                }
-                        );
-                    }
-            );
 
         }
     }
@@ -211,28 +248,34 @@ public class RnsBase {
      *
      * @param values k * N matrix, each column represent a value under RnsBase.
      */
-    public void composeArray(long[][] values) {
+    public void composeArray(long[] values, int count) {
         if (size > 1) {
-            int count = values[0].length;
-            // copy every column, just copy every value
-            // N * k , just transpose
-            long[][] columns = new long[count][size];
-            IntStream.range(0, count).parallel().forEach(
-                    j -> {
-                        IntStream.range(0, size).parallel().forEach(
-                                i -> columns[j][i] = values[i][j]
-                        );
-                    }
-            );
+
+            // 先把 rns-base 表示下的值 先抠出来
+            // 即 按列把值先拿出来
+            // 例如 {1 0 0 2 0 0 } ---> {1 2 1 2 1 2}
+            // 我们需要把它分成 {1 1 1} {2 2 2} 两个数组
+            // ----> {1, 0, 0, 2, 0, 0}
+
+            // 一共 count 个值，每一个值都被分解为了 size 个 数据
+            long[][] decomposedValues = new long[count][size];
+            for (int i = 0; i < count; i++) {
+                for (int j = 0; j < size; j++) {
+                    // 注意这里取数据的方式 i 是起点，count 是 步长 , j 的范围是 [0， size) 正好对应被分解后的数据长度
+                    decomposedValues[i][j] = values[i + j * count];
+                }
+            }
+            // 这里必须得 新开 二维数组了，因为 需要取的值 不是连续的放在 values 中的，比较麻烦
+
+
             // 对每一列 compose, in-place
             IntStream.range(0, count).parallel().forEach(
-                   i -> compose(columns[i])
+                    i -> compose(decomposedValues[i])
             );
-            // 再转置 回 values
-            IntStream.range(0, size).parallel().forEach(
-                    i -> IntStream.range(0, count).parallel().forEach(
-                            j -> values[i][j] = columns[j][i]
-                    )
+            // 再覆盖掉 values 中的值
+            // 按 count 和 size 长度覆盖即可
+            IntStream.range(0, count).parallel().forEach(
+                    i -> System.arraycopy(decomposedValues[i], 0, values, i * size, size)
             );
         }
     }
@@ -267,7 +310,7 @@ public class RnsBase {
                 invPuncturedProdModBaseArray[i].set(tmpInv[0], base[i]);
             }
             // Q = (Q/q0) * q0
-            UintArithmetic.multiplyUint(puncturedProdArray[0], size, base[0].getValue(),size, baseProd);
+            UintArithmetic.multiplyUint(puncturedProdArray[0], size, base[0].getValue(), size, baseProd);
 
             return invertible;
         }
@@ -432,8 +475,6 @@ public class RnsBase {
     }
 
 
-
-
     public boolean contains(Modulus value) {
         // objects compare can not use ==
         return Arrays.stream(base).parallel().anyMatch(m -> m.equals(value));
@@ -464,7 +505,6 @@ public class RnsBase {
     }
 
 
-
     public long[][] getPuncturedProdArray() {
         return puncturedProdArray;
     }
@@ -483,5 +523,35 @@ public class RnsBase {
 
     public int getSize() {
         return size;
+    }
+
+    @Override
+    public RnsBase clone() {
+        try {
+            RnsBase clone = (RnsBase) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            clone.base = new Modulus[size];
+            for (int i = 0; i < size; i++) {
+                clone.base[i] = base[i].clone();
+            }
+
+            clone.baseProd = new long[baseProd.length];
+            System.arraycopy(baseProd, 0, clone.baseProd, 0, baseProd.length);
+
+            clone.invPuncturedProdModBaseArray = new MultiplyUintModOperand[invPuncturedProdModBaseArray.length];
+            for (int i = 0; i < invPuncturedProdModBaseArray.length; i++) {
+                clone.invPuncturedProdModBaseArray[i] = invPuncturedProdModBaseArray[i].clone();
+            }
+
+            clone.puncturedProdArray = new long[puncturedProdArray.length][puncturedProdArray[0].length];
+            for (int i = 0; i < puncturedProdArray.length; i++) {
+
+                System.arraycopy(puncturedProdArray[i], 0, clone.puncturedProdArray[i], 0, puncturedProdArray[0].length);
+            }
+
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

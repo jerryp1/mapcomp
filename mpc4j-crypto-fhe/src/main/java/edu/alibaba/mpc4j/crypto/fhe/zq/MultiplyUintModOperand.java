@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
  * @author Qixian Zhou
  * @date 2023/8/10
  */
-public class MultiplyUintModOperand {
+public class MultiplyUintModOperand implements Cloneable {
 
     public long operand;
     public long quotient;
@@ -55,5 +55,16 @@ public class MultiplyUintModOperand {
                 "operand=" + operand +
                 ", quotient=" + quotient +
                 '}';
+    }
+
+    @Override
+    public MultiplyUintModOperand clone() {
+        try {
+            MultiplyUintModOperand clone = (MultiplyUintModOperand) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

@@ -9,7 +9,22 @@ import java.util.Map;
  * @author Qixian Zhou
  * @date 2023/8/29
  */
-public class Globals {
+public class GlobalVariables {
+
+    /**
+     Default value for the standard deviation of the noise (error) distribution.
+     */
+    public static final double NOISE_STANDARD_DEVIATION = HeStdParms.HE_STD_PARMS_ERROR_STD_DEV;
+
+    public static final double NOISE_DISTRIBUTION_WIDTH_MULTIPLIER = 6;
+
+    public static final double NOISE_MAX_DEVIATION = NOISE_STANDARD_DEVIATION * NOISE_DISTRIBUTION_WIDTH_MULTIPLIER;
+
+
+
+
+
+
 
 
     public static final Map<Integer, Modulus[]> DEFAULT_COEFF_MUDULUS_128 = new HashMap<>();

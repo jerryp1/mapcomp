@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.ntt;
 
+import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
@@ -16,7 +17,7 @@ import java.util.Random;
 public class NttTest {
 
 
-    public static final int MAX_LOOP_NUM = 1;
+    public static final int MAX_LOOP_NUM = 1000;
 
 
     @Test
@@ -131,7 +132,6 @@ public class NttTest {
         int[] coeffCountPowers = new int[]{1, 3, 6, 8, 10, 11, 12, 13, 14, 15};
         Random random = new Random();
 
-
         for (int coeffCountPower : coeffCountPowers) {
             int n = 1 << coeffCountPower;
             NttTables tables = new NttTables(coeffCountPower, modulus);
@@ -150,7 +150,49 @@ public class NttTest {
                 Assert.assertArrayEquals(temp, poly);
             }
         }
+    }
 
+    @Test
+    public void randomRnsIterTest() {
+
+
+        Modulus[] mod = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
+
+
+        // N = 4096
+        int[] coeffCountPowers = new int[]{12};
+        Random random = new Random();
+
+
+        for (int coeffCountPower : coeffCountPowers) {
+
+            NttTables[] nttTables = new NttTables[mod.length];
+
+            int n = 1 << coeffCountPower;
+            NttTablesCreateIter.createNttTables(coeffCountPower, mod, nttTables);
+
+            long[] poly = new long[n * mod.length];
+            long[] groundTruth = new long[n * mod.length];
+
+            for (int i = 0; i < MAX_LOOP_NUM; i++) {
+
+                for (int j = 0; j < mod.length; j++) {
+                    for (int k = 0; k < n; k++) {
+                        poly[j * n + k] = Math.abs(random.nextLong()) % mod[j].getValue();
+                    }
+                }
+
+                System.arraycopy(poly, 0, groundTruth, 0, n * mod.length);
+
+                RnsIter rnsIter = new RnsIter(poly, n);
+
+
+                NttTool.nttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
+                NttTool.inverseNttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
+
+                Assert.assertArrayEquals(groundTruth, poly);
+            }
+        }
     }
 
 

@@ -10,6 +10,26 @@ import java.math.BigInteger;
 public class Common {
 
 
+    public static int hammingWeight(byte value) {
+
+        int t = (int) value;
+        t -= (t >> 1) & 0x55;
+        t = (t & 0x33) + ((t >> 2) & 0x33);
+        return (t + (t >> 4)) & 0x0F;
+
+    }
+
+
+
+    public static boolean areClose(double v1, double v2) {
+
+        double scaleFactor = Math.max(   Math.max(Math.abs(v1), Math.abs(v2)), 1.0 );
+
+        return Math.abs(v1 - v2) < scaleFactor * Math.ulp( 1.0);
+    }
+
+
+
 
     public static boolean unsignedGt(long in1, long in2) {
         return Long.compareUnsigned(in1, in2) > 0;
@@ -18,8 +38,6 @@ public class Common {
     public static boolean unsignedGt(int in1, int in2) {
         return Long.compareUnsigned((long)in1, (long) in2) > 0;
     }
-
-
 
 
 
@@ -119,6 +137,48 @@ public class Common {
         }
         return prod;
     }
+
+//    public static boolean productFitsIn(boolean unsigned, int in1, int... numbers) {
+//
+//        try{
+//            mulSafe(in1, 1, unsigned, numbers);
+//        }catch (Exception e) {
+//            return false;
+//        }
+//        return true;
+//    }
+
+    public static boolean productFitsIn(boolean unsigned, int... numbers) {
+
+        try{
+            mulSafe(1, 1, unsigned, numbers);
+        }catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+//    public static boolean productFitsIn(boolean unsigned, long in1, long... numbers) {
+//
+//        try{
+//            mulSafe(in1, 1, unsigned, numbers);
+//        }catch (Exception e) {
+//            return false;
+//        }
+//        return true;
+//    }
+
+    public static boolean productFitsIn(boolean unsigned, long... numbers) {
+
+        try{
+            mulSafe(1, 1, unsigned, numbers);
+        }catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+
 
 
     /**
@@ -295,6 +355,10 @@ public class Common {
         }
         return a - b;
     }
+
+
+
+
 
 
 

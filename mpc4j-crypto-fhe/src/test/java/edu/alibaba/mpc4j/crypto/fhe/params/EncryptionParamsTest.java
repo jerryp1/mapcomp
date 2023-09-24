@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.crypto.fhe.params;
 
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
+import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
@@ -25,7 +26,7 @@ public class EncryptionParamsTest {
             parms.setPlainModulus(2);
         }
         parms.setPolyModulusDegree(2);
-        parms.setRandomGenerator(new UniformRandomGenerator());
+        parms.setRandomGeneratorFactory(new UniformRandomGeneratorFactory());
 
         Assert.assertEquals(scheme, parms.getScheme());
         Assert.assertEquals(parms.getCoeffModulus()[0].getValue(), 2);
@@ -74,7 +75,7 @@ public class EncryptionParamsTest {
             params1.setPlainModulus(1 << 6);
         }
         params1.setPolyModulusDegree(64);
-        params1.setRandomGenerator(new UniformRandomGenerator());
+        params1.setRandomGeneratorFactory(new UniformRandomGeneratorFactory());
         // deep copy
         EncryptionParams params2 = new EncryptionParams(params1);
         Assert.assertEquals(params1, params2);

@@ -57,5 +57,19 @@ public class DynArrayTest {
         }
     }
 
+    @Test
+    public void cloneTest() {
+
+        DynArray d = new DynArray();
+        d.resize(100);
+
+        System.out.println(d);
+
+        DynArray c = d.clone();
+        System.out.println(c);
+
+
+    }
+
 
 }

@@ -16,8 +16,8 @@ public class PlaintextTest {
     public void basic() {
 
         Plaintext plain = new Plaintext(2);
-        Assert.assertEquals(2, plain.capacity());
-        Assert.assertEquals(2, plain.coeffCount());
+        Assert.assertEquals(2, plain.getCapacity());
+        Assert.assertEquals(2, plain.getCoeffCount());
         Assert.assertEquals(0, plain.significantCoeffCount());
         Assert.assertEquals(0, plain.nonZeroCoeffCount());
         Assert.assertFalse(plain.isNttForm());
@@ -25,8 +25,8 @@ public class PlaintextTest {
         plain.set(0, 1);
         plain.set(1, 2);
         plain.reserve(10);
-        Assert.assertEquals(10, plain.capacity());
-        Assert.assertEquals(2, plain.coeffCount());
+        Assert.assertEquals(10, plain.getCapacity());
+        Assert.assertEquals(2, plain.getCoeffCount());
         Assert.assertEquals(2, plain.significantCoeffCount());
         Assert.assertEquals(2, plain.nonZeroCoeffCount());
         Assert.assertEquals(1, plain.get(0));
@@ -34,8 +34,8 @@ public class PlaintextTest {
         Assert.assertFalse(plain.isNttForm());
 
         plain.resize(5);
-        Assert.assertEquals(10, plain.capacity());
-        Assert.assertEquals(5, plain.coeffCount());
+        Assert.assertEquals(10, plain.getCapacity());
+        Assert.assertEquals(5, plain.getCoeffCount());
         Assert.assertEquals(2, plain.significantCoeffCount());
         Assert.assertEquals(2, plain.nonZeroCoeffCount());
         Assert.assertEquals(1, plain.get(0));
@@ -47,15 +47,15 @@ public class PlaintextTest {
 
         Plaintext plain2 = new Plaintext();
         plain2.resize(15);
-        Assert.assertEquals(15, plain2.capacity());
-        Assert.assertEquals(15, plain2.coeffCount());
+        Assert.assertEquals(15, plain2.getCapacity());
+        Assert.assertEquals(15, plain2.getCoeffCount());
         Assert.assertEquals(0, plain2.significantCoeffCount());
         Assert.assertEquals(0, plain2.significantCoeffCount());
         Assert.assertFalse(plain.isNttForm());
 
         plain2 = plain;
-        Assert.assertEquals(10, plain2.capacity());
-        Assert.assertEquals(5, plain2.coeffCount());
+        Assert.assertEquals(10, plain2.getCapacity());
+        Assert.assertEquals(5, plain2.getCoeffCount());
         Assert.assertEquals(2, plain2.significantCoeffCount());
         Assert.assertEquals(2, plain2.nonZeroCoeffCount());
         Assert.assertEquals(1, plain2.get(0));
@@ -66,8 +66,8 @@ public class PlaintextTest {
         Assert.assertSame(plain2, plain);
 
         Plaintext plain3 = new Plaintext(plain2);
-        Assert.assertEquals(10, plain3.capacity());
-        Assert.assertEquals(5, plain3.coeffCount());
+        Assert.assertEquals(10, plain3.getCapacity());
+        Assert.assertEquals(5, plain3.getCoeffCount());
         Assert.assertEquals(2, plain3.significantCoeffCount());
         Assert.assertEquals(2, plain3.nonZeroCoeffCount());
         Assert.assertEquals(1, plain3.get(0));

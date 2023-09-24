@@ -15,7 +15,7 @@ import java.util.Arrays;
  * @author Qixian Zhou
  * @date 2023/9/2
  */
-public class Plaintext {
+public class Plaintext implements Cloneable {
 
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
 
@@ -24,6 +24,7 @@ public class Plaintext {
     private double scale = 1.0;
 
     // todo: must use DynArray?
+    // 始终只有 1个 Poly, 即 size = 1, 即使这个 poly 可能是 RNS base， 即 k * N
     private DynArray data;
 
 
@@ -173,15 +174,15 @@ public class Plaintext {
         data.setZero();
     }
 
-    public DynArray dynArray() {
+    public DynArray getDynArray() {
         return data;
     }
 
-    public long[] data() {
+    public long[] getData() {
         return data.data();
     }
 
-    public long data(int coeffIndex) {
+    public long getData(int coeffIndex) {
 
         if (coeffCount == 0) {
             throw new RuntimeException();
@@ -199,11 +200,11 @@ public class Plaintext {
     }
 
 
-    public int capacity() {
+    public int getCapacity() {
         return data.capacity();
     }
 
-    public int coeffCount() {
+    public int getCoeffCount() {
         return coeffCount;
     }
 
@@ -230,7 +231,7 @@ public class Plaintext {
     }
 
 
-    public ParmsIdType parmsId() {
+    public ParmsIdType getParmsId() {
         return parmsId;
     }
 
@@ -310,5 +311,18 @@ public class Plaintext {
                 ", scale=" + scale +
                 ", data=" + data +
                 '}';
+    }
+
+    @Override
+    public Plaintext clone() {
+        try {
+            Plaintext clone = (Plaintext) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            clone.parmsId = this.parmsId.clone();
+            clone.data = this.data.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

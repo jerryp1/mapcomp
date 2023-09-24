@@ -354,9 +354,11 @@ public class UintCore {
     }
 
     public static void setZeroUint(int uint64Count, long[] values) {
-        for (int i = 0; i < uint64Count; i++) {
-            values[i] = 0;
-        }
+//        for (int i = 0; i < uint64Count; i++) {
+//            values[i] = 0;
+//        }
+
+        Arrays.fill(values, 0, uint64Count, 0);
     }
 
     /**
@@ -449,5 +451,24 @@ public class UintCore {
         // right shift and judge
         return ((values[uint64Index] >>> subBitIndex) & 1) != 0;
     }
+
+    /**
+     *
+     * @param input a base-2^64 value
+     * @param uint64Count length of the input in base-2^64
+     * @param newUint64Count length of the output in base-2^64
+     * @param force if true, then deep-copy, otherwise shallow-copy
+     * @return a base-2^64 value, which equals input
+     */
+    public static long[] duplicateUintIfNeeded(long[] input, int uint64Count, int newUint64Count, boolean force) {
+
+        if (!force && uint64Count >= newUint64Count) {
+            return input;
+        }
+        long[] newUint = new long[newUint64Count];
+        setUint(input, uint64Count, newUint64Count, newUint);
+        return newUint;
+    }
+
 
 }

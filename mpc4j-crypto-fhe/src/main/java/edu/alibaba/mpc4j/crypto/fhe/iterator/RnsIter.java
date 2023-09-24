@@ -1,11 +1,9 @@
 package edu.alibaba.mpc4j.crypto.fhe.iterator;
 
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.crypto.fhe.rns.RnsContext;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 /**
  * Represent a degree-N poly in RNS representation.
@@ -15,48 +13,77 @@ import java.util.function.Consumer;
  * [ c1 mod q1, c2 mod q1,  ..., cn mod q1]
  * .......
  * [c1 mod qk, c2 mod qk, ....., cn mod qk]
- *
+ * <p>
  * But remember, most of the time, we use this matrix column by column,
  * which is what we often call this matrix: [c1 mod q1, c1 mod q2, ..., c1 mod qk]^T
  *
  * @author Qixian Zhou
  * @date 2023/8/20
  */
-public class RnsIter implements Iterator{
+public class RnsIter implements Cloneable {
 
-    // use long[][] represent CoeffIter in SEAL, k * N
-    // a single CoeffIter is long[] with length k, can treat as a column vector
-    private long[][] coeffIter;
+//    // use long[][] represent CoeffIter in SEAL, k * N
+//    // a single CoeffIter is long[] with length k, can treat as a column vector
+//    private long[][] coeffIter;
+
+    /**
+     * Using a 1D-array with length k * N to represent a degree-N poly in RNS.
+     * Logically, we can treat it as a k*N matrix. 1D-Array is used here mainly for performance reasons.
+     */
+    public long[] coeffIter;
 
     // k
-    private int coeffModulusSize;
+    public int coeffModulusSize;
 
     // N
-    private int polyModulusDegree;
+    public int polyModulusDegree;
 
-    // inner pos
-    private int pos;
+    public RnsIter() {}
 
-    public RnsIter(long[][] coeffIter, int polyModulusDegree) {
-        assert coeffIter[0].length == polyModulusDegree;
+
+    public RnsIter(long[] coeffIter, int polyModulusDegree) {
+        assert coeffIter.length % polyModulusDegree == 0;
 
         this.coeffIter = coeffIter;
         this.polyModulusDegree = polyModulusDegree;
-        this.coeffModulusSize = coeffIter.length;
-
-        this.pos = 0;
+        this.coeffModulusSize = coeffIter.length / polyModulusDegree;
     }
 
-    public RnsIter(long[] coeff, int polyModulusDegree) {
-        assert coeff.length == polyModulusDegree;
-
-        this.coeffIter = new long[1][polyModulusDegree];
-        coeffIter[0] = coeff;
+    public RnsIter(int coeffModulusSize, int polyModulusDegree) {
         this.polyModulusDegree = polyModulusDegree;
-        this.coeffModulusSize = 1;
-
-        this.pos = 0;
+        this.coeffModulusSize = coeffModulusSize;
+        this.coeffIter = new long[coeffModulusSize * polyModulusDegree];
     }
+
+
+    /**
+     * Flatten a 2D array of k * N into a 1D array with length k*N.
+     *
+     * @param data a k * N matrix
+     */
+    public static RnsIter from2dArray(long[][] data) {
+
+        RnsIter rnsIter = new RnsIter();
+        rnsIter.coeffModulusSize = data.length;
+        rnsIter.polyModulusDegree = data[0].length;
+        // flatten
+        rnsIter.coeffIter = Arrays.stream(data).flatMapToLong(Arrays::stream).toArray();
+        return rnsIter;
+    }
+
+    /**
+     * convert 1d Array with lenght k*N to a 2d Array with shape k * N
+     *
+     * @return a 2d Array
+     */
+    public static long[][] to2dArray(RnsIter rnsIter) {
+
+        return IntStream.range(0, rnsIter.coeffModulusSize)
+                .mapToObj(i -> Arrays.copyOfRange(rnsIter.coeffIter, i * rnsIter.polyModulusDegree, (i + 1) * rnsIter.polyModulusDegree))
+                .toArray(long[][]::new);
+
+    }
+
 
 
     /**
@@ -65,102 +92,44 @@ public class RnsIter implements Iterator{
      * @param coeffIter1 k1 * N
      * @param coeffIter2 k2 * N
      */
-    public void update(long[][] coeffIter1, long[][] coeffIter2) {
+    public void update(long[] coeffIter1, long[] coeffIter2) {
 
         assert coeffIter1.length + coeffIter2.length == coeffIter.length;
-        assert coeffIter1[0].length == coeffIter2[0].length;
-        assert coeffIter1[0].length == polyModulusDegree;
-
-        // copy 1
-        for (int i = 0; i < coeffIter1.length; i++) {
-            System.arraycopy(coeffIter1[i], 0, coeffIter[i], 0, polyModulusDegree);
-        }
-        // copy 2
-        for (int i = 0; i < coeffIter2.length; i++) {
-            System.arraycopy(coeffIter2[i], 0, coeffIter[i + coeffIter1.length], 0, polyModulusDegree);
-        }
+        assert coeffIter1.length % polyModulusDegree == 0;
+        assert coeffIter2.length % polyModulusDegree == 0;
+        // copy k1 * N into [0, k1*N)
+        System.arraycopy(coeffIter1, 0, coeffIter, 0, coeffIter1.length);
+        // copy k2 * N into [k1*N, (k1 + k2) *N)
+        System.arraycopy(coeffIter2, 0, coeffIter, coeffIter1.length, coeffIter2.length);
     }
 
 
     /**
-     *   k  * N matrix
-     * + k1 * N matrix
-     *   (k + k1) * N
-     *
-     * @param otherCoeffIter k_1 * N matrix
-     */
-    public void extend(long[][] otherCoeffIter) {
-
-        assert otherCoeffIter[0].length == polyModulusDegree;
-
-        long[][] newCoeffIter = new long[otherCoeffIter.length + coeffModulusSize][polyModulusDegree];
-
-        // copy original
-        for (int i = 0; i < coeffIter.length; i++) {
-            System.arraycopy(coeffIter[i], 0, newCoeffIter[i], 0, polyModulusDegree);
-        }
-        // copy other
-        for (int i = 0; i < otherCoeffIter.length; i++) {
-            System.arraycopy(otherCoeffIter[i], 0, newCoeffIter[coeffIter.length + i], 0, polyModulusDegree);
-        }
-        // update current object
-        this.coeffIter = newCoeffIter;
-        this.coeffModulusSize = newCoeffIter.length;
-    }
-
-    public void extend(RnsIter otherRnsIter) {
-
-        assert otherRnsIter.polyModulusDegree == polyModulusDegree;
-
-        long[][] newCoeffIter = new long[otherRnsIter.coeffModulusSize + coeffModulusSize][polyModulusDegree];
-
-        // copy original
-        for (int i = 0; i < coeffIter.length; i++) {
-            System.arraycopy(coeffIter[i], 0, newCoeffIter[i], 0, polyModulusDegree);
-        }
-        // copy other
-        long[][] otherCoeffIter = otherRnsIter.getCoeffIter();
-        for (int i = 0; i < otherCoeffIter.length; i++) {
-            System.arraycopy(otherCoeffIter[i], 0, newCoeffIter[coeffIter.length + i], 0, polyModulusDegree);
-        }
-        // update current object
-        this.coeffIter = newCoeffIter;
-        this.coeffModulusSize = newCoeffIter.length;
-    }
-
-    /**
-     *
-     * @param startIndex satrtIndex of CoeffIter
-     * @param endIndex end index of CoeffIter
-     * @return a new RnsIter object with coeffIter[startIndex, endIndex - 1]
+     * @param startIndex start index of CoeffIter
+     * @param endIndex   end index of CoeffIter
+     * @return a new RnsIter object with coeffIter[startIndex * N, endIndex * N)
      */
     public RnsIter subIter(int startIndex, int endIndex) {
         assert endIndex > startIndex;
         assert endIndex <= coeffModulusSize;
 
-        long[][] newCoeffIter = new long[endIndex - startIndex][polyModulusDegree];
-        // copy
-        for (int i = startIndex; i < endIndex; i++) {
-            System.arraycopy(coeffIter[i], 0, newCoeffIter[i - startIndex], 0, polyModulusDegree);
-        }
+        long[] newCoeffIter = new long[(endIndex - startIndex) * polyModulusDegree];
+        System.arraycopy(coeffIter, startIndex * polyModulusDegree, newCoeffIter, 0, (endIndex - startIndex) * polyModulusDegree);
 
         return new RnsIter(newCoeffIter, polyModulusDegree);
     }
 
     /**
-     *
      * @param startIndex start index
-     * @return a new RnsIter object with coeffIter[startIndex, rnsBase - 1]
+     * @return a new RnsIter object with coeffIter[startIndex * N, k * N)
      */
     public RnsIter subIter(int startIndex) {
 
         assert startIndex < coeffModulusSize;
 
-        long[][] newCoeffIter = new long[coeffModulusSize - startIndex][polyModulusDegree];
+        long[] newCoeffIter = new long[(coeffModulusSize - startIndex) * polyModulusDegree];
         // copy
-        for (int i = startIndex; i < coeffModulusSize; i++) {
-            System.arraycopy(coeffIter[i], 0, newCoeffIter[i - startIndex], 0, polyModulusDegree);
-        }
+        System.arraycopy(coeffIter, startIndex * polyModulusDegree, newCoeffIter, 0, newCoeffIter.length);
 
         return new RnsIter(newCoeffIter, polyModulusDegree);
     }
@@ -168,53 +137,40 @@ public class RnsIter implements Iterator{
 
 
 
-    public RnsIter() {}
 
-    /**
-     * An empty RnsIter with size of  k * N
-     * @param coeffModulusSize k
-     * @param coeffCount N
-     */
-    public RnsIter(int coeffModulusSize, int coeffCount) {
-        coeffIter = new long[coeffModulusSize][coeffCount];
-        this.polyModulusDegree = coeffCount;
-        this.coeffModulusSize = coeffModulusSize;
-    }
-
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof RnsIter) {
-            RnsIter that = (RnsIter) obj;
-            return new EqualsBuilder()
-                    .append(this.coeffIter, that.coeffIter )
-                    .append(this.polyModulusDegree, that.polyModulusDegree)
-                    .isEquals();
-        }
-        return false;
-    }
 
 
     public int getCoeffModulusSize() {
         return coeffModulusSize;
     }
 
-    /**
-     * @return coeffIter.length
-     */
-    public int getCoeffIterCount() {
-        return coeffIter.length;
-    }
+//    /**
+//     * @return coeffIter.length
+//     */
+//    public int getCoeffIterCount() {
+//        return coeffIter.length;
+//    }
+//
+//    public void setCoeffIter(long[][] coeffIter) {
+//        this.coeffIter = coeffIter;
+//    }
+//
+//    public void setCoeffIter(long[] coeff, int index) {
+//        this.coeffIter[index] = coeff;
+//    }
 
-    public void setCoeffIter(long[][] coeffIter) {
-        this.coeffIter = coeffIter;
-    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
 
-    public void setCoeffIter(long[] coeff, int index) {
-        this.coeffIter[index] = coeff;
+        if (!(o instanceof RnsIter)) return false;
+
+        RnsIter rnsIter = (RnsIter) o;
+
+        return new EqualsBuilder()
+                .append(polyModulusDegree, rnsIter.polyModulusDegree)
+                .append(coeffIter, rnsIter.coeffIter)
+                .isEquals();
     }
 
     @Override
@@ -225,108 +181,93 @@ public class RnsIter implements Iterator{
     }
 
     /**
-     *
      * @return the size of the RnsBase to which the current RnsIter belongs
      */
     public int getRnsBaseSize() {
         return coeffModulusSize;
     }
 
-    public long[][] getCoeffIter() {
+    public long[] getCoeffIter() {
         return coeffIter;
     }
 
+//    /**
+//     * note that this method will create new array, which has poor performance
+//     *
+//     * @param modulusIndex [0, coeffModulusSize)
+//     * @return [modulusIndex * polyModulusDegree, (modulusIndex + 1) * modulusIndex)
+//     */
+//    public long[] getCoeffIter(int modulusIndex) {
+//
+//        assert modulusIndex >= 0 && modulusIndex < coeffModulusSize;
+//        long[] result = new long[polyModulusDegree];
+//        System.arraycopy(coeffIter, modulusIndex * polyModulusDegree, result, 0, polyModulusDegree);
+//
+//        return result;
+//    }
+
+
     /**
+     * 感觉可能会出错啊，这里 会深拷贝一个 数组对象出去，那么这个数组出去被修改后，和原始数据就没啥关系了
+     * 1D Array 就存在这种问题. 突然在想，是不是不用去返回一个新的 subArray , 根据，运算的时候 直接修改 整个大数组的特定区间即可？
      *
-     * @param index i, range of [0, k), k is the RnsBase
-     * @return the i-th row of k * N matrix, just the coeffs mod q_i
+     * @param index range of [0, k), k is the RnsBase size
+     * @return the i-th row of k * N matrix, coeffIter[index * N, (index+1) * N)
      */
-    public long[] getCoeffIter(int index) {
-        return coeffIter[index];
-    }
+//    public long[] getCoeffIter(int index) {
+//
+//        assert index >= 0 && index < coeffModulusSize;
+//
+//        return coeffIter[index];
+//    }
 
 
     /**
-     *
      * @param rowIndex row
      * @param colIndex col
      * @return coeffIter[i][j] = c_j mod q_i
      */
     public long getCoeff(int rowIndex, int colIndex) {
-        return coeffIter[rowIndex][colIndex];
+        assert rowIndex >= 0 && rowIndex < coeffModulusSize;
+        assert colIndex >= 0 && colIndex < polyModulusDegree;
+
+        return coeffIter[rowIndex * polyModulusDegree + colIndex];
     }
+
+    public long getCoeff(int index) {
+        assert index >= 0 && index < polyModulusDegree * coeffModulusSize;
+
+        return coeffIter[index];
+    }
+
+
 
     /**
-     *  coeffIter[rowIndex][colIndex] = value;
+     * coeffIter[rowIndex][colIndex] = value;
+     *
      * @param rowIndex i
      * @param colIndex j
-     * @param value value
+     * @param value    value
      */
     public void setCoeff(int rowIndex, int colIndex, long value) {
-        coeffIter[rowIndex][colIndex] = value;
+        coeffIter[rowIndex * polyModulusDegree + colIndex] = value;
     }
-
 
 
     public int getPolyModulusDegree() {
         return polyModulusDegree;
     }
 
-    public int getPos() {
-        return pos;
-    }
-
-    public void setPos(int pos) {
-        this.pos = 0;
-    }
-
-    /**
-     * Returns {@code true} if the iteration has more elements.
-     * (In other words, returns {@code true} if {@link #next} would
-     * return an element rather than throwing an exception.)
-     *
-     * @return {@code true} if the iteration has more elements
-     */
     @Override
-    public boolean hasNext() {
-        return pos < coeffIter.length;
-    }
+    public RnsIter clone() {
+        try {
+            RnsIter clone = (RnsIter) super.clone();
 
-    /**
-     * Returns the next element in the iteration.
-     *
-     * @return the next element in the iteration
-     * @throws NoSuchElementException if the iteration has no more elements
-     */
-    @Override
-    public long[] next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-        long[] temp = coeffIter[pos];
-        pos++;
-        return temp;
-    }
-
-    /**
-     * Performs the given action for each remaining element until all elements
-     * have been processed or the action throws an exception.  Actions are
-     * performed in the order of iteration, if that order is specified.
-     * Exceptions thrown by the action are relayed to the caller.
-     *
-     * @param action The action to be performed for each element
-     * @throws NullPointerException if the specified action is null
-     * @implSpec <p>The default implementation behaves as if:
-     * <pre>{@code
-     *     while (hasNext())
-     *         action.accept(next());
-     * }</pre>
-     * @since 1.8
-     */
-    @Override
-    public void forEachRemaining(Consumer action) {
-        while (hasNext()) {
-            action.accept(next());
+            clone.coeffIter = new long[this.coeffIter.length];
+            System.arraycopy(this.coeffIter, 0, clone.coeffIter, 0, this.coeffIter.length);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
         }
     }
 }

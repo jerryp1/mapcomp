@@ -7,7 +7,7 @@ import java.util.Arrays;
  * @author Qixian Zhou
  * @date 2023/8/31
  */
-public class DynArray {
+public class DynArray implements Cloneable {
 
     private int capacity = 0;
 
@@ -55,7 +55,6 @@ public class DynArray {
     }
 
 
-
     public DynArray(long[] data, int capacity, int size, boolean fillZero) {
         if (capacity < size) {
             throw new IllegalArgumentException("capacity cannot be smaller than size");
@@ -93,14 +92,12 @@ public class DynArray {
     }
 
 
-
     public boolean empty() {
         return size == 0;
     }
 
     /**
      * Reallocates the array so that its capacity exactly matches its size.
-     *
      */
     public void shrinkToFit() {
         reserve(size);
@@ -175,14 +172,14 @@ public class DynArray {
         if (size <= capacity) {
             // Are we changing size to bigger within current capacity?
             // If so, need to set top terms to zero
-            if (size > this.size) {
-                // 当前 size 是 this.size , 需要 expand, expand 的部分为 0
-                Arrays.fill(data, this.size, size, 0);
-
-                // set size
-                this.size = size;
-                return;
-            }
+//            if (size > this.size) {
+//                // 当前 size 是 this.size , 需要 expand, expand 的部分为 0
+//                // 因为 Java 新建数组时，默认所有值为0, 因此不需要再进一步处理了
+//                Arrays.fill(data, this.size, size, 0);
+//            }
+            // set size
+            this.size = size;
+            return;
         }
 
         // At this point we know for sure that size_ <= capacity_ < size so need
@@ -198,6 +195,9 @@ public class DynArray {
         capacity = size;
         this.size = size;
     }
+
+
+
 
 
     public void setZero(int startIndex, int length) {
@@ -237,6 +237,21 @@ public class DynArray {
         return data;
     }
 
+    /**
+     *
+     * @param startIndex
+     * @param endIndex
+     * @return data[startIndex, endIndex)
+     */
+    public long[] data(int startIndex, int endIndex) {
+        assert startIndex < endIndex;
+        assert endIndex <= size;
+        long[] result = new long[endIndex - startIndex + 1];
+
+        System.arraycopy(data, startIndex, result, 0, endIndex - startIndex + 1);
+        return result;
+    }
+
     public int capacity() {
         return capacity;
     }
@@ -250,4 +265,25 @@ public class DynArray {
     }
 
 
+    @Override
+    public DynArray clone() {
+        try {
+            DynArray clone = (DynArray) super.clone();
+            clone.data = new long[this.data.length];
+            System.arraycopy(this.data, 0, clone.data, 0, this.data.length);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+
+    @Override
+    public String toString() {
+        return "DynArray{" +
+                "capacity=" + capacity +
+                ", size=" + size +
+                ", data=" + Arrays.toString(data) +
+                '}';
+    }
 }

@@ -137,6 +137,11 @@ public class UintArithmeticSmallMod {
         return Numth.tryInvertUintMod(operand, modulus.getValue(), result);
     }
 
+    public static boolean tryInvertUintMod(long operand, long modulus, long[] result) {
+        assert result.length == 1;
+        return Numth.tryInvertUintMod(operand, modulus, result);
+    }
+
 
 
     /**
@@ -197,6 +202,41 @@ public class UintArithmeticSmallMod {
         }
         return tmp[1];
     }
+
+
+    /**
+     * treat value[startIndex, startIndex + valueUint64Count) as a base-2^64 value, then mod modulus.
+     *
+     * @param value
+     * @param startIndex
+     * @param valueUint64Count
+     * @param modulus
+     * @return
+     */
+    public static long moduloUint(long[] value, int startIndex, int valueUint64Count, Modulus modulus) {
+
+        assert valueUint64Count > 0;
+
+        if (valueUint64Count == 1) {
+            if (value[startIndex] < modulus.getValue()) {
+                return value[startIndex];
+            }else {
+                return barrettReduce64(value[startIndex], modulus);
+            }
+        }
+
+        long[] tmp = new long[] {0, value[startIndex + valueUint64Count - 1]};
+        // 从高位往低位依次 reduce
+        // (n-2, n-1) ---> reduce
+        // (n-3, n-2) ---> reduce
+        // i-->0  1) i > 0; 2) i--; 3) enter the for loop
+        for (int i = startIndex + valueUint64Count - 1; i-- > startIndex; ) {
+            tmp[0] = value[i];
+            tmp[1] = barrettReduce128(tmp, modulus);
+        }
+        return tmp[1];
+    }
+
 
 
 

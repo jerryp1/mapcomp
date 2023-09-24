@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.crypto.fhe.params;
 
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
+import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.utils.HashFunction;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @author Qixian Zhou
  * @date 2023/8/30
  */
-public class EncryptionParams {
+public class EncryptionParams implements Cloneable {
 
     private final SchemeType scheme;
 
@@ -24,21 +25,21 @@ public class EncryptionParams {
 
     private Modulus[] coeffModulus;
 
-    private UniformRandomGenerator randomGenerator;
+    private UniformRandomGeneratorFactory randomGeneratorFactory;
 
     private Modulus plainModulus;
 
     private ParmsIdType parmsId;
 
     /**
-     * Creates an empty set of encryption parameters. SchemType is NONE.
+     * Creates an empty set of encryption parameters, SchemType is NONE.
      */
     public EncryptionParams() {
         scheme = SchemeType.NONE;
         polyModulusDegree = 0;
-        coeffModulus = null;
-        randomGenerator = null;
-        plainModulus = null;
+        coeffModulus = new Modulus[0];
+        randomGeneratorFactory = null;
+        plainModulus = new Modulus();
         parmsId = ParmsIdType.parmsIdZero();
 
         computeParmsId();
@@ -52,9 +53,9 @@ public class EncryptionParams {
 
         this.scheme = scheme;
         polyModulusDegree = 0;
-        coeffModulus = null;
-        randomGenerator = null;
-        plainModulus = null;
+        coeffModulus = new Modulus[0];
+        randomGeneratorFactory = null;
+        plainModulus = new Modulus();
         parmsId = ParmsIdType.parmsIdZero();
 
         computeParmsId();
@@ -66,9 +67,9 @@ public class EncryptionParams {
         }
         this.scheme = SchemeType.getByValue(scheme);
         polyModulusDegree = 0;
-        coeffModulus = null;
-        randomGenerator = null;
-        plainModulus = null;
+        coeffModulus = new Modulus[0];
+        randomGeneratorFactory = null;
+        plainModulus = new Modulus();
         parmsId = ParmsIdType.parmsIdZero();
 
         computeParmsId();
@@ -85,9 +86,14 @@ public class EncryptionParams {
         this.polyModulusDegree = other.polyModulusDegree;
         this.coeffModulus = Arrays.stream(other.coeffModulus).map(Modulus::new).toArray(Modulus[]::new);
         this.plainModulus = new Modulus(other.plainModulus);
-        this.randomGenerator = other.randomGenerator;
+        this.randomGeneratorFactory = other.randomGeneratorFactory;
         this.parmsId = new ParmsIdType(other.parmsId);
     }
+
+
+
+
+
 
     /**
      * Sets the degree of the polynomial modulus parameter to the specified value.
@@ -146,8 +152,8 @@ public class EncryptionParams {
     }
 
 
-    public void setRandomGenerator(UniformRandomGenerator randomGenerator) {
-        this.randomGenerator = randomGenerator;
+    public void setRandomGeneratorFactory(UniformRandomGeneratorFactory randomGeneratorFactory) {
+        this.randomGeneratorFactory = randomGeneratorFactory;
     }
 
 
@@ -167,8 +173,8 @@ public class EncryptionParams {
         return scheme;
     }
 
-    public UniformRandomGenerator getRandomGenerator() {
-        return randomGenerator;
+    public UniformRandomGeneratorFactory getRandomGeneratorFactory() {
+        return randomGeneratorFactory;
     }
 
     public ParmsIdType getParmsId() {
@@ -189,9 +195,13 @@ public class EncryptionParams {
                 .isEquals();
     }
 
+    /**
+     * ref seal/encryptionparams.h struct hash<seal::EncryptionParameters>
+     * @return
+     */
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(parmsId).toHashCode();
+        return parmsId.hashCode();
     }
 
     public void computeParmsId() {
@@ -216,7 +226,7 @@ public class EncryptionParams {
                 paramData[i++] = modulus.getValue();
             }
         }
-        if (plainModulus != null) {
+        if (plainModulus != null && plainModulus.getUint64Count() > 0) {
             paramData[i] = plainModulus.getValue();
         }
 
@@ -252,6 +262,18 @@ public class EncryptionParams {
                 throw new IllegalArgumentException("currently unsupported scheme");
             default:
                 return false;
+        }
+    }
+
+    @Override
+    public EncryptionParams clone() {
+        try {
+            EncryptionParams clone = (EncryptionParams) super.clone();
+            // only clone this member
+            clone.parmsId = this.parmsId.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
         }
     }
 }

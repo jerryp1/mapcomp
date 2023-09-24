@@ -17,8 +17,8 @@ public class RnsBaseTest {
 
     @Test
     public void create() {
-//        Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0}));
-//        Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0, 3}));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0}));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0, 3}));
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{2, 2}));
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{2, 3, 4}));
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{3, 4, 5, 6}));
@@ -189,12 +189,12 @@ public class RnsBaseTest {
         Assert.assertArrayEquals(inCopy, in);
     }
 
-    private void rnsTest2(RnsBase base, long[][] in, long[][] out) {
-        long[][] inCopy = Arrays.copyOf(in, in.length);
-        base.decomposeArray(inCopy);
+    private void rnsTest2(RnsBase base, int count, long[] in, long[] out) {
+        long[] inCopy = Arrays.copyOf(in, in.length);
+        base.decomposeArray(inCopy, count);
         Assert.assertArrayEquals(inCopy, out);
 
-        base.composeArray(inCopy);
+        base.composeArray(inCopy, count);
         Assert.assertArrayEquals(inCopy, in);
     }
 
@@ -202,61 +202,92 @@ public class RnsBaseTest {
     @Test
     public void composeDecomposeArray() {
 
-        RnsBase base = new RnsBase(new long[]{2});
-        rnsTest2(base, new long[][]{{0}}, new long[][]{{0}});
-        rnsTest2(base, new long[][]{{1}}, new long[][]{{1}});
+        {
+            RnsBase base = new RnsBase(new long[]{2});
+            rnsTest2(base, 1, new long[]{0}, new long[]{0});
+            rnsTest2(base, 1, new long[]{1}, new long[]{1});
+        }
 
-        base = new RnsBase(new long[]{5});
-        rnsTest2(base, new long[][]{{0, 1, 2}}, new long[][]{{0, 1, 2}});
+        {
+            RnsBase base = new RnsBase(new long[]{5});
+            rnsTest2(base, 3, new long[]{0, 1, 2}, new long[]{0, 1, 2});
+        }
 
-        base = new RnsBase(new long[]{3, 5});
-        rnsTest2(base, new long[][]{{0}, {0}}, new long[][]{{0}, {0}});
-        // 2 mod 3, 2 mod 5
-        rnsTest2(base, new long[][]{{2}, {0}}, new long[][]{{2}, {2}});
-        // 7 mod 3, 7 mod 5
-        rnsTest2(base, new long[][]{ {7}, {0}}, new long[][]{{1}, {2}});
-        rnsTest2(base, new long[][]{{0, 0}, {0, 0}}, new long[][]{{0, 0}, {0, 0}});
-        rnsTest2(base, new long[][]{{1, 2}, {0, 0}}, new long[][]{{1, 2}, {1, 2}});
-        rnsTest2(base, new long[][]{{7, 8}, {0, 0}}, new long[][]{{1, 2}, {2, 3}});
-////
-        base = new RnsBase(new long[]{3, 5, 7});
-        rnsTest2(base, new long[][]{{0}, {0}, {0}}, new long[][]{{0}, {0}, {0}});
-        rnsTest2(base, new long[][]{{2}, {0}, {0}}, new long[][]{{2}, {2}, {2}});
-        rnsTest2(base, new long[][]{{7}, {0}, {0}}, new long[][]{{1}, {2}, {0}});
-        rnsTest2(base, new long[][]{{0, 0}, {0, 0}, {0, 0}}, new long[][]{{0, 0}, {0, 0}, {0, 0}});
-        rnsTest2(base, new long[][]{{1, 2}, {0, 0}, {0, 0}}, new long[][]{{1, 2}, {1, 2}, {1, 2}});
-        rnsTest2(base, new long[][]{{7, 8}, {0, 0}, {0, 0}}, new long[][]{{1, 2}, {2, 3}, {0, 1}});
-        // [7, 0, 0]^T = 7 , 7 mod 3 7 mod 5 7 mod 7 = [1, 2, 0]^T
-        // [8, 0, 0]^T = 8 ---> [2, 3, 1]^T
-        // [9, 0, 0]^T = 9 ----> [0, 4, 2]^T
-        rnsTest2(base, new long[][]{{7, 8, 9}, {0, 0, 0}, {0, 0, 0}}, new long[][]{{1, 2, 0}, {2, 3, 4}, {0, 1, 2}});
+        {
+            RnsBase base = new RnsBase(new long[]{3, 5});
+            rnsTest2(base, 1, new long[]{0, 0}, new long[]{0, 0});
+            rnsTest2(base, 1, new long[]{2, 0}, new long[]{2, 2});
+            rnsTest2(base, 1, new long[]{7, 0}, new long[]{1, 2});
 
-        // large number
-        Modulus[] primes = Numth.getPrimes(1024 * 2, 60, 2);
-        long[][] inValues = new long[][]{
-                {0xAAAAAAAAAAAL, 0xBBBBBBBBBBL, 0xCCCCCCCCCCL},
-                {0xDDDDDDDDDDL, 0xEEEEEEEEEEL, 0xFFFFFFFFFFL}};
+            rnsTest2(base, 2, new long[]{0, 0, 0, 0}, new long[]{0, 0, 0, 0});
+            rnsTest2(base, 2, new long[]{1, 0, 2, 0}, new long[]{1, 2, 1, 2});
+            rnsTest2(base, 2, new long[]{7, 0, 8, 0}, new long[]{1, 2, 2, 3});
+        }
 
-        long[][] invaluesT = new long[][] {
-                { 0xAAAAAAAAAAAL, 0xDDDDDDDDDDL},
-                {0xBBBBBBBBBBL, 0xEEEEEEEEEEL},
-                {0xCCCCCCCCCCL, 0xFFFFFFFFFFL},
-        };
+        {
+            RnsBase base = new RnsBase(new long[]{3, 5, 7});
+            rnsTest2(base, 1, new long[]{0, 0, 0}, new long[]{0, 0, 0});
+            rnsTest2(base, 1, new long[]{2, 0, 0}, new long[]{2, 2, 2});
+            rnsTest2(base, 1, new long[]{7, 0, 0}, new long[]{1, 2, 0});
+            rnsTest2(base, 2, new long[]{0, 0, 0, 0, 0, 0}, new long[]{0, 0, 0, 0, 0, 0});
+            rnsTest2(base, 2, new long[]{1, 0, 0, 2, 0, 0}, new long[]{1, 2, 1, 2, 1, 2});
+            rnsTest2(base, 2, new long[]{7, 0, 0, 8, 0, 0}, new long[]{1, 2, 2, 3, 0, 1});
+            rnsTest2(base, 3, new long[]{7, 0, 0, 8, 0, 0, 9, 0, 0}, new long[]{1, 2, 0, 2, 3, 4, 0, 1, 2});
+        }
 
-        RnsBase base1 = new RnsBase(primes);
+        {
+            // large number
+            Modulus[] primes = Numth.getPrimes(1024 * 2, 60, 2);
+            long[] inValues = new long[]{0xAAAAAAAAAAAL, 0xBBBBBBBBBBL,
+                    0xCCCCCCCCCCL, 0xDDDDDDDDDDL,
+                    0xEEEEEEEEEEL, 0xFFFFFFFFFFL};
 
-        rnsTest2(base1, inValues, new long[][]{
-                {
-                        UintArithmeticSmallMod.moduloUint(invaluesT[0], 2, primes[0]),
-                        UintArithmeticSmallMod.moduloUint(invaluesT[1], 2, primes[0]),
-                        UintArithmeticSmallMod.moduloUint(invaluesT[2], 2, primes[0]),
-                },
-                {
-                        UintArithmeticSmallMod.moduloUint(invaluesT[0], 2, primes[1]),
-                        UintArithmeticSmallMod.moduloUint(invaluesT[1], 2, primes[1]),
-                        UintArithmeticSmallMod.moduloUint(invaluesT[2], 2, primes[1]),
-                }
-        });
+            long[][] invaluesT = new long[][]{
+                    {0xAAAAAAAAAAAL, 0xBBBBBBBBBBL},
+                    {0xCCCCCCCCCCL, 0xDDDDDDDDDDL},
+                    {0xEEEEEEEEEEL, 0xFFFFFFFFFFL},
+            };
+            // 注意 moduloUint 的函数签名， 这种情况必须使用辅助数组 把每一个 base-2^64 的值 给抠出来
+            RnsBase base = new RnsBase(primes);
+            rnsTest2(base, 3, inValues, new long[]{
+                            UintArithmeticSmallMod.moduloUint(invaluesT[0], 2, primes[0]),
+                            UintArithmeticSmallMod.moduloUint(invaluesT[1], 2, primes[0]),
+                            UintArithmeticSmallMod.moduloUint(invaluesT[2], 2, primes[0]),
+
+                            UintArithmeticSmallMod.moduloUint(invaluesT[0], 2, primes[1]),
+                            UintArithmeticSmallMod.moduloUint(invaluesT[1], 2, primes[1]),
+                            UintArithmeticSmallMod.moduloUint(invaluesT[2], 2, primes[1]),
+                    }
+            );
+        }
+        {
+            // large number2
+            Modulus[] primes = Numth.getPrimes(1024 * 2, 60, 2);
+            long[] inValues = new long[]{0xAAAAAAAAAAAL, 0xBBBBBBBBBBL,
+                    0xCCCCCCCCCCL, 0xDDDDDDDDDDL,
+                    0xEEEEEEEEEEL, 0xFFFFFFFFFFL};
+
+            RnsBase base = new RnsBase(primes);
+            // 注意 moduloUint 的函数签名， 不使用辅助数组，直接取 原数组给定区间 [startIndex, startIndex + valueUint64Count)
+            // 这种方法可以避免 重新 new 数组，这样底层的运算都是那一个 1维数组，但是在真正计算的时候，我们只取 对应区间的元素作为我们的 计算数据
+            // 在这里我也突然明白了，为什么在 SEAL 的实现中，特别是在 UintArithmetic 的实现中，方法的参数里 都存在一个 uint64Count
+            // 就是为了取给定数组的特定区间，在 C++ 里，可以非常方便的取数组的任一元素的地址 作为新的起始地址
+            // 但是在 Java里，给定数组 long[] values = new long[10]，我们无法直接获取 values[2]的地址，所以我们增加一个字段 startIndex
+            // 来解决这个问题
+
+            rnsTest2(base, 3, inValues, new long[]{
+                            UintArithmeticSmallMod.moduloUint(inValues, 0, 2, primes[0]),
+                            UintArithmeticSmallMod.moduloUint(inValues, 2, 2, primes[0]),
+                            UintArithmeticSmallMod.moduloUint(inValues, 4, 2, primes[0]),
+
+                            UintArithmeticSmallMod.moduloUint(inValues, 0, 2, primes[1]),
+                            UintArithmeticSmallMod.moduloUint(inValues, 2, 2, primes[1]),
+                            UintArithmeticSmallMod.moduloUint(inValues, 4, 2, primes[1]),
+                    }
+            );
+        }
+
+
     }
 
 
@@ -317,7 +348,6 @@ public class RnsBaseTest {
                 UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[2]),
                 UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[3]),
         });
-
     }
 
 

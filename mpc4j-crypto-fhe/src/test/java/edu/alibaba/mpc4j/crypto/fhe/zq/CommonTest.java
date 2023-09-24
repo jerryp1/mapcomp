@@ -12,6 +12,25 @@ public class CommonTest {
 
 
     @Test
+    public void hammingWeight() {
+        Assert.assertEquals(0, Common.hammingWeight((byte) 0));
+        Assert.assertEquals(8, Common.hammingWeight((byte) 0xFF));
+        Assert.assertEquals(4, Common.hammingWeight((byte) 0xF0));
+        Assert.assertEquals(4, Common.hammingWeight((byte) 0x0F));
+        Assert.assertEquals(2, Common.hammingWeight((byte) 0xC0));
+        Assert.assertEquals(2, Common.hammingWeight((byte) 0x0C));
+        Assert.assertEquals(2, Common.hammingWeight((byte) 0x03));
+        Assert.assertEquals(2, Common.hammingWeight((byte) 0x30));
+        Assert.assertEquals(4, Common.hammingWeight((byte) 0xAA));
+        Assert.assertEquals(4, Common.hammingWeight((byte) 0x55));
+        Assert.assertEquals(5, Common.hammingWeight((byte) 0xD6));
+        Assert.assertEquals(5, Common.hammingWeight((byte) 0x6D));
+        Assert.assertEquals(7, Common.hammingWeight((byte) 0xBF));
+        Assert.assertEquals(7, Common.hammingWeight((byte) 0xFB));
+    }
+
+
+    @Test
     public void reversedBit64() {
 
         Assert.assertEquals(0L, Common.reverseBits(0L));
@@ -164,8 +183,8 @@ public class CommonTest {
         Assert.assertEquals(625, Common.mulSafe(posI32, posI32, false, posI32, posI32));
 
         Assert.assertThrows(ArithmeticException.class, () -> Common.mulSafe(posI32, posI32, false,
-                posI32, posI32,posI32, posI32,posI32, posI32,posI32, posI32,posI32, posI32,posI32, posI32
-                ));
+                posI32, posI32, posI32, posI32, posI32, posI32, posI32, posI32, posI32, posI32, posI32, posI32
+        ));
 
     }
 

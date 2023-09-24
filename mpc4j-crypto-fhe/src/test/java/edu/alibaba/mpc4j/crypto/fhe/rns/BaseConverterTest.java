@@ -34,7 +34,6 @@ public class BaseConverterTest {
     }
 
     private void bctExactTest(BaseConverter bct, long[] in, long out) {
-
         long curOut =  bct.exactConvert(in);
         Assert.assertEquals(curOut, out);
     }
@@ -105,20 +104,15 @@ public class BaseConverterTest {
         bctTest(bct, new long[] {1, 1, 1}, new long[] {1, 1});
     }
 
-    private void bctArrayTest(BaseConverter bct, long[][] in, long[][] out) {
-        long[][] outArray = new long[out.length][out[0].length];
-        RnsIter outIter = new RnsIter(outArray, out[0].length);
 
-        RnsIter inIter = new RnsIter(in, in[0].length);
 
-        bct.fastConvertArray(inIter, outIter);
-        Assert.assertArrayEquals(out, outIter.getCoeffIter());
-    }
+    private void bctExactArrayTest(BaseConverter bct, long[] in, long[] out) {
+        long[] outArray = Arrays.copyOf(out, out.length);
 
-    private void bctExactArrayTest(BaseConverter bct, long[][] in, long[] out) {
-        long[] outArray = new long[out.length];
-        RnsIter inIter = new RnsIter(in, in[0].length);
+        RnsIter inIter = new RnsIter(in, 3);
+
         bct.exactConvertArray(inIter, outArray);
+
         Assert.assertArrayEquals(out, outArray);
     }
 
@@ -126,25 +120,23 @@ public class BaseConverterTest {
     @Test
     public void exactConvertArray() {
 
-
         // 2 mod 3 ---> 2 mod 2 = 0, exact convert will failure on this
-
         BaseConverter bct;
         bct = new BaseConverter(new RnsBase(new long[]{3}), new RnsBase(new long[]{2}));
         bctExactArrayTest(bct,
-                new long[][]{
-                        {0, 1}
+                new long[]{
+                        0, 1, 0 // 2
                 },
                 new long[]{
-                        0, 1
+                        0, 1, 0
                 }
         );
 
         bct = new BaseConverter(new RnsBase(new long[]{2, 3}), new RnsBase(new long[]{2}));
         bctExactArrayTest(bct,
-                new long[][]{
-                        {0, 1, 0},
-                        {0, 1, 2}
+                new long[]{
+                        0, 1, 0,
+                        0, 1, 2
                 },
                 new long[]
                         {0, 1, 0}
@@ -153,7 +145,16 @@ public class BaseConverterTest {
     }
 
 
+    private void bctArrayTest(BaseConverter bct, long[] in, long[] out) {
+        long[] outArray = Arrays.copyOf(out, out.length);
 
+        RnsIter outIter = new RnsIter(outArray, 3);
+
+        RnsIter inIter = new RnsIter(in, 3);
+        // in Iter 是在 inBase 下的数据，outIter 是在 outBase 下的数据
+        bct.fastConvertArray(inIter, outIter);
+        Assert.assertArrayEquals(out, outIter.coeffIter);
+    }
 
     @Test
     public void convertArray() {
@@ -161,48 +162,40 @@ public class BaseConverterTest {
         BaseConverter bct;
         bct = new BaseConverter(new RnsBase(new long[]{3}), new RnsBase(new long[]{2}));
         bctArrayTest(bct,
-                new long[][]{
-                        {0, 1, 2}
+                new long[]{
+                        0, 1, 2
                 },
-                new long[][]{
-                        {0, 1, 0}
+                new long[]{
+                        0, 1, 0
                 }
         );
 
         bct = new BaseConverter(new RnsBase(new long[]{2, 3}), new RnsBase(new long[]{2}));
         bctArrayTest(bct,
-                new long[][]{
-                        {0, 1, 0},
-                        {0, 1, 2}
+                new long[]{
+                     0, 1, 0, 0, 1, 2
                 },
-                new long[][]{
-                        {0, 1, 0}
+                new long[]{
+                        0, 1, 0
                 });
 
         bct = new BaseConverter(new RnsBase(new long[]{2, 3}), new RnsBase(new long[]{2, 3}));
         bctArrayTest(bct,
-                new long[][]{
-                        {1, 1, 0},
-                        {1, 2, 2},
+                new long[]{
+                        1, 1, 0, 1, 2, 2
                 },
-                new long[][]{
-                        {1, 1, 0},
-                        {1, 2, 2},
+                new long[]{
+                        1, 1, 0, 1, 2, 2
                 });
 
         bct = new BaseConverter(new RnsBase(new long[]{2, 3}), new RnsBase(new long[]{3, 4, 5}));
         bctArrayTest(bct,
-                new long[][]{
-                        {0, 1, 1},
-                        {0, 1, 2},
+                new long[]{
+                    0, 1, 1, 0, 1, 2
                 },
-                new long[][]{
-                        {0, 1, 2},
-                        {0, 3, 1},
-                        {0, 2, 0},
+                new long[]{
+                    0, 1, 2, 0, 3, 1, 0, 2, 0
                 });
     }
-
-
 
 }

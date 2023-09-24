@@ -15,14 +15,13 @@ import java.util.stream.IntStream;
  * @author Qixian Zhou
  * @date 2023/8/20
  */
-public class PolyIter implements Iterator {
+public class PolyIter {
 
     //
     private RnsIter[] rnsIters;
 
     // number of poly
     private int size;
-
 
     // k , size of RnsBase
     private int coeffModulusSize;
@@ -44,6 +43,25 @@ public class PolyIter implements Iterator {
         this.pos = 0;
     }
 
+    /**
+     * create an empty PolyIter object with size RnsIter Objects, which shape is coeffModulusSize * polyModulusDegree
+     *
+     * @param size size of poly
+     * @param coeffModulusSize k
+     * @param polyModulusDegree N
+     */
+    public PolyIter(int size, int coeffModulusSize, int polyModulusDegree) {
+
+        this.size = size;
+        this.coeffModulusSize = coeffModulusSize;
+        this.polyModulusDegree = polyModulusDegree;
+
+        rnsIters = IntStream.range(0, size)
+                .mapToObj( i->new RnsIter(coeffModulusSize, polyModulusDegree))
+                .toArray(RnsIter[]::new);
+    }
+
+
     public PolyIter() {}
 
 
@@ -55,6 +73,28 @@ public class PolyIter implements Iterator {
 
         return new PolyIter(rnsIters, polyModulusDegree, coeffModulusSize);
     }
+
+
+    public static PolyIter from3dArray(long[][][] data) {
+
+        PolyIter polyIter = new PolyIter(data.length, data[0].length, data[0][0].length);
+
+
+        IntStream.range(0, polyIter.size).parallel().forEach(
+                i -> polyIter.rnsIters[i] = RnsIter.from2dArray(data[i])
+        );
+        return polyIter;
+    }
+
+    public static long[][][] to3dArray(PolyIter polyIter) {
+
+        return IntStream.range(0, polyIter.size).parallel()
+                .mapToObj(i -> RnsIter.to2dArray(polyIter.rnsIters[i]))
+                .toArray(long[][][]::new);
+    }
+
+
+
 
     public void setRnsIters(RnsIter[] rnsIters) {
         this.rnsIters = rnsIters;
@@ -98,53 +138,4 @@ public class PolyIter implements Iterator {
         return coeffModulusSize;
     }
 
-    /**
-     * Returns {@code true} if the iteration has more elements.
-     * (In other words, returns {@code true} if {@link #next} would
-     * return an element rather than throwing an exception.)
-     *
-     * @return {@code true} if the iteration has more elements
-     */
-    @Override
-    public boolean hasNext() {
-        return pos < rnsIters.length;
-    }
-
-    /**
-     * Returns the next element in the iteration.
-     *
-     * @return the next element in the iteration
-     * @throws NoSuchElementException if the iteration has no more elements
-     */
-    @Override
-    public RnsIter next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-        RnsIter temp = rnsIters[pos];
-        pos++;
-        return temp;
-    }
-
-    /**
-     * Performs the given action for each remaining element until all elements
-     * have been processed or the action throws an exception.  Actions are
-     * performed in the order of iteration, if that order is specified.
-     * Exceptions thrown by the action are relayed to the caller.
-     *
-     * @param action The action to be performed for each element
-     * @throws NullPointerException if the specified action is null
-     * @implSpec <p>The default implementation behaves as if:
-     * <pre>{@code
-     *     while (hasNext())
-     *         action.accept(next());
-     * }</pre>
-     * @since 1.8
-     */
-    @Override
-    public void forEachRemaining(Consumer action) {
-        while (hasNext()) {
-            action.accept(next());
-        }
-    }
 }
