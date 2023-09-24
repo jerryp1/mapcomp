@@ -231,6 +231,11 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
     }
 
     private byte[] requestLocalQuery(int x) throws MpcAbortException {
+        requestEmptyQuery();
+        return localCacheEntries.get(x);
+    }
+
+    private void requestEmptyQuery() throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -242,7 +247,7 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests local query");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests empty query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -255,10 +260,9 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles local response");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles empty response");
 
         logPhaseInfo(PtoState.PTO_END);
-        return localCacheEntries.get(x);
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
