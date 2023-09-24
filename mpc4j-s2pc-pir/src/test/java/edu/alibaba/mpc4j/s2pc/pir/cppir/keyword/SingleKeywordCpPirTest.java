@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
@@ -41,18 +40,18 @@ public class SingleKeywordCpPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // PIANO
-//        configurations.add(new Object[]{
-//            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " PIANO",
-//            new Alpr21SingleKeywordCpPirConfig.Builder().build()
-//        });
-//        // SPAM
-//        configurations.add(new Object[]{
-//            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " SPAM + DIGEST BYTE LENGTH 16",
-//            new Alpr21SingleKeywordCpPirConfig.Builder()
-//                .setSingleIndexCpPirConfig(new SpamSingleIndexCpPirConfig.Builder().build())
-//                .build()
-//        });
+        // PIANO
+        configurations.add(new Object[]{
+            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " PIANO",
+            new Alpr21SingleKeywordCpPirConfig.Builder().build()
+        });
+        // SPAM
+        configurations.add(new Object[]{
+            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " SPAM + DIGEST BYTE LENGTH 16",
+            new Alpr21SingleKeywordCpPirConfig.Builder()
+                .setSingleIndexCpPirConfig(new SpamSingleIndexCpPirConfig.Builder().build())
+                .build()
+        });
         // STREAM
         configurations.add(new Object[]{
             SingleKeywordCpPirType.LLP23_STREAM_PIR.name(), new Llp23SingleKeywordCpPirConfig.Builder().build()
