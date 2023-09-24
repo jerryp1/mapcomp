@@ -137,15 +137,15 @@ public class SpamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
         MpcAbortPreconditions.checkArgument(queryRequestSize == 0 || queryRequestSize == 2);
 
         if (queryRequestSize == 0) {
-            // response missing query
-            responseMissingQuery();
+            // response empty query
+            responseEmptyQuery();
         } else {
             // response actual query
             respondActualQuery(queryRequestPayload);
         }
     }
 
-    private void responseMissingQuery() {
+    private void responseEmptyQuery() {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -157,7 +157,7 @@ public class SpamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, responseTime, "Server responses miss query");
+        logStepInfo(PtoState.PTO_STEP, 1, 1, responseTime, "Server responses empty query");
     }
 
     private void respondActualQuery(List<byte[]> queryRequestPayload) throws MpcAbortException {

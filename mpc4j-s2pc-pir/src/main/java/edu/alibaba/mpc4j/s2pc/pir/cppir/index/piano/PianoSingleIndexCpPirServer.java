@@ -129,15 +129,15 @@ public class PianoSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer 
         MpcAbortPreconditions.checkArgument(queryRequestSize == 0 || queryRequestSize == 1);
 
         if (queryRequestSize == 0) {
-            // response missing query
-            responseMissingQuery();
+            // response empty query
+            responseEmptyQuery();
         } else {
             // response actual query
             respondActualQuery(queryRequestPayload);
         }
     }
 
-    private void responseMissingQuery() {
+    private void responseEmptyQuery() {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();

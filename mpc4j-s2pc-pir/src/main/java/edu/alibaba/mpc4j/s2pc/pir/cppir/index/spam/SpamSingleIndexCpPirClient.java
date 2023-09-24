@@ -206,37 +206,16 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     }
 
     private byte[] requestMissQuery(int x) throws MpcAbortException {
-        logPhaseInfo(PtoState.PTO_BEGIN);
-
-        stopWatch.start();
-        DataPacketHeader queryRequestHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
-            rpc.ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, new LinkedList<>()));
-        stopWatch.stop();
-        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests miss query");
-
-        DataPacketHeader queryResponseHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
-            otherParty().getPartyId(), rpc.ownParty().getPartyId()
-        );
-        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
-
-        stopWatch.start();
-        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 0);
-        stopWatch.stop();
-        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles miss response");
-
-        logPhaseInfo(PtoState.PTO_END);
+        requestEmptyQuery();
         return missingEntries.get(x);
     }
 
     private byte[] requestLocalQuery(int x) throws MpcAbortException {
+        requestEmptyQuery();
+        return localCacheEntries.get(x);
+    }
+
+    private void requestEmptyQuery() throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -248,7 +227,7 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests local query");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests empty query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -261,10 +240,9 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles local response");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles empty response");
 
         logPhaseInfo(PtoState.PTO_END);
-        return localCacheEntries.get(x);
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
