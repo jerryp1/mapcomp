@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
-import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndexPirPtoDesc;
 
 /**
  * Simple PIR protocol description. The protocol comes from the following paper:
@@ -16,7 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.simplepir.Hhcm23SimpleSingleIndex
  * @author Liqiang Peng
  * @date 2023/9/18
  */
-public class SimpleSingleIndexCpPirDesc implements PtoDesc {
+class SimpleSingleIndexCpPirDesc implements PtoDesc {
     /**
      * protocol ID
      */

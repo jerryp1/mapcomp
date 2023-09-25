@@ -24,27 +24,28 @@ import static edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils.INT_MAX_VALUE;
 import static edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirDesc.*;
 
 /**
+ * SimplePIR client.
+ *
  * @author Liqiang Peng
  * @date 2023/9/18
  */
 public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
-
     /**
      * Simple PIR params
      */
     private SimpleSingleIndexCpPirParams params;
     /**
-     * cols
+     * number of columns
      */
     private int cols;
     /**
-     * rows
+     * number of rows
      */
     private int rows;
     /**
-     * hint
+     * hints
      */
-    private Zl64Matrix[] hint;
+    private Zl64Matrix[] hints;
     /**
      * secret key
      */
@@ -52,19 +53,19 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
     /**
      * random matrix A
      */
-    private Zl64Matrix a;
+    private Zl64Matrix matrixA;
     /**
      * Z_p elements num
      */
     private int d;
     /**
-     * partition byte length
+     * partition l
      */
-    private int partitionByteLength;
+    private int partitionL;
     /**
-     * partition bit-length
+     * partition l (in byte)
      */
-    private int partitionBitLength;
+    private int partitionByteL;
     /**
      * partition size
      */
@@ -79,11 +80,30 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         setInitInput(n, l);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
+        stopWatch.start();
+        clientSetup(n, l);
+        stopWatch.stop();
+        long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 3, paramTime, "Client setups params");
+
         DataPacketHeader seedPayloadHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SEED.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> seedPayload = rpc.receive(seedPayloadHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(seedPayload.size() == 1);
+        byte[] seed = seedPayload.get(0);
+        MpcAbortPreconditions.checkArgument(seed.length == CommonConstants.BLOCK_BYTE_LENGTH);
+        matrixA = Zl64Matrix.createRandom(params.zl64, cols, SimpleSingleIndexCpPirParams.N, seed);
+        matrixA.setParallel(parallel);
+        stopWatch.stop();
+        long seedTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 2, 3, seedTime, "Client generates matrix A");
+
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HINT.ordinal(), extraInfo,
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
@@ -91,17 +111,47 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         List<byte[]> hintPayload = rpc.receive(hintPayloadHeader).getPayload();
 
         stopWatch.start();
-        params = SimpleSingleIndexCpPirParams.DEFAULT_PARAMS;
-        clientSetup(n, l);
-        handledSeedPayload(seedPayload);
-        hint = new Zl64Matrix[partitionSize];
-        hint = handledHintPayload(hintPayload);
+        hints = new Zl64Matrix[partitionSize];
+        MpcAbortPreconditions.checkArgument(hintPayload.size() == partitionSize);
+        for (int i = 0; i < partitionSize; i++) {
+            long[] elements = LongUtils.byteArrayToLongArray(hintPayload.get(i));
+            hints[i] = Zl64Matrix.create(params.zl64, elements, rows, SimpleSingleIndexCpPirParams.N);
+            hints[i].setParallel(parallel);
+        }
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long hintTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, hintTime, "Client stores hints");
 
         logPhaseInfo(PtoState.INIT_END);
+    }
+
+    private void clientSetup(int databaseSize, int l) {
+        // compute max number of partitions
+        int maxPartitionNum = CommonUtils.getUnitNum(l, SimpleSingleIndexCpPirParams.LOG_P - 1);
+        int tempPartitionL = 0;
+        for (int partitionNum = 1; partitionNum < maxPartitionNum + 1; partitionNum++) {
+            tempPartitionL = CommonUtils.getUnitNum(l, partitionNum);
+            int tempPartitionByteL = CommonUtils.getByteLength(tempPartitionL);
+            // each row would be divided into d rows in this partition
+            d = CommonUtils.getUnitNum(tempPartitionByteL * Byte.SIZE, SimpleSingleIndexCpPirParams.LOG_P - 1);
+            // now the database is expanded to d * N, and this may exceed Integer.MAX_VALUE
+            BigInteger expandN = BigInteger.valueOf(d).multiply(BigInteger.valueOf(databaseSize));
+            if (expandN.compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
+                int[] dimensions = PirUtils.approxSquareDatabaseDims(databaseSize, d);
+                rows = dimensions[0];
+                cols = dimensions[1];
+                params = new SimpleSingleIndexCpPirParams(envType, PirUtils.getBitLength(cols));
+                break;
+            }
+            // since database.rows() must be less than Integer.MAX_VALUE, and we can make as many partitions as possible
+            // the loop must break at some point.
+        }
+        partitionL = Math.min(tempPartitionL, l);
+        partitionByteL = CommonUtils.getByteLength(partitionL);
+        partitionSize = CommonUtils.getUnitNum(l, partitionL);
+        // secret key
+        secretKey = Zl64Vector.createRandom(params.zl64, SimpleSingleIndexCpPirParams.N, secureRandom);
     }
 
     @Override
@@ -140,67 +190,6 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
     }
 
     /**
-     * client setup.
-     *
-     * @param serverElementSize server element size.
-     * @param elementBitLength  element bit length.
-     */
-    private void clientSetup(int serverElementSize, int elementBitLength) {
-        int maxPartitionBitLength = 0;
-        int upperBound = CommonUtils.getUnitNum(elementBitLength, params.logP - 1);
-        for (int count = 1; count < upperBound + 1; count++) {
-            maxPartitionBitLength = CommonUtils.getUnitNum(elementBitLength, count);
-            int maxPartitionByteLength = CommonUtils.getByteLength(maxPartitionBitLength);
-            d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
-            if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(serverElementSize)))
-                .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                int[] dims = PirUtils.approxSquareDatabaseDims(serverElementSize, d);
-                rows = dims[0];
-                cols = dims[1];
-                params.setPlainModulo(PirUtils.getBitLength(cols));
-                break;
-            }
-        }
-        partitionBitLength = Math.min(maxPartitionBitLength, elementBitLength);
-        partitionByteLength = CommonUtils.getByteLength(partitionBitLength);
-        partitionSize = CommonUtils.getUnitNum(elementBitLength, partitionBitLength);
-        // secret key
-        secretKey = Zl64Vector.createRandom(params.zl64, params.n, secureRandom);
-    }
-
-    /**
-     * client handles seed payload.
-     *
-     * @param seedPayload seed payload.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    private void handledSeedPayload(List<byte[]> seedPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(seedPayload.size() == 1);
-        byte[] seed = seedPayload.get(0);
-        MpcAbortPreconditions.checkArgument(seed.length == CommonConstants.BLOCK_BYTE_LENGTH);
-        a = Zl64Matrix.createRandom(params.zl64, cols, params.n, seed);
-        a.setParallel(parallel);
-    }
-
-    /**
-     * client handles hint payload.
-     *
-     * @param hintPayload hint payload.
-     * @return hint.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    private Zl64Matrix[] handledHintPayload(List<byte[]> hintPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(hintPayload.size() == partitionSize);
-        Zl64Matrix[] hint = new Zl64Matrix[partitionSize];
-        for (int i = 0; i < partitionSize; i++) {
-            long[] elements = LongUtils.byteArrayToLongArray(hintPayload.get(i));
-            hint[i] = Zl64Matrix.create(params.zl64, elements, rows, params.n);
-            hint[i].setParallel(parallel);
-        }
-        return hint;
-    }
-
-    /**
      * client generates query.
      *
      * @param index retrieval index.
@@ -211,11 +200,11 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         // column index
         int colIndex = index / rowElementsNum;
         // q / p
-        long floor = params.q / params.p;
+        long floor = SimpleSingleIndexCpPirParams.Q / params.p;
         // error term, allow correctness error 𝛿 = 2^{−40}.
-        Zl64Vector error = Zl64Vector.createGaussianSample(params.zl64, cols, 0, params.stdDev);
+        Zl64Vector error = Zl64Vector.createGaussianSample(params.zl64, cols, 0, SimpleSingleIndexCpPirParams.SIGMA);
         // query = A * s + e + q/p * u_i_col
-        Zl64Vector query = a.matrixMulVector(secretKey);
+        Zl64Vector query = matrixA.matrixMulVector(secretKey);
         query.addi(error);
         // Add q/p * 1 only to the index corresponding to the desired column
         long[] elements = query.getElements();
@@ -238,20 +227,18 @@ public class SimpleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         int rowIndex = index % rowElementsNum;
         ZlDatabase[] databases = new ZlDatabase[partitionSize];
         IntStream intStream = IntStream.range(0, partitionSize);
-        double delta = params.p * 1.0 / params.q;
+        double delta = params.p * 1.0 / SimpleSingleIndexCpPirParams.Q;
         intStream = parallel ? intStream.parallel() : intStream;
         intStream.forEach(i -> {
-            Zl64Vector vector = hint[i].matrixMulVector(secretKey);
+            Zl64Vector vector = hints[i].matrixMulVector(secretKey);
             long[] responseElements = LongUtils.byteArrayToLongArray(serverResponse.get(i));
             Zl64Vector response = Zl64Vector.create(params.zl64, responseElements);
             response.subi(vector);
             long[] element = IntStream.range(0, d)
                 .mapToLong(j -> Math.round(response.getElement(rowIndex * d + j) * delta) % params.p)
                 .toArray();
-            byte[] bytes = PirUtils.convertCoeffsToBytes(element, params.logP - 1);
-            databases[i] = ZlDatabase.create(
-                partitionBitLength, new byte[][]{BytesUtils.clone(bytes, 0, partitionByteLength)}
-            );
+            byte[] bytes = PirUtils.convertCoeffsToBytes(element, SimpleSingleIndexCpPirParams.LOG_P - 1);
+            databases[i] = ZlDatabase.create(partitionL, new byte[][]{BytesUtils.clone(bytes, 0, partitionByteL)});
         });
         return NaiveDatabase.createFromZl(l, databases).getBytesData(0);
     }

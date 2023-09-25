@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleIndexCpPirType;
 
 /**
  * Simple PIR config.
@@ -18,8 +18,8 @@ public class SimpleSingleIndexCpPirConfig extends AbstractMultiPartyPtoConfig im
     }
 
     @Override
-    public SingleIndexCpPirFactory.SingleIndexCpPirType getProType() {
-        return SingleIndexCpPirFactory.SingleIndexCpPirType.HHCM23_SIMPLE;
+    public SingleIndexCpPirType getProType() {
+        return SingleIndexCpPirType.HHCM23_SIMPLE;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<SimpleSingleIndexCpPirConfig> {

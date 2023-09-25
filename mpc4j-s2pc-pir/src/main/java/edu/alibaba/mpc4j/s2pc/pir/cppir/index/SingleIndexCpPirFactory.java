@@ -6,6 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirServer;
@@ -36,13 +39,17 @@ public class SingleIndexCpPirFactory implements PtoFactory {
          */
         LLP23_XOSPAM,
         /**
+         * MIR23 (SPAM)
+         */
+        MIR23_SPAM,
+        /**
          * ZPSZ23 (PIANO)
          */
         ZPSZ23_PIANO,
         /**
-         * MIR23 (SPAM)
+         * HHCM23 (SimplePIR).
          */
-        MIR23_SPAM,
+        HHCM23_SIMPLE,
     }
 
     /**
@@ -58,10 +65,12 @@ public class SingleIndexCpPirFactory implements PtoFactory {
         switch (type) {
             case LLP23_XOSPAM:
                 return new XospamSingleIndexCpPirServer(serverRpc, clientParty, (XospamSingleIndexCpPirConfig) config);
-            case ZPSZ23_PIANO:
-                return new PianoSingleIndexCpPirServer(serverRpc, clientParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPirServer(serverRpc, clientParty, (SpamSingleIndexCpPirConfig) config);
+            case ZPSZ23_PIANO:
+                return new PianoSingleIndexCpPirServer(serverRpc, clientParty, (PianoSingleIndexCpPirConfig) config);
+            case HHCM23_SIMPLE:
+                return new SimpleSingleIndexCpPirServer(serverRpc, clientParty, (SimpleSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()
@@ -82,10 +91,12 @@ public class SingleIndexCpPirFactory implements PtoFactory {
         switch (type) {
             case LLP23_XOSPAM:
                 return new XospamSingleIndexCpPirClient(clientRpc, serverParty, (XospamSingleIndexCpPirConfig) config);
-            case ZPSZ23_PIANO:
-                return new PianoSingleIndexCpPirClient(clientRpc, serverParty, (PianoSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPirClient(clientRpc, serverParty, (SpamSingleIndexCpPirConfig) config);
+            case ZPSZ23_PIANO:
+                return new PianoSingleIndexCpPirClient(clientRpc, serverParty, (PianoSingleIndexCpPirConfig) config);
+            case HHCM23_SIMPLE:
+                return new SimpleSingleIndexCpPirClient(clientRpc, serverParty, (SimpleSingleIndexCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleIndexCpPirType.class.getSimpleName() + ": " + type.name()

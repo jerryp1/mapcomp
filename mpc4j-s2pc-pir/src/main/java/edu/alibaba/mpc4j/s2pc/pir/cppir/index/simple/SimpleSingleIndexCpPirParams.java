@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64Factory;
 
@@ -10,60 +11,53 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl64.Zl64Factory;
  * @author Liqiang Peng
  * @date 2023/9/18
  */
-public class SimpleSingleIndexCpPirParams {
+class SimpleSingleIndexCpPirParams {
     /**
-     * the integer modulus
+     * the secret dimension, Section 4.2 of the paper requires n = 2^10
      */
-    public long q;
+    static final int N = 1 << 10;
     /**
-     * the plaintext modulus
+     * ciphertext modulus, Section 4.2 of the paper requires q = 2^32
      */
-    public int p;
+    static final long Q = 1L << 32;
     /**
-     * the lwe secret length
+     * error distribution: (0, σ) - discrete Gaussian distribution, Section 4.2 of the paper requires σ = 6.4,
      */
-    public int n;
+    static final double SIGMA = 6.4;
     /**
-     * the standard deviation for sampling random elements
+     * plaintext modulus bit length, can be chosen in {991, 833, 701, 589}, all bit length are 10.
      */
-    public double stdDev;
+    static final int LOG_P = 10;
+    /**
+     * plaintext modulus, can be chosen in {991, 833, 701, 589}
+     */
+    final int p;
     /**
      * zl64
      */
-    public Zl64 zl64;
-    /**
-     * bit length of p
-     */
-    public int logP = 10;
-
-    public SimpleSingleIndexCpPirParams(int n, int modulusBitLength, double stdDev) {
-        this.n = n;
-        this.q = 1L << modulusBitLength;
-        this.stdDev = stdDev;
-        this.zl64 = Zl64Factory.createInstance(EnvType.STANDARD_JDK, modulusBitLength);
-    }
+    final Zl64 zl64;
 
     /**
-     * default params
-     */
-    public static SimpleSingleIndexCpPirParams DEFAULT_PARAMS = new SimpleSingleIndexCpPirParams(1024, 32, 6.4);
-
-    /**
-     * set plain modulo.
+     * Creates SimplePIR params.
      *
-     * @param m cols.
+     * @param envType environment.
+     * @param logN    log(N), where N is the database size.
      */
-    public void setPlainModulo(int m) {
-        if (m <= 13) {
-            this.p = 991;
-        } else if (m == 14) {
-            this.p = 833;
-        } else if (m == 15) {
-            this.p = 701;
-        } else if (m == 16) {
-            this.p = 589;
+    @SuppressWarnings("AlibabaUndefineMagicConstant")
+    public SimpleSingleIndexCpPirParams(EnvType envType, int logN) {
+        MathPreconditions.checkNonNegativeInRangeClosed("logN", logN, 16);
+        if (logN <= 13) {
+            // n = 2^13, p = 991
+            p = 991;
+        } else if (logN == 14) {
+            p = 833;
+        } else if (logN == 15) {
+            p = 701;
+        } else if (logN == 16) {
+            p = 589;
         } else {
-            assert false : "failed to generate Simple PIR params.";
+            throw new IllegalStateException("logN must be in range [0, " + 16 + "]: " + logN);
         }
+        zl64 = Zl64Factory.createInstance(envType, 32);
     }
 }

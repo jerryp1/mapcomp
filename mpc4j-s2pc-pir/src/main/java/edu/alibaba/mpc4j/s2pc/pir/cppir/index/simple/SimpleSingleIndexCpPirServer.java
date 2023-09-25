@@ -24,25 +24,31 @@ import static edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils.INT_MAX_VALUE;
 import static edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirDesc.*;
 
 /**
+ * SimplePIR server.
+ *
  * @author Liqiang Peng
  * @date 2023/9/18
  */
 public class SimpleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
-
     /**
      * Simple PIR params
      */
     private SimpleSingleIndexCpPirParams params;
     /**
-     * random seed
+     * random seed to compress the random matrix A, see Section 4.1, modification 3:
+     * <p>
+     * We compress A using pseudorandomness. Specifically, the server and the clients can derive A as the output of a
+     * public hash function, modelled as a random oracle, applied to a fixed string in counter mode. This saves on
+     * bandwidth and storage, as the server and the clients communicate and store only a small seed to generate A.
+     * </p>
      */
     private byte[] seed;
     /**
-     * database
+     * database matrix
      */
-    private Zl64Matrix[] db;
+    private Zl64Matrix[] databaseMatrix;
     /**
-     * cols
+     * number of columns
      */
     private int cols;
     /**
@@ -60,15 +66,24 @@ public class SimpleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        params = SimpleSingleIndexCpPirParams.DEFAULT_PARAMS;
-        Zl64Matrix[] hint = serverSetup(database);
+        // server generates and sends the seed for the random matrix A.
+        seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(seed);
         DataPacketHeader seedPayloadHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_SEED.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(seedPayloadHeader, Collections.singletonList(seed)));
+        stopWatch.stop();
+        long seedTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 2, seedTime, "Server generates seed");
+
+        stopWatch.start();
+        // server partition the database, generates and sends hints
+        Zl64Matrix[] hints = serverSetup(database);
         List<byte[]> hintPayload = IntStream.range(0, partitionSize)
-            .mapToObj(i -> LongUtils.longArrayToByteArray(hint[i].elements))
+            .mapToObj(i -> LongUtils.longArrayToByteArray(hints[i].elements))
             .collect(Collectors.toList());
         DataPacketHeader hintPayloadHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HINT.ordinal(), extraInfo,
@@ -76,11 +91,66 @@ public class SimpleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
         );
         rpc.send(DataPacket.fromByteArrayList(hintPayloadHeader, hintPayload));
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long hintTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 2, hintTime, "Server generates hints");
 
         logPhaseInfo(PtoState.INIT_END);
+    }
+
+    private Zl64Matrix[] serverSetup(ZlDatabase database) {
+        // compute max number of partitions
+        int maxPartitionNum = CommonUtils.getUnitNum(database.getL(), SimpleSingleIndexCpPirParams.LOG_P - 1);
+        int tempPartitionL = 0, rows = 0, d = 0;
+        for (int partitionNum = 1; partitionNum <= maxPartitionNum; partitionNum++) {
+            tempPartitionL = CommonUtils.getUnitNum(database.getL(), partitionNum);
+            int tempPartitionByteL = CommonUtils.getByteLength(tempPartitionL);
+            // each row would be divided into d rows in this partition
+            d = CommonUtils.getUnitNum(tempPartitionByteL * Byte.SIZE, SimpleSingleIndexCpPirParams.LOG_P - 1);
+            // now the database is expanded to d * N, and this may exceed Integer.MAX_VALUE
+            BigInteger expandN = BigInteger.valueOf(d).multiply(BigInteger.valueOf(database.rows()));
+            if (expandN.compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
+                // this means we get as large N as possible while satisfying N < Integer.MAX_VALUE
+                int[] dimensions = PirUtils.approxSquareDatabaseDims(database.rows(), d);
+                rows = dimensions[0];
+                cols = dimensions[1];
+                params = new SimpleSingleIndexCpPirParams(envType, PirUtils.getBitLength(cols));
+                break;
+            }
+            // since database.rows() must be less than Integer.MAX_VALUE, and we can make as many partitions as possible
+            // the loop must break at some point.
+        }
+        int partitionL = Math.min(tempPartitionL, database.getL());
+        NaiveDatabase naiveDatabase = NaiveDatabase.create(database.getL(), database.getBytesData());
+        ZlDatabase[] databases = naiveDatabase.partitionZl(partitionL);
+        partitionSize = databases.length;
+        // public matrix A
+        Zl64Matrix matrixA = Zl64Matrix.createRandom(params.zl64, cols, SimpleSingleIndexCpPirParams.N, seed);
+        // init the partitioned database matrix
+        databaseMatrix = new Zl64Matrix[partitionSize];
+        for (int i = 0; i < partitionSize; i++) {
+            databaseMatrix[i] = Zl64Matrix.createZeros(params.zl64, rows, cols);
+            databaseMatrix[i].setParallel(parallel);
+        }
+        // init hints
+        Zl64Matrix[] hint = new Zl64Matrix[partitionSize];
+        int rowElementsNum = rows / d;
+        for (int i = 0; i < partitionSize; i++) {
+            for (int j = 0; j < cols; j++) {
+                for (int l = 0; l < rowElementsNum; l++) {
+                    if (j * rowElementsNum + l < n) {
+                        byte[] element = databases[i].getBytesData(j * rowElementsNum + l);
+                        long[] coeffs = PirUtils.convertBytesToCoeffs(SimpleSingleIndexCpPirParams.LOG_P - 1, 0, element.length, element);
+                        // values mod the plaintext modulus p
+                        for (int k = 0; k < d; k++) {
+                            databaseMatrix[i].set(l * d + k, j, coeffs[k]);
+                        }
+                    }
+                }
+            }
+            hint[i] = databaseMatrix[i].matrixMul(matrixA);
+        }
+        return hint;
     }
 
     @Override
@@ -112,61 +182,6 @@ public class SimpleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
     }
 
     /**
-     * server setup.
-     * @param database database.
-     * @return hint.
-     */
-    private Zl64Matrix[] serverSetup(ZlDatabase database) {
-        int maxPartitionBitLength = 0, rows = 0, d = 0;
-        int upperBound = CommonUtils.getUnitNum(database.getL(), params.logP - 1);
-        for (int count = 1; count < upperBound + 1; count++) {
-            maxPartitionBitLength = CommonUtils.getUnitNum(database.getL(), count);
-            int maxPartitionByteLength = CommonUtils.getByteLength(maxPartitionBitLength);
-            d = CommonUtils.getUnitNum(maxPartitionByteLength * Byte.SIZE, params.logP - 1);
-            if ((BigInteger.valueOf(d).multiply(BigInteger.valueOf(database.rows())))
-                .compareTo(INT_MAX_VALUE.shiftRight(1)) < 0) {
-                int[] dims = PirUtils.approxSquareDatabaseDims(database.rows(), d);
-                rows = dims[0];
-                cols = dims[1];
-                params.setPlainModulo(PirUtils.getBitLength(cols));
-                break;
-            }
-        }
-        int partitionBitLength = Math.min(maxPartitionBitLength, database.getL());
-        NaiveDatabase naiveDatabase = NaiveDatabase.create(database.getL(), database.getBytesData());
-        ZlDatabase[] databases = naiveDatabase.partitionZl(partitionBitLength);
-        partitionSize = databases.length;
-        // public matrix A
-        seed = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(seed);
-        Zl64Matrix a = Zl64Matrix.createRandom(params.zl64, cols, params.n, seed);
-        // generate the client's hint, which is the database multiplied by A. Also known as the setup.
-        db = new Zl64Matrix[partitionSize];
-        for (int i = 0; i < partitionSize; i++) {
-            db[i] = Zl64Matrix.createZeros(params.zl64, rows, cols);
-            db[i].setParallel(parallel);
-        }
-        Zl64Matrix[] hint = new Zl64Matrix[partitionSize];
-        int rowElementsNum = rows / d;
-        for (int i = 0; i < partitionSize; i++) {
-            for (int j = 0; j < cols; j++) {
-                for (int l = 0; l < rowElementsNum; l++) {
-                    if (j * rowElementsNum + l < n) {
-                        byte[] element = databases[i].getBytesData(j * rowElementsNum + l);
-                        long[] coeffs = PirUtils.convertBytesToCoeffs(params.logP - 1, 0, element.length, element);
-                        // values mod the plaintext modulus p
-                        for (int k = 0; k < d; k++) {
-                            db[i].set(l * d + k, j, coeffs[k]);
-                        }
-                    }
-                }
-            }
-            hint[i] = db[i].matrixMul(a);
-        }
-        return hint;
-    }
-
-    /**
      * server generates response.
      *
      * @param clientQuery client query.
@@ -178,7 +193,7 @@ public class SimpleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
         MpcAbortPreconditions.checkArgument(queryElements.length == cols);
         Zl64Vector query = Zl64Vector.create(params.zl64, queryElements);
         return IntStream.range(0, partitionSize)
-            .mapToObj(i -> LongUtils.longArrayToByteArray(db[i].matrixMulVector(query).getElements()))
+            .mapToObj(i -> LongUtils.longArrayToByteArray(databaseMatrix[i].matrixMulVector(query).getElements()))
             .collect(Collectors.toList());
     }
 }
