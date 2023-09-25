@@ -206,7 +206,6 @@ public class SpamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
         rpc.send(DataPacket.fromByteArrayList(queryResponseHeader, queryResponsePayload));
         // increase current query num
         currentQueryNum++;
-        extraInfo++;
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

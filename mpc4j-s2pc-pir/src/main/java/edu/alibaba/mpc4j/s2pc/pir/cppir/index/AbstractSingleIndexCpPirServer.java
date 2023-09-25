@@ -40,6 +40,6 @@ public abstract class AbstractSingleIndexCpPirServer extends AbstractTwoPartyPto
 
     protected void setPtoInput() {
         checkInitialized();
-        // extra info is managed by the protocol itself
+        extraInfo++;
     }
 }

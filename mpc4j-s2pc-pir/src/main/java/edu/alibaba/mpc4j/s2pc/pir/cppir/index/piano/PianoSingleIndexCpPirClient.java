@@ -196,7 +196,7 @@ public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient 
     public byte[] pir(int x) throws MpcAbortException {
         setPtoInput(x);
         if (missingEntries.containsKey(x)) {
-            return requestMissingQuery(x);
+            return requestMissQuery(x);
         } else if (localCacheEntries.containsKey(x)) {
             return requestCacheQuery(x);
         } else {
@@ -204,19 +204,7 @@ public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient 
         }
     }
 
-    private byte[] requestMissingQuery(int x) throws MpcAbortException {
-        requestEmptyQuery();
-        return missingEntries.get(x);
-    }
-
-    private byte[] requestCacheQuery(int x) throws MpcAbortException {
-        requestEmptyQuery();
-        return localCacheEntries.get(x);
-    }
-
-    private void requestEmptyQuery() throws MpcAbortException {
-        logPhaseInfo(PtoState.PTO_BEGIN);
-
+    private byte[] requestMissQuery(int x) throws MpcAbortException {
         stopWatch.start();
         DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
@@ -226,7 +214,7 @@ public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient 
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests local query");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests miss query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -239,9 +227,57 @@ public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient 
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles local response");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles miss response");
 
         logPhaseInfo(PtoState.PTO_END);
+        return missingEntries.get(x);
+    }
+
+    private byte[] requestCacheQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        // when client asks a query with x in cache, we make a dummy query, otherwise we would also leak information.
+        ByteBuffer queryByteBuffer = ByteBuffer.allocate(Short.BYTES * (chunkNum - 1));
+        for (int i = 0; i < chunkNum - 1; i++) {
+            queryByteBuffer.putShort((short) secureRandom.nextInt(chunkSize));
+        }
+        List<byte[]> queryRequestPayload = Collections.singletonList(queryByteBuffer.array());
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, queryRequestPayload));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests dummy query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
+        byte[] responseByteArray = queryResponsePayload.get(0);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * chunkNum);
+        // ignore the result
+        // we need to obtain value here, because local cache may be cleaned in preprocessing().
+        byte[] value = localCacheEntries.get(x);
+        currentQueryNum++;
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles dummy response");
+
+        // when query num exceeds the maximum, rerun preprocessing.
+        if (currentQueryNum >= roundQueryNum) {
+            preprocessing();
+        }
+
+        return value;
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
@@ -318,7 +354,6 @@ public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient 
         // add x to the local cache
         localCacheEntries.put(x, value);
         currentQueryNum++;
-        extraInfo++;
         stopWatch.stop();
         long refreshTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

@@ -206,16 +206,6 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     }
 
     private byte[] requestMissQuery(int x) throws MpcAbortException {
-        requestEmptyQuery();
-        return missingEntries.get(x);
-    }
-
-    private byte[] requestLocalQuery(int x) throws MpcAbortException {
-        requestEmptyQuery();
-        return localCacheEntries.get(x);
-    }
-
-    private void requestEmptyQuery() throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -227,7 +217,7 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests empty query");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests miss query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -240,9 +230,75 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles empty response");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles miss response");
 
         logPhaseInfo(PtoState.PTO_END);
+        return missingEntries.get(x);
+    }
+
+    private byte[] requestLocalQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        // when client asks a query with x in cache, we make a dummy query, otherwise we would also leak information.
+        SpamDirectPrimaryHint dummyPrimaryHint = new SpamDirectPrimaryHint(chunkSize, chunkNum, l, secureRandom);
+        // we need to sample a dummy target ChunkID that are in the dummy primary hint
+        int targetChunkId = -1;
+        boolean success = false;
+        while (!success) {
+            targetChunkId = secureRandom.nextInt(chunkNum);
+            success = dummyPrimaryHint.containsChunkId(targetChunkId);
+        }
+        BitVector bitVector = BitVectorFactory.createZeros(chunkNum);
+        for (int chunkId = 0; chunkId < chunkNum; chunkId++) {
+            if (chunkId != targetChunkId) {
+                bitVector.set(chunkId, dummyPrimaryHint.containsChunkId(chunkId));
+            }
+        }
+        byte[] bitVectorByteArray = bitVector.getBytes();
+        int[] offsets = dummyPrimaryHint.expandOffset();
+        // send the dummy punctured set to the server
+        ByteBuffer offsetByteBuffer = ByteBuffer.allocate(Short.BYTES * chunkNum);
+        for (int i = 0; i < chunkNum; i++) {
+            offsetByteBuffer.putShort((short) offsets[i]);
+        }
+        List<byte[]> queryRequestPayload = new LinkedList<>();
+        queryRequestPayload.add(bitVectorByteArray);
+        queryRequestPayload.add(offsetByteBuffer.array());
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, queryRequestPayload));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests dummy query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
+        byte[] responseByteArray = queryResponsePayload.get(0);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * 2);
+        // ignore the result
+        // we need to obtain value here, because local cache may be cleaned in preprocessing().
+        byte[] value = localCacheEntries.get(x);
+        currentQueryNum++;
+        // when query num exceeds the maximum, rerun preprocessing.
+        if (currentQueryNum >= roundQueryNum) {
+            preprocessing();
+        }
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles dummy response");
+
+        return value;
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
@@ -293,7 +349,7 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests query");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, queryTime, "Client requests actual query");
 
         DataPacketHeader queryResponseHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
@@ -314,7 +370,7 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles response");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, responseTime, "Client handles actual response");
 
         stopWatch.start();
         // pick one backup hint
@@ -325,7 +381,6 @@ public class SpamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
         // add x to the local cache
         localCacheEntries.put(x, value);
         currentQueryNum++;
-        extraInfo++;
         stopWatch.stop();
         long refreshTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

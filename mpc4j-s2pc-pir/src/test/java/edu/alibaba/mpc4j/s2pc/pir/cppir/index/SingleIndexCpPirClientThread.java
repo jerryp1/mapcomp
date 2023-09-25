@@ -50,7 +50,7 @@ class SingleIndexCpPirClientThread extends Thread {
         retrievalResult = new TIntObjectHashMap<>(queryNum);
     }
 
-    public TIntObjectMap<byte[]> getRetrievalResult() {
+    TIntObjectMap<byte[]> getRetrievalResult() {
         return retrievalResult;
     }
 
