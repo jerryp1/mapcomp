@@ -1,33 +1,28 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleIndexCpPirType;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirConfig;
-import gnu.trove.map.TIntObjectMap;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirFactory.SingleKeywordCpPirType;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23.Llp23SingleKeywordCpPirConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.IntStream;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
- * Single Index Client-specific Preprocessing PIR test.
+ * Single Keyword Client-specific Preprocessing PIR test.
  *
- * @author Weiran Liu
- * @date 2023/8/25
+ * @author Liqiang Peng
+ * @date 2023/9/14
  */
 @RunWith(Parameterized.class)
-public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
+public class SingleKeywordCpPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
@@ -45,32 +40,31 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // XOSPAM
+        // PIANO
         configurations.add(new Object[]{
-            SingleIndexCpPirType.LLP23_XOSPAM.name(), new XospamSingleIndexCpPirConfig.Builder().build()
+            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " PIANO",
+            new Alpr21SingleKeywordCpPirConfig.Builder().build()
         });
         // SPAM
         configurations.add(new Object[]{
-            SingleIndexCpPirType.MIR23_SPAM.name(), new SpamSingleIndexCpPirConfig.Builder().build()
+            SingleKeywordCpPirType.ALPR21_SIMPLE_PIR.name() + " SPAM + DIGEST BYTE LENGTH 16",
+            new Alpr21SingleKeywordCpPirConfig.Builder()
+                .setSingleIndexCpPirConfig(new SpamSingleIndexCpPirConfig.Builder().build())
+                .build()
         });
-        // PIANO
+        // STREAM
         configurations.add(new Object[]{
-            SingleIndexCpPirType.ZPSZ23_PIANO.name(), new PianoSingleIndexCpPirConfig.Builder().build()
+            SingleKeywordCpPirType.LLP23_STREAM_PIR.name(), new Llp23SingleKeywordCpPirConfig.Builder().build()
         });
-        // SIMPLE
-        configurations.add(new Object[]{
-            SingleIndexCpPirType.HHCM23_SIMPLE.name(), new SimpleSingleIndexCpPirConfig.Builder().build()
-        });
-
         return configurations;
     }
 
     /**
      * config
      */
-    private final SingleIndexCpPirConfig config;
+    private final SingleKeywordCpPirConfig config;
 
-    public SingleIndexCpPirTest(String name, SingleIndexCpPirConfig config) {
+    public SingleKeywordCpPirTest(String name, SingleKeywordCpPirConfig config) {
         super(name);
         this.config = config;
     }
@@ -127,32 +121,36 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testParallelLarge() {
-        testPto(1 << 20, DEFAULT_L, 1 << 10, true);
+        testPto(1 << 20, DEFAULT_L, 1 << 6, true);
     }
 
     public void testPto(int n, int l, int queryNum, boolean parallel) {
         int byteL = CommonUtils.getByteLength(l);
-        byte[][] dataByteArrays = IntStream.range(0, n)
-            .parallel()
-            .mapToObj(x -> Arrays.copyOf(IntUtils.intToByteArray(x), byteL))
-            .toArray(byte[][]::new);
-        ZlDatabase database = ZlDatabase.create(l, dataByteArrays);
-        SingleIndexCpPirServer server = SingleIndexCpPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
-        SingleIndexCpPirClient client = SingleIndexCpPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
+        List<Set<ByteBuffer>> randomSets = PirUtils.generateByteBufferSets(n, queryNum, 1);
+        Map<ByteBuffer, ByteBuffer> keywordLabelMap = PirUtils.generateKeywordByteBufferLabelMap(
+            randomSets.get(0), byteL
+        );
+        SingleKeywordCpPirServer server = SingleKeywordCpPirFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        SingleKeywordCpPirClient client = SingleKeywordCpPirFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
-        SingleIndexCpPirServerThread serverThread = new SingleIndexCpPirServerThread(server, database, queryNum);
-        SingleIndexCpPirClientThread clientThread = new SingleIndexCpPirClientThread(client, n, l, queryNum);
+        SingleKeywordCpPirServerThread serverThread = new SingleKeywordCpPirServerThread(
+            server, keywordLabelMap, l, queryNum
+        );
+        SingleKeywordCpPirClientThread clientThread = new SingleKeywordCpPirClientThread(
+            client, n, l, new ArrayList<>(randomSets.get(1))
+        );
         try {
             serverThread.start();
             clientThread.start();
             serverThread.join();
             clientThread.join();
             // verify result
-            TIntObjectMap<byte[]> retrievalResult = clientThread.getRetrievalResult();
-            for (int x : retrievalResult.keys()) {
-                Assert.assertArrayEquals(retrievalResult.get(x), database.getBytesData(x));
-            }
+            Set<ByteBuffer> intersectionSet = new HashSet<>(randomSets.get(1));
+            intersectionSet.retainAll(randomSets.get(0));
+            Map<ByteBuffer, ByteBuffer> retrievalResult = clientThread.getRetrievalResult();
+            Assert.assertEquals(intersectionSet.size(), retrievalResult.size());
+            retrievalResult.forEach((key, value) -> Assert.assertEquals(value, keywordLabelMap.get(key)));
             // destroy
             new Thread(server::destroy).start();
             new Thread(client::destroy).start();

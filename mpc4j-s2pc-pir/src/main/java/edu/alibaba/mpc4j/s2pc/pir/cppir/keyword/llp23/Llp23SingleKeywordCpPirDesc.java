@@ -1,41 +1,36 @@
-package edu.alibaba.mpc4j.s2pc.pir.keyword.alpr21;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * The protocol introduces a keyword PIR construction based on an index PIR protocol, it comes from the following paper:
- * <p>
- * A. Ali and T. Lepoint and S. Patel and M. Raykova and P. Schoppmann and K. Seth and K. Yeo
- * Communication-Computation Trade-offs in PIR.
- * In 2021 USENIX Security Symposium. 2021, 1811-1828.
- * </p>
+ * LLP23 client-specific preprocessing PIR protocol description.
  *
  * @author Liqiang Peng
- * @date 2023/7/4
+ * @date 2023/9/20
  */
-public class Alpr21KwPirPtoDesc implements PtoDesc {
+public class Llp23SingleKeywordCpPirDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 4681208408191309489L);
+    private static final int PTO_ID = Math.abs((int) 6665219932164077804L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "ALPR21_KEYWORD_PIR";
+    private static final String PTO_NAME = "LLP23_STREAM_PIR";
 
     /**
      * protocol step
      */
     enum PtoStep {
         /**
-         * server send cuckoo hash keys
+         * server send blind
          */
-        SERVER_SEND_CUCKOO_HASH_KEYS,
+        SERVER_SEND_BLIND,
         /**
-         * server send prf key
+         * client send blind prf
          */
-        SERVER_SEND_PRF_KEY,
+        CLIENT_SEND_BLIND_PRF,
         /**
          * client send query
          */
@@ -49,12 +44,12 @@ public class Alpr21KwPirPtoDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Alpr21KwPirPtoDesc INSTANCE = new Alpr21KwPirPtoDesc();
+    private static final Llp23SingleKeywordCpPirDesc INSTANCE = new Llp23SingleKeywordCpPirDesc();
 
     /**
      * private constructor.
      */
-    private Alpr21KwPirPtoDesc() {
+    private Llp23SingleKeywordCpPirDesc() {
         // empty
     }
 
