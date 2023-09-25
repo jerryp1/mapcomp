@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -7,19 +7,19 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.AbstractSingleIndexCpPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * XOSPAM client-specific preprocessing PIR server.
+ * Shuffle client-specific preprocessing PIR server.
  *
  * @author Weiran Liu
  * @date 2023/9/24
  */
-public class XospamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
+public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer {
     /**
      * row num
      */
@@ -37,8 +37,8 @@ public class XospamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
      */
     private Map<ByteBuffer, byte[]> finalDatabase;
 
-    public XospamSingleIndexCpPirServer(Rpc serverRpc, Party clientParty, XospamSingleIndexCpPirConfig config) {
-        super(XospamSingleIndexCpPirDesc.getInstance(), serverRpc, clientParty, config);
+    public ShuffleSingleIndexCpPirServer(Rpc serverRpc, Party clientParty, ShuffleSingleIndexCpPirConfig config) {
+        super(ShuffleSingleIndexCpPirDesc.getInstance(), serverRpc, clientParty, config);
     }
 
     @Override
@@ -47,8 +47,8 @@ public class XospamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        rowNum = XospamSingleIndexCpPirUtils.getRowNum(n);
-        columnNum = XospamSingleIndexCpPirUtils.getColumnNum(n);
+        rowNum = ShuffleSingleIndexCpPirUtils.getRowNum(n);
+        columnNum = ShuffleSingleIndexCpPirUtils.getColumnNum(n);
         assert rowNum * columnNum >= n
             : "rowNum * columnNum must be greater than or equal to n (" + n + "): " + rowNum * columnNum;
         // pad the database
@@ -225,7 +225,6 @@ public class XospamSingleIndexCpPirServer extends AbstractSingleIndexCpPirServer
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(queryResponseHeader, queryResponsePayload));
-        extraInfo++;
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

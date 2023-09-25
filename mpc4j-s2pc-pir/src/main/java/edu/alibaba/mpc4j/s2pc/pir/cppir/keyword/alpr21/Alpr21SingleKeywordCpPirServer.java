@@ -11,22 +11,32 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
+import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBin;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfFactory;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfKey;
+import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfSender;
 import edu.alibaba.mpc4j.s2pc.pir.PirUtils;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirServerOutput;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirServer;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.AbstractSingleKeywordCpPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirDesc.PtoStep;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.*;
-import static edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirDesc.*;
 
 /**
  * ALPR21 client-specific preprocessing PIR server.
@@ -34,65 +44,100 @@ import static edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywor
  * @author Liqiang Peng
  * @date 2023/9/14
  */
-public class Alpr21SingleKeywordCpPirServer extends AbstractSingleKeywordCpPirServer {
+public class Alpr21SingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpPirServer<T> {
     /**
      * single index client-specific preprocessing PIR server
      */
     private final SingleIndexCpPirServer singleIndexCpPirServer;
     /**
+     * sq-OPRF sender
+     */
+    private final SqOprfSender sqOprfSender;
+    /**
      * cuckoo hash bin type
      */
     private final CuckooHashBinType cuckooHashBinType;
     /**
-     * hash keys
+     * h: {0, 1}^* → {0, 1}^l
      */
-    private byte[][] hashKeys;
+    private final Hash hash;
     /**
-     * digest byte length
+     * hash byte length (for keyword)
      */
-    private final int digestByteLength;
+    private final int hashByteLength;
     /**
      * hash num
      */
     private final int hashNum;
     /**
-     * keyword list
+     * PRG used for encrypt concat value
      */
-    private List<ByteBuffer> keywordList;
+    private Prg prg;
+    /**
+     * OPRF key
+     */
+    private SqOprfKey sqOprfKey;
+    /**
+     * hash for ⊥
+     */
+    private ByteBuffer botHash;
+    /**
+     * hash keys
+     */
+    private byte[][] hashKeys;
 
     public Alpr21SingleKeywordCpPirServer(Rpc serverRpc, Party clientParty, Alpr21SingleKeywordCpPirConfig config) {
-        super(getInstance(), serverRpc, clientParty, config);
+        super(Alpr21SingleKeywordCpPirDesc.getInstance(), serverRpc, clientParty, config);
         singleIndexCpPirServer = SingleIndexCpPirFactory.createServer(serverRpc, clientParty, config.getIndexCpPirConfig());
         addSubPtos(singleIndexCpPirServer);
+        sqOprfSender = SqOprfFactory.createSender(serverRpc, clientParty, config.getSqOprfConfig());
+        addSubPtos(sqOprfSender);
         cuckooHashBinType = config.getCuckooHashBinType();
-        hashNum = getHashNum(cuckooHashBinType);
-        digestByteLength = config.getDigestByteLength();
+        hashNum = CuckooHashBinFactory.getHashNum(cuckooHashBinType);
+        hashByteLength = config.hashByteLength();
+        hash = HashFactory.createInstance(envType, hashByteLength);
+
     }
 
     @Override
-    public void init(Map<ByteBuffer, ByteBuffer> keyValueMap, int labelBitLength) throws MpcAbortException {
+    public void init(Map<T, byte[]> keyValueMap, int labelBitLength) throws MpcAbortException {
         setInitInput(keyValueMap, labelBitLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
-        MathPreconditions.checkGreaterOrEqual("statistical security",
-            digestByteLength * Byte.SIZE, PirUtils.getBitLength(n) + CommonConstants.STATS_BIT_LENGTH);
 
-        // compute keyword prf
         stopWatch.start();
-        keywordList = new ArrayList<>(keyValueMap.keySet());
-        List<ByteBuffer> keywordPrf = computeKeywordPrf();
-        Map<ByteBuffer, ByteBuffer> prfLabelMap = IntStream.range(0, n)
-            .boxed()
-            .collect(
-                Collectors.toMap(keywordPrf::get, i -> keyValueMap.get(keywordList.get(i)), (a, b) -> b)
+        MathPreconditions.checkGreaterOrEqual("keyword_hash_byte_length",
+            hashByteLength * Byte.SIZE, PirUtils.getBitLength(n) + CommonConstants.STATS_BIT_LENGTH
+        );
+        prg = PrgFactory.createInstance(envType, hashByteLength + byteL);
+        sqOprfKey = sqOprfSender.keyGen();
+        sqOprfSender.init(1, sqOprfKey);
+        stopWatch.stop();
+        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.INIT_STEP, 1, 3, sqOprfTime, "Server inits sq-OPRF");
+
+        stopWatch.start();
+        // compute hash-value map
+        botHash = ByteBuffer.wrap(hash.digestToBytes(botByteBuffer.array()));
+        Stream<Map.Entry<T, byte[]>> keywordStream = keyValueMap.entrySet().stream();
+        keywordStream = parallel ? keywordStream.parallel() : keywordStream;
+        Map<ByteBuffer, byte[]> hashValueMap = keywordStream
+            .collect(Collectors.toMap(
+                entry -> {
+                    ByteBuffer keywordHash = ByteBuffer.wrap(hash.digestToBytes(ObjectUtils.objectToByteArray(entry.getKey())));
+                    assert !keywordHash.equals(botHash);
+                    return keywordHash;
+                },
+                Entry::getValue)
             );
         stopWatch.stop();
-        long prfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 2, prfTime);
+        logStepInfo(PtoState.INIT_STEP, 2, 3, hashTime, "Server inits cuckoo hash");
 
-        // init index pir
         stopWatch.start();
-        ZlDatabase database = generateCuckooHashBin(keywordPrf, prfLabelMap);
+        // init index pir
+        ZlDatabase database = generateCuckooHashBin(hashValueMap);
         DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -101,15 +146,42 @@ public class Alpr21SingleKeywordCpPirServer extends AbstractSingleKeywordCpPirSe
         rpc.send(DataPacket.fromByteArrayList(cuckooHashKeyHeader, cuckooHashKeyPayload));
         singleIndexCpPirServer.init(database);
         stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long initPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 2, initTime);
+        logStepInfo(PtoState.INIT_STEP, 3, 3, initPirTime, "Server inits PIR");
 
         logPhaseInfo(PtoState.INIT_END);
     }
 
+    private ZlDatabase generateCuckooHashBin(Map<ByteBuffer, byte[]> hashValueMap) {
+        CuckooHashBin<ByteBuffer> cuckooHashBin = CuckooHashBinFactory.createEnforceNoStashCuckooHashBin(
+            envType, cuckooHashBinType, n, hashValueMap.keySet(), secureRandom
+        );
+        hashKeys = cuckooHashBin.getHashKeys();
+        cuckooHashBin.insertPaddingItems(botHash);
+        int binNum = cuckooHashBin.binNum();
+        byte[][] cuckooHashBinItems = new byte[binNum][];
+        IntStream binIndexStream = IntStream.range(0, binNum);
+        binIndexStream = parallel ? binIndexStream.parallel() : binIndexStream;
+        binIndexStream.forEach(binIndex -> {
+            HashBinEntry<ByteBuffer> hashBinEntry = cuckooHashBin.getHashBinEntry(binIndex);
+            ByteBuffer keywordHash = hashBinEntry.getItem();
+            byte[] value = new byte[byteL];
+            if (hashBinEntry.getHashIndex() != HashBinEntry.DUMMY_ITEM_HASH_INDEX) {
+                value = hashValueMap.get(hashBinEntry.getItem());
+            } else {
+                secureRandom.nextBytes(value);
+            }
+            byte[] concatHashValue = Bytes.concat(keywordHash.array(), value);
+            byte[] oprfKey = sqOprfKey.getPrf(keywordHash.array());
+            BytesUtils.xori(concatHashValue, prg.extendToBytes(oprfKey));
+            cuckooHashBinItems[binIndex] = concatHashValue;
+        });
+        return ZlDatabase.create((hashByteLength + byteL) * Byte.SIZE, cuckooHashBinItems);
+    }
+
     @Override
-    public void pir() throws MpcAbortException {
+    public SingleKeywordCpPirServerOutput pir() throws MpcAbortException {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -118,56 +190,18 @@ public class Alpr21SingleKeywordCpPirServer extends AbstractSingleKeywordCpPirSe
             singleIndexCpPirServer.pir();
         }
         stopWatch.stop();
-        long replyTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long pirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, replyTime, "Server generates reply");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, pirTime, "Server runs PIR");
+
+        stopWatch.start();
+        sqOprfSender.oprf(1);
+        stopWatch.stop();
+        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, sqOprfTime, "Server runs sq-OPRF");
 
         logPhaseInfo(PtoState.PTO_END);
-    }
-
-    /**
-     * compute keyword prf.
-     *
-     * @return keyword prf.
-     */
-    private List<ByteBuffer> computeKeywordPrf() {
-        Hash hash = HashFactory.createInstance(envType, digestByteLength);
-        Stream<ByteBuffer> keywordStream = keywordList.stream();
-        keywordStream = parallel ? keywordStream.parallel() : keywordStream;
-        return keywordStream
-            .map(byteBuffer -> hash.digestToBytes(byteBuffer.array()))
-            .map(ByteBuffer::wrap)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * generate cuckoo hash bin.
-     *
-     * @param keywordPrf  keyword prf list.
-     * @param prfLabelMap keyword prf label map.
-     * @return database.
-     */
-    private ZlDatabase generateCuckooHashBin(List<ByteBuffer> keywordPrf, Map<ByteBuffer, ByteBuffer> prfLabelMap) {
-        CuckooHashBin<ByteBuffer> cuckooHashBin = createEnforceNoStashCuckooHashBin(
-            envType, cuckooHashBinType, n, keywordPrf, secureRandom
-        );
-        hashKeys = cuckooHashBin.getHashKeys();
-        byte[] botElementByteArray = new byte[digestByteLength];
-        Arrays.fill(botElementByteArray, (byte) 0xFF);
-        ByteBuffer botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        cuckooHashBin.insertPaddingItems(botElementByteBuffer);
-        int binNum = cuckooHashBin.binNum();
-        byte[][] cuckooHashBinItems = new byte[binNum][];
-        for (int i = 0; i < binNum; i++) {
-            ByteBuffer item = cuckooHashBin.getHashBinEntry(i).getItem();
-            byte[] value = new byte[byteL];
-            if (prfLabelMap.get(item) != null) {
-                value = prfLabelMap.get(item).array();
-            } else {
-                secureRandom.nextBytes(value);
-            }
-            cuckooHashBinItems[i] = Bytes.concat(item.array(), value);
-        }
-        return ZlDatabase.create((digestByteLength + byteL) * Byte.SIZE, cuckooHashBinItems);
+        return SingleKeywordCpPirServerOutput.UNKNOWN;
     }
 }

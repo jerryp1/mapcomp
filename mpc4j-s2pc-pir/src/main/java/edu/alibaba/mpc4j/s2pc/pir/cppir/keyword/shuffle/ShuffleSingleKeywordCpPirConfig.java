@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -6,14 +6,14 @@ import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirFactory;
 
 /**
- * LLP23 client-specific preprocessing PIR config.
+ * Shuffle client-specific preprocessing PIR config.
  *
  * @author Liqiang Peng
  * @date 2023/9/20
  */
-public class Llp23SingleKeywordCpPirConfig extends AbstractMultiPartyPtoConfig implements SingleKeywordCpPirConfig {
+public class ShuffleSingleKeywordCpPirConfig extends AbstractMultiPartyPtoConfig implements SingleKeywordCpPirConfig {
 
-    public Llp23SingleKeywordCpPirConfig() {
+    public ShuffleSingleKeywordCpPirConfig() {
         super(SecurityModel.MALICIOUS);
     }
 
@@ -22,15 +22,15 @@ public class Llp23SingleKeywordCpPirConfig extends AbstractMultiPartyPtoConfig i
         return SingleKeywordCpPirFactory.SingleKeywordCpPirType.LLP23_STREAM_PIR;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Llp23SingleKeywordCpPirConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<ShuffleSingleKeywordCpPirConfig> {
 
         public Builder() {
             // empty
         }
 
         @Override
-        public Llp23SingleKeywordCpPirConfig build() {
-            return new Llp23SingleKeywordCpPirConfig();
+        public ShuffleSingleKeywordCpPirConfig build() {
+            return new ShuffleSingleKeywordCpPirConfig();
         }
     }
 }

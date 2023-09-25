@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleInde
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirConfig;
 import gnu.trove.map.TIntObjectMap;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
 
         // XOSPAM
         configurations.add(new Object[]{
-            SingleIndexCpPirType.LLP23_XOSPAM.name(), new XospamSingleIndexCpPirConfig.Builder().build()
+            SingleIndexCpPirType.LLP23_SHUFFLE.name(), new ShuffleSingleIndexCpPirConfig.Builder().build()
         });
         // SPAM
         configurations.add(new Object[]{

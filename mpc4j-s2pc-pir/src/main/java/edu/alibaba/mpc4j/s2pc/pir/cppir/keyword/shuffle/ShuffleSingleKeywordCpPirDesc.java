@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * LLP23 client-specific preprocessing PIR protocol description.
+ * Shuffle client-specific preprocessing PIR protocol description.
  *
  * @author Liqiang Peng
  * @date 2023/9/20
  */
-public class Llp23SingleKeywordCpPirDesc implements PtoDesc {
+public class ShuffleSingleKeywordCpPirDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -17,7 +17,7 @@ public class Llp23SingleKeywordCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "LLP23_STREAM_PIR";
+    private static final String PTO_NAME = "LLP23_SHUFFLE";
 
     /**
      * protocol step
@@ -44,12 +44,12 @@ public class Llp23SingleKeywordCpPirDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final Llp23SingleKeywordCpPirDesc INSTANCE = new Llp23SingleKeywordCpPirDesc();
+    private static final ShuffleSingleKeywordCpPirDesc INSTANCE = new ShuffleSingleKeywordCpPirDesc();
 
     /**
      * private constructor.
      */
-    private Llp23SingleKeywordCpPirDesc() {
+    private ShuffleSingleKeywordCpPirDesc() {
         // empty
     }
 

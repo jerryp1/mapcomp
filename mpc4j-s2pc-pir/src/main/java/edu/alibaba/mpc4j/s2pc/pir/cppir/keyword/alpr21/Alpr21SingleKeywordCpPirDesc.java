@@ -4,8 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * ALPR21 client-specific preprocessing PIR protocol description. This protocol
- * introduces a keyword PIR construction based on an index PIR protocol, it comes from the following paper:
+ * ALPR21 client-specific preprocessing PIR protocol description. This protocol introduces a keyword PIR construction
+ * based on an index PIR protocol, it comes from the following paper:
  * <p>
  * A. Ali and T. Lepoint and S. Patel and M. Raykova and P. Schoppmann and K. Seth and K. Yeo
  * Communication-Computation Trade-offs in PIR. In 2021 USENIX Security Symposium. 2021, 1811-1828.
@@ -14,7 +14,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Liqiang Peng
  * @date 2023/9/14
  */
-public class Alpr21SingleKeywordCpPirDesc implements PtoDesc {
+class Alpr21SingleKeywordCpPirDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -22,7 +22,7 @@ public class Alpr21SingleKeywordCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "ALPR21_KEYWORD_PIR";
+    private static final String PTO_NAME = "ALPR21_TRANFORM";
 
     /**
      * protocol step

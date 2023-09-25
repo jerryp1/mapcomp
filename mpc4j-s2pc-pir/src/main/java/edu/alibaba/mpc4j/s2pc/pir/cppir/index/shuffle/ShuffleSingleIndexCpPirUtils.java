@@ -1,18 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
- * XOSPAM client-specific preprocessing PIR utilities.
+ * Shuffle client-specific preprocessing PIR utilities.
  *
  * @author Weiran Liu
  * @date 2023/9/24
  */
-public class XospamSingleIndexCpPirUtils {
+public class ShuffleSingleIndexCpPirUtils {
     /**
      * private constructor.
      */
-    private XospamSingleIndexCpPirUtils() {
+    private ShuffleSingleIndexCpPirUtils() {
         // empty
     }
 

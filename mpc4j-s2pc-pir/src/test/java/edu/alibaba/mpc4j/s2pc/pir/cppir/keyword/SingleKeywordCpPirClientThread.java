@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,7 @@ class SingleKeywordCpPirClientThread extends Thread {
     /**
      * client
      */
-    private final SingleKeywordCpPirClient client;
+    private final SingleKeywordCpPirClient<String> client;
     /**
      * database size
      */
@@ -36,22 +35,22 @@ class SingleKeywordCpPirClientThread extends Thread {
     /**
      * retrieval result
      */
-    private final Map<ByteBuffer, ByteBuffer> retrievalResult;
+    private final Map<String, byte[]> retrievalResult;
     /**
      * retrieval list
      */
-    private final List<ByteBuffer> retrievalList;
+    private final List<String> queryList;
 
-    SingleKeywordCpPirClientThread(SingleKeywordCpPirClient client, int n, int l, List<ByteBuffer> retrievalList) {
+    SingleKeywordCpPirClientThread(SingleKeywordCpPirClient<String> client, int n, int l, List<String> queryList) {
         this.client = client;
         this.n = n;
         this.l = l;
-        this.retrievalList = retrievalList;
-        this.queryNum = retrievalList.size();
+        this.queryList = queryList;
+        this.queryNum = queryList.size();
         retrievalResult = new HashMap<>(queryNum);
     }
 
-    public Map<ByteBuffer, ByteBuffer> getRetrievalResult() {
+    public Map<String, byte[]> getRetrievalResult() {
         return retrievalResult;
     }
 
@@ -66,9 +65,9 @@ class SingleKeywordCpPirClientThread extends Thread {
             client.getRpc().reset();
 
             for (int i = 0; i < queryNum; i++) {
-                ByteBuffer value = client.pir(retrievalList.get(i));
+                byte[] value = client.pir(queryList.get(i));
                 if (!(value == null)) {
-                    retrievalResult.put(retrievalList.get(i), value);
+                    retrievalResult.put(queryList.get(i), value);
                 }
             }
             LOGGER.info(

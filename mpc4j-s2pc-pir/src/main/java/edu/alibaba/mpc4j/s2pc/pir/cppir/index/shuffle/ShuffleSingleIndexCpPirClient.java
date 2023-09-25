@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
@@ -9,9 +9,11 @@ import edu.alibaba.mpc4j.common.tool.crypto.prp.PrpFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipher;
 import edu.alibaba.mpc4j.common.tool.crypto.stream.StreamCipherFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.AbstractSingleIndexCpPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirDesc.PtoStep;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -19,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * XOSPAM client-specific preprocessing PIR client.
+ * Shuffle client-specific preprocessing PIR client.
  *
  * @author Weiran Liu
  * @date 2023/9/24
  */
-public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
+public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     /**
      * stream cipher
      */
@@ -58,8 +60,8 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
      */
     private TIntObjectMap<byte[]> localCacheEntries;
 
-    public XospamSingleIndexCpPirClient(Rpc clientRpc, Party serverParty, XospamSingleIndexCpPirConfig config) {
-        super(XospamSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
+    public ShuffleSingleIndexCpPirClient(Rpc clientRpc, Party serverParty, ShuffleSingleIndexCpPirConfig config) {
+        super(ShuffleSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
         streamCipher = StreamCipherFactory.createInstance(envType);
     }
 
@@ -69,8 +71,8 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        rowNum = XospamSingleIndexCpPirUtils.getRowNum(n);
-        columnNum = XospamSingleIndexCpPirUtils.getColumnNum(n);
+        rowNum = ShuffleSingleIndexCpPirUtils.getRowNum(n);
+        columnNum = ShuffleSingleIndexCpPirUtils.getColumnNum(n);
         assert rowNum * columnNum >= n
             : "RowNum * ColumnNum must be greater than or equal to n (" + n + "): " + rowNum * columnNum;
         stopWatch.stop();
@@ -231,7 +233,31 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
     }
 
     private byte[] requestLocalQuery(int x) throws MpcAbortException {
-        requestEmptyQuery();
+        // when client asks a query with x in cache, we make a dummy query, otherwise we would also leak information.
+        if (localCacheEntries.size() == n) {
+            // if all indexes have been queried, request an empty query and return value in local cache
+            requestEmptyQuery();
+        } else {
+            // query a random index that is not queried before
+            if (localCacheEntries.size() * 2 <= n) {
+                // when queried size is not that large, sample a random query
+                boolean success = false;
+                int dummyX = -1;
+                while (!success) {
+                    dummyX = secureRandom.nextInt(n);
+                    success = !localCacheEntries.containsKey(dummyX);
+                }
+                requestActualQuery(dummyX);
+            } else {
+                // when queries size reaches n / 2, it means we have O(n) storages, sample from the remaining set
+                TIntSet remainIndexSet = new TIntHashSet(n);
+                remainIndexSet.addAll(IntStream.range(0, n).toArray());
+                remainIndexSet.removeAll(localCacheEntries.keys());
+                int[] remainIndexArray = remainIndexSet.toArray();
+                assert remainIndexArray.length > 0;
+                requestActualQuery(remainIndexArray[0]);
+            }
+        }
         return localCacheEntries.get(x);
     }
 
@@ -302,7 +328,6 @@ public class XospamSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient
         byte[] value = streamCipher.ivDecrypt(vk1, ivMedValue);
         // add x to the local cache
         localCacheEntries.put(x, value);
-        extraInfo++;
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

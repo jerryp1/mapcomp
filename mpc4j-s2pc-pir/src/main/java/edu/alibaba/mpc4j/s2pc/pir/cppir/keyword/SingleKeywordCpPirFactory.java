@@ -6,9 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23.Llp23SingleKeywordCpPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23.Llp23SingleKeywordCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.llp23.Llp23SingleKeywordCpPirServer;
 
 /**
  * Single Keyword Client-specific Preprocessing PIR factory.
@@ -29,9 +26,9 @@ public class SingleKeywordCpPirFactory implements PtoFactory {
      */
     public enum SingleKeywordCpPirType {
         /**
-         * ALPR21 (SIMPLE_PIR)
+         * ALPR21
          */
-        ALPR21_SIMPLE_PIR,
+        ALPR21,
         /**
          * LLP23
          */
@@ -46,13 +43,12 @@ public class SingleKeywordCpPirFactory implements PtoFactory {
      * @param config      config.
      * @return a server.
      */
-    public static SingleKeywordCpPirServer createServer(Rpc serverRpc, Party clientParty, SingleKeywordCpPirConfig config) {
+    public static <T> SingleKeywordCpPirServer<T> createServer(Rpc serverRpc, Party clientParty, SingleKeywordCpPirConfig config) {
         SingleKeywordCpPirType type = config.getProType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case ALPR21_SIMPLE_PIR:
-                return new Alpr21SingleKeywordCpPirServer(serverRpc, clientParty, (Alpr21SingleKeywordCpPirConfig) config);
-            case LLP23_STREAM_PIR:
-                return new Llp23SingleKeywordCpPirServer(serverRpc, clientParty, (Llp23SingleKeywordCpPirConfig) config);
+            case ALPR21:
+                return new Alpr21SingleKeywordCpPirServer<>(serverRpc, clientParty, (Alpr21SingleKeywordCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleKeywordCpPirType.class.getSimpleName() + ": " + type.name()
@@ -68,13 +64,12 @@ public class SingleKeywordCpPirFactory implements PtoFactory {
      * @param config      config.
      * @return a client.
      */
-    public static SingleKeywordCpPirClient createClient(Rpc clientRpc, Party serverParty, SingleKeywordCpPirConfig config) {
+    public static <T> SingleKeywordCpPirClient<T> createClient(Rpc clientRpc, Party serverParty, SingleKeywordCpPirConfig config) {
         SingleKeywordCpPirType type = config.getProType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case ALPR21_SIMPLE_PIR:
-                return new Alpr21SingleKeywordCpPirClient(clientRpc, serverParty, (Alpr21SingleKeywordCpPirConfig) config);
-            case LLP23_STREAM_PIR:
-                return new Llp23SingleKeywordCpPirClient(clientRpc, serverParty, (Llp23SingleKeywordCpPirConfig) config);
+            case ALPR21:
+                return new Alpr21SingleKeywordCpPirClient<>(clientRpc, serverParty, (Alpr21SingleKeywordCpPirConfig) config);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + SingleKeywordCpPirType.class.getSimpleName() + ": " + type.name()

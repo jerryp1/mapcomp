@@ -12,9 +12,9 @@ import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirServe
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirClient;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirConfig;
-import edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam.XospamSingleIndexCpPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirClient;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirServer;
 
 /**
  * Single Index Client-specific Preprocessing PIR factory.
@@ -35,9 +35,9 @@ public class SingleIndexCpPirFactory implements PtoFactory {
      */
     public enum SingleIndexCpPirType {
         /**
-         * LLP23 (XOSPAM)
+         * LLP23 (Shuffle)
          */
-        LLP23_XOSPAM,
+        LLP23_SHUFFLE,
         /**
          * MIR23 (SPAM)
          */
@@ -47,7 +47,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
          */
         ZPSZ23_PIANO,
         /**
-         * HHCM23 (SimplePIR).
+         * HHCM23 (Simple).
          */
         HHCM23_SIMPLE,
     }
@@ -63,8 +63,8 @@ public class SingleIndexCpPirFactory implements PtoFactory {
     public static SingleIndexCpPirServer createServer(Rpc serverRpc, Party clientParty, SingleIndexCpPirConfig config) {
         SingleIndexCpPirType type = config.getProType();
         switch (type) {
-            case LLP23_XOSPAM:
-                return new XospamSingleIndexCpPirServer(serverRpc, clientParty, (XospamSingleIndexCpPirConfig) config);
+            case LLP23_SHUFFLE:
+                return new ShuffleSingleIndexCpPirServer(serverRpc, clientParty, (ShuffleSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPirServer(serverRpc, clientParty, (SpamSingleIndexCpPirConfig) config);
             case ZPSZ23_PIANO:
@@ -89,8 +89,8 @@ public class SingleIndexCpPirFactory implements PtoFactory {
     public static SingleIndexCpPirClient createClient(Rpc clientRpc, Party serverParty, SingleIndexCpPirConfig config) {
         SingleIndexCpPirType type = config.getProType();
         switch (type) {
-            case LLP23_XOSPAM:
-                return new XospamSingleIndexCpPirClient(clientRpc, serverParty, (XospamSingleIndexCpPirConfig) config);
+            case LLP23_SHUFFLE:
+                return new ShuffleSingleIndexCpPirClient(clientRpc, serverParty, (ShuffleSingleIndexCpPirConfig) config);
             case MIR23_SPAM:
                 return new SpamSingleIndexCpPirClient(clientRpc, serverParty, (SpamSingleIndexCpPirConfig) config);
             case ZPSZ23_PIANO:

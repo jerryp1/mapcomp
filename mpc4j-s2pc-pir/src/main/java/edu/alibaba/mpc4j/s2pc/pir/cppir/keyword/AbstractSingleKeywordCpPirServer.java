@@ -5,9 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -18,7 +19,7 @@ import java.util.*;
  * @author Liqiang Peng
  * @date 2023/9/14
  */
-public abstract class AbstractSingleKeywordCpPirServer extends AbstractTwoPartyPto implements SingleKeywordCpPirServer {
+public abstract class AbstractSingleKeywordCpPirServer<T> extends AbstractTwoPartyPto implements SingleKeywordCpPirServer<T> {
     /**
      * database size
      */
@@ -32,32 +33,35 @@ public abstract class AbstractSingleKeywordCpPirServer extends AbstractTwoPartyP
      */
     protected int byteL;
     /**
-     * bot element bytebuffer
+     * ByteBuffer for ⊥
      */
-    protected ByteBuffer botElementByteBuffer;
+    protected ByteBuffer botByteBuffer;
 
     protected AbstractSingleKeywordCpPirServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty,
                                                SingleKeywordCpPirConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
     }
 
-    protected void setInitInput(Map<ByteBuffer, ByteBuffer> keywordLabelMap, int labelBitLength) {
-        MathPreconditions.checkPositive("labelBitLength", labelBitLength);
-        this.l = labelBitLength;
-        this.byteL = CommonUtils.getByteLength(this.l);
-        MathPreconditions.checkPositive("keywordNum", keywordLabelMap.size());
-        this.n = keywordLabelMap.size();
-        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
-        Arrays.fill(botElementByteArray, (byte) 0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
-        keywordLabelMap.forEach(
-            (item, value) -> Preconditions.checkArgument(!item.equals(botElementByteBuffer), "xi must not equal ⊥")
-        );
+    protected void setInitInput(Map<T, byte[]> keyValueMap, int valueBitLength) {
+        MathPreconditions.checkPositive("value_bit_length", valueBitLength);
+        l = valueBitLength;
+        byteL = CommonUtils.getByteLength(l);
+        MathPreconditions.checkPositive("# of keywords", keyValueMap.size());
+        n = keyValueMap.size();
+        byte[] bot = new byte[byteL];
+        Arrays.fill(bot, (byte) 0xFF);
+        BytesUtils.reduceByteArray(bot, l);
+        botByteBuffer = ByteBuffer.wrap(bot);
+        keyValueMap.forEach((keyword, value) -> {
+            ByteBuffer keywordByteBuffer = ByteBuffer.wrap(ObjectUtils.objectToByteArray(keyword));
+            Preconditions.checkArgument(!keywordByteBuffer.equals(botByteBuffer), "k_i must not equal ⊥");
+            Preconditions.checkArgument(BytesUtils.isFixedReduceByteArray(value, byteL, l));
+        });
         initState();
     }
 
     protected void setPtoInput() {
         checkInitialized();
-        // extra info is managed by the protocol itself
+        extraInfo++;
     }
 }

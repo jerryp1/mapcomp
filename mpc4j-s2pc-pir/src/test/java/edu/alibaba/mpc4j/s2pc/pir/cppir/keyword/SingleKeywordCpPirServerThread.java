@@ -4,7 +4,6 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 
 /**
@@ -18,32 +17,32 @@ class SingleKeywordCpPirServerThread extends Thread {
     /**
      * server
      */
-    private final SingleKeywordCpPirServer server;
+    private final SingleKeywordCpPirServer<String> server;
     /**
      * keyword label map
      */
-    private final Map<ByteBuffer, ByteBuffer> keywordLabelMap;
+    private final Map<String, byte[]> keywordValueMap;
     /**
-     * label bit length
+     * value bit length
      */
-    private final int labelBitLength;
+    private final int valueBitLength;
     /**
      * query num
      */
     private final int queryNum;
 
-    SingleKeywordCpPirServerThread(SingleKeywordCpPirServer server, Map<ByteBuffer, ByteBuffer> keywordLabelMap,
-                                   int labelBitLength, int queryNum) {
+    SingleKeywordCpPirServerThread(SingleKeywordCpPirServer<String> server,
+                                   Map<String, byte[]> keywordValueMap, int valueBitLength, int queryNum) {
         this.server = server;
-        this.keywordLabelMap = keywordLabelMap;
-        this.labelBitLength = labelBitLength;
+        this.keywordValueMap = keywordValueMap;
+        this.valueBitLength = valueBitLength;
         this.queryNum = queryNum;
     }
 
     @Override
     public void run() {
         try {
-            server.init(keywordLabelMap, labelBitLength);
+            server.init(keywordValueMap, valueBitLength);
             LOGGER.info(
                 "Server: The Offline Communication costs {}MB", server.getRpc().getSendByteLength() * 1.0 / (1 << 20)
             );

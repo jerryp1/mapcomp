@@ -1,15 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.xospam;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * eXtreme One-time SPAM (XOSPAM) client-specific preprocessing PIR protocol description.
+ * Shuffle client-specific preprocessing PIR protocol description.
  *
  * @author Weiran Liu
  * @date 2023/9/23
  */
-class XospamSingleIndexCpPirDesc implements PtoDesc {
+class ShuffleSingleIndexCpPirDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -17,7 +17,7 @@ class XospamSingleIndexCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "LLP23_XO_SPAM";
+    private static final String PTO_NAME = "LLP23_SHUFFLE";
 
     /**
      * the protocol step
@@ -52,12 +52,12 @@ class XospamSingleIndexCpPirDesc implements PtoDesc {
     /**
      * the singleton mode
      */
-    private static final XospamSingleIndexCpPirDesc INSTANCE = new XospamSingleIndexCpPirDesc();
+    private static final ShuffleSingleIndexCpPirDesc INSTANCE = new ShuffleSingleIndexCpPirDesc();
 
     /**
      * private constructor.
      */
-    private XospamSingleIndexCpPirDesc() {
+    private ShuffleSingleIndexCpPirDesc() {
         // empty
     }
 

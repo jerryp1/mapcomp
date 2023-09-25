@@ -5,9 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -18,7 +19,7 @@ import java.util.Arrays;
  * @author Liqiang Peng
  * @date 2023/9/14
  */
-public abstract class AbstractSingleKeywordCpPirClient extends AbstractTwoPartyPto implements SingleKeywordCpPirClient {
+public abstract class AbstractSingleKeywordCpPirClient<T> extends AbstractTwoPartyPto implements SingleKeywordCpPirClient<T> {
     /**
      * database size
      */
@@ -32,9 +33,9 @@ public abstract class AbstractSingleKeywordCpPirClient extends AbstractTwoPartyP
      */
     protected int byteL;
     /**
-     * bot element bytebuffer
+     * ByteBuffer for ⊥
      */
-    protected ByteBuffer botElementByteBuffer;
+    protected ByteBuffer botByteBuffer;
 
     protected AbstractSingleKeywordCpPirClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty,
                                                SingleKeywordCpPirConfig config) {
@@ -47,15 +48,17 @@ public abstract class AbstractSingleKeywordCpPirClient extends AbstractTwoPartyP
         MathPreconditions.checkPositive("l", l);
         this.l = l;
         byteL = CommonUtils.getByteLength(l);
-        byte[] botElementByteArray = new byte[CommonConstants.STATS_BYTE_LENGTH];
-        Arrays.fill(botElementByteArray, (byte)0xFF);
-        botElementByteBuffer = ByteBuffer.wrap(botElementByteArray);
+        byte[] bot = new byte[byteL];
+        Arrays.fill(bot, (byte) 0xFF);
+        BytesUtils.reduceByteArray(bot, l);
+        botByteBuffer = ByteBuffer.wrap(bot);
         initState();
     }
 
-    protected void setPtoInput(ByteBuffer keyword) {
-        // extra info is managed by the protocol itself
+    protected void setPtoInput(T keyword) {
         checkInitialized();
-        Preconditions.checkArgument(!keyword.equals(botElementByteBuffer), "keyword must not equal ⊥");
+        ByteBuffer keywordByteBuffer = ByteBuffer.wrap(ObjectUtils.objectToByteArray(keyword));
+        Preconditions.checkArgument(!keywordByteBuffer.equals(botByteBuffer), "keyword must not equal ⊥");
+        extraInfo++;
     }
 }
