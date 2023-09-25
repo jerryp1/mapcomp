@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfi
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirFactory.SingleKeywordCpPirType;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.alpr21.Alpr21SingleKeywordCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.shuffle.ShuffleSingleKeywordCpPirConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,28 +45,33 @@ public class SingleKeywordCpPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // STREAM
+        // LLP23_SHUFFLE
         configurations.add(new Object[]{
-            SingleKeywordCpPirType.LLP23_STREAM_PIR.name() + "(" + SingleIndexCpPirType.LLP23_SHUFFLE + ")",
+            SingleKeywordCpPirType.LLP23_SHUFFLE.name(),
+            new ShuffleSingleKeywordCpPirConfig.Builder().build()
+        });
+        // ALPR21 + SHUFFLE
+        configurations.add(new Object[]{
+            SingleKeywordCpPirType.ALPR21.name() + "(" + SingleIndexCpPirType.LLP23_SHUFFLE + ")",
             new Alpr21SingleKeywordCpPirConfig.Builder()
                 .setSingleIndexCpPirConfig(new ShuffleSingleIndexCpPirConfig.Builder().build())
                 .build()
         });
-        // SPAM
+        // ALPR21 + SPAM
         configurations.add(new Object[]{
             SingleKeywordCpPirType.ALPR21.name() + "(" + SingleIndexCpPirType.MIR23_SPAM + ")",
             new Alpr21SingleKeywordCpPirConfig.Builder()
                 .setSingleIndexCpPirConfig(new SpamSingleIndexCpPirConfig.Builder().build())
                 .build()
         });
-        // PIANO
+        // ALPR21 + PIANO
         configurations.add(new Object[]{
             SingleKeywordCpPirType.ALPR21.name() + "(" + SingleIndexCpPirType.ZPSZ23_PIANO + ")",
             new Alpr21SingleKeywordCpPirConfig.Builder()
                 .setSingleIndexCpPirConfig(new PianoSingleIndexCpPirConfig.Builder().build())
                 .build()
         });
-        // Simple
+        // ALPR21 + Simple
         configurations.add(new Object[]{
             SingleKeywordCpPirType.ALPR21.name() + "(" + SingleIndexCpPirType.HHCM23_SIMPLE + ")",
             new Alpr21SingleKeywordCpPirConfig.Builder()

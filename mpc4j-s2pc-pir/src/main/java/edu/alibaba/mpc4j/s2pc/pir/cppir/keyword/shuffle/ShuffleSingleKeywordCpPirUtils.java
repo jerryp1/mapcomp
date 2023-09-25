@@ -1,18 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.shuffle;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 /**
- * Shuffle client-specific preprocessing PIR utilities.
+ * Shuffle keyword client-specific preprocessing PIR utilities.
  *
  * @author Weiran Liu
- * @date 2023/9/24
+ * @date 2023/9/25
  */
-class ShuffleSingleIndexCpPirUtils {
+class ShuffleSingleKeywordCpPirUtils {
     /**
      * private constructor.
      */
-    private ShuffleSingleIndexCpPirUtils() {
+    private ShuffleSingleKeywordCpPirUtils() {
         // empty
     }
 

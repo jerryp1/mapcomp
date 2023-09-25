@@ -64,7 +64,7 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
         long paddingTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.INIT_STEP, 0, 1, paddingTime,
+            PtoState.INIT_STEP, 1, 3, paddingTime,
             String.format(
                 "Server sets params: n = %d, RowNum = %d, ColumnNum = %d, n (pad) = %d",
                 n, rowNum, columnNum, rowNum * columnNum
@@ -124,7 +124,7 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
         stopWatch.stop();
         long streamRowTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 2, streamRowTime, "Server handles " + rowNum + " rows");
+        logStepInfo(PtoState.INIT_STEP, 2, 3, streamRowTime, "Server handles " + rowNum + " rows");
 
         stopWatch.start();
         // stream handling columns
@@ -171,7 +171,7 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
         stopWatch.stop();
         long streamColumnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 2, streamColumnTime, "Server handles " + columnNum + " columns");
+        logStepInfo(PtoState.INIT_STEP, 3, 3, streamColumnTime, "Server handles " + columnNum + " columns");
     }
 
     @Override

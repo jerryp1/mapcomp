@@ -17,7 +17,7 @@ class ShuffleSingleIndexCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "LLP23_SHUFFLE";
+    private static final String PTO_NAME = "LLP23_INDEX_SHUFFLE";
 
     /**
      * the protocol step

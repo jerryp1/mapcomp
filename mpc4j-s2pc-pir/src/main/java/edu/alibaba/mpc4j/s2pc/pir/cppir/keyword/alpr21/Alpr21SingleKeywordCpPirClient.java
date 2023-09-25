@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * ALPR21 client-specific preprocessing PIR client.
+ * ALPR21 keyword client-specific preprocessing PIR client.
  *
  * @author Liqiang Peng
  * @date 2023/9/14

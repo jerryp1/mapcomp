@@ -39,7 +39,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * ALPR21 client-specific preprocessing PIR server.
+ * ALPR21 keyword client-specific preprocessing PIR server.
  *
  * @author Liqiang Peng
  * @date 2023/9/14
