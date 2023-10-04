@@ -41,13 +41,9 @@ public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClien
      */
     private int columnNum;
     /**
-     * value encrypted key 1
+     * value encrypted key
      */
-    private byte[] vk1;
-    /**
-     * value encrypted key 2
-     */
-    private byte[] vk2;
+    private byte[] vk;
     /**
      * med PRP
      */
@@ -104,10 +100,8 @@ public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClien
         secureRandom.nextBytes(ik2);
         finalPrp = PrpFactory.createInstance(envType);
         finalPrp.setKey(ik2);
-        vk1 = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(vk1);
-        vk2 = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(vk2);
+        vk = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(vk);
         localCacheEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
         long allocateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -147,7 +141,7 @@ public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClien
                 // med value
                 byte[] iv = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 secureRandom.nextBytes(iv);
-                medValueArray[iColumn] = streamCipher.ivEncrypt(vk1, iv, rowValueArray[iColumn]);
+                medValueArray[iColumn] = streamCipher.ivEncrypt(vk, iv, rowValueArray[iColumn]);
             });
             // send shuffled response
             List<Integer> rowPiList = IntStream.range(0, columnNum).boxed().collect(Collectors.toList());
@@ -201,15 +195,16 @@ public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClien
                 // final key
                 finalKeyArray[iRow] = finalPrp.prp(columnKeyArray[iRow]);
                 // final value
+                byte[] value = streamCipher.ivDecrypt(vk, columnValueArray[iRow]);
                 byte[] iv = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 secureRandom.nextBytes(iv);
-                finalValueArray[iRow] = streamCipher.ivEncrypt(vk2, iv, columnValueArray[iRow]);
+                finalValueArray[iRow] = streamCipher.ivEncrypt(vk, iv, value);
             });
             // send shuffled response
             List<Integer> columnPiList = IntStream.range(0, rowNum).boxed().collect(Collectors.toList());
             Collections.shuffle(columnPiList, secureRandom);
             int[] columnPi = columnPiList.stream().mapToInt(i -> i).toArray();
-            ByteBuffer finalByteBuffer = ByteBuffer.allocate((CommonConstants.BLOCK_BYTE_LENGTH * 3 + byteL) * rowNum);
+            ByteBuffer finalByteBuffer = ByteBuffer.allocate((CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL) * rowNum);
             for (int iRow = 0; iRow < rowNum; iRow++) {
                 finalByteBuffer.put(finalKeyArray[columnPi[iRow]]);
                 finalByteBuffer.put(finalValueArray[columnPi[iRow]]);
@@ -328,11 +323,9 @@ public class ShuffleSingleIndexCpPirClient extends AbstractSingleIndexCpPirClien
         stopWatch.start();
         MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
         byte[] responseByteArray = queryResponsePayload.get(0);
-        MpcAbortPreconditions.checkArgument(responseByteArray.length == CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL);
-        // final decrypt
-        byte[] ivMedValue = streamCipher.ivDecrypt(vk2, responseByteArray);
-        // med decrypt
-        byte[] value = streamCipher.ivDecrypt(vk1, ivMedValue);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == CommonConstants.BLOCK_BYTE_LENGTH + byteL);
+        // decrypt
+        byte[] value = streamCipher.ivDecrypt(vk, responseByteArray);
         // add x to the local cache
         localCacheEntries.put(x, value);
         stopWatch.stop();

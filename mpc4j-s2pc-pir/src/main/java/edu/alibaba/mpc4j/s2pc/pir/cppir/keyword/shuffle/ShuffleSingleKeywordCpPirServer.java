@@ -161,7 +161,7 @@ public class ShuffleSingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpP
             List<byte[]> medResponsePayload = rpc.receive(medResponseHeader).getPayload();
             MpcAbortPreconditions.checkArgument(medResponsePayload.size() == 1);
             byte[] medDataByteArray = medResponsePayload.get(0);
-            // each mec contains encrypted key + random IV + encrypted value
+            // each med contains encrypted key + (random IV + encrypted value)
             MpcAbortPreconditions.checkArgument(
                 medDataByteArray.length == (byteFullEcc.pointByteLength() + CommonConstants.BLOCK_BYTE_LENGTH + byteL) * columnNum
             );
@@ -210,9 +210,9 @@ public class ShuffleSingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpP
             List<byte[]> finalResponsePayload = rpc.receive(finalResponseHeader).getPayload();
             MpcAbortPreconditions.checkArgument(finalResponsePayload.size() == 1);
             byte[] finalDataByteArray = finalResponsePayload.get(0);
-            // each final contains encrypted key + random IV + (random IV + encrypted value)
+            // each final contains encrypted key + (random IV + encrypted value)
             MpcAbortPreconditions.checkArgument(
-                finalDataByteArray.length == (byteFullEcc.pointByteLength() + CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL) * rowNum
+                finalDataByteArray.length == (byteFullEcc.pointByteLength() + CommonConstants.BLOCK_BYTE_LENGTH + byteL) * rowNum
             );
             ByteBuffer finalByteBuffer = ByteBuffer.wrap(finalDataByteArray);
             for (int iRow = 0; iRow < rowNum; iRow++) {
@@ -220,7 +220,7 @@ public class ShuffleSingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpP
                 byte[] finalKey = new byte[byteFullEcc.pointByteLength()];
                 finalByteBuffer.get(finalKey);
                 // final value
-                byte[] finalValue = new byte[CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL];
+                byte[] finalValue = new byte[CommonConstants.BLOCK_BYTE_LENGTH + byteL];
                 finalByteBuffer.get(finalValue);
                 ByteBuffer finalKeyByteBuffer = ByteBuffer.wrap(finalKey);
                 assert !finalDatabase.containsKey(finalKeyByteBuffer);
