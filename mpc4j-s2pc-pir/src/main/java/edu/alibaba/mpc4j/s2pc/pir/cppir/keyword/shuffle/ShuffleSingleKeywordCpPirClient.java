@@ -58,13 +58,9 @@ public class ShuffleSingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpP
      */
     private BigInteger alpha;
     /**
-     * value encrypted key 1
+     * value encrypted key
      */
-    private byte[] vk1;
-    /**
-     * value encrypted key 2
-     */
-    private byte[] vk2;
+    private byte[] vk;
     /**
      * PRG used for encrypt concat value
      */
@@ -127,10 +123,8 @@ public class ShuffleSingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpP
         BigInteger alpha1 = byteFullEcc.randomZn(secureRandom);
         BigInteger alpha2 = byteFullEcc.randomZn(secureRandom);
         alpha = alpha1.multiply(alpha2).mod(byteFullEcc.getN());
-        vk1 = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(vk1);
-        vk2 = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
-        secureRandom.nextBytes(vk2);
+        vk = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        secureRandom.nextBytes(vk);
         localExistCacheEntries = new HashMap<>(n);
         localBotCacheEntries = new HashSet<>();
         stopWatch.stop();
@@ -168,7 +162,7 @@ public class ShuffleSingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpP
                 // med value
                 byte[] iv = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 secureRandom.nextBytes(iv);
-                medValueArray[iColumn] = streamCipher.ivEncrypt(vk1, iv, rowValueArray[iColumn]);
+                medValueArray[iColumn] = streamCipher.ivEncrypt(vk, iv, rowValueArray[iColumn]);
             });
             // send shuffled response
             List<Integer> rowPiList = IntStream.range(0, columnNum).boxed().collect(Collectors.toList());
@@ -222,15 +216,16 @@ public class ShuffleSingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpP
                 // final key
                 finalKeyArray[iRow] = byteFullEcc.mul(columnKeyArray[iRow], alpha2);
                 // final value
+                byte[] value = streamCipher.ivDecrypt(vk, columnValueArray[iRow]);
                 byte[] iv = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 secureRandom.nextBytes(iv);
-                finalValueArray[iRow] = streamCipher.ivEncrypt(vk2, iv, columnValueArray[iRow]);
+                finalValueArray[iRow] = streamCipher.ivEncrypt(vk, iv, value);
             });
             // send shuffled response
             List<Integer> columnPiList = IntStream.range(0, rowNum).boxed().collect(Collectors.toList());
             Collections.shuffle(columnPiList, secureRandom);
             int[] columnPi = columnPiList.stream().mapToInt(i -> i).toArray();
-            ByteBuffer finalByteBuffer = ByteBuffer.allocate((byteFullEcc.pointByteLength() + CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL) * rowNum);
+            ByteBuffer finalByteBuffer = ByteBuffer.allocate((byteFullEcc.pointByteLength() + CommonConstants.BLOCK_BYTE_LENGTH + byteL) * rowNum);
             for (int iRow = 0; iRow < rowNum; iRow++) {
                 finalByteBuffer.put(finalKeyArray[columnPi[iRow]]);
                 finalByteBuffer.put(finalValueArray[columnPi[iRow]]);
@@ -344,11 +339,9 @@ public class ShuffleSingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpP
             stopWatch.start();
             // contain result
             byte[] responseByteArray = queryResponsePayload.get(0);
-            MpcAbortPreconditions.checkArgument(responseByteArray.length == CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL);
-            // final decrypt
-            byte[] ivMedValue = streamCipher.ivDecrypt(vk2, responseByteArray);
-            // med decrypt
-            byte[] value = streamCipher.ivDecrypt(vk1, ivMedValue);
+            MpcAbortPreconditions.checkArgument(responseByteArray.length == CommonConstants.BLOCK_BYTE_LENGTH + byteL);
+            // decrypt
+            byte[] value = streamCipher.ivDecrypt(vk, responseByteArray);
             // run sq-OPRF and decrypt
             SqOprfReceiverOutput sqOprfReceiverOutput = sqOprfReceiver.oprf(new byte[][] {xBytes});
             byte[] key = prg.extendToBytes(sqOprfReceiverOutput.getPrf(0));

@@ -107,7 +107,7 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
             List<byte[]> medResponsePayload = rpc.receive(medResponseHeader).getPayload();
             MpcAbortPreconditions.checkArgument(medResponsePayload.size() == 1);
             byte[] medDataByteArray = medResponsePayload.get(0);
-            // each mec contains encrypted key + random IV + encrypted value
+            // each med contains encrypted key +(random IV + encrypted value)
             MpcAbortPreconditions.checkArgument(
                 medDataByteArray.length == (CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL) * columnNum
             );
@@ -150,9 +150,9 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
             List<byte[]> finalResponsePayload = rpc.receive(finalResponseHeader).getPayload();
             MpcAbortPreconditions.checkArgument(finalResponsePayload.size() == 1);
             byte[] finalDataByteArray = finalResponsePayload.get(0);
-            // each final contains encrypted key + random IV + (random IV + encrypted value)
+            // each final contains encrypted key + (random IV + encrypted value)
             MpcAbortPreconditions.checkArgument(
-                finalDataByteArray.length == (CommonConstants.BLOCK_BYTE_LENGTH * 3 + byteL) * rowNum
+                finalDataByteArray.length == (CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL) * rowNum
             );
             ByteBuffer finalByteBuffer = ByteBuffer.wrap(finalDataByteArray);
             for (int iRow = 0; iRow < rowNum; iRow++) {
@@ -160,7 +160,7 @@ public class ShuffleSingleIndexCpPirServer extends AbstractSingleIndexCpPirServe
                 byte[] finalKey = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
                 finalByteBuffer.get(finalKey);
                 // final value
-                byte[] finalValue = new byte[CommonConstants.BLOCK_BYTE_LENGTH * 2 + byteL];
+                byte[] finalValue = new byte[CommonConstants.BLOCK_BYTE_LENGTH + byteL];
                 finalByteBuffer.get(finalValue);
                 ByteBuffer finalKeyByteBuffer = ByteBuffer.wrap(finalKey);
                 assert !finalDatabase.containsKey(finalKeyByteBuffer);
