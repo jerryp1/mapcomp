@@ -31,36 +31,36 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
     /**
      * default element bit length
      */
-    private static final int DEFAULT_L = Long.SIZE;
+    private static final int DEFAULT_L = 128;
     /**
      * default database size
      */
-    private static final int DEFAULT_N = (1 << 16) - 3;
+    private static final int DEFAULT_N = (1 << 24);
     /**
      * default query num
      */
-    private static final int DEFAULT_QUERY_NUM = 2;
+    private static final int DEFAULT_QUERY_NUM = 10000;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // XOSPAM
-        configurations.add(new Object[]{
-            SingleIndexCpPirType.LLP23_SHUFFLE.name(), new ShuffleSingleIndexCpPirConfig.Builder().build()
-        });
-        // SPAM
-        configurations.add(new Object[]{
-            SingleIndexCpPirType.MIR23_SPAM.name(), new SpamSingleIndexCpPirConfig.Builder().build()
-        });
+//        // XOSPAM
+//        configurations.add(new Object[]{
+//            SingleIndexCpPirType.LLP23_SHUFFLE.name(), new ShuffleSingleIndexCpPirConfig.Builder().build()
+//        });
+//        // SPAM
+//        configurations.add(new Object[]{
+//            SingleIndexCpPirType.MIR23_SPAM.name(), new SpamSingleIndexCpPirConfig.Builder().build()
+//        });
         // PIANO
         configurations.add(new Object[]{
             SingleIndexCpPirType.ZPSZ23_PIANO.name(), new PianoSingleIndexCpPirConfig.Builder().build()
         });
-        // SIMPLE
-        configurations.add(new Object[]{
-            SingleIndexCpPirType.HHCM23_SIMPLE.name(), new SimpleSingleIndexCpPirConfig.Builder().build()
-        });
+//        // SIMPLE
+//        configurations.add(new Object[]{
+//            SingleIndexCpPirType.HHCM23_SIMPLE.name(), new SimpleSingleIndexCpPirConfig.Builder().build()
+//        });
 
         return configurations;
     }

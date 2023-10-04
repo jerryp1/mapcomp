@@ -61,7 +61,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
      * @return a server.
      */
     public static SingleIndexCpPirServer createServer(Rpc serverRpc, Party clientParty, SingleIndexCpPirConfig config) {
-        SingleIndexCpPirType type = config.getProType();
+        SingleIndexCpPirType type = config.getPtoType();
         switch (type) {
             case LLP23_SHUFFLE:
                 return new ShuffleSingleIndexCpPirServer(serverRpc, clientParty, (ShuffleSingleIndexCpPirConfig) config);
@@ -87,7 +87,7 @@ public class SingleIndexCpPirFactory implements PtoFactory {
      * @return a client.
      */
     public static SingleIndexCpPirClient createClient(Rpc clientRpc, Party serverParty, SingleIndexCpPirConfig config) {
-        SingleIndexCpPirType type = config.getProType();
+        SingleIndexCpPirType type = config.getPtoType();
         switch (type) {
             case LLP23_SHUFFLE:
                 return new ShuffleSingleIndexCpPirClient(clientRpc, serverParty, (ShuffleSingleIndexCpPirConfig) config);

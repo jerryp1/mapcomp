@@ -18,7 +18,7 @@ public class PianoSingleIndexCpPirConfig extends AbstractMultiPartyPtoConfig imp
     }
 
     @Override
-    public SingleIndexCpPirType getProType() {
+    public SingleIndexCpPirType getPtoType() {
         return SingleIndexCpPirType.ZPSZ23_PIANO;
     }
 

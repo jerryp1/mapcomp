@@ -18,7 +18,7 @@ public class SimpleSingleIndexCpPirConfig extends AbstractMultiPartyPtoConfig im
     }
 
     @Override
-    public SingleIndexCpPirType getProType() {
+    public SingleIndexCpPirType getPtoType() {
         return SingleIndexCpPirType.HHCM23_SIMPLE;
     }
 

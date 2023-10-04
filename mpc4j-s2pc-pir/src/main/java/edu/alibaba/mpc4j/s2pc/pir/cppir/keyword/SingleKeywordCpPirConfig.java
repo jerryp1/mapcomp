@@ -14,5 +14,5 @@ public interface SingleKeywordCpPirConfig extends MultiPartyPtoConfig {
      *
      * @return protocol type.
      */
-    SingleKeywordCpPirFactory.SingleKeywordCpPirType getProType();
+    SingleKeywordCpPirFactory.SingleKeywordCpPirType getPtoType();
 }

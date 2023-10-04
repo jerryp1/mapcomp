@@ -46,7 +46,7 @@ public class Alpr21SingleKeywordCpPirConfig extends AbstractMultiPartyPtoConfig 
     }
 
     @Override
-    public SingleKeywordCpPirType getProType() {
+    public SingleKeywordCpPirType getPtoType() {
         return SingleKeywordCpPirType.ALPR21;
     }
 
