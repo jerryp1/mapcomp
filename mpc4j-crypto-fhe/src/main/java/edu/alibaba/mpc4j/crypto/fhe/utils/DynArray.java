@@ -196,9 +196,10 @@ public class DynArray implements Cloneable {
         this.size = size;
     }
 
-
-
-
+    public void setData(long[] data) {
+        assert data.length == size;
+        System.arraycopy(data, 0, this.data, 0, size);
+    }
 
     public void setZero(int startIndex, int length) {
 

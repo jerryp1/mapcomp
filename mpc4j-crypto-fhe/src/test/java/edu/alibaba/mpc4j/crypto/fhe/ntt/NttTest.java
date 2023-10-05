@@ -144,8 +144,8 @@ public class NttTest {
                     poly[j] = Math.abs(random.nextLong()) % modulus.getValue();
                     temp[j] = poly[j];
                 }
-                NttTool.nttNegAcyclicHarvey(poly, tables);
-                NttTool.inverseNttNegAcyclicHarvey(poly, tables);
+                NttTool.nttNegAcyclicHarvey(poly,0,  tables);
+                NttTool.inverseNttNegAcyclicHarvey(poly,0,  tables);
 
                 Assert.assertArrayEquals(temp, poly);
             }
@@ -189,6 +189,46 @@ public class NttTest {
 
                 NttTool.nttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
                 NttTool.inverseNttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
+
+                Assert.assertArrayEquals(groundTruth, poly);
+            }
+        }
+    }
+
+    @Test
+    public void randomRnsIterTest2() {
+
+
+        Modulus[] mod = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
+
+
+        // N = 4096
+        int[] coeffCountPowers = new int[]{12};
+        Random random = new Random();
+
+
+        for (int coeffCountPower : coeffCountPowers) {
+
+            NttTables[] nttTables = new NttTables[mod.length];
+
+            int n = 1 << coeffCountPower;
+            NttTablesCreateIter.createNttTables(coeffCountPower, mod, nttTables);
+
+            long[] poly = new long[n * mod.length];
+            long[] groundTruth = new long[n * mod.length];
+
+            for (int i = 0; i < MAX_LOOP_NUM; i++) {
+
+                for (int j = 0; j < mod.length; j++) {
+                    for (int k = 0; k < n; k++) {
+                        poly[j * n + k] = Math.abs(random.nextLong()) % mod[j].getValue();
+                    }
+                }
+
+                System.arraycopy(poly, 0, groundTruth, 0, n * mod.length);
+
+                NttTool.nttNegAcyclicHarveyRnsIter(poly, n, mod.length, nttTables);
+                NttTool.inverseNttNegAcyclicHarveyRnsIter(poly, n, mod.length, nttTables);
 
                 Assert.assertArrayEquals(groundTruth, poly);
             }

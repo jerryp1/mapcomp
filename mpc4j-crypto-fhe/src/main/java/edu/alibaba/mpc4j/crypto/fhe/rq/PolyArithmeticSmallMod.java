@@ -34,6 +34,7 @@ public class PolyArithmeticSmallMod {
 
     /**
      * result[resultStartIndex, resultStartIndex + N) = operand1Array[startIndex1, startIndex1 + N) + operand2Array[startIndex2, startIndex2 + N)
+     * 处理 RnsIter 中的某个 CoeffIter, 用了 StartIndex 来标记
      *
      * @param operand1Array    single poly in RNS, lengt is k * N
      * @param startIndex1      startIndex of a single poly in operand1Array
@@ -71,6 +72,61 @@ public class PolyArithmeticSmallMod {
                 result[resultStartIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
             }
         }
+    }
+
+    /**
+     * 注意函数命名，这里处理的是一个 完整的RnsIter, 通过 long[] + coeffCount 来指定一个RnsIter（避免new一个对象）。
+     *
+     * @param rnsIter1
+     * @param rnsIter1CoeffCount
+     * @param rnsIter2
+     * @param rnsIter2CoeffCount
+     * @param coeffModulusSize
+     * @param modulus
+     * @param resultCoeffCount
+     * @param result
+     */
+    public static void addPolyCoeffModRnsIter(long[] rnsIter1, int rnsIter1CoeffCount,
+                                              long[] rnsIter2, int rnsIter2CoeffCount,
+                                              int coeffModulusSize, Modulus[] modulus,
+                                              int resultCoeffCount, long[] result) {
+
+        assert coeffModulusSize > 0;
+        // 必须是 coeffCount 相同的 rnsIter
+        assert rnsIter1CoeffCount == resultCoeffCount;
+        assert rnsIter2CoeffCount == resultCoeffCount;
+
+        int coeffCount = resultCoeffCount;
+
+        // 开始逐 modulus 处理
+        for (int j = 0; j < coeffModulusSize; j++) {
+            assert !modulus[j].isZero();
+            long modulusValue = modulus[j].getValue();
+            int startIndex = j * coeffCount;
+            // 开始处理每一个 modulus 下的多项式
+            // 根据 coeffCount 决定是否开并发以获取最优的效率
+
+            if (coeffCount > 8192) {
+                IntStream.range(0, coeffCount).parallel().forEach(
+                        i -> {
+                            assert rnsIter1[startIndex + i] < modulusValue;
+                            assert rnsIter2[startIndex + i] < modulusValue;
+
+                            long sum = rnsIter1[startIndex + i] + rnsIter2[startIndex + i];
+                            result[startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
+                        }
+                );
+            } else {
+                long sum;
+                for (int i = 0; i < coeffCount; i++) {
+                    assert rnsIter1[startIndex + i] < modulusValue;
+                    assert rnsIter2[startIndex + i] < modulusValue;
+                    sum = rnsIter1[startIndex + i] + rnsIter2[startIndex + i];
+                    result[startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
+                }
+            }
+        }
+
     }
 
 
@@ -194,17 +250,13 @@ public class PolyArithmeticSmallMod {
         assert coeffCount > 0;
         assert !modulus.isZero();
         assert startIndex % coeffCount == 0 && resultStartIndex % coeffCount == 0;
+
         MultiplyUintModOperand tmp = new MultiplyUintModOperand();
         tmp.set(UintArithmeticSmallMod.barrettReduce64(scalar, modulus), modulus);
 
         // todo: 当传入的 scalar 是 long 类型的，一定要转换为 MultiplyUintModOperand 类型吗？还是不用？
         // todo: 因为 UintArithmeticSmallMod.multiplyUintMod 也是直接支持 long * long 的
-
         // poly[i] * scalar mod moudlus
-//        IntStream.range(0, coeffCount).parallel().forEach(
-//                i -> result[resultStartIndex + i] = UintArithmeticSmallMod.multiplyUintMod(poly[startIndex + i], scalar, modulus)
-//        );
-
         for (int i = 0; i < coeffCount; i++) {
             result[resultStartIndex + i] = UintArithmeticSmallMod.multiplyUintMod(poly[startIndex + i], tmp, modulus);
         }
@@ -363,13 +415,13 @@ public class PolyArithmeticSmallMod {
         );
     }
 
-    public static void moduloPolyCoeffs(long[] poly, int startIndex, int coeffCount, Modulus modulus, int resultIndex, long[] result) {
+    public static void moduloPolyCoeffs(long[] poly, int startIndex, int coeffCount, Modulus modulus, int resultStartIndex, long[] result) {
 
         assert coeffCount > 0;
         assert !modulus.isZero();
 
         IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[resultIndex + i] = UintArithmeticSmallMod.barrettReduce64(poly[startIndex + i], modulus)
+                i -> result[resultStartIndex + i] = UintArithmeticSmallMod.barrettReduce64(poly[startIndex + i], modulus)
         );
     }
 
@@ -542,6 +594,8 @@ public class PolyArithmeticSmallMod {
     }
 
     /**
+     * CoeffIter * CoeffIter = CoeffIter
+     *
      * @param operand1   single poly, length is N
      * @param operand2   single poly, length is N
      * @param coeffCount N
@@ -634,6 +688,9 @@ public class PolyArithmeticSmallMod {
 
 
     /**
+     *  RnsIter + startIndex = CoeffIter, 处理的基本单位为 CoeffIter
+     *
+     *
      * @param operand1Array    single poly in RNS, length is k * N
      * @param startIndex1      startIndex of a singel poly in operand1Array
      * @param operand2Array    single poly in RNS, length is k * N
@@ -753,6 +810,64 @@ public class PolyArithmeticSmallMod {
                     );
                 }
         );
+    }
+
+    /**
+     * 处理单个 CoeffIter, 不管输入数组是什么，反正通过 数组+startIndex 定位到 单个 CoeffIter 的起点
+     * @param polyIter1
+     * @param startIndex1
+     * @param polyIter2
+     * @param startIndex2
+     * @param coeffCount
+     * @param modulus
+     * @param resultStartIndex
+     * @param resultPolyIter
+     */
+    public static void dyadicProductCoeffModCoeffIter(long[] polyIter1, int startIndex1, long[] polyIter2, int startIndex2, int coeffCount, Modulus modulus, int resultStartIndex, long[] resultPolyIter) {
+
+        assert coeffCount > 0;
+
+        assert startIndex1 % coeffCount == 0;
+        assert startIndex2 % coeffCount == 0;
+        assert resultStartIndex % coeffCount == 0;
+
+
+        assert !modulus.isZero();
+        long modulusValue = modulus.getValue();
+        long constRation0 = modulus.getConstRatio()[0];
+        long constRation1 = modulus.getConstRatio()[1];
+
+        IntStream.range(0, coeffCount).parallel().forEach(
+                i -> {
+                    // 处理多项式的 每一个系数
+                    long[] z = new long[2];
+                    long tmp3, carry;
+                    long[] tmp1 = new long[1];
+                    long[] tmp2 = new long[2];
+                    // Reduces z using base 2^64 Barrett reduction
+                    UintArithmetic.multiplyUint64(polyIter1[startIndex1 + i], polyIter2[startIndex2 + i], z);
+
+                    // Multiply input and const_ratio
+                    // Round 1
+                    carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+                    UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+                    tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+
+                    // Round 2
+                    UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+                    carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+
+                    // This is all we care about
+                    tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+
+                    // Barrett subtraction
+                    tmp3 = z[0] - tmp1[0] * modulusValue;
+
+                    // Claim: One more subtraction is enough
+                    resultPolyIter[resultStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+                }
+        );
+
     }
 
 
@@ -895,14 +1010,6 @@ public class PolyArithmeticSmallMod {
             result[resultStartIndex + i] = (modulusValue - polyArray[startIndex + i]) & (-nonZero);
         }
         // 实测即使 coeffCount = 32768, for 也更快
-//        IntStream.range(0, coeffCount).parallel().forEach(
-//                i -> {
-//                    long nonZero = poly[i] != 0 ? 1 : 0;
-//                    // 0 ---> & 0 = 0
-//                    // 1 ---> & -1 = & 0xFFFFFFF
-//                    result[i] = (modulusValue - poly[i]) & (-nonZero);
-//                }
-//        );
     }
 
     public static void negatePolyCoeffModFor(long[] poly, int coeffCount, Modulus modulus, long[] result) {

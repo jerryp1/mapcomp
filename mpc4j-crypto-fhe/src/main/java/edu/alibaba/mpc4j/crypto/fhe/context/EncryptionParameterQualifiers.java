@@ -90,6 +90,19 @@ public class EncryptionParameterQualifiers {
         securityLevel = CoeffModulus.SecurityLevelType.NONE;
     }
 
+    @Override
+    public String toString() {
+        return "EncryptionParameterQualifiers{" +
+                "parameterError=" + parameterError +
+                ", usingFft=" + usingFft +
+                ", usingNtt=" + usingNtt +
+                ", usingBatching=" + usingBatching +
+                ", usingFastPlainLift=" + usingFastPlainLift +
+                ", usingDescendingModulusChain=" + usingDescendingModulusChain +
+                ", securityLevel=" + securityLevel +
+                '}';
+    }
+
     /**
      * @return parameterError's name
      */

@@ -26,12 +26,24 @@ public enum SchemeType {
 
     public static SchemeType getByValue(int value) {
 
-        for (SchemeType scheme: SchemeType.values()) {
-            if (scheme.getValue() == value) {
-                return scheme;
-            }
+        switch (value) {
+            case 0:
+                return NONE;
+            case 1:
+                return BFV;
+            case 2:
+                return CKKS;
+            case 3:
+                return BGV;
+            default:
+                throw new IllegalArgumentException("no match scheme for given value");
         }
-        throw new IllegalArgumentException("no match scheme for given value");
+//        for (SchemeType scheme: SchemeType.values()) {
+//            if (scheme.getValue() == value) {
+//                return scheme;
+//            }
+//        }
+//        throw new IllegalArgumentException("no match scheme for given value");
     }
 
 }

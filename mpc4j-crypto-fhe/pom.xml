@@ -35,6 +35,10 @@
             <artifactId>mpc4j-common-tool</artifactId>
             <version>1.0.9-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

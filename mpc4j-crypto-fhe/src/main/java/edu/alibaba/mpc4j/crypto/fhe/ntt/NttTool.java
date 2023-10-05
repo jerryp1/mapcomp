@@ -59,13 +59,64 @@ public class NttTool {
         );
     }
 
+    /**
+     * 对一个 RnsIter 整体进行处理, long[] + rnsIterCoeffCount 来构成一个 RnsIter 对象，避免了 new RnsIter 带来的额外开销
+     *
+     * @param rnsIter k * N
+     * @param rnsIterCoeffCount
+     * @param coeffModulusSize
+     * @param tables
+     */
+    public static void nttNegAcyclicHarveyRnsIter(long[] rnsIter, int rnsIterCoeffCount, int coeffModulusSize, NttTables[] tables) {
+        //todo: consider remove
+        assert rnsIterCoeffCount == tables[0].getCoeffCount();
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                i -> nttNegAcyclicHarvey(rnsIter, i * rnsIterCoeffCount, tables[i])
+        );
+    }
+
+    /**
+     * [0, N) ---> NttForward, [N, 2N) ---> NttForward
+     *
+     * @param rnsIter k * N
+     * @param coeffModulusSize k
+     * @param tables
+     */
     public static void nttNegAcyclicHarvey(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
 
         assert rnsIter.length == coeffModulusSize * tables[0].getCoeffCount();
 
+
         IntStream.range(0, coeffModulusSize).parallel().forEach(
-//                i -> nttNegAcyclicHarvey(operand.getCoeffIter(i), tables[i])
                 i -> nttNegAcyclicHarvey(rnsIter, i * tables[i].getCoeffCount(), tables[i])
+        );
+    }
+
+    public static void nttNegAcyclicHarveyLazy(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
+
+        assert rnsIter.length == coeffModulusSize * tables[0].getCoeffCount();
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                i -> nttNegAcyclicHarveyLazy(rnsIter, i * tables[i].getCoeffCount(), tables[i])
+        );
+    }
+
+    /**
+     * polyIter + startIndx = RnsIter
+     *
+     * @param polyIter
+     * @param startIndex
+     * @param coeffModulusSize
+     * @param tables
+     */
+    public static void nttNegAcyclicHarvey(long[] polyIter, int startIndex, int coeffModulusSize, NttTables[] tables) {
+
+        assert startIndex % coeffModulusSize * tables[0].getCoeffCount() == 0;
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                // RnsIter + startIndex = CoeffIter , 最底层这里仍然只处理 单个 CoeffIter
+                i -> nttNegAcyclicHarvey(polyIter, startIndex + i * tables[i].getCoeffCount(), tables[i])
         );
     }
 
@@ -188,8 +239,22 @@ public class NttTool {
 //                i -> inverseNttNegAcyclicHarvey(operand.getCoeffIter(i), tables[i])
                 i -> inverseNttNegAcyclicHarvey(operand.coeffIter, i * tables[i].getCoeffCount(), tables[i])
         );
+    }
+
+
+    public static void inverseNttNegAcyclicHarveyRnsIter(long[] rnsIter, int rnsIterCoeffCount, int coeffModulusSize, NttTables[] tables) {
+
+        assert rnsIterCoeffCount == tables[0].getCoeffCount();
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                i -> inverseNttNegAcyclicHarvey(rnsIter, i * tables[i].getCoeffCount(), tables[i])
+        );
 
     }
+
+
+
+
 
     public static void inverseNttNegAcyclicHarvey(PolyIter operand, int size, NttTables[] tables) {
         int coeffModulusSize = operand.getCoeffModulusSize();

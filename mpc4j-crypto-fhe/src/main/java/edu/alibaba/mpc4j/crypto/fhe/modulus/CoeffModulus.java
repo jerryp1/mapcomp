@@ -93,28 +93,36 @@ public class CoeffModulus {
 
     /**
      * 为什么 seal 的实现如此麻烦？不能直接遍历，然后生成？为什么非得搞 map?
+     * Returns a custom coefficient modulus suitable for use with the specified
+     * poly_modulus_degree. The return value will be an array consisting of
+     * Modulus elements representing distinct prime numbers such that:
+     * 1) have bit-lengths as given in the bit_sizes parameter (at most 60 bits) and
+     * 2) are congruent to 1 modulo 2*poly_modulus_degree.
      *
-     * @param polyModulusDegree
-     * @param bitSizes
-     * @return
+     * @param polyModulusDegree The value of the polyModulusDegree
+     *                          encryption parameter
+     * @param bitSizes          The bit-lengths of the primes to be generated
+     *
+     * @return an array consisting of Modulus elements
      */
     public static Modulus[] create(int polyModulusDegree, int[] bitSizes) {
 
         if (polyModulusDegree > Constants.POLY_MOD_DEGREE_MAX || polyModulusDegree < Constants.POLY_MOD_DEGREE_MIN
                 || UintCore.getPowerOfTwo(polyModulusDegree) < 0
         ) {
-            throw new IllegalArgumentException("poly_modulus_degree is invalid");
+            throw new IllegalArgumentException("polyModulusDegree is invalid");
         }
 
         if (bitSizes.length > Constants.COEFF_MOD_COUNT_MAX) {
-            throw new IllegalArgumentException("bit_sizes is invalid");
+            throw new IllegalArgumentException("bitSizes is invalid");
         }
 
         if (Arrays.stream(bitSizes).min().getAsInt() < Constants.USER_MOD_BIT_COUNT_MIN
                 || Arrays.stream(bitSizes).max().getAsInt() > Constants.USER_MOD_BIT_COUNT_MAX) {
-            throw new IllegalArgumentException("bit_sizes is invalid");
+            throw new IllegalArgumentException("bitSizes is invalid");
         }
-        // because bitSizes may have some same size
+
+        // because bitSizes may have some same elements
         // size --> count
         Map<Integer, Integer> countTables = new HashMap<>();
         for (int size : bitSizes) {
@@ -124,7 +132,7 @@ public class CoeffModulus {
             }
             countTables.put(size, countTables.get(size) + 1);
         }
-        // why mul safe?
+        // todo: why mul safe?
         long factor = Common.mulSafe(2L, (long) polyModulusDegree, true);
 
         Map<Integer, ArrayList<Modulus>> primeTable = new HashMap<>();

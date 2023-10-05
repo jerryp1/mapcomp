@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.crypto.fhe.modulus;
 
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -30,12 +31,21 @@ public class Modulus implements Cloneable {
     // value is a prime
     private boolean isPrime;
 
+    /**
+     * Creates a Modulus instance. The value of the Modulus is set to the given value.
+     *
+     * @param value a given value.
+     */
     public Modulus(long value) {
-
         setValue(value);
     }
 
-    public Modulus() {}
+    /**
+     * Creates a Modulus instance. The value of the Modulus is set to zero by default.
+     */
+    public Modulus() {
+        setValue(0);
+    }
 
 
     /**
@@ -53,9 +63,9 @@ public class Modulus implements Cloneable {
     }
 
     /**
-     * Set another value for the current Modulus object, which will completely change the current Modulus object
+     * Set another value for the current Modulus object, which will completely change the current Modulus object's contents.
      *
-     * @param value a long value
+     * @param value a given value
      */
     public void setValue(long value) {
 
@@ -63,21 +73,23 @@ public class Modulus implements Cloneable {
             // zero settings
             bitCount = 0;
             uint64Count = 1;
-            value = 0;
-            constRatio = new long[] {0, 0, 0};
+            this.value = 0;
+            constRatio = new long[]{0, 0, 0};
             isPrime = false;
-        }else if (value >>> Constants.MOD_BIT_COUNT_MAX != 0 || (value == 1)) {
+        } else if (value >>> Constants.MOD_BIT_COUNT_MAX != 0 || (value == 1)) {
             throw new IllegalArgumentException("value can be at most 61-bit and cannot be 1");
-        }else {
+        } else {
+            // All normal, compute const_ratio and set everything
             this.value = value;
             bitCount = UintCore.getSignificantBitCount(value);
             uint64Count = 1;
+            // 这里就是为 barret reduce 进行预计算: 2^128 / value, 商保存在 constRatio[0, 1]
+            // 余数保存在 constRatio[2]
             constRatio = new long[3];
             long[] numerator = new long[]{0, 0, 1}; // 2^128, 129 bits
-            // first parameter numerator will be changed, so new a array instead of pass the TWO_POWER_128
             UintArithmetic.divideUint192Inplace(numerator, value, constRatio);
             constRatio[2] = numerator[0];
-
+            // Set the primality flag
             isPrime = Numth.isPrime(value);
         }
     }
@@ -87,7 +99,6 @@ public class Modulus implements Cloneable {
     }
 
     /**
-     *
      * @param values an array of type long
      * @return An array of Modulus objects
      */
@@ -172,6 +183,7 @@ public class Modulus implements Cloneable {
                 .toArray();
 
     }
+
 
     public long negate(long a) {
         assert a < value;
@@ -299,13 +311,19 @@ public class Modulus implements Cloneable {
 
     @Override
     public String toString() {
-        return "Modulus{" +
-                "value=" + value +
-                ", bitCount=" + bitCount +
-                ", uint64Count=" + uint64Count +
-                ", constRatio=" + Arrays.toString(constRatio) +
-                ", isPrime=" + isPrime +
-                '}';
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Modulus{" + "value=").append(value).append(", bitCount=").append(bitCount).append(", uint64Count=").append(uint64Count).append(", constRatio=[");
+        for (int i = 0; i < constRatio.length; i++) {
+            sb.append(constRatio[i]);
+            if (i < constRatio.length - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append("] ");
+        sb.append(", isPrime=").append(isPrime).append('}');
+
+        return sb.toString();
     }
 
     public int getBitCount() {

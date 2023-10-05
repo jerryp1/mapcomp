@@ -39,68 +39,99 @@ public class Context {
 
     private boolean usingKeySwitching;
 
+
+    @Override
+    public String toString() {
+        return "Context{" +
+                "keyParmsId=" + keyParmsId +
+                ", firstParmsId=" + firstParmsId +
+                ", lastParmsId=" + lastParmsId +
+                ", contextDataMap size=" + contextDataMap.size() +
+                ", securityLevel=" + securityLevel +
+                ", usingKeySwitching=" + usingKeySwitching +
+                '}';
+    }
+
     /**
-     * create a Context object. expandModChain default is true, securityLevel default is TC128.
+     * Creates an instance of Context and performs several pre-computations
+     * on the given EncryptionParameters.
+     * Note that expandModChain is default true and SecurityLevelType is default TC128.
      *
-     * @param params an EncryptionParams ob
+     * @param params The encryption parameters
      */
     public Context(EncryptionParams params) {
         this(params, true, CoeffModulus.SecurityLevelType.TC128);
     }
 
-
+    /**
+     * Creates an instance of Context, and performs several pre-computations
+     * on the given EncryptionParameters.
+     *
+     * @param parms          The encryption parameters
+     * @param expandModChain Determines whether the modulus switching chain
+     *                       should be created
+     * @param securityLevel  Determines whether a specific security level should be
+     *                       enforced according to HomomorphicEncryption.org security standard
+     */
     public Context(EncryptionParams parms, boolean expandModChain, CoeffModulus.SecurityLevelType securityLevel) {
 
         this.securityLevel = securityLevel;
         if (parms.getRandomGeneratorFactory() == null) {
             parms.setRandomGeneratorFactory(UniformRandomGeneratorFactory.defaultFactory());
         }
+
         // Validate parameters and add new ContextData to the map
         // Note that this happens even if parameters are not valid
-
         contextDataMap.put(parms.getParmsId().clone(), validate(parms));
+        // keyParmsId 对应完整的 modulus: [q1, q2, ..., qk]
         keyParmsId = parms.getParmsId().clone();
 
         // Then create first_parms_id_ if the parameters are valid and there is
-        // more than one modulus in coeff_modulus. This is equivalent to expanding
-        // the chain by one step. Otherwise, we set first_parms_id_ to equal
+        // more than one modulus in coeff_modulus.
+        // This is equivalent to expanding the chain by one step. Otherwise, we set first_parms_id_ to equal
         // key_parms_id_.
-        if (!contextDataMap.get(keyParmsId).qualifiers.isParametersSet() || parms.getCoeffModulus().length == 1) {
+
+        // 这里就是计算 firstParmsId, firstParmsId 对应：[q1, q2, .., q(k-1)]
+        if (!contextDataMap.get(keyParmsId).qualifiers.isParametersSet()
+                || parms.getCoeffModulus().length == 1) {
             firstParmsId = keyParmsId.clone();
         } else {
             ParmsIdType nextParmsId = createNextContextData(keyParmsId);
-            firstParmsId = nextParmsId.equals(ParmsIdType.PARMS_ID_ZERO) ? keyParmsId.clone() : nextParmsId.clone();
+            firstParmsId = nextParmsId.isZero() ? keyParmsId.clone() : nextParmsId.clone();
         }
 
         // Set last_parms_id_ to point to first_parms_id_
         lastParmsId = firstParmsId.clone();
         // Check if keyswitching is available
+        // 什么情况下是 false呢？就是上面的 if/else 进入了 if 或者 创建下一个 ContextData 对象失败
         usingKeySwitching = !firstParmsId.equals(keyParmsId);
 
         // If modulus switching chain is to be created, compute the remaining parameter sets as long as they are valid
         // to use (i.e., parameters_set() == true).
         if (expandModChain && contextDataMap.get(firstParmsId).qualifiers.isParametersSet()) {
-
             ParmsIdType prevParmsId = firstParmsId.clone();
-
+            // 从 first [q1, q2, ..., q(k-1)] 递减计算至： [q1]
             while (contextDataMap.get(prevParmsId).parms.getCoeffModulus().length > 1) {
-
                 ParmsIdType nextParmsId = createNextContextData(prevParmsId);
+                // 如果等于0, 说明创建 下一个 ContextData 失败了
                 if (nextParmsId.isZero()) {
                     break;
                 }
+                // 当前的 参数Id，作为下一轮计算的 ID
                 prevParmsId = nextParmsId.clone();
+                // 更新 last参数ID，最终指向最后一个参数 Id , 即 [q1] 对应的 ContextData 对象
                 lastParmsId = nextParmsId.clone();
             }
         }
         // Set the chain_index for each context_data
         int parmsCount = contextDataMap.size();
         ContextData contextDataPtr = contextDataMap.get(keyParmsId);
+        // 每一个 ContextData 又维护一个 chainIndex 来指明在 chain 中的位置，这里就是倒过来看了
+        // [q1] ---> [q1, q2] ---> [q1, q2, q3] --> .... --> [q1, q2, ..., qk]
         while (contextDataPtr != null) {
             contextDataPtr.chainIndex = --parmsCount;
             contextDataPtr = contextDataPtr.nextContextData;
         }
-
     }
 
 
@@ -127,7 +158,7 @@ public class Context {
             contextData.qualifiers.parameterError = ErrorType.INVALID_COEFF_MODULUS_SIZE;
             return contextData;
         }
-
+        // 检测每一个 qi 的 bit count 是否合法 [2, 60]
         int coeffModulusSize = coeffModulus.length;
         for (int i = 0; i < coeffModulusSize; i++) {
             if (coeffModulus[i].getValue() >>> Constants.USER_MOD_BIT_COUNT_MAX > 0 ||
@@ -145,6 +176,7 @@ public class Context {
         contextData.totalCoeffModulusBitCount = UintCore.getSignificantBitCountUint(contextData.totalCoeffModulus, coeffModulusSize);
 
         // Check polynomial modulus degree and create poly_modulus
+        // x^N + 1, N \in [2, 131073]
         int polyModulusDegree = parms.getPolyModulusDegree();
         if (polyModulusDegree < Constants.POLY_MOD_DEGREE_MIN || polyModulusDegree > Constants.POLY_MOD_DEGREE_MAX) {
 
@@ -159,7 +191,8 @@ public class Context {
         }
 
         // Quick sanity check
-        if (!Common.productFitsIn(true, coeffModulusSize, polyModulusDegree)) {
+        // todo: really need this check?
+        if (!Common.productFitsIn(false, coeffModulusSize, polyModulusDegree)) {
             contextData.qualifiers.parameterError = ErrorType.INVALID_PARAMETERS_TOO_LARGE;
             return contextData;
         }
@@ -202,7 +235,7 @@ public class Context {
         }
 
         // now only consider bfv
-        if (parms.getScheme() == SchemeType.BFV) {
+        if (parms.getScheme() == SchemeType.BFV || parms.getScheme() == SchemeType.BGV) {
 
             // Plain modulus must be at least 2 and at most 60 bits
             if (plainModulus.getValue() >>> Constants.PLAIN_MOD_BIT_COUNT_MAX != 0 ||
@@ -222,7 +255,7 @@ public class Context {
 
             // Check that plain_modulus is smaller than total coeff modulus
             if (!UintCore.isLessThanUint(
-                    new long[]{plainModulus.getValue()},
+                    new long[]{plainModulus.getValue()}, // todo: consider remove new Array?
                     plainModulus.getUint64Count(),
                     contextData.totalCoeffModulus,
                     coeffModulusSize)) {
@@ -289,8 +322,9 @@ public class Context {
                 // directly sub
                 UintArithmetic.subUint(contextData.totalCoeffModulus, widePlainModulus, coeffModulusSize, contextData.plainUpperHalfIncrement);
             }
-
-
+        } else if (parms.getScheme() == SchemeType.CKKS) {
+            //todo: implement CKKS
+            throw new IllegalArgumentException("now cannot support CKKS");
         } else {
 
             contextData.qualifiers.parameterError = ErrorType.INVALID_SCHEME;
@@ -311,7 +345,8 @@ public class Context {
         // Check whether the coefficient modulus consists of a set of primes that are in decreasing order
         contextData.qualifiers.usingDescendingModulusChain = true;
         for (int i = 0; i < coeffModulusSize - 1; i++) {
-            contextData.qualifiers.usingDescendingModulusChain &= (coeffModulus[i].getValue() > coeffModulus[i + 1].getValue());
+            contextData.qualifiers.usingDescendingModulusChain &=
+                    (coeffModulus[i].getValue() > coeffModulus[i + 1].getValue());
         }
 
         contextData.galoisTool = new GaloisTool(coeffCountPower);
@@ -323,29 +358,39 @@ public class Context {
     private ParmsIdType createNextContextData(ParmsIdType prevParmsId) {
 
         // note that here EncryptionParams object should be cloned, a new ContextData should hold a new  object.
+
+        // 这里需要一个新的 加密参数对象，这个对象是从 prevParmsId 得到的，然后咋这里会做一些修改
         EncryptionParams nextParms = contextDataMap.get(prevParmsId).parms.clone();
         Modulus[] nextCoeffModulus = nextParms.getCoeffModulus();
         // Create the next set of parameters by removing last modulus
+        // 最后一个 moduli 被移除，然后得到的新的 Modulus[] 被赋值给 nextParms
         Modulus[] removedLastModulus = new Modulus[nextCoeffModulus.length - 1];
         System.arraycopy(nextCoeffModulus, 0, removedLastModulus, 0, nextCoeffModulus.length - 1);
         nextParms.setCoeffModulus(removedLastModulus);
+        // 随着参数被改变，parmsId 也会被修改
         ParmsIdType nextParmsId = nextParms.getParmsId().clone();
 
         // Validate next parameters and create next context_data
+        // 根据新的参数，计算新的 ContextData
         ContextData nextContextData = validate(nextParms);
 
         // If not valid then return zero parms_id
+        // 如果当前参数 计算出来的 ContextData 不合法，则直接返回
         if (!nextContextData.qualifiers.isParametersSet()) {
             return ParmsIdType.parmsIdZero();
         }
 
         // Add them to the context_data_map_
+        // 这里还需要一次 clone 吗？ 上面已经 clone 过一次了
         contextDataMap.put(nextParmsId.clone(), nextContextData);
 
         // Add pointer to next context_data to the previous one (linked list)
         // Add pointer to previous context_data to the next one (doubly linked list)
         // We need to remove constness first to modify this
+
+        // 前一个参数 对应的 nextContextData, 就是 当前参数Id 对应的 ContextData
         contextDataMap.get(prevParmsId).nextContextData = contextDataMap.get(nextParmsId);
+        // 当前参数Id 对应的 preContextData 就是 前一个参数Id 对应的 Context
         contextDataMap.get(nextParmsId).preContextData = contextDataMap.get(prevParmsId);
 
         return nextParmsId;
@@ -362,12 +407,10 @@ public class Context {
     }
 
     public ContextData keyContextData() {
-
         return contextDataMap.getOrDefault(keyParmsId, null);
     }
 
     public ContextData lastContextData() {
-
         return contextDataMap.getOrDefault(lastParmsId, null);
     }
 
@@ -415,7 +458,6 @@ public class Context {
      */
     public class ContextData {
 
-
         private EncryptionParams parms;
 
         private EncryptionParameterQualifiers qualifiers;
@@ -456,7 +498,6 @@ public class Context {
 
             smallNttTables = new NttTables[parms.getCoeffModulus().length];
             plainNttTables = new NttTables[1];
-
         }
 
 

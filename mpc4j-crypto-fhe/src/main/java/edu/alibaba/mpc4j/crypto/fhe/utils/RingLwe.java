@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 import edu.alibaba.mpc4j.crypto.fhe.Ciphertext;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
+import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.keys.SecretKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttHandler;
@@ -18,6 +19,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticMod;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
+import org.bouncycastle.math.raw.Mod;
 
 import java.util.Arrays;
 
@@ -163,6 +165,7 @@ public class RingLwe {
             for (int i = 0; i < coeffCount; i++) {
                 // This ensures uniform distribution
                 while (Long.compareUnsigned(destination[startIndex + j * coeffCount + i], maxMultiple) >= 0) {
+                    // rand 可能为负数，所以要用 compareUnsigned
                     destination[startIndex + j * coeffCount + i] = prng.secureRandom.nextLong();
                 }
                 // 修改原数组
@@ -326,6 +329,127 @@ public class RingLwe {
     }
 
 
+    public static void encryptZeroAsymmetric(PublicKey publicKey, Context context, ParmsIdType parmsId, boolean isNttForm, Ciphertext destination) {
+
+
+        assert ValueChecker.isValidFor(publicKey, context);
+
+        Context.ContextData contextData = context.getContextData(parmsId);
+        EncryptionParams parms = contextData.getParms();
+        Modulus[] coeffModulus = parms.getCoeffModulus();
+        Modulus plainModulus = parms.getPlainModulus();
+        int coeffModulusSize = coeffModulus.length;
+        int coeffCount = parms.getPolyModulusDegree();
+        NttTables[] nttTables = contextData.getSmallNttTables();
+        int encryptedSize = publicKey.data().getSize();
+        SchemeType type = parms.getScheme();
+
+        // Make destination have right size and parms_id
+        // Ciphertext (c_0,c_1, ...)
+        destination.resize(context, parmsId, encryptedSize);
+        destination.setIsNttForm(isNttForm);
+        destination.setScale(1.0);
+        destination.setCorrectionFactor(1);
+
+        // c[j] = public_key[j] * u + e[j] in BFV/CKKS = public_key[j] * u + p * e[j] in BGV
+        // where e[j] <-- chi, u <-- R_3
+
+        // Create a PRNG; u and the noise/error share the same PRNG
+        UniformRandomGenerator prng = parms.getRandomGeneratorFactory().create();
+
+        // Generate u <-- R_3
+        long[] u = new long[coeffCount * coeffModulusSize];
+        samplePolyTernary(prng, parms, u);
+
+//        System.out.println("u length: " + u.length);
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("u: {");
+//        for (int i = 0; i < u.length; i++) {
+//            sb.append(u[i]);
+//            if (i != u.length - 1) {
+//                sb.append(", ");
+//            }
+//        }
+//        sb.append("}");
+//        System.out.println(sb);
+//
+//        sb = new StringBuilder();
+//        sb.append("u: {");
+//        for (int i = 0; i < u.length; i++) {
+//            sb.append(u[i]);
+//            sb.append("L");
+//            if (i != u.length - 1) {
+//                sb.append(", ");
+//            }
+//        }
+//        sb.append("}");
+//        System.out.println(sb);
+
+        // 覆盖固定 u
+//        u = new long[] {0L, 0L, 0L, 1L, 0L, 1099511590912L, 1099511590912L, 1099511590912L, 0L, 1L, 1099511590912L, 0L, 0L, 1L, 1099511590912L, 1099511590912L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511590912L, 1L, 1L, 1099511590912L, 0L, 0L, 1099511590912L, 0L, 0L, 0L, 1099511590912L, 0L, 1L, 1L, 0L, 1099511590912L, 0L, 0L, 1099511590912L, 0L, 1099511590912L, 0L, 1099511590912L, 1L, 0L, 0L, 1099511590912L, 1L, 1099511590912L, 1L, 1099511590912L, 1L, 1099511590912L, 0L, 1L, 0L, 1099511590912L, 0L, 1099511590912L, 0L, 1L, 1099511590912L, 1099511590912L, 0L, 1099511590912L, 1L, 1L, 1L, 1L, 0L, 1099511590912L, 1099511590912L, 1L, 1099511590912L, 1L, 0L, 1099511590912L, 1099511590912L, 1099511590912L, 1099511590912L, 1099511590912L, 1099511590912L, 1099511590912L, 0L, 0L, 1099511590912L, 1L, 1L, 1099511590912L, 0L, 1099511590912L, 1L, 0L, 1099511590912L, 1L, 1L, 1099511590912L, 1099511590912L, 1099511590912L, 1L, 0L, 0L, 1099511590912L, 1L, 0L, 1099511590912L, 1099511590912L, 1099511590912L, 1099511590912L, 1L, 1L, 1099511590912L, 0L, 0L, 0L, 1099511590912L, 1L, 1L, 1099511590912L, 0L, 1099511590912L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511590912L, 1L, 0L, 1099511590912L, 1L, 0L, 1L, 0L, 1L, 1L, 1099511590912L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 1L, 1099511590912L, 1099511590912L, 1L, 1L, 0L, 1L, 0L, 1L, 1099511590912L, 0L, 1L, 0L, 0L, 1L, 0L, 1099511590912L, 1L, 1099511590912L, 1L, 1L, 1L, 1L, 1L, 1099511590912L, 1L, 1099511590912L, 1099511590912L, 0L, 1099511590912L, 1L, 1L, 1099511590912L, 1L, 1099511590912L, 0L, 1L, 1099511590912L, 1L, 0L, 0L, 1099511590912L, 1099511590912L, 1L, 1099511590912L, 0L, 0L, 1L, 1L, 0L, 1L, 1099511590912L, 1L, 1L, 1099511590912L, 0L, 1L, 1L, 0L, 1L, 1L, 1099511590912L, 0L, 1L, 1099511590912L, 1L, 1L, 1L, 0L, 1L, 1L, 1099511590912L, 0L, 0L, 0L, 1L, 0L, 1L, 1099511590912L, 1L, 0L, 0L, 0L, 1099511590912L, 0L, 1L, 1L, 1099511590912L, 1099511590912L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511590912L, 1099511590912L, 1L, 1L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 1099511592960L, 1099511592960L, 1099511592960L, 0L, 1L, 1099511592960L, 0L, 0L, 1L, 1099511592960L, 1099511592960L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511592960L, 1L, 1L, 1099511592960L, 0L, 0L, 1099511592960L, 0L, 0L, 0L, 1099511592960L, 0L, 1L, 1L, 0L, 1099511592960L, 0L, 0L, 1099511592960L, 0L, 1099511592960L, 0L, 1099511592960L, 1L, 0L, 0L, 1099511592960L, 1L, 1099511592960L, 1L, 1099511592960L, 1L, 1099511592960L, 0L, 1L, 0L, 1099511592960L, 0L, 1099511592960L, 0L, 1L, 1099511592960L, 1099511592960L, 0L, 1099511592960L, 1L, 1L, 1L, 1L, 0L, 1099511592960L, 1099511592960L, 1L, 1099511592960L, 1L, 0L, 1099511592960L, 1099511592960L, 1099511592960L, 1099511592960L, 1099511592960L, 1099511592960L, 1099511592960L, 0L, 0L, 1099511592960L, 1L, 1L, 1099511592960L, 0L, 1099511592960L, 1L, 0L, 1099511592960L, 1L, 1L, 1099511592960L, 1099511592960L, 1099511592960L, 1L, 0L, 0L, 1099511592960L, 1L, 0L, 1099511592960L, 1099511592960L, 1099511592960L, 1099511592960L, 1L, 1L, 1099511592960L, 0L, 0L, 0L, 1099511592960L, 1L, 1L, 1099511592960L, 0L, 1099511592960L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511592960L, 1L, 0L, 1099511592960L, 1L, 0L, 1L, 0L, 1L, 1L, 1099511592960L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 1L, 1099511592960L, 1099511592960L, 1L, 1L, 0L, 1L, 0L, 1L, 1099511592960L, 0L, 1L, 0L, 0L, 1L, 0L, 1099511592960L, 1L, 1099511592960L, 1L, 1L, 1L, 1L, 1L, 1099511592960L, 1L, 1099511592960L, 1099511592960L, 0L, 1099511592960L, 1L, 1L, 1099511592960L, 1L, 1099511592960L, 0L, 1L, 1099511592960L, 1L, 0L, 0L, 1099511592960L, 1099511592960L, 1L, 1099511592960L, 0L, 0L, 1L, 1L, 0L, 1L, 1099511592960L, 1L, 1L, 1099511592960L, 0L, 1L, 1L, 0L, 1L, 1L, 1099511592960L, 0L, 1L, 1099511592960L, 1L, 1L, 1L, 0L, 1L, 1L, 1099511592960L, 0L, 0L, 0L, 1L, 0L, 1L, 1099511592960L, 1L, 0L, 0L, 0L, 1099511592960L, 0L, 1L, 1L, 1099511592960L, 1099511592960L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511592960L, 1099511592960L, 1L, 1L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 1099511603712L, 1099511603712L, 1099511603712L, 0L, 1L, 1099511603712L, 0L, 0L, 1L, 1099511603712L, 1099511603712L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511603712L, 1L, 1L, 1099511603712L, 0L, 0L, 1099511603712L, 0L, 0L, 0L, 1099511603712L, 0L, 1L, 1L, 0L, 1099511603712L, 0L, 0L, 1099511603712L, 0L, 1099511603712L, 0L, 1099511603712L, 1L, 0L, 0L, 1099511603712L, 1L, 1099511603712L, 1L, 1099511603712L, 1L, 1099511603712L, 0L, 1L, 0L, 1099511603712L, 0L, 1099511603712L, 0L, 1L, 1099511603712L, 1099511603712L, 0L, 1099511603712L, 1L, 1L, 1L, 1L, 0L, 1099511603712L, 1099511603712L, 1L, 1099511603712L, 1L, 0L, 1099511603712L, 1099511603712L, 1099511603712L, 1099511603712L, 1099511603712L, 1099511603712L, 1099511603712L, 0L, 0L, 1099511603712L, 1L, 1L, 1099511603712L, 0L, 1099511603712L, 1L, 0L, 1099511603712L, 1L, 1L, 1099511603712L, 1099511603712L, 1099511603712L, 1L, 0L, 0L, 1099511603712L, 1L, 0L, 1099511603712L, 1099511603712L, 1099511603712L, 1099511603712L, 1L, 1L, 1099511603712L, 0L, 0L, 0L, 1099511603712L, 1L, 1L, 1099511603712L, 0L, 1099511603712L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511603712L, 1L, 0L, 1099511603712L, 1L, 0L, 1L, 0L, 1L, 1L, 1099511603712L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 1L, 1099511603712L, 1099511603712L, 1L, 1L, 0L, 1L, 0L, 1L, 1099511603712L, 0L, 1L, 0L, 0L, 1L, 0L, 1099511603712L, 1L, 1099511603712L, 1L, 1L, 1L, 1L, 1L, 1099511603712L, 1L, 1099511603712L, 1099511603712L, 0L, 1099511603712L, 1L, 1L, 1099511603712L, 1L, 1099511603712L, 0L, 1L, 1099511603712L, 1L, 0L, 0L, 1099511603712L, 1099511603712L, 1L, 1099511603712L, 0L, 0L, 1L, 1L, 0L, 1L, 1099511603712L, 1L, 1L, 1099511603712L, 0L, 1L, 1L, 0L, 1L, 1L, 1099511603712L, 0L, 1L, 1099511603712L, 1L, 1L, 1L, 0L, 1L, 1L, 1099511603712L, 0L, 0L, 0L, 1L, 0L, 1L, 1099511603712L, 1L, 0L, 0L, 0L, 1099511603712L, 0L, 1L, 1L, 1099511603712L, 1099511603712L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 1099511603712L, 1099511603712L, 1L, 1L, 0L, 1L};
+        // c[j] = u * public_key[j]
+        for (int i = 0; i < coeffModulusSize; i++) {
+            // u 是 RnsIter, 这里是对 CoeffIter 操作，RnsIter + startIndex ---> CoeffIter
+            NttTool.nttNegAcyclicHarvey(u, i * coeffCount, nttTables[i]);
+            // j 是对 密文多项式的索引
+            for (int j = 0; j < encryptedSize; j++) {
+                // 注意这里是对 CoeffIter 操作，注意起点的计算
+                PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                        u,
+                        i * coeffCount,
+                        publicKey.data().getData(), // 密文，PolyIter
+                        publicKey.data().indexAt(j) + i * coeffCount, // RnsIter + startIndx = CoeffIter
+                        coeffCount,
+                        coeffModulus[i],
+                        destination.indexAt(j) + i * coeffCount,
+                        destination.getData()
+                );
+                // Addition with e_0, e_1 is in non-NTT form
+                if (!isNttForm) {
+                    NttTool.inverseNttNegAcyclicHarvey(destination.getData(), destination.indexAt(j) + i * coeffCount, nttTables[i]);
+                }
+            }
+        }
+        // Generate e_j <-- chi
+        // c[j] = public_key[j] * u + e[j] in BFV/CKKS, = public_key[j] * u + p * e[j] in BGV,
+
+        for (int j = 0; j < encryptedSize; j++) {
+            // 采样 noise, 默认使用cbd分布
+            // todo: noise 采样方式可配置
+            samplePolyCbd(prng, parms, u);
+            // 噪音置 0
+//            Arrays.fill(u, 0);
+            // 把 u 视为 RnsIter
+            if (type == SchemeType.BGV) {
+                //todo: implement BGV
+                throw new IllegalArgumentException("now  cannot support BGV");
+            } else { // BFV & CKKS
+                if (isNttForm) {
+                    // 注意函数签名, 直接处理 u 这个 RnsIter
+                    NttTool.nttNegAcyclicHarveyRnsIter(u, coeffCount, coeffModulusSize, nttTables);
+                }
+            }
+            //开始完成加法
+            // 全部都处理为 CoeffIter 这个粒度的运算，不管输入的数组是表示 RnsIter/PolyIter, 每次都只处理一个 CoeffIter
+            // 那么核心的就是 起点的计算 + coeffCount
+            // 这里我们是想计算 RnsIter, 由于我们单次运算的粒度是 CoeffIter, 所以这里需要一个循环，k次，即 RnsBaseSize
+            // todo: 需要设计一个 统一、高效的 基于 long[] 的 CoeffIter/RnsIter/PolyIter 的处理方式
+            for (int i = 0; i < coeffModulusSize; i++) {
+                PolyArithmeticSmallMod.addPolyCoeffMod(
+                        u,
+                        i * coeffCount,
+                        destination.getData(), // Ciphertext 有多个 poly（polyIter）, destination.indexAt(j) 定位到单个poly（RnsIter） + i * coeffCount 定位到 CoffIter
+                        destination.indexAt(j) + i * coeffCount,
+                        coeffCount,
+                        coeffModulus[i],
+                        destination.indexAt(j) + i * coeffCount,
+                        destination.getData()
+                );
+            }
+        }
+    }
+
+
     public static void encryptZeroSymmetric(SecretKey secretKey, Context context, ParmsIdType parmsId, Boolean isNttForm, Boolean saveSeed, Ciphertext destination) {
 
         assert ValueChecker.isValidFor(secretKey, context);
@@ -372,14 +496,15 @@ public class RingLwe {
         bootstrapPrng.generate(UniformRandomGeneratorFactory.PRNG_SEED_BYTE_COUNT, publicPrngSeed);
 
         // Set up a new default PRNG for expanding u from the seed sampled above
-        UniformRandomGenerator ciphertextPrng = UniformRandomGeneratorFactory.defaultFactory().create();
+        UniformRandomGenerator ciphertextPrng = UniformRandomGeneratorFactory.defaultFactory().create(publicPrngSeed);
 
         // Generate ciphertext: (c[0], c[1]) = ([-(as+ e)]_q, a) in BFV/CKKS
         // Generate ciphertext: (c[0], c[1]) = ([-(as+pe)]_q, a) in BGV
         int c0StartIndex = 0;
-        int c1StartIndex = destination.getData(1);
+        int c1StartIndex = destination.indexAt(1);
 
         // Sample a uniformly at random
+        // c1 就是随机数 a
         if (isNttForm || !saveSeed) {
             // Sample the NTT form directly
             samplePolyUniform(ciphertextPrng, parms, destination.getData(), c1StartIndex);
@@ -403,6 +528,7 @@ public class RingLwe {
          */
         long[] noise = new long[coeffCount * coeffModulusSize];
         // 这里暂时 默认使用 sample_poly_cbd
+        // todo: noise 采样方式可配置
         samplePolyCbd(bootstrapPrng, parms, noise);
 
         // Calculate -(as+ e) (mod q) and store in c[0] in BFV/CKKS
@@ -410,8 +536,15 @@ public class RingLwe {
         // 处理 RNS 下的每一个多项式计算
         for (int i = 0; i < coeffModulusSize; i++) {
             // c1 就是 a, 一个均匀分布的多项式， 这里在计算 as
-            PolyArithmeticSmallMod.dyadicProductCoeffMod(secretKey.data().getData(), i * coeffCount, destination.getData(), c1StartIndex + i * coeffCount, coeffCount, coeffModulus[i],
-                    c0StartIndex + i * coeffCount, destination.getData()
+            PolyArithmeticSmallMod.dyadicProductCoeffMod(
+                    secretKey.data().getData(),
+                    i * coeffCount,
+                    destination.getData(),
+                    c1StartIndex + i * coeffCount,
+                    coeffCount,
+                    coeffModulus[i],
+                    c0StartIndex + i * coeffCount,
+                    destination.getData()
             );
             // 到这里 a s 都是 ntt form
             // e 不是，需要根据参数，决定是否将 e 转换为 NTT，还是 将 as 转回系数表示
@@ -438,14 +571,22 @@ public class RingLwe {
                     c0StartIndex + i * coeffCount,
                     destination.getData());
             // (as + e, a) ---> (-(as + e), a)
-            PolyArithmeticSmallMod.negatePolyCoeffMod(destination.getData(), c0StartIndex + i * coeffCount, coeffCount, coeffModulus[i], c0StartIndex, destination.getData());
-
+            PolyArithmeticSmallMod.negatePolyCoeffMod(
+                    destination.getData(),
+                    c0StartIndex + i * coeffCount,
+                    coeffCount,
+                    coeffModulus[i],
+                    c0StartIndex + i * coeffCount,
+                    destination.getData());
         }
 
         if (!isNttForm && !saveSeed) {
             for (int i = 0; i < coeffModulusSize; i++) {
                 // Transform the c1 into non-NTT representation
-                NttTool.inverseNttNegAcyclicHarvey(destination.getData(), c1StartIndex + i * coeffCount, nttTables[i]);
+                NttTool.inverseNttNegAcyclicHarvey(
+                        destination.getData(),
+                        c1StartIndex + i * coeffCount,
+                        nttTables[i]);
             }
         }
 

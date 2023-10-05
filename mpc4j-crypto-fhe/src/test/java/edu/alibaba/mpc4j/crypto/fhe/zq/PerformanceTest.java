@@ -25,7 +25,7 @@ public class PerformanceTest {
     /**
      * max loop num
      */
-    private static final int MAX_LOOP_NUM = 10000;
+    private static final int MAX_LOOP_NUM = 10000 * 1000;
 
     /**
      * time format

@@ -29,6 +29,25 @@ public class RnsBase implements Cloneable {
     // note that we use MultiplyUintModOperand for faster modular multiplication
     private MultiplyUintModOperand[] invPuncturedProdModBaseArray;
 
+
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append( "RnsBase{" +
+                "size=" + size +
+                ", base=" + Arrays.toString(base) +
+                ", baseProd=" + Arrays.toString(baseProd));
+        sb.append(", puncturedProdArray= ");
+        for (long[] longs : puncturedProdArray) {
+            sb.append(Arrays.toString(longs));
+        }
+        sb.append(", invPuncturedProdModBaseArray= ");
+        sb.append(Arrays.toString(invPuncturedProdModBaseArray));
+
+        return sb.toString();
+    }
+
     public RnsBase(Modulus[] rnsBase) {
         assert rnsBase.length > 0;
         this.size = rnsBase.length;
@@ -69,7 +88,7 @@ public class RnsBase implements Cloneable {
         for (int i = 0; i < size; i++) {
 
             if (rnsBase[i] == 0) {
-                throw new IllegalArgumentException("rnbase is valid, modulus can not be zero");
+                throw new IllegalArgumentException("rns base is invalid, modulus can not be zero");
             }
 
             // in our implementation, a valid modulus must not be zero, so omit this check.

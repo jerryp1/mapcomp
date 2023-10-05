@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -36,7 +37,19 @@ public class NttTables {
 
     NttHandler nttHandler;
 
-
+    @Override
+    public String toString() {
+        return "NttTables{" +
+                "root=" + root +
+                ", invRoot=" + invRoot +
+                ", coeffCountPower=" + coeffCountPower +
+                ", coeffCount=" + coeffCount +
+                ", modulus=" + modulus +
+                ", invDegreeModulo=" + invDegreeModulo +
+                ", \n rootPowers=" + Arrays.toString(rootPowers) +
+                ", \n invRootPowers=" + Arrays.toString(invRootPowers) +
+                '}';
+    }
 
     public NttTables() {}
 

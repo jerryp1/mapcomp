@@ -604,6 +604,9 @@ public class UintArithmetic {
 
     /**
      * long[] / long[]
+     * numerator 记录 余数
+     * quotient 记录商
+     *
      * @param numerator
      * @param denominator
      * @param uint64Count
@@ -1238,11 +1241,12 @@ public class UintArithmetic {
      *
      * @param a a 64-bit value
      * @param b a 64-bit value
-     * @param result an array of length 1， which store lower 64-bit part of (a + b)
+     * @param result an array，result[0] store lower 64-bit part of (a + b)
      * @return (a + b)'s carry
      */
     public static long addUint64(long a, long b, long[] result) {
-        assert result.length == 1;
+        // 不需要这个 assert, 反正结果保存在 result[0], 至于 result 多长, 不需要关心
+//        assert result.length == 1;
         result[0] = a + b;
         return Long.compareUnsigned(result[0], a) < 0 ? 1: 0;
     }

@@ -2,6 +2,9 @@ package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
+import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
+import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTablesCreateIter;
+import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,7 +64,7 @@ public class RnsToolTest {
             in[1] = 70;
             in[2] = 35;
             in[3] = 70;
-
+            // Q = 35, [(t/35) * 35] mod t --> 0,  [(t/35) * 70] mod t --> 0
             // so result is zero
             rnsTool.decryptScaleAndRound(inIter, outIter);
             for (long o : outIter) {
@@ -450,10 +453,7 @@ public class RnsToolTest {
     @Test
     public void divideAndRoundQLastInplace() {
 
-        // This function approximately divides the input values by the last prime in the base q.
-        // Input is in base q; the last RNS component becomes invalid.
-        // note that the last RNS component becomes invalid. So in the following test,
-        // we drop the last RNS component.
+
         RnsTool rnsTool;
         {
             int polyModulusDegree = 2;
@@ -546,4 +546,75 @@ public class RnsToolTest {
             Assert.assertTrue((7 + 6 - in[5]) % 7 <= 1);
         }
     }
+
+    @Test
+    public void divideAndRoundQLastNttInplace() {
+
+        // This function approximately divides the input values by the last prime in the base q.
+        // Input is in base q; the last RNS component becomes invalid.
+        // note that the last RNS component becomes invalid. So in the following test,
+        // we drop the last RNS component.
+
+        RnsTool rnsTool;
+
+        int polyModulusDegree = 2;
+        NttTables[] nttTables = new NttTables[]{
+                new NttTables(1, new Modulus(53)),
+                new NttTables(1, new Modulus(13)),
+        };
+        Modulus plainT = new Modulus(0);
+        // no throw
+        rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{53, 13}), plainT);
+
+        long[] in = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
+        RnsIter inIter = new RnsIter(in, polyModulusDegree);
+        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        Assert.assertEquals(0, in[0]);
+        Assert.assertEquals(0, in[1]);
+
+        // The size of q is 2. We set some values here and divide by the last modulus (i.e., 13).
+        in[0] = 1;
+        in[1] = 2;
+        in[2] = 1;
+        in[3] = 2;
+        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+
+        // We expect to get a zero output also in this case
+        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        Assert.assertEquals(0, in[0]);
+        Assert.assertEquals(0, in[1]);
+
+        // Next a case with non-trivial rounding
+        in[0] = 4;
+        in[1] = 12;
+        in[2] = 4;
+        in[3] = 12;
+        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+
+        // We expect to get a zero output also in this case
+        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        Assert.assertTrue((53 + 1 - in[0]) % 53 <= 1); // in[0] = 0, round(4/13) = 0
+        Assert.assertTrue((53 + 2 - in[1]) % 53 <= 1); // in[1] = 1, round(12/13) = 1
+
+        // Input array (25, 35)
+        in[0] = 25;
+        in[1] = 35;
+        in[2] = 12;
+        in[3] = 9;
+        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+
+        // We expect to get a zero output also in this case
+        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        Assert.assertTrue((53 + 2 - in[0]) % 53 <= 1); // round(25/13) = 2
+        Assert.assertTrue((53 + 3 - in[1]) % 53 <= 1);// round(35/13) = 3
+    }
 }
+
+
+

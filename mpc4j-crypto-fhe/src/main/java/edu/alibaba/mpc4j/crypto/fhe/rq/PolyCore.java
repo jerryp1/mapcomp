@@ -13,6 +13,52 @@ import java.util.stream.IntStream;
  */
 public class PolyCore {
 
+
+    /**
+     * Convert a poly (N coefficients, each coefficient is a base-2^64 value with length l) to hexString
+     *
+     * @param value            表示一个多项式的系数，总共 N 个系数，每一个都是一个 uint，长度为 coeffUint64Count
+     * @param coeffCount       N
+     * @param coeffUint64Count 每一个系数的uint64长度, l
+     * @return hex string of the value(poly)
+     */
+    public static String polyToHexString(long[] value, int coeffCount, int coeffUint64Count) {
+
+        assert value != null;
+
+        if (coeffCount == 0 || coeffUint64Count == 0) {
+            return "0";
+        }
+
+        StringBuilder result = new StringBuilder();
+        boolean empty = true;
+
+        int valueIndex = Common.mulSafe(coeffCount - 1, coeffUint64Count, false);
+        // 依次处理每一个coeff, 即 [(N-1) * l , N * l) --> [(N-2) * l, (N-1) * l) ---> .... ---> [0, 1* l)
+        while (coeffCount-- > 0) {
+            // 如果最后一个 coeff 为0
+            if (UintCore.isZeroUint(value, valueIndex, coeffUint64Count)) {
+                valueIndex -= coeffUint64Count;
+                continue;
+            }
+            if (!empty) {
+                result.append(" + ");
+            }
+            result.append(UintCore.uintToHexString(value, valueIndex, coeffUint64Count));
+            if (coeffCount > 0) {
+                result.append("x^");
+                result.append(coeffCount);
+            }
+            empty = false;
+            valueIndex -= coeffUint64Count;
+        }
+        if (empty) {
+            result.append('0');
+        }
+        return result.toString();
+    }
+
+
     /**
      * @param coeffCount       N
      * @param coeffUint64Count k
@@ -58,7 +104,8 @@ public class PolyCore {
     }
 
     public static void setPoly(long[] poly, int coeffCount, int coeffUint64Count, long[] result) {
-
+        assert poly != null;
+        assert result != null;
         assert coeffCount > 0 && coeffUint64Count > 0;
 
         UintCore.setUint(poly, Common.mulSafe(coeffCount, coeffUint64Count, false), result);

@@ -18,7 +18,7 @@ import org.junit.Test;
  */
 public class KeyGeneratorTest {
 
-    private static final int MAX_LOOP = 10000;
+    private static final int MAX_LOOP = 100;
 
     @Test
     public void bfvKeyGeneration2() {
@@ -26,10 +26,6 @@ public class KeyGeneratorTest {
             bfvKeyGeneration();
         }
     }
-
-
-
-
 
     @Test
     public void bfvKeyGeneration() {

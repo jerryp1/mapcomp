@@ -538,7 +538,42 @@ public class PolyArithmeticSmallModTest {
                     },
                     RnsIter.to2dArray(result)
             );
+
+
+            long[] data11 = new long[] {1, 2, 1, 2, 1, 2};
+            long[] data21 = new long[] {2, 3, 4, 2, 3, 4};
+            long[] result1 = new long[6];
+
+            for (int i = 0; i < 2; i++) {
+                PolyArithmeticSmallMod.dyadicProductCoeffMod(
+                        data11,
+                        i * 3,
+                        data21,
+                        i * 3,
+                        3,
+                        mod[i],
+                        i * 3,
+                        result1
+                );
+
+            }
+            Assert.assertArrayEquals(new long[] {2, 6, 4, 4, 3, 1}, result1);
+
+
+            Arrays.fill(result1, 0);
+            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(data11, 0, data21, 0,
+                    2, 3, mod,0, result1
+                    );
+
+            Assert.assertArrayEquals(new long[] {2, 6, 4, 4, 3, 1}, result1);
+
         }
+
+
+
+
+
+
         {
             long[][][] data1 = new long[][][]{
                     {

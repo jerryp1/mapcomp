@@ -31,7 +31,10 @@ public class BaseConverter {
     //         ............
     //         [ q_1^* mod m_n, q_2^* mod m_n, ...,  q_k^* mod m_n]
     // the shape is: n * k
+    // n is the size of outBase, k is the size of inBase
     private long[][] baseChangeMatrix;
+
+
 
 
     /**
@@ -386,5 +389,23 @@ public class BaseConverter {
 
     public RnsBase getOutputBase() {
         return outBase;
+    }
+
+
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("BaseConverter{" +
+                "inBase=" + inBase +
+                ", outBase=" + outBase);
+        sb.append(", baseChangeMatrix=");
+        for (long[] changeMatrix : baseChangeMatrix) {
+            sb.append(Arrays.toString(changeMatrix));
+        }
+        sb.append("}");
+
+        return sb.toString();
+
     }
 }

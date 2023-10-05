@@ -25,6 +25,14 @@ public class ModArithLazy {
 
     }
 
+    @Override
+    public String toString() {
+        return "ModArithLazy{" +
+                "modulus=" + modulus +
+                ", twoTimesModulus=" + twoTimesModulus +
+                '}';
+    }
+
     public long add(long a, long b) {
         return  a + b;
     }

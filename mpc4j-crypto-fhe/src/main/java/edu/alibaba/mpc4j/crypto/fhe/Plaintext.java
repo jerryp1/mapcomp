@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
+import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.DynArray;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
@@ -65,26 +66,239 @@ public class Plaintext implements Cloneable {
         this.data = new DynArray(copy.data);
     }
 
-//    public Plaintext(String hexPoly) {
-//
-//        if (isNttForm()) {
-//            throw new RuntimeException("cannot set an NTT transformed Plaintext");
+    /**
+     * Constructs a plaintext from a given hexadecimal string describing the
+     * plaintext polynomial.
+     * <p>
+     * The string description of the polynomial must adhere to the format returned
+     * by to_string(),
+     * which is of the form "7FFx^3 + 1x^1 + 3" and summarized by the following
+     * rules:
+     * 1. Terms are listed in order of strictly decreasing exponent
+     * 2. Coefficient values are non-negative and in hexadecimal format (upper
+     * and lower case letters are both supported)
+     * 3. Exponents are positive and in decimal format
+     * 4. Zero coefficient terms (including the constant term) may be (but do
+     * not have to be) omitted
+     * 5. Term with the exponent value of one must be exactly written as x^1
+     * 6. Term with the exponent value of zero (the constant term) must be written
+     * as just a hexadecimal number without exponent
+     * 7. Terms must be separated by exactly <space>+<space> and minus is not
+     * allowed
+     * 8. Other than the +, no other terms should have whitespace
+     *
+     * @param hexPoly a poly in hex string
+     */
+    public Plaintext(String hexPoly) {
+        // first call new Plaintext()
+        this();
+        fromHexPoly(hexPoly);
+    }
+
+
+    public void fromHexPoly(String hexPoly) {
+
+        if (isNttForm()) {
+            throw new RuntimeException("cannot set an NTT transformed Plaintext");
+        }
+
+        if (Common.unsignedGt(hexPoly.length(), Integer.MAX_VALUE)) {
+            throw new IllegalArgumentException("hex poly too long");
+        }
+
+        int length = hexPoly.length();
+        // Determine size needed to store string coefficient.
+        int assignCoeffCount = 0;
+        int assignCoeffBitCount = 0;
+
+        int pos = 0;
+        // todo: need Math.min? here two value is equal.
+        int lastPower = Math.min(data.maxSize(), Integer.MAX_VALUE);
+        // 这个 while 是在做两件事情: 1. 确定多项式的 coeffCount, 2. 确定每一个系数的 bitCount
+        // 以 "1x^63 + 2Fx^62 + Fx^32" 为例子
+        while (pos < length) {
+            // Determine length of coefficient starting at pos.
+            // 这里是在计算 coeff 的长度，例如 1 --> 长度就是 1，这里的长度是指 char 的长度
+            // 2F 的长度就是 2
+            int coeffLength = getCoeffLength(hexPoly, pos);
+            if (coeffLength == 0) {
+                throw new IllegalArgumentException("unable to parse hex poly, please check the format of the hex poly");
+            }
+
+            // Determine bit length of coefficient.
+            // 迭代找出最大的  assignCoeffBitCount
+            int coeffBitCount = Common.getHexStringBitCount(hexPoly, pos, coeffLength);
+            if (coeffBitCount > assignCoeffBitCount) {
+                assignCoeffBitCount = coeffBitCount;
+            }
+            pos += coeffLength;
+
+            // Extract power-term.
+            // 这里是在计算 x^63 的长度，这里就是 4,  x^2 --> 3
+            int[] powerLength = new int[1];
+            // power 就是 x^ 的这个power 值，长度保存在 powerLength
+            int power = getCoeffPower(hexPoly, pos, powerLength);
+            if (power == -1 || power >= lastPower) {
+                throw new IllegalArgumentException("unable to parse hex poly");
+            }
+            // 按照规定第一个 1x^63 的power 是最高项，那么系数长度（coeff count）就 63 + 1
+            if (assignCoeffCount == 0) {
+                assignCoeffCount = power + 1;
+            }
+            pos += powerLength[0];
+            lastPower = power;
+
+            // Extract plus (unless it is the end).
+            // 获取 " + " 的长度，正常情况下 就是 3
+            int plusLength = getPlus(hexPoly, pos);
+            if (plusLength == -1) {
+                throw new IllegalArgumentException("unable to parse hex poly");
+            }
+            pos += plusLength;
+        }
+        // If string is empty, then done.
+        if (assignCoeffCount == 0 || assignCoeffBitCount == 0) {
+            setZero();
+            return;
+        }
+
+        // Resize polynomial.
+        // 单个多项式系数至多 64-bit（实际上更少）
+        if (assignCoeffBitCount > Common.BITS_PER_UINT64) {
+            throw new IllegalArgumentException("hex poly has too large coefficients");
+        }
+        resize(assignCoeffCount);
+
+        // Populate polynomial from string.
+        pos = 0;
+        lastPower = getCoeffCount();
+        // 这里的 while 开始真正的从一个 Hex Poly 转换为 long[]
+        // 这里的做法和上面完全相同，就是逐个遍历 hexPoly，依次读取 coeff (1), power(x^63), plus(" + ")
+        // 然后把 coeff 放在 long[] 中，注意 long[] 中顺序和 power 的关系
+        // 1x^63 ， 是把 1 放在 data[63]  这个位置上的，是一一对应的
+        // 也就是 power = index(base-0)
+        while (pos < length) {
+            // Determine length of coefficient starting at pos.
+
+            // 记录下系数 所在的 pos
+            int coeffPos = pos;
+            int coeffLength = getCoeffLength(hexPoly, pos);
+            pos += coeffLength;
+
+            // Extract power-term.
+            int[] powerLength = new int[1];
+            int power = getCoeffPower(hexPoly, pos, powerLength);
+            pos += powerLength[0];
+
+            // Extract plus (unless it is the end).
+            int plusLength = getPlus(hexPoly, pos);
+            pos += plusLength;
+
+            // Zero coefficients not set by string.
+            for (int zeroPower = lastPower - 1; zeroPower > power; --zeroPower) {
+                data.set(zeroPower, 0);
+            }
+            // Populate coefficient.
+            // 注意函数签名
+            UintCore.hexStringToUint(hexPoly, coeffPos, coeffLength, 1, power, getData());
+            lastPower = power;
+        }
+
+        // Zero coefficients not set by string.
+        for (int zeroPower = lastPower - 1; zeroPower >= 0; --zeroPower) {
+            data.set(zeroPower, 0);
+        }
+    }
+
+
+    private boolean isDecimalChar(char c) {
+
+        return c >= '0' && c <= '9';
+    }
+
+    private int getDecimalValue(char c) {
+        return c - '0';
+    }
+
+    /**
+     * 获取一个系数的长度,例如  1Fx^1 --> coeffLength = 2
+     *
+     * @param poly
+     * @param startIndex
+     * @return
+     */
+    private int getCoeffLength(String poly, int startIndex) {
+        int length = 0;
+        int charIndex = startIndex;
+        // 注意 while 条件有两个
+        while (charIndex < poly.length() && Common.isHexChar(poly.charAt(charIndex))) {
+            length++;
+            charIndex++;
+        }
+        return length;
+    }
+
+    private int getCoeffPower(String poly, int startIndex, int[] powerLength) {
+        int length = 0;
+        int polyIndex = startIndex;
+
+//        if (poly.charAt(polyIndex) == '\0') {
+//            powerLength[0] = 0;
+//            return 0;
 //        }
-//
-//        if (Common.unsignedGt(hexPoly.length(), Integer.MAX_VALUE)) {
-//            throw new IllegalArgumentException("hex_poly too long");
+
+        if (poly.length() == startIndex) {
+            powerLength[0] = 0;
+            return 0;
+        }
+
+
+        if (poly.charAt(polyIndex) != 'x') {
+            return -1;
+        }
+
+        polyIndex++;
+        length++;
+        if (poly.charAt(polyIndex) != '^') {
+            return -1;
+        }
+        polyIndex++;
+        length++;
+        // 例如： '4' '0' '9' '6' ---> 4096
+        int power = 0;
+        while (polyIndex < poly.length() && isDecimalChar(poly.charAt(polyIndex))) {
+            power *= 10;
+            power += getDecimalValue(poly.charAt(polyIndex));
+            polyIndex++;
+            length++;
+        }
+        powerLength[0] = length;
+        return power;
+    }
+
+    private int getPlus(String poly, int startIndex) {
+
+        int polyIndex = startIndex;
+//        if (poly.charAt(polyIndex) == '\0') {
+//            return 0;
 //        }
-//
-//        int length = hexPoly.length();
-//        // Determine size needed to store string coefficient.
-//        int assignCoeffCount = 0;
-//
-//        int assignCoeffBitCount = 0;
-//
-//        int pos = 0;
-//        int lastPower =
-//
-//    }
+        if (poly.length() == startIndex) {
+            return 0;
+        }
+
+        if (poly.charAt(polyIndex++) != ' ') {
+            return -1;
+        }
+
+        if (poly.charAt(polyIndex++) != '+') {
+            return -1;
+        }
+        if (poly.charAt(polyIndex) != ' ') {
+            return -1;
+        }
+        // " + "  --> length = 3
+        return 3;
+    }
 
 
     public void reserve(int capacity) {
@@ -137,6 +351,7 @@ public class Plaintext implements Cloneable {
         coeffCount = 1;
         parmsId = ParmsIdType.parmsIdZero();
     }
+
 
     public void set(long[] coeffs) {
         data = new DynArray(coeffs);
@@ -209,7 +424,6 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     *
      * @return the significant coefficient count of the current plaintext polynomial.
      */
     public int significantCoeffCount() {
@@ -254,7 +468,7 @@ public class Plaintext implements Cloneable {
      */
     public boolean isNttForm() {
 
-        return !parmsId.equals(ParmsIdType.PARMS_ID_ZERO);
+        return !parmsId.isZero();
     }
 
 
@@ -305,12 +519,13 @@ public class Plaintext implements Cloneable {
 
     @Override
     public String toString() {
-        return "Plaintext{" +
-                "parmsId=" + parmsId +
-                ", coeffCount=" + coeffCount +
-                ", scale=" + scale +
-                ", data=" + data +
-                '}';
+
+        if (isNttForm()) {
+            throw new IllegalArgumentException("cannot convert NTT transformed plaintext to string");
+        }
+
+        return PolyCore.polyToHexString(data.data(), coeffCount, 1);
+
     }
 
     @Override

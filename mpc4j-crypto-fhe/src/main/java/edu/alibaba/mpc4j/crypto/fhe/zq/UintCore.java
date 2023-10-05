@@ -10,9 +10,232 @@ import java.util.Arrays;
  */
 public class UintCore {
 
+    /**
+     * @param value       a base-2^64 value
+     * @param uint64Count length of the base-2^64 value
+     * @return
+     */
+    public static String uintToDecimalString(long[] value, int uint64Count) {
+
+        assert !(uint64Count > 0 && value == null);
+
+        if (uint64Count == 0) {
+            return "0";
+        }
+
+        long[] remainder = new long[uint64Count];
+        long[] quotient = new long[uint64Count];
+        long[] base = new long[uint64Count];
+        int remainderIndex = 0;
+        int quotientIndex = 0;
+        int baseIndex = 0;
+        // base = [10, 10, ..., 10]
+        setUint(10, uint64Count, base);
+        // remainder = value
+        setUint(value, uint64Count, remainder);
+
+        StringBuilder output = new StringBuilder();
+        // 例如把 1234 这个十进制的数转换为 String -->
+        // 1234 / 10 --> q = 123, r = 4 ---> '4'
+        // 123 / 10 ----> q = 12 , r = 3 ---> '43'
+        // ......
+        // '4321' ---> reverse ---> '1234'
+        while (!isZeroUint(remainder, uint64Count)) {
+            // remainder / 10
+            UintArithmetic.divideUintInplace(remainder, base, uint64Count, quotient);
+            // 保留余数
+            char digit = (char) ((char) remainder[0] + '0');
+            output.append(digit);
+            // 更新余数，作为下一轮的 被除数
+            System.arraycopy(quotient, 0, remainder, 0, uint64Count);
+        }
+        // 反转 output
+        output.reverse();
+        // 输出 String
+        String result = output.toString();
+        if (result.isEmpty()) {
+            return "0";
+        }
+        return result;
+    }
+
+    /**
+     * convert value[startIndex, startIndex + uint64Count) to a hex String
+     *
+     * @param value
+     * @param startIndex
+     * @param uint64Count
+     * @return
+     */
+    public static String uintToHexString(long[] value, int startIndex, int uint64Count) {
+
+        assert !(uint64Count > 0 && value == null);
+
+        // Start with a string with a zero for each nibble in the array.
+        // nibble 值的是一个 hex char 对应的 decimal value, 占据 4-bit, 0-15
+        int numNibbles = Common.mulSafe(uint64Count, Common.NIBBLES_PER_UINT64, false);
+        StringBuilder output = new StringBuilder();
+        for (int i = 0; i < numNibbles; i++) {
+            output.append('0');
+        }
+
+        // Iterate through each uint64 in array and set string with correct nibbles in hex.
+        int nibbleIndex = numNibbles;
+        int leftMostNonZeroPos = numNibbles;
+
+        for (int i = 0; i < uint64Count; i++) {
+            long part = value[startIndex + i];
+            // Iterate through each nibble in the current uint64.
+            // 可以认为一个 part 包含了 24(64-bit/4)个 nibble, 现在一个一个抠出来
+            for (int j = 0; j < Common.NIBBLES_PER_UINT64; j++) {
+                // 依次取 最低位的 4-bit, 就是当前的 nibble
+                int nibble = (int) (part & (long) 0x0F);
+                int pos = --nibbleIndex;
+                if (nibble != 0) {
+                    // If nibble is not zero, then update string and save this pos to determine
+                    // number of leading zeros.
+                    output.setCharAt(pos, Common.nibbleToUpperHex(nibble));
+                    leftMostNonZeroPos = pos;
+                }
+                // 右移动 4-bit, 处理下一个 nibble
+                part >>>= 4;
+            }
+        }
+        // Trim string to remove leading zeros.
+        // 只保留 [leftMostNonZeroPos,...)
+        String result = output.substring(leftMostNonZeroPos);
+
+        if (result.isEmpty()) {
+            return "0";
+        }
+        return result;
+    }
+
+    /**
+     * convert a uint, a long array, to a hex string
+     *
+     * @param value
+     * @param uint64Count
+     * @return
+     */
+    public static String uintToHexString(long[] value, int uint64Count) {
+
+        assert !(uint64Count > 0 && value == null);
+
+        // Start with a string with a zero for each nibble in the array.
+        // nibble 值的是一个 hex char 对应的 decimal value, 占据 4-bit, 0-15
+        int numNibbles = Common.mulSafe(uint64Count, Common.NIBBLES_PER_UINT64, false);
+        StringBuilder output = new StringBuilder();
+        for (int i = 0; i < numNibbles; i++) {
+            output.append('0');
+        }
+
+        // Iterate through each uint64 in array and set string with correct nibbles in hex.
+        int nibbleIndex = numNibbles;
+        int leftMostNonZeroPos = numNibbles;
+
+        for (int i = 0; i < uint64Count; i++) {
+            long part = value[i];
+            // Iterate through each nibble in the current uint64.
+            // 可以认为一个 part 包含了 24(64-bit/4)个 nibble, 现在一个一个抠出来
+            for (int j = 0; j < Common.NIBBLES_PER_UINT64; j++) {
+                // 依次取 最低位的 4-bit, 就是当前的 nibble
+                int nibble = (int) (part & (long) 0x0F);
+                int pos = --nibbleIndex;
+                if (nibble != 0) {
+                    // If nibble is not zero, then update string and save this pos to determine
+                    // number of leading zeros.
+                    output.setCharAt(pos, Common.nibbleToUpperHex(nibble));
+                    leftMostNonZeroPos = pos;
+                }
+                // 右移动 4-bit, 处理下一个 nibble
+                part >>>= 4;
+            }
+        }
+        // Trim string to remove leading zeros.
+        // 只保留 [leftMostNonZeroPos,...)
+        String result = output.substring(leftMostNonZeroPos);
+
+        if (result.isEmpty()) {
+            return "0";
+        }
+        return result;
+    }
+
+
+    /**
+     * convert a hex string to uint, a long array.
+     *
+     * @param hexString
+     * @param charCount
+     * @param uint64Count
+     * @param result
+     */
+    public static void hexStringToUint(String hexString, int charCount, int uint64Count, long[] result) {
+        // 如果 hexString 为空，charCount 同时又大于0，显然是错误
+        assert !(hexString == null && charCount > 0);
+        assert !(uint64Count > 0 && result == null);
+        // todo: need mulSafe?
+        assert !Common.unsignedGt(Common.getHexStringBitCount(hexString, charCount), Common.mulSafe(uint64Count, Common.BITS_PER_UINT64, true));
+        // 从最低位遍历，也就是 最后一个 hex char
+        int hexStringIndex = charCount;
+
+        for (int uint64Index = 0; uint64Index < uint64Count; uint64Index++) {
+            long value = 0;
+            // 把一个 long 的 bits 填满, 每次处理一个 Nibble
+            for (int bitIndex = 0; bitIndex < Common.BITS_PER_UINT64; bitIndex += Common.BITS_PER_NIBBLE) {
+                // 处理完 charCount 个 char 就结束
+                if (hexStringIndex == 0) {
+                    break;
+                }
+                char hex = hexString.charAt(--hexStringIndex);
+                int nibble = Common.hexToNibble(hex);
+                // 表示当前字符不是 hex char
+                if (nibble == -1) {
+                    throw new IllegalArgumentException("current char: " + hex + "is not a hex char");
+                }
+                // 当前 nibble 放在 value 对应的 4-bit 位置上
+                value |= ((long) nibble << bitIndex);
+            }
+            result[uint64Index] = value;
+        }
+    }
+
+    public static void hexStringToUint(String hexString, int startIndex, int charCount, int uint64Count, int resultStartIndex, long[] result) {
+        // 如果 hexString 为空，charCount 同时又大于0，显然是错误
+        assert !(hexString == null && charCount > 0);
+        assert !(uint64Count > 0 && result == null);
+        // todo: need mulSafe?
+        assert !Common.unsignedGt(Common.getHexStringBitCount(hexString, charCount), Common.mulSafe(uint64Count, Common.BITS_PER_UINT64, true));
+        // 从最低位遍历，也就是 最后一个 hex char
+        int hexStringIndex = charCount + startIndex;
+
+        for (int uint64Index = 0; uint64Index < uint64Count; uint64Index++) {
+            long value = 0;
+            // 把一个 long 的 bits 填满, 每次处理一个 Nibble
+            for (int bitIndex = 0; bitIndex < Common.BITS_PER_UINT64; bitIndex += Common.BITS_PER_NIBBLE) {
+                // 处理完 charCount 个 char 就结束, 只要到了起点就结束了
+                if (hexStringIndex == startIndex) {
+                    break;
+                }
+                char hex = hexString.charAt(--hexStringIndex);
+                int nibble = Common.hexToNibble(hex);
+                // 表示当前字符不是 hex char
+                if (nibble == -1) {
+                    throw new IllegalArgumentException("current char: " + hex + "is not a hex char");
+                }
+                // 当前 nibble 放在 value 对应的 4-bit 位置上
+                value |= ((long) nibble << bitIndex);
+            }
+            result[resultStartIndex + uint64Index] = value;
+        }
+
+    }
+
 
     /**
      * If the value is a power of two, return the power; otherwise, return -1.
+     *
      * @param value
      * @return value = 2^n, return n.
      */
@@ -26,19 +249,40 @@ public class UintCore {
 
     /**
      * note that values is a base-2^64 number
-     * @param values
+     *
+     * @param value
      * @param uint64Count
      * @return values == 0
      */
-    public static boolean isZeroUint(long[] values, int uint64Count) {
+    public static boolean isZeroUint(long[] value, int uint64Count) {
 
         assert uint64Count > 0;
-        return Arrays.stream(values, 0, uint64Count).allMatch(n -> n == 0);
+        return Arrays.stream(value, 0, uint64Count).allMatch(n -> n == 0);
+    }
+
+    /**
+     * determine whether the value[startIndex, startIndex + uint64Count) is all 0
+     *
+     * @param value
+     * @param startIndex
+     * @param uint64Count
+     * @return value[startIndex, startIndex + uint64Count) == 0
+     */
+    public static boolean isZeroUint(long[] value, int startIndex,  int uint64Count) {
+        assert uint64Count > 0;
+
+        for (int i = startIndex; i < startIndex + uint64Count; i++) {
+            if (value[i] != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
     /**
      * note that values is a base-2^64 number
+     *
      * @param values
      * @param uint64Count
      * @param scalar
@@ -55,9 +299,7 @@ public class UintCore {
     }
 
 
-
     /**
-     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
@@ -66,11 +308,10 @@ public class UintCore {
      */
     public static boolean isEqualUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
 
-        return compareUint(operand1, operand1Uint64Count,  operand2, operand2Uint64Count) == 0;
+        return compareUint(operand1, operand1Uint64Count, operand2, operand2Uint64Count) == 0;
     }
 
     /**
-     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -83,7 +324,6 @@ public class UintCore {
 
 
     /**
-     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
@@ -92,11 +332,10 @@ public class UintCore {
      */
     public static boolean isGreaterThanUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
 
-        return compareUint(operand1, operand1Uint64Count,  operand2, operand2Uint64Count) > 0;
+        return compareUint(operand1, operand1Uint64Count, operand2, operand2Uint64Count) > 0;
     }
 
     /**
-     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -108,7 +347,6 @@ public class UintCore {
     }
 
     /**
-     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -120,7 +358,6 @@ public class UintCore {
     }
 
     /**
-     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
@@ -129,11 +366,10 @@ public class UintCore {
      */
     public static boolean isGreaterThanOrEqualUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
 
-        return compareUint(operand1, operand1Uint64Count,  operand2, operand2Uint64Count) >= 0;
+        return compareUint(operand1, operand1Uint64Count, operand2, operand2Uint64Count) >= 0;
     }
 
     /**
-     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -144,7 +380,6 @@ public class UintCore {
     }
 
     /**
-     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
@@ -153,11 +388,10 @@ public class UintCore {
      */
     public static boolean isLessThanUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
 
-        return compareUint(operand1, operand1Uint64Count,  operand2, operand2Uint64Count) < 0;
+        return compareUint(operand1, operand1Uint64Count, operand2, operand2Uint64Count) < 0;
     }
 
     /**
-     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -168,7 +402,6 @@ public class UintCore {
     }
 
     /**
-     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
@@ -176,15 +409,13 @@ public class UintCore {
      * @return operand1 <= operand2
      */
     public static boolean isLessThanOrEqualUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
-        return compareUint(operand1, operand1Uint64Count,  operand2, operand2Uint64Count) <= 0;
+        return compareUint(operand1, operand1Uint64Count, operand2, operand2Uint64Count) <= 0;
     }
-
-
-
 
 
     /**
      * note that operand1 and operand2 is a base-2^64 number
+     *
      * @param operand1
      * @param operand2
      * @param uint64Count
@@ -199,13 +430,14 @@ public class UintCore {
         // once result = 1, break loop
         for (; result == 0 && uint64Count-- > 0; index--) {
 //            result = (operand1[index] > operand2[index] ? 1 : 0) - ((operand1[index] < operand2[index] ? 1 : 0));
-              result = compareUint64(operand1[index], operand2[index]);
+            result = compareUint64(operand1[index], operand2[index]);
         }
         return result;
     }
 
     /**
      * note that we treat long as uint64, if a is neg, b is pos, the a > b
+     *
      * @param a
      * @param b
      * @return if a > b then return 1, else if  a < b , return -1, otherwise return 0
@@ -223,7 +455,7 @@ public class UintCore {
         if (b == 0) {
             return 1;
         }
-        if (( a > 0 && b > 0) || ( a < 0 && b < 0) ) {
+        if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
             // a = -1 b = -2 , a > b , return 1
             // a == b do not occur here
             return a > b ? 1 : -1;
@@ -238,13 +470,14 @@ public class UintCore {
 
     /**
      * note that operand1 and operand2 is a base-2^64 number
+     *
      * @param operand1
      * @param operand1Uint64Count
      * @param operand2
      * @param operand2Uint64Count
      * @return if operand1 > operand2 , return 1, else if operand1 < operand2 return -1, otherwise return 0
      */
-    public static int compareUint(long[] operand1, int operand1Uint64Count,  long[] operand2, int operand2Uint64Count) {
+    public static int compareUint(long[] operand1, int operand1Uint64Count, long[] operand2, int operand2Uint64Count) {
 
         assert operand1Uint64Count > 0 && operand2Uint64Count > 0;
 
@@ -257,25 +490,25 @@ public class UintCore {
         for (; (result == 0) && operand1Uint64Count-- > 0; operand1Index--) {
 //            result = operand1[operand1Index] > 0 ? 1: 0;
             // treat long as uint64, so once != 0, operand1 > operand2
-            result = operand1[operand1Index] != 0 ? 1: 0;
+            result = operand1[operand1Index] != 0 ? 1 : 0;
         }
         operand2Uint64Count -= minUint64Count;
         for (; (result == 0) && operand2Uint64Count-- > 0; operand2Index--) {
 //            result = -(operand2[operand2Index] > 0 ? 1: 0);
-            result = -(operand1[operand1Index] != 0 ? 1: 0);
+            result = -(operand1[operand1Index] != 0 ? 1 : 0);
         }
 
-        for(; result == 0 && minUint64Count-- > 0; operand1Index--, operand2Index--) {
+        for (; result == 0 && minUint64Count-- > 0; operand1Index--, operand2Index--) {
 //            result = (operand1[operand1Index] > operand2[operand2Index] ? 1 : 0) - ((operand1[operand1Index] < operand2[operand2Index] ? 1 : 0));
-              result = compareUint64(operand1[operand1Index], operand2[operand2Index]);
+            result = compareUint64(operand1[operand1Index], operand2[operand2Index]);
         }
         return result;
     }
 
 
-
     /**
-     *  such as : ([1, 0], 2) , will return 1, because the significant Uint64Count is just 1
+     * such as : ([1, 0], 2) , will return 1, because the significant Uint64Count is just 1
+     *
      * @param values
      * @param uint64Count
      * @return real uint64Count of given values
@@ -288,7 +521,7 @@ public class UintCore {
         // ([1, 0], 2) ---->  1
         //  只要不满足中间条件，会直接退出 for 循环
         // ensure uint64Count > 0 is the first condition
-        for (; uint64Count > 0 && values[index] == 0;  uint64Count--){
+        for (; uint64Count > 0 && values[index] == 0; uint64Count--) {
             index--;
         }
         return uint64Count;
@@ -296,8 +529,7 @@ public class UintCore {
 
 
     /**
-     *
-     * @param value a base-2^64 value
+     * @param value       a base-2^64 value
      * @param uint64Count the used count in value
      * @return the number of non-zero element in value[0, uint64Count)
      */
@@ -320,12 +552,12 @@ public class UintCore {
     }
 
 
-
     /**
      * the real bits in values, for example: [0, 0, 1]  63 + 63 + 1 = 127
      * [1, 0, 0, ]  1 + 0 + 0 = 1 bits
-     * @param values long values
-     * @param uint64Count  how many 63-bits
+     *
+     * @param values      long values
+     * @param uint64Count how many 63-bits
      * @return the real bits in the range values[..uint63Count]
      */
     public static int getSignificantBitCountUint(long[] values, int uint64Count) {
@@ -363,6 +595,7 @@ public class UintCore {
 
     /**
      * set result[0] = value, result[i>0] = 0
+     *
      * @param value
      * @param uint64Count
      * @param result
@@ -379,6 +612,7 @@ public class UintCore {
 
     /**
      * result[0..uint64Count] = value[0..uint64Count]
+     *
      * @param values
      * @param uint64Count
      * @param result
@@ -393,7 +627,6 @@ public class UintCore {
     }
 
     /**
-     *
      * @param values
      * @param valueUint64Count
      * @param resultUint64Count
@@ -406,7 +639,7 @@ public class UintCore {
 
         if (values == result || valueUint64Count == 0) {
             Arrays.fill(result, valueUint64Count, resultUint64Count, 0);
-        }else {
+        } else {
             int minUint64Count = Math.min(valueUint64Count, resultUint64Count);
             System.arraycopy(values, 0, result, 0, minUint64Count);
             Arrays.fill(result, minUint64Count, resultUint64Count, 0);
@@ -415,6 +648,7 @@ public class UintCore {
 
     /**
      * set the specific bitIndex of long[] to 1, long[] has  64 * uint64Count bits
+     *
      * @param values
      * @param uint64Count
      * @param bitIndex
@@ -433,11 +667,10 @@ public class UintCore {
     }
 
     /**
-     *
      * @param values
      * @param uint64Count
      * @param bitIndex
-     * @return  whether the value at specific bitIndex of given values is 1
+     * @return whether the value at specific bitIndex of given values is 1
      */
     public static boolean isBitSetUint(long[] values, int uint64Count, int bitIndex) {
 
@@ -453,11 +686,10 @@ public class UintCore {
     }
 
     /**
-     *
-     * @param input a base-2^64 value
-     * @param uint64Count length of the input in base-2^64
+     * @param input          a base-2^64 value
+     * @param uint64Count    length of the input in base-2^64
      * @param newUint64Count length of the output in base-2^64
-     * @param force if true, then deep-copy, otherwise shallow-copy
+     * @param force          if true, then deep-copy, otherwise shallow-copy
      * @return a base-2^64 value, which equals input
      */
     public static long[] duplicateUintIfNeeded(long[] input, int uint64Count, int newUint64Count, boolean force) {

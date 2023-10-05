@@ -4,10 +4,126 @@ import java.math.BigInteger;
 
 /**
  * This Class for some common arithmetic computation, just like safeArithmetic(safeAdd, safeMul..)
+ *
  * @author Qixian Zhou
  * @date 2023/8/9
  */
 public class Common {
+
+    public static final int BYTES_PER_UINT64 = 8;
+
+    // a hex value is 4-bit
+    public static final int BITS_PER_NIBBLE = 4;
+
+    public static final int BITS_PER_BYTE = 8;
+
+    public static final int BITS_PER_UINT64 = BYTES_PER_UINT64 * BITS_PER_BYTE;
+    // 一个 byte 可以表示 2个 Nibble, 一个 Nibble 占据 4-bit，1个byte有8-bit
+    public static final int NIBBLES_PER_BYTE = 2;
+
+    public static final int NIBBLES_PER_UINT64 = BYTES_PER_UINT64 * NIBBLES_PER_BYTE;
+
+
+
+    public static char nibbleToUpperHex(int nibble) {
+
+        assert !(nibble < 0 || nibble > 15);
+
+
+        if (nibble < 10) {
+            return (char) ((char) nibble + '0');
+        }
+
+        return (char) ((char) nibble + 'A' - 10);
+
+    }
+
+
+    /**
+     * determine whether the given character is a hex char
+     *
+     * @param hex a char
+     * @return whether the given char is a hex char
+     */
+    public static boolean isHexChar(char hex) {
+        if (hex >= '0' && hex <= '9') {
+            return true;
+        }
+        if (hex >= 'A' && hex <= 'F') {
+            return true;
+        }
+        if (hex >= 'a' && hex <= 'f') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * convert a hex char to corresponding decimal value
+     *
+     * @param hex a hex char
+     * @return decimal corresponding to the hex char
+     */
+    public static int hexToNibble(char hex) {
+
+        if (hex >= '0' && hex <= '9') {
+            return hex - '0';
+        }
+        if (hex >= 'A' && hex <= 'F') {
+            return hex - 'A' + 10;
+        }
+        if (hex >= 'a' && hex <= 'f') {
+            return hex - 'a' + 10;
+        }
+
+        assert isHexChar(hex);
+
+        return -1;
+    }
+
+
+    public static int getHexStringBitCount(String hexString, int charCount) {
+
+        assert !(hexString == null && charCount > 0);
+        assert charCount >= 0;
+
+        for (int i = 0; i < charCount; i++) {
+            char hex = hexString.charAt(i);
+            int nibble = hexToNibble(hex);
+            // 找到第一个 不等于0 的 hex char即可,因为 hexString 左边是高位，右边是低位，例如：
+            // 0x0F ---> 4-bit   0x1F ---> 5-bit
+            if (nibble != 0) {
+                int nibbleBits = UintCore.getSignificantBitCount((long) nibble);
+                int remainingNibbles = (charCount - i - 1) * BITS_PER_NIBBLE;
+
+                return nibbleBits + remainingNibbles;
+            }
+        }
+        return 0;
+    }
+
+    public static int getHexStringBitCount(String hexString, int startIndex, int charCount) {
+
+        assert !(hexString == null && charCount > 0);
+        assert charCount >= 0;
+
+        for (int i = 0; i < charCount; i++) {
+            char hex = hexString.charAt(i + startIndex);
+            int nibble = hexToNibble(hex);
+            // 找到第一个 不等于0 的 hex char即可,因为 hexString 左边是高位，右边是低位，例如：
+            // 0x0F ---> 4-bit   0x1F ---> 5-bit
+            if (nibble != 0) {
+                int nibbleBits = UintCore.getSignificantBitCount((long) nibble);
+                int remainingNibbles = (charCount - i - 1) * BITS_PER_NIBBLE;
+
+                return nibbleBits + remainingNibbles;
+            }
+        }
+        return 0;
+    }
+
+
+
 
 
     public static int hammingWeight(byte value) {
@@ -20,15 +136,12 @@ public class Common {
     }
 
 
-
     public static boolean areClose(double v1, double v2) {
 
-        double scaleFactor = Math.max(   Math.max(Math.abs(v1), Math.abs(v2)), 1.0 );
+        double scaleFactor = Math.max(Math.max(Math.abs(v1), Math.abs(v2)), 1.0);
 
-        return Math.abs(v1 - v2) < scaleFactor * Math.ulp( 1.0);
+        return Math.abs(v1 - v2) < scaleFactor * Math.ulp(1.0);
     }
-
-
 
 
     public static boolean unsignedGt(long in1, long in2) {
@@ -36,10 +149,8 @@ public class Common {
     }
 
     public static boolean unsignedGt(int in1, int in2) {
-        return Long.compareUnsigned((long)in1, (long) in2) > 0;
+        return Long.compareUnsigned((long) in1, (long) in2) > 0;
     }
-
-
 
 
     public static long reverseBits(long operand, int bitCount) {
@@ -67,22 +178,23 @@ public class Common {
 
     /**
      * treat int as uint32
+     *
      * @param operand
      * @return
      */
     public static int reverseBits(int operand) {
-       // 0b10101010101010101010101010101010      0b1010101010101010101010101010101
-       operand = ((operand & 0xaaaaaaaa) >>> 1) |  ((operand & 0x55555555) << 1);
-       operand = ((operand & 0xcccccccc) >>> 2) |  ((operand & 0x33333333) << 2);
-       operand = ((operand & 0xf0f0f0f0) >>> 4) |  ((operand & 0x0f0f0f0f) << 4);
-       operand = ((operand & 0xff00ff00) >>> 8) |  ((operand & 0x00ff00ff) << 8);
+        // 0b10101010101010101010101010101010      0b1010101010101010101010101010101
+        operand = ((operand & 0xaaaaaaaa) >>> 1) | ((operand & 0x55555555) << 1);
+        operand = ((operand & 0xcccccccc) >>> 2) | ((operand & 0x33333333) << 2);
+        operand = ((operand & 0xf0f0f0f0) >>> 4) | ((operand & 0x0f0f0f0f) << 4);
+        operand = ((operand & 0xff00ff00) >>> 8) | ((operand & 0x00ff00ff) << 8);
 
-       return (operand >>> 16) | (operand << 16);
+        return (operand >>> 16) | (operand << 16);
     }
 
     public static long reverseBits(long operand) {
         // (int) operand equals (int) (operand & 0xFFFFFFFF)
-        int a =  reverseBits((int)(operand >>> 32));
+        int a = reverseBits((int) (operand >>> 32));
         // avoid negate lead error, just like when a = -65536 = 0x0000FFFF, cast to long, we expect is 0x 0000 0000 0000 FFFF
         // if we directly long b = (long) a; we will get 0x FFFF FFFF FFFF 0000 , this is error
         long au = Long.parseUnsignedLong(Integer.toHexString(a), 16);
@@ -92,10 +204,7 @@ public class Common {
     }
 
 
-
-
     /**
-     *
      * @param value
      * @return the msb bit index of value, such as 1->0, 2->1
      */
@@ -105,7 +214,6 @@ public class Common {
 
 
     /**
-     *
      * @param a
      * @param b
      * @param unsigned
@@ -115,14 +223,13 @@ public class Common {
     public static int mulSafe(int a, int b, boolean unsigned, int... numbers) {
 
         int prod = mulSafe(a, b, unsigned);
-        for (int n: numbers) {
+        for (int n : numbers) {
             prod = mulSafe(prod, n, unsigned);
         }
         return prod;
     }
 
     /**
-     *
      * @param a
      * @param b
      * @param unsigned
@@ -132,7 +239,7 @@ public class Common {
     public static long mulSafe(long a, long b, boolean unsigned, long... numbers) {
 
         long prod = mulSafe(a, b, unsigned);
-        for (long n: numbers) {
+        for (long n : numbers) {
             prod = mulSafe(prod, n, unsigned);
         }
         return prod;
@@ -150,9 +257,9 @@ public class Common {
 
     public static boolean productFitsIn(boolean unsigned, int... numbers) {
 
-        try{
+        try {
             mulSafe(1, 1, unsigned, numbers);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return false;
         }
         return true;
@@ -170,19 +277,16 @@ public class Common {
 
     public static boolean productFitsIn(boolean unsigned, long... numbers) {
 
-        try{
+        try {
             mulSafe(1, 1, unsigned, numbers);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return false;
         }
         return true;
     }
 
 
-
-
     /**
-     *
      * @param a
      * @param b
      * @param unsigned
@@ -212,16 +316,16 @@ public class Common {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        }else { // 按 int64 来判断，简单多了
+        } else { // 按 int64 来判断，简单多了
             // a * b > 0 的时候，溢出指的是结果 大于 2^63 - 1
             if ((a > 0) && (b > 0) && (b > Integer.MAX_VALUE / a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (  (a < 0) && (b < 0) && ( (-b) > Integer.MAX_VALUE / (-a))) {
+            } else if ((a < 0) && (b < 0) && ((-b) > Integer.MAX_VALUE / (-a))) {
                 throw new ArithmeticException("signed overflow");
-            } else if (  (a < 0) && (b > 0) && (b > Integer.MAX_VALUE / (-a))    ) {
+            } else if ((a < 0) && (b > 0) && (b > Integer.MAX_VALUE / (-a))) {
                 // a * b < 0 的时候，溢出指的是 结果 小于 -2^63
                 throw new ArithmeticException("unsigned overflow");
-            }else if ( (a > 0) && (b < 0) && (b < (Integer.MIN_VALUE / a))) {
+            } else if ((a > 0) && (b < 0) && (b < (Integer.MIN_VALUE / a))) {
                 throw new ArithmeticException("unsigned overflow");
             }
         }
@@ -229,9 +333,7 @@ public class Common {
     }
 
 
-
     /**
-     *
      * @param a
      * @param b
      * @param unsigned
@@ -261,16 +363,16 @@ public class Common {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        }else { // 按 int64 来判断，简单多了
+        } else { // 按 int64 来判断，简单多了
             // a * b > 0 的时候，溢出指的是结果 大于 2^63 - 1
             if ((a > 0) && (b > 0) && (b > Long.MAX_VALUE / a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (  (a < 0) && (b < 0) && ( (-b) > Long.MAX_VALUE / (-a))) {
+            } else if ((a < 0) && (b < 0) && ((-b) > Long.MAX_VALUE / (-a))) {
                 throw new ArithmeticException("signed overflow");
-            } else if (  (a < 0) && (b > 0) && (b > Long.MAX_VALUE / (-a))    ) {
-            // a * b < 0 的时候，溢出指的是 结果 小于 -2^63
+            } else if ((a < 0) && (b > 0) && (b > Long.MAX_VALUE / (-a))) {
+                // a * b < 0 的时候，溢出指的是 结果 小于 -2^63
                 throw new ArithmeticException("unsigned overflow");
-            }else if ( (a > 0) && (b < 0) && (b < (Long.MIN_VALUE / a))) {
+            } else if ((a > 0) && (b < 0) && (b < (Long.MIN_VALUE / a))) {
                 throw new ArithmeticException("unsigned overflow");
             }
         }
@@ -281,6 +383,7 @@ public class Common {
     /**
      * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
      * otherwise, treat long as int64
+     *
      * @param a
      * @param b
      * @param unsigned
@@ -299,7 +402,7 @@ public class Common {
             if (a > 0 && b > 0 && a < b) {
                 throw new ArithmeticException("unsigned underflow");
             }
-            if (a < 0 && b < 0 ) {
+            if (a < 0 && b < 0) {
                 if (a < b) {
                     throw new ArithmeticException("unsigned underflow");
                 }
@@ -307,10 +410,10 @@ public class Common {
             if (a > 0 && b < 0) {
                 throw new ArithmeticException("unsigned underflow");
             }
-        }else {
+        } else {
             if (a < 0 && (b > Integer.MAX_VALUE + a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (a > 0 && ( b < Integer.MIN_VALUE + a)) {
+            } else if (a > 0 && (b < Integer.MIN_VALUE + a)) {
                 throw new ArithmeticException("signed underflow");
             }
         }
@@ -320,6 +423,7 @@ public class Common {
     /**
      * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
      * otherwise, treat long as int64
+     *
      * @param a
      * @param b
      * @param unsigned
@@ -346,10 +450,10 @@ public class Common {
             if (a > 0 && b < 0) {
                 throw new ArithmeticException("unsigned underflow");
             }
-        }else {
+        } else {
             if (a < 0 && (b > Long.MAX_VALUE + a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (a > 0 && ( b < Long.MIN_VALUE + a)) {
+            } else if (a > 0 && (b < Long.MIN_VALUE + a)) {
                 throw new ArithmeticException("signed underflow");
             }
         }
@@ -357,14 +461,10 @@ public class Common {
     }
 
 
-
-
-
-
-
     /**
      * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
      * otherwise, treat long as int64
+     *
      * @param a
      * @param b
      * @param unsigned
@@ -383,11 +483,11 @@ public class Common {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        }else { // treat a and b as int64
+        } else { // treat a and b as int64
 
             if (a > 0 && (b > Long.MAX_VALUE - a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (a < 0 && (b < Long.MIN_VALUE - a)) {
+            } else if (a < 0 && (b < Long.MIN_VALUE - a)) {
                 throw new ArithmeticException("signed underflow");
             }
         }
@@ -397,6 +497,7 @@ public class Common {
 
     /**
      * add safe with variable numbers parameters
+     *
      * @param a
      * @param b
      * @param unsigned
@@ -415,6 +516,7 @@ public class Common {
     /**
      * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
      * otherwise, treat long as int64
+     *
      * @param a
      * @param b
      * @param unsigned
@@ -433,11 +535,11 @@ public class Common {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        }else { // treat a and b as int64
+        } else { // treat a and b as int64
 
             if (a > 0 && (b > Integer.MAX_VALUE - a)) {
                 throw new ArithmeticException("signed overflow");
-            }else if (a < 0 && (b < Integer.MIN_VALUE - a)) {
+            } else if (a < 0 && (b < Integer.MIN_VALUE - a)) {
                 throw new ArithmeticException("signed underflow");
             }
         }
@@ -447,6 +549,7 @@ public class Common {
 
     /**
      * add safe with variable numbers parameters
+     *
      * @param a
      * @param b
      * @param unsigned

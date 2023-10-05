@@ -15,18 +15,11 @@ public class ParmsIdType implements Cloneable {
 
     public long[] value;
 
-    public static final ParmsIdType PARMS_ID_ZERO;
-
-    static {
-        PARMS_ID_ZERO = new ParmsIdType(HashFunction.HASH_ZERO_BLOCK);
-    }
-
-    public static final long[] ZERO_VALUE = HashFunction.HASH_ZERO_BLOCK;
-
-
-    public static ParmsIdType parmsIdZero() {
-        long[] value = new long[HashFunction.HASH_BLOCK_UINT64_COUNT];
-        return new ParmsIdType(value);
+    /**
+     * return a zero parms id
+     */
+    public ParmsIdType() {
+        value = new long[HashFunction.HASH_BLOCK_UINT64_COUNT];
     }
 
 
@@ -35,6 +28,10 @@ public class ParmsIdType implements Cloneable {
 
         this.value = new long[HashFunction.HASH_BLOCK_UINT64_COUNT];
         System.arraycopy(value, 0, this.value, 0, HashFunction.HASH_BLOCK_UINT64_COUNT);
+    }
+
+    public static ParmsIdType parmsIdZero() {
+        return new ParmsIdType();
     }
 
     /**
@@ -55,9 +52,17 @@ public class ParmsIdType implements Cloneable {
         this.value = value;
     }
 
+    /**
+     * set the parmsId to zero
+     */
+    public void setZero() {
+        Arrays.fill(value, 0);
+    }
+
 
     public boolean isZero() {
-        return Arrays.equals(this.value, ZERO_VALUE);
+        // value 长度是固定的, 所以直接这样判断
+        return (value[0] == 0) && (value[1] == 0) && (value[2] == 0) && (value[3] == 0);
     }
 
 
@@ -93,8 +98,8 @@ public class ParmsIdType implements Cloneable {
 
     @Override
     public String toString() {
-        return "ParmsIdType{" +
-                "value=" + Arrays.toString(value) +
+        return "{" +
+                "value=" + value[0] +
                 '}';
     }
 

@@ -1,6 +1,10 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
+import edu.alibaba.mpc4j.crypto.fhe.context.Context;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
+import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
+import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -80,11 +84,35 @@ public class PlaintextTest {
         plain.setParmsId(new long[]{1, 2, 3, 4});
         Assert.assertTrue(plain.isNttForm());
 
-        plain2.setParmsId(ParmsIdType.PARMS_ID_ZERO);
+        plain2.setParmsId(ParmsIdType.parmsIdZero());
         Assert.assertFalse(plain2.isNttForm());
         plain2.setParmsId(new long[]{1, 2, 3, 5});
         plain2.isNttForm();
         Assert.assertTrue(plain2.isNttForm());
+    }
+
+
+    @Test
+    public void fromHexPoly() {
+
+        Plaintext plain = new Plaintext();
+
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            parms.setPolyModulusDegree(64);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[] {30, 30}));
+            parms.setPlainModulus(65537);
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+
+            plain.setParmsId(ParmsIdType.parmsIdZero());
+
+            plain.fromHexPoly("1x^63 + 2x^62 + Fx^32 + Ax^9 + 1x^1 + 1");
+
+            Assert.assertFalse(plain.isNttForm());
+        }
+
+
     }
 
 }

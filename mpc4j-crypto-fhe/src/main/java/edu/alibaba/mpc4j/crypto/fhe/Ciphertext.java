@@ -162,6 +162,7 @@ public class Ciphertext implements Cloneable {
         }
 
         EncryptionParams parms = contextData.getParms();
+        // todo: need deep-copy?
         this.parmsId = contextData.getParmsId().clone();
 
         resizeInternal(size, parms.getPolyModulusDegree(), parms.getCoeffModulus().length);
@@ -205,7 +206,24 @@ public class Ciphertext implements Cloneable {
         // 其实是返回这个多项式 在 DynArray 中的起点
 
         return Common.mulSafe(polyIndex, polyUint64Count, false);
+    }
 
+    /**
+     * 获取这个 polyIndex 的索引，例如 2 * 3 * 64, polyIndex = 1 ---> 3 * 64
+     *
+     * @param polyIndex 某个 poly 的 index
+     * @return
+     */
+    public int indexAt(int polyIndex) {
+        assert polyIndex >= 0 && polyIndex < size;
+
+        // 一个多项式 在 RNS 下被表示为 coeffModuluSize 个多项式
+        // todo: need mulSafe ?
+        int polyUint64Count = Common.mulSafe(polyModulusDegree, coeffModulusSize, false);
+
+        // 其实是返回这个多项式 在 DynArray 中的起点
+
+        return Common.mulSafe(polyIndex, polyUint64Count, false);
     }
 
 
@@ -245,6 +263,9 @@ public class Ciphertext implements Cloneable {
         return polyModulusDegree;
     }
 
+    /**
+     * @return 密文中多项式的数量
+     */
     public int getSize() {
         return size;
     }
