@@ -31,5 +31,14 @@ public class NttTablesCreateIter {
         );
     }
 
+//    public static void createNttTable(int coeffCountPower, Modulus modulus, NttTables nttTables) {
+//
+//
+//
+//        IntStream.range(0, modulus.length).parallel().forEach(
+//                i -> nttTables[i] = new NttTables(coeffCountPower, modulus[i])
+//        );
+//    }
+
 
 }

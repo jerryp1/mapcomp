@@ -60,6 +60,8 @@ public class EncryptionParameterQualifiers {
      * element to NTT domain (Evaluator::transform_to_ntt) can be used when the
      * plaintext modulus is smaller than each prime in the coefficient modulus.
      * In this case the variable using_fast_plain_lift is set to true.
+     *
+     * 明文模比任意的 单个密文模都要小时，就是 true
      */
     boolean usingFastPlainLift;
 
@@ -230,6 +232,21 @@ public class EncryptionParameterQualifiers {
         return parameterError == ErrorType.SUCCESS;
     }
 
+    public boolean isUsingDescendingModulusChain() {
+        return usingDescendingModulusChain;
+    }
+
+    public boolean isUsingFastPlainLift() {
+        return usingFastPlainLift;
+    }
+
+    public boolean isUsingFft() {
+        return usingFft;
+    }
+
+    public boolean isUsingNtt() {
+        return usingNtt;
+    }
 
     public boolean isUsingBatching() {
         return usingBatching;

@@ -1,0 +1,1745 @@
+package edu.alibaba.mpc4j.crypto.fhe;
+
+import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
+import edu.alibaba.mpc4j.crypto.fhe.context.Context;
+import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
+import edu.alibaba.mpc4j.crypto.fhe.modulus.PlainModulus;
+import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
+import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
+import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
+import org.checkerframework.checker.units.qual.C;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+/**
+ * @author Qixian Zhou
+ * @date 2023/10/5
+ */
+public class EvaluatorTest {
+
+    private void evaluatorTransformEncryptedToFromNtt(SchemeType scheme) {
+
+        EncryptionParams parms = new EncryptionParams(scheme);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(128);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(128, new int[]{40, 40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Evaluator evaluator = new Evaluator(context);
+        Encryptor encryptor = new Encryptor(context, pk);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+        Ciphertext encrypted = new Ciphertext();
+        Plaintext plain = new Plaintext();
+
+        plain.fromHexPoly("0");
+        encryptor.encrypt(plain, encrypted);
+        evaluator.transformToNttInplace(encrypted);
+        evaluator.transformFromNttInplace(encrypted);
+        decryptor.decrypt(encrypted, plain);
+        Assert.assertEquals(
+                "0",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+        plain.fromHexPoly("1");
+        encryptor.encrypt(plain, encrypted);
+        evaluator.transformToNttInplace(encrypted);
+        evaluator.transformFromNttInplace(encrypted);
+        decryptor.decrypt(encrypted, plain);
+        Assert.assertEquals(
+                "1",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+        plain.fromHexPoly("Fx^10 + Ex^9 + Dx^8 + Cx^7 + Bx^6 + Ax^5 + 1x^4 + 2x^3 + 3x^2 + 4x^1 + 5");
+        encryptor.encrypt(plain, encrypted);
+        evaluator.transformToNttInplace(encrypted);
+        evaluator.transformFromNttInplace(encrypted);
+        decryptor.decrypt(encrypted, plain);
+        Assert.assertEquals(
+                "Fx^10 + Ex^9 + Dx^8 + Cx^7 + Bx^6 + Ax^5 + 1x^4 + 2x^3 + 3x^2 + 4x^1 + 5",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+    }
+
+
+    @Test
+    public void transformEncryptedToFromNTT() {
+        evaluatorTransformEncryptedToFromNtt(SchemeType.BFV);
+    }
+
+
+    private void evaluatorTransformPlainToNtt(SchemeType scheme) {
+
+        EncryptionParams parms = new EncryptionParams(scheme);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(128);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(128, new int[]{40, 40, 40}));
+
+        Context context = new Context(parms, true, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Evaluator evaluator = new Evaluator(context);
+
+        Plaintext plain = new Plaintext("0");
+        Assert.assertFalse(plain.isNttForm());
+        evaluator.transformToNttInplace(plain, context.getFirstParmsId());
+        Assert.assertTrue(plain.isZero());
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(context.getFirstParmsId()));
+
+        plain.release();
+        plain.fromHexPoly("0");
+        Assert.assertFalse(plain.isNttForm());
+        ParmsIdType nextParmsId = context.firstContextData().getNextContextData().getParmsId();
+        evaluator.transformToNttInplace(plain, nextParmsId);
+        Assert.assertTrue(plain.isZero());
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(nextParmsId));
+
+        plain.release();
+        plain.fromHexPoly("1");
+        Assert.assertFalse(plain.isNttForm());
+        evaluator.transformToNttInplace(plain, context.getFirstParmsId());
+        Assert.assertEquals(256, plain.getCoeffCount());
+        for (int i = 0; i < 256; i++) {
+            Assert.assertEquals(plain.at(i), 1);
+        }
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(context.getFirstParmsId()));
+
+        plain.release();
+        plain.fromHexPoly("1");
+        Assert.assertFalse(plain.isNttForm());
+        evaluator.transformToNttInplace(plain, nextParmsId);
+        Assert.assertEquals(128, plain.getCoeffCount());
+        for (int i = 0; i < 128; i++) {
+            Assert.assertEquals(plain.at(i), 1);
+        }
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(nextParmsId));
+
+        plain.release();
+        plain.fromHexPoly("2");
+        Assert.assertFalse(plain.isNttForm());
+        evaluator.transformToNttInplace(plain, context.getFirstParmsId());
+        Assert.assertEquals(256, plain.getCoeffCount());
+        for (int i = 0; i < 256; i++) {
+            Assert.assertEquals(plain.at(i), 2);
+        }
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(context.getFirstParmsId()));
+
+        plain.release();
+        plain.fromHexPoly("2");
+        Assert.assertFalse(plain.isNttForm());
+        evaluator.transformToNttInplace(plain, nextParmsId);
+        Assert.assertEquals(128, plain.getCoeffCount());
+        for (int i = 0; i < 128; i++) {
+            Assert.assertEquals(plain.at(i), 2);
+        }
+        Assert.assertTrue(plain.isNttForm());
+        Assert.assertTrue(plain.getParmsId().equals(nextParmsId));
+
+    }
+
+
+    @Test
+    public void transformPlainToNTT() {
+        evaluatorTransformPlainToNtt(SchemeType.BFV);
+    }
+
+    @Test
+    public void bfvEncryptMultiplyPlainNTTInplaceDecrypt() {
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            Modulus plainModulus = new Modulus(1 << 6);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+            Ciphertext encrypted = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+        }
+
+
+
+    }
+
+
+
+
+    // in-place test
+    @Test
+    public void bfvEncryptMultiplyPlainInplaceDecrypt() {
+        // 参数1
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            Modulus plainModulus = new Modulus(1 << 6);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+            Ciphertext encrypted = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+            );
+            plain2.fromHexPoly(
+                    "1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^46 + 1x^44 + 1x^43 + 1x^42 + 1x^41 + 2x^39 + 1x^38 + 2x^37 + 3x^36 + 1x^35 + "
+                            + "3x^34 + 2x^33 + 2x^32 + 4x^30 + 2x^29 + 5x^28 + 2x^27 + 4x^26 + 3x^25 + 2x^24 + "
+                            + "4x^23 + 3x^22 + 4x^21 + 4x^20 + 4x^19 + 4x^18 + 3x^17 + 2x^15 + 4x^14 + 2x^13 + "
+                            + "3x^12 + 2x^11 + 2x^10 + 2x^9 + 1x^8 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+                    ,
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain1.fromHexPoly(
+                    "0"
+            );
+            plain2.fromHexPoly(
+                    "1x^2 + 1"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain1.fromHexPoly(
+                    "1x^2 + 1x^1 + 1"
+            );
+            plain2.fromHexPoly(
+                    "1x^2"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^4 + 1x^3 + 1x^2",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly(
+                    "1x^2 + 1x^1 + 1"
+            );
+            plain2.fromHexPoly(
+                    "1x^1"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^3 + 1x^2 + 1x^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain1.fromHexPoly(
+                    "1x^2 + 1"
+            );
+            plain2.fromHexPoly(
+                    "3Fx^1 + 3F"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "3Fx^3 + 3Fx^2 + 3Fx^1 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain1.fromHexPoly(
+                    "3Fx^2 + 3Fx^1 + 3F"
+            );
+            plain2.fromHexPoly(
+                    "1x^1"
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "3Fx^3 + 3Fx^2 + 3Fx^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+        // 参数2
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            // 明文模 < each qi
+            Modulus plainModulus = new Modulus((1L << 20) - 1);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{30, 60, 60}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+            Ciphertext encrypted = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+            );
+            plain2.fromHexPoly(
+                    "1" // 单项式，有特殊优化
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+                    ,
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain2.fromHexPoly(
+                    "5" // 单项式，有特殊优化
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "5x^28 + 5x^25 + 5x^21 + 5x^20 + 5x^18 + 5x^14 + 5x^12 + 5x^10 + 5x^9 + 5x^6 + 5x^5 + 5x^4 + 5x^3"
+                    ,
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+        }
+
+        // 参数3
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            // 明文模 并不小于 每一个 qi，和上面的测试 会进入到不同的分支
+            Modulus plainModulus = new Modulus((1L << 40) - 1);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{30, 60, 60}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+            Ciphertext encrypted = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+            );
+            plain2.fromHexPoly(
+                    "1" // 单项式，有特殊优化
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3"
+                    ,
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+
+            plain2.fromHexPoly(
+                    "5" // 单项式，有特殊优化
+            );
+            encryptor.encrypt(plain1, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain2);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "5x^28 + 5x^25 + 5x^21 + 5x^20 + 5x^18 + 5x^14 + 5x^12 + 5x^10 + 5x^9 + 5x^6 + 5x^5 + 5x^4 + 5x^3"
+                    ,
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+
+        // 参数4
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            Modulus plainModulus = PlainModulus.batching(64, 20);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{30, 30, 30}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+            BatchEncoder batchEncoder = new BatchEncoder(context);
+
+            Ciphertext encrypted = new Ciphertext();
+            Plaintext plain = new Plaintext();
+
+            long[] data = new long[batchEncoder.slotCount()];
+            Arrays.fill(data, 7);
+            // 注意这里的 data 是 i64
+            batchEncoder.encodeInt64(data, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            long[] result = new long[batchEncoder.slotCount()];
+            batchEncoder.decodeInt64(plain, result);
+
+            long[] truth = new long[batchEncoder.slotCount()];
+            // 7 * 7 = 49
+            Arrays.fill(truth, 49);
+            Assert.assertArrayEquals(
+                    truth,
+                    result
+            );
+
+            // 注意这里的 data 是 i64
+            Arrays.fill(data, -7);
+            batchEncoder.encodeInt64(data, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            result = new long[batchEncoder.slotCount()];
+            batchEncoder.decodeInt64(plain, result);
+
+            truth = new long[batchEncoder.slotCount()];
+            // -7 * -7 = 49
+            Arrays.fill(truth, 49);
+            Assert.assertArrayEquals(
+                    truth,
+                    result
+            );
+        }
+
+        // 参数4
+        {
+            EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+            Modulus plainModulus = PlainModulus.batching(64, 40);
+            parms.setPolyModulusDegree(64);
+            parms.setPlainModulus(plainModulus);
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{30, 30, 30, 30, 30}));
+
+            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+            KeyGenerator keyGenerator = new KeyGenerator(context);
+            PublicKey pk = new PublicKey();
+            keyGenerator.createPublicKey(pk);
+
+            Encryptor encryptor = new Encryptor(context, pk);
+            Evaluator evaluator = new Evaluator(context);
+            Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+            BatchEncoder batchEncoder = new BatchEncoder(context);
+
+            Ciphertext encrypted = new Ciphertext();
+            Plaintext plain = new Plaintext();
+            // First test with constant plaintext
+            long[] data = new long[batchEncoder.slotCount()];
+            Arrays.fill(data, 7);
+            // 注意这里的 data 是 i64
+            batchEncoder.encodeInt64(data, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            long[] result = new long[batchEncoder.slotCount()];
+            batchEncoder.decodeInt64(plain, result);
+
+            long[] truth = new long[batchEncoder.slotCount()];
+            // 7 * 7 = 49
+            Arrays.fill(truth, 49);
+            Assert.assertArrayEquals(
+                    truth,
+                    result
+            );
+
+            // 注意这里的 data 是 i64
+            Arrays.fill(data, -7);
+            batchEncoder.encodeInt64(data, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            result = new long[batchEncoder.slotCount()];
+            batchEncoder.decodeInt64(plain, result);
+
+            truth = new long[batchEncoder.slotCount()];
+            // -7 * -7 = 49
+            Arrays.fill(truth, 49);
+            Assert.assertArrayEquals(
+                    truth,
+                    result
+            );
+
+            // Now test a non-constant plaintext
+            long[] input = new long[batchEncoder.slotCount()];
+            Arrays.fill(input, 7);
+            input[input.length - 1] = 1;
+            long[] truthResult = new long[batchEncoder.slotCount()];
+            Arrays.fill(truthResult, 49);
+            truthResult[truthResult.length - 1] = 1;
+
+            batchEncoder.encodeInt64(input, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            batchEncoder.decode(plain, result);
+            Assert.assertArrayEquals(
+                    truthResult,
+                    result
+            );
+
+            // Now test a non-constant plaintext
+            input = new long[batchEncoder.slotCount()];
+            Arrays.fill(input, -7);
+            input[input.length - 1] = 1;
+            truthResult = new long[batchEncoder.slotCount()];
+            Arrays.fill(truthResult, 49);
+            truthResult[truthResult.length - 1] = 1;
+
+            batchEncoder.encodeInt64(input, plain);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.multiplyPlainInplace(encrypted, plain);
+            decryptor.decrypt(encrypted, plain);
+            batchEncoder.decode(plain, result);
+            Assert.assertArrayEquals(
+                    truthResult,
+                    result
+            );
+        }
+    }
+
+
+    @Test
+    public void bfvEncryptSubPlainDecrypt() {
+
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(64);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+        // in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly("1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3");
+            plain2.fromHexPoly("1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 3Fx^16 + 1x^12 + 1x^10 + 3Fx^8 + 1x^6 + 1x^4 + 1x^3 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("0");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("1x^2 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("1x^2 + 1");
+            plain2.fromHexPoly("3Fx^1 + 3F");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1x^1 + 2",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("3Fx^2 + 3Fx^1 + 3F");
+            plain2.fromHexPoly("1x^1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3Ex^1 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+        // non in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Ciphertext destination = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly("1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3");
+            plain2.fromHexPoly("1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 3Fx^16 + 1x^12 + 1x^10 + 3Fx^8 + 1x^6 + 1x^4 + 1x^3 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("0");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("1x^2 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("1x^2 + 1");
+            plain2.fromHexPoly("3Fx^1 + 3F");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1x^1 + 2",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("3Fx^2 + 3Fx^1 + 3F");
+            plain2.fromHexPoly("1x^1");
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.subPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3Ex^1 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+    }
+
+    @Test
+    public void bfvEncryptAddPlainDecrypt() {
+
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(64);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+        // in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+            String hexPoly1;
+            String hexPoly2;
+
+            hexPoly1 = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            hexPoly2 = "1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 2x^18 + 1x^16 + 2x^14 + 1x^12 + 1x^10 + 2x^9 + 1x^8 + "
+                            + "1x^6 + 2x^5 + 1x^4 + 1x^3 + 1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "0";
+            hexPoly2 = "0";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+
+            hexPoly1 = "0";
+            hexPoly2 = "1x^2 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "1x^2 + 1";
+            hexPoly2 = "3Fx^1 + 3F";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 3Fx^1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3Fx^2 + 3Fx^1 + 3F";
+            hexPoly2 = "1x^1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "2x^2 + 1x^1 + 3";
+            hexPoly2 = "3x^3 + 4x^2 + 5x^1 + 6";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3x^3 + 6x^2 + 6x^1 + 9",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3x^5 + 1x^4 + 4x^3 + 1";
+            hexPoly2 = "5x^2 + 9x^1 + 2";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlainInplace(encrypted1, plain2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3x^5 + 1x^4 + 4x^3 + 5x^2 + 9x^1 + 3",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+        }
+
+        // non in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Ciphertext destination = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+            String hexPoly1;
+            String hexPoly2;
+
+            hexPoly1 = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            hexPoly2 = "1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 2x^18 + 1x^16 + 2x^14 + 1x^12 + 1x^10 + 2x^9 + 1x^8 + "
+                            + "1x^6 + 2x^5 + 1x^4 + 1x^3 + 1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "0";
+            hexPoly2 = "0";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+
+            hexPoly1 = "0";
+            hexPoly2 = "1x^2 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "1x^2 + 1";
+            hexPoly2 = "3Fx^1 + 3F";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 3Fx^1",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3Fx^2 + 3Fx^1 + 3F";
+            hexPoly2 = "1x^1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "2x^2 + 1x^1 + 3";
+            hexPoly2 = "3x^3 + 4x^2 + 5x^1 + 6";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3x^3 + 6x^2 + 6x^1 + 9",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3x^5 + 1x^4 + 4x^3 + 1";
+            hexPoly2 = "5x^2 + 9x^1 + 2";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+
+            evaluator.addPlain(encrypted1, plain2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3x^5 + 1x^4 + 4x^3 + 5x^2 + 9x^1 + 3",
+                    plain.toString()
+            );
+
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+        }
+
+    }
+
+
+    @Test
+    public void bfvEncryptSubDecrypt() {
+
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(64);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+        // in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly("1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3");
+            plain2.fromHexPoly("1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.subInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 3Fx^16 + 1x^12 + 1x^10 + 3Fx^8 + 1x^6 + 1x^4 + 1x^3 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("0");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.subInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("1x^2 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.subInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("1x^2 + 1");
+            plain2.fromHexPoly("3Fx^1 + 3F");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.subInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1x^1 + 2",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("3Fx^2 + 3Fx^1 + 3F");
+            plain2.fromHexPoly("1x^1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.subInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3Ex^1 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+        // non in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Ciphertext destination = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+
+            plain1.fromHexPoly("1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3");
+            plain2.fromHexPoly("1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.sub(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 3Fx^16 + 1x^12 + 1x^10 + 3Fx^8 + 1x^6 + 1x^4 + 1x^3 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("0");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.sub(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("0");
+            plain2.fromHexPoly("1x^2 + 1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.sub(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("1x^2 + 1");
+            plain2.fromHexPoly("3Fx^1 + 3F");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.sub(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1x^1 + 2",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            plain1.fromHexPoly("3Fx^2 + 3Fx^1 + 3F");
+            plain2.fromHexPoly("1x^1");
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.sub(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3Ex^1 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+        }
+    }
+
+
+    @Test
+    public void bfvEncryptAddManyDecrypt() {
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(128);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(128, new int[]{40, 40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+        Ciphertext encrypted1 = new Ciphertext();
+        Ciphertext encrypted2 = new Ciphertext();
+        Ciphertext encrypted3 = new Ciphertext();
+        Ciphertext encrypted4 = new Ciphertext();
+        Ciphertext sum = new Ciphertext();
+
+        Plaintext plain = new Plaintext();
+        Plaintext plain1 = new Plaintext();
+        Plaintext plain2 = new Plaintext();
+        Plaintext plain3 = new Plaintext();
+        Plaintext plain4 = new Plaintext();
+
+        plain1.fromHexPoly("1x^2 + 1");
+        plain2.fromHexPoly("1x^2 + 1x^1");
+        plain3.fromHexPoly("1x^2 + 1x^1 + 1");
+        encryptor.encrypt(plain1, encrypted1);
+        encryptor.encrypt(plain2, encrypted2);
+        encryptor.encrypt(plain3, encrypted3);
+
+        Ciphertext[] encrypteds = new Ciphertext[]{encrypted1, encrypted2, encrypted3};
+        evaluator.addMany(encrypteds, sum);
+        decryptor.decrypt(sum, plain);
+        Assert.assertEquals(
+                "3x^2 + 2x^1 + 2",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted1.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted2.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted3.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(sum.getParmsId().equals(context.getFirstParmsId()));
+
+        plain1.fromHexPoly("3Fx^3 + 3F");
+        plain2.fromHexPoly("3Fx^4 + 3F");
+        encryptor.encrypt(plain1, encrypted1);
+        encryptor.encrypt(plain2, encrypted2);
+
+        encrypteds = new Ciphertext[]{encrypted1, encrypted2};
+        evaluator.addMany(encrypteds, sum);
+        decryptor.decrypt(sum, plain);
+        Assert.assertEquals(
+                "3Fx^4 + 3Fx^3 + 3E",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted1.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted2.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(sum.getParmsId().equals(context.getFirstParmsId()));
+
+
+        plain1.fromHexPoly("1x^1");
+        plain2.fromHexPoly("3Fx^4 + 3Fx^3 + 3Fx^2 + 3Fx^1 + 3F");
+        plain3.fromHexPoly("1x^2 + 1x^1 + 1");
+        encryptor.encrypt(plain1, encrypted1);
+        encryptor.encrypt(plain2, encrypted2);
+        encryptor.encrypt(plain3, encrypted3);
+
+        encrypteds = new Ciphertext[]{encrypted1, encrypted2, encrypted3};
+        evaluator.addMany(encrypteds, sum);
+        decryptor.decrypt(sum, plain);
+        Assert.assertEquals(
+                "3Fx^4 + 3Fx^3 + 1x^1",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted1.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted2.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted3.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(sum.getParmsId().equals(context.getFirstParmsId()));
+
+
+        plain1.fromHexPoly("1");
+        plain2.fromHexPoly("3F");
+        plain3.fromHexPoly("1");
+        plain4.fromHexPoly("3F");
+        encryptor.encrypt(plain1, encrypted1);
+        encryptor.encrypt(plain2, encrypted2);
+        encryptor.encrypt(plain3, encrypted3);
+        encryptor.encrypt(plain4, encrypted4);
+
+        encrypteds = new Ciphertext[]{encrypted1, encrypted2, encrypted3, encrypted4};
+        evaluator.addMany(encrypteds, sum);
+        decryptor.decrypt(sum, plain);
+        Assert.assertEquals(
+                "0",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted1.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted2.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted3.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted4.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(sum.getParmsId().equals(context.getFirstParmsId()));
+
+        plain1.fromHexPoly("1x^16 + 1x^15 + 1x^8 + 1x^7 + 1x^6 + 1x^3 + 1x^2 + 1");
+        plain2.fromHexPoly("0");
+        plain3.fromHexPoly("1x^13 + 1x^12 + 1x^5 + 1x^4 + 1x^3 + 1");
+        plain4.fromHexPoly("1x^15 + 1x^10 + 1x^9 + 1x^8 + 1x^2 + 1x^1 + 1");
+        encryptor.encrypt(plain1, encrypted1);
+        encryptor.encrypt(plain2, encrypted2);
+        encryptor.encrypt(plain3, encrypted3);
+        encryptor.encrypt(plain4, encrypted4);
+
+        encrypteds = new Ciphertext[]{encrypted1, encrypted2, encrypted3, encrypted4};
+        evaluator.addMany(encrypteds, sum);
+        decryptor.decrypt(sum, plain);
+        Assert.assertEquals(
+                "1x^16 + 2x^15 + 1x^13 + 1x^12 + 1x^10 + 1x^9 + 2x^8 + 1x^7 + 1x^6 + 1x^5 + 1x^4 + 2x^3 + 2x^2 + 1x^1 + 3",
+                plain.toString()
+        );
+        Assert.assertTrue(encrypted1.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted2.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted3.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(encrypted4.getParmsId().equals(sum.getParmsId()));
+        Assert.assertTrue(sum.getParmsId().equals(context.getFirstParmsId()));
+
+
+    }
+
+    @Test
+    public void bfvEncryptAddDecrypt() {
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(64);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+        // in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+            String hexPoly1;
+            String hexPoly2;
+
+            hexPoly1 = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            hexPoly2 = "1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 2x^18 + 1x^16 + 2x^14 + 1x^12 + 1x^10 + 2x^9 + 1x^8 + "
+                            + "1x^6 + 2x^5 + 1x^4 + 1x^3 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "0";
+            hexPoly2 = "0";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+
+            hexPoly1 = "0";
+            hexPoly2 = "1x^2 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "1x^2 + 1";
+            hexPoly2 = "3Fx^1 + 3F";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "1x^2 + 3Fx^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3Fx^2 + 3Fx^1 + 3F";
+            hexPoly2 = "1x^1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "2x^2 + 1x^1 + 3";
+            hexPoly2 = "3x^3 + 4x^2 + 5x^1 + 6";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3x^3 + 6x^2 + 6x^1 + 9",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3x^5 + 1x^4 + 4x^3 + 1";
+            hexPoly2 = "5x^2 + 9x^1 + 2";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.addInplace(encrypted1, encrypted2);
+            decryptor.decrypt(encrypted1, plain);
+            Assert.assertEquals(
+                    "3x^5 + 1x^4 + 4x^3 + 5x^2 + 9x^1 + 3",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+        }
+
+        // non in-place
+        {
+            Ciphertext encrypted1 = new Ciphertext();
+            Ciphertext encrypted2 = new Ciphertext();
+            Ciphertext destination = new Ciphertext();
+
+            Plaintext plain = new Plaintext();
+            Plaintext plain1 = new Plaintext();
+            Plaintext plain2 = new Plaintext();
+            String hexPoly1;
+            String hexPoly2;
+
+            hexPoly1 = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            hexPoly2 = "1x^18 + 1x^16 + 1x^14 + 1x^9 + 1x^8 + 1x^5 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^28 + 1x^25 + 1x^21 + 1x^20 + 2x^18 + 1x^16 + 2x^14 + 1x^12 + 1x^10 + 2x^9 + 1x^8 + "
+                            + "1x^6 + 2x^5 + 1x^4 + 1x^3 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "0";
+            hexPoly2 = "0";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+
+            hexPoly1 = "0";
+            hexPoly2 = "1x^2 + 1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "1x^2 + 1";
+            hexPoly2 = "3Fx^1 + 3F";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 3Fx^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3Fx^2 + 3Fx^1 + 3F";
+            hexPoly2 = "1x^1";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^2 + 3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "2x^2 + 1x^1 + 3";
+            hexPoly2 = "3x^3 + 4x^2 + 5x^1 + 6";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3x^3 + 6x^2 + 6x^1 + 9",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly1 = "3x^5 + 1x^4 + 4x^3 + 1";
+            hexPoly2 = "5x^2 + 9x^1 + 2";
+            plain1.fromHexPoly(hexPoly1);
+            plain2.fromHexPoly(hexPoly2);
+            encryptor.encrypt(plain1, encrypted1);
+            encryptor.encrypt(plain2, encrypted2);
+            evaluator.add(encrypted1, encrypted2, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3x^5 + 1x^4 + 4x^3 + 5x^2 + 9x^1 + 3",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted2.getParmsId().equals(encrypted1.getParmsId()));
+            Assert.assertTrue(encrypted1.getParmsId().equals(context.getFirstParmsId()));
+        }
+
+    }
+
+    @Test
+    public void bfvEncryptNegateDecrypt() {
+
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPolyModulusDegree(64);
+        parms.setPlainModulus(plainModulus);
+        parms.setCoeffModulus(CoeffModulus.create(64, new int[]{40}));
+
+        Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keyGenerator = new KeyGenerator(context);
+        PublicKey pk = new PublicKey();
+        keyGenerator.createPublicKey(pk);
+
+        Encryptor encryptor = new Encryptor(context, pk);
+        Evaluator evaluator = new Evaluator(context);
+        Decryptor decryptor = new Decryptor(context, keyGenerator.getSecretKey());
+
+        // in-place
+        {
+            Ciphertext encrypted = new Ciphertext();
+            Plaintext plain = new Plaintext();
+            String hexPoly;
+
+            hexPoly = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            // 1 + (3F) mod 64 = 0
+            // 1 + (3 * 16 + 15 = 48 + 15 = 1 + 63 mod 64 = 0)
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "3Fx^28 + 3Fx^25 + 3Fx^21 + 3Fx^20 + 3Fx^18 + 3Fx^14 + 3Fx^12 + 3Fx^10 + 3Fx^9 + 3Fx^6 + 3Fx^5 + 3Fx^4 + 3Fx^3",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "0";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "1";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "3F";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "1x^1";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "3Fx^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "3Fx^2 + 3F";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negateInplace(encrypted);
+            decryptor.decrypt(encrypted, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+        }
+        // non in-place
+        {
+            Ciphertext encrypted = new Ciphertext();
+            Ciphertext destination = new Ciphertext();
+            Plaintext plain = new Plaintext();
+            String hexPoly;
+
+            hexPoly = "1x^28 + 1x^25 + 1x^21 + 1x^20 + 1x^18 + 1x^14 + 1x^12 + 1x^10 + 1x^9 + 1x^6 + 1x^5 + 1x^4 + 1x^3";
+            // 1 + (3F) mod 64 = 0
+            // 1 + (3 * 16 + 15 = 48 + 15 = 1 + 63 mod 64 = 0)
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^28 + 3Fx^25 + 3Fx^21 + 3Fx^20 + 3Fx^18 + 3Fx^14 + 3Fx^12 + 3Fx^10 + 3Fx^9 + 3Fx^6 + 3Fx^5 + 3Fx^4 + 3Fx^3",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "0";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "0",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "1";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3F",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "3F";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "1x^1";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "3Fx^1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+
+            hexPoly = "3Fx^2 + 3F";
+            plain.fromHexPoly(hexPoly);
+            encryptor.encrypt(plain, encrypted);
+            evaluator.negate(encrypted, destination);
+            decryptor.decrypt(destination, plain);
+            Assert.assertEquals(
+                    "1x^2 + 1",
+                    plain.toString()
+            );
+            Assert.assertTrue(encrypted.getParmsId().equals(context.getFirstParmsId()));
+        }
+    }
+
+}

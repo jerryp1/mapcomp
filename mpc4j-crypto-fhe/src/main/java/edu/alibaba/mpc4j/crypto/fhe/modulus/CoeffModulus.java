@@ -91,6 +91,26 @@ public class CoeffModulus {
     }
 
 
+    public static Modulus create(int polyModulusDegree, int bitSize) {
+
+        if (polyModulusDegree > Constants.POLY_MOD_DEGREE_MAX || polyModulusDegree < Constants.POLY_MOD_DEGREE_MIN
+                || UintCore.getPowerOfTwo(polyModulusDegree) < 0
+        ) {
+            throw new IllegalArgumentException("polyModulusDegree is invalid");
+        }
+
+        if (bitSize < Constants.USER_MOD_BIT_COUNT_MIN
+                || bitSize > Constants.USER_MOD_BIT_COUNT_MAX) {
+            throw new IllegalArgumentException("bitSize is invalid");
+        }
+
+        // todo: why mul safe?
+        long factor = Common.mulSafe(2L, (long) polyModulusDegree, true);
+        // 直接 return
+        return Numth.getPrime(factor, bitSize);
+    }
+
+
     /**
      * 为什么 seal 的实现如此麻烦？不能直接遍历，然后生成？为什么非得搞 map?
      * Returns a custom coefficient modulus suitable for use with the specified

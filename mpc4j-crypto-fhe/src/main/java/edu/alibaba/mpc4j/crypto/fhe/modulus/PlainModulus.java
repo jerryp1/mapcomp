@@ -15,7 +15,8 @@ public class PlainModulus {
      * @return a modulus with prime number
      */
     public static Modulus batching(int polyModulusDegree, int bitSize) {
-        return CoeffModulus.create(polyModulusDegree, new int[]{bitSize})[0];
+
+        return CoeffModulus.create(polyModulusDegree, bitSize);
     }
 
     /**

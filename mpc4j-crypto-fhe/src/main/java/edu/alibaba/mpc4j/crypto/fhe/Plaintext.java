@@ -54,6 +54,21 @@ public class Plaintext implements Cloneable {
     }
 
     /**
+     * 对标 operator=
+     * @param assign
+     */
+    public void copyFrom(Plaintext assign) {
+
+        this.coeffCount = assign.coeffCount;
+        this.scale = assign.scale;
+        this.setParmsId(assign.getParmsId().clone());
+
+        this.resize(assign.coeffCount);
+        System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.coeffCount);
+
+    }
+
+    /**
      * deep-copy a Plaintext object
      *
      * @param copy another Plaintext object
@@ -363,6 +378,17 @@ public class Plaintext implements Cloneable {
         return data.at(index);
     }
 
+    public long at(int index) {
+        return data.at(index);
+    }
+
+    public long getValue(int index) {
+        return data.at(index);
+    }
+
+    public double getScale() {
+        return scale;
+    }
 
     public void setZero(int startCoeff, int length) {
 
@@ -454,7 +480,8 @@ public class Plaintext implements Cloneable {
     }
 
     public void setParmsId(ParmsIdType parmsId) {
-        this.parmsId = new ParmsIdType(parmsId);
+        // todo: really need clone?
+        this.parmsId = parmsId.clone();
     }
 
 

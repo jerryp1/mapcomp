@@ -78,16 +78,10 @@ public class DynArray implements Cloneable {
 
 
     public long at(int index) {
-        if (index >= size) {
-            throw new ArrayIndexOutOfBoundsException("index must be within [0," + size + ")");
-        }
         return data[index];
     }
 
     public long set(int index, long value) {
-        if (index >= size) {
-            throw new ArrayIndexOutOfBoundsException("index must be within [0," + size + ")");
-        }
         return data[index] = value;
     }
 
@@ -188,6 +182,7 @@ public class DynArray implements Cloneable {
         // copy original datd
         System.arraycopy(data, 0, newData, 0, this.size);
         // fill zero is true
+        // todo: 感觉这一步应该是不需要的？因为其余位置默认为 0
         Arrays.fill(newData, this.size, size, 0);
 
         this.data = newData;

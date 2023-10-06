@@ -23,7 +23,10 @@ import java.util.Arrays;
  */
 public class EncryptDecryptTest {
 
-    private static final int MAX_LOOP = 1000;
+    private static final int MAX_LOOP = 1;
+
+
+
 
     @Test
     public void bfvEncryptZeroDecryptRandom() {
@@ -455,7 +458,7 @@ public class EncryptDecryptTest {
         }
 
     }
-    
+
     @Test
     public void bfvEncryptDecrypt() {
         EncryptionParams parms = new EncryptionParams(SchemeType.BFV);

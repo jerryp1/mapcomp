@@ -37,8 +37,8 @@ public class EncryptionParams implements Cloneable {
     public EncryptionParams() {
         scheme = SchemeType.NONE;
         polyModulusDegree = 0;
-//        coeffModulus = new Modulus[0];
-        coeffModulus = null;
+        coeffModulus = new Modulus[0];
+//        coeffModulus = null;
         randomGeneratorFactory = null;
 //        plainModulus = new Modulus();
         plainModulus = null;
@@ -55,8 +55,8 @@ public class EncryptionParams implements Cloneable {
 
         this.scheme = scheme;
         polyModulusDegree = 0;
-//        coeffModulus = new Modulus[0];
-        coeffModulus = null;
+        coeffModulus = new Modulus[0];
+//        coeffModulus = null;
         randomGeneratorFactory = null;
 //        plainModulus = new Modulus();
         plainModulus = null;
@@ -260,7 +260,6 @@ public class EncryptionParams implements Cloneable {
         if (parmsId.isZero()) {
             throw new RuntimeException("parmsId cannot be zero");
         }
-
     }
 
     @Override

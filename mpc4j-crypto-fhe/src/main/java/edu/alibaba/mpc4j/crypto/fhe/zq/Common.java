@@ -149,7 +149,7 @@ public class Common {
     }
 
     public static boolean unsignedGt(int in1, int in2) {
-        return Long.compareUnsigned((long) in1, (long) in2) > 0;
+        return Integer.compareUnsigned( in1, in2) > 0;
     }
 
 

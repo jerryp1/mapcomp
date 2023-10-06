@@ -267,7 +267,8 @@ public class Context {
             // plainModulus is a prime and mod 2n = 1
             contextData.qualifiers.usingBatching = true;
             try {
-                NttTablesCreateIter.createNttTables(coeffCountPower, new Modulus[]{plainModulus}, contextData.plainNttTables);
+                contextData.plainNttTables = new NttTables(coeffCountPower, plainModulus);
+//                NttTablesCreateIter.createNttTables(coeffCountPower, new Modulus[]{plainModulus}, contextData.plainNttTables);
             } catch (Exception e) {
                 contextData.qualifiers.usingBatching = false;
             }
@@ -465,8 +466,10 @@ public class Context {
         private RnsTool rnsTool;
 
         private NttTables[] smallNttTables;
-
-        private NttTables[] plainNttTables;
+        /**
+         * only one modulus, so using single NttTables is enough.
+         */
+        private NttTables plainNttTables;
 
         private GaloisTool galoisTool;
 
@@ -495,9 +498,7 @@ public class Context {
         public ContextData(EncryptionParams parms) {
             this.parms = parms;
             qualifiers = new EncryptionParameterQualifiers();
-
             smallNttTables = new NttTables[parms.getCoeffModulus().length];
-            plainNttTables = new NttTables[1];
         }
 
 
@@ -531,7 +532,7 @@ public class Context {
             return smallNttTables;
         }
 
-        public NttTables[] getPlainNttTables() {
+        public NttTables getPlainNttTables() {
             return plainNttTables;
         }
 

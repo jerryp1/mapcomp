@@ -623,6 +623,7 @@ public class UintCore {
         if (result == values || uint64Count == 0) {
             return;
         }
+        // todo: 这里的写法有问题，起点不一定是0的, SEAL的参数直接是一个数组的起点
         System.arraycopy(values, 0, result, 0, uint64Count);
     }
 

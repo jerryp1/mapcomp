@@ -70,6 +70,31 @@ public class Ciphertext implements Cloneable {
     }
 
     /**
+     * 对标 Ciphertext &Ciphertext::operator=(const Ciphertext &assign) 这个实现
+     *
+     * @param assign another Ciphertext Object
+     */
+    public void copyFrom(Ciphertext assign) {
+        if (this == assign) {
+            return;
+        }
+
+        // copy over fields
+        // todo: need deep copy?
+        this.parmsId = assign.getParmsId().clone();
+        this.isNttForm = assign.isNttForm();
+        this.scale = assign.scale;
+        this.correctionFactor = assign.correctionFactor;
+
+        // Then resize
+        resizeInternal(assign.size, assign.polyModulusDegree, assign.coeffModulusSize);
+
+        // copy data
+        System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.getData().length);
+    }
+
+
+    /**
      * Resets the ciphertext. This function releases any memory allocated
      * by the ciphertext, returning it to the memory pool. It also sets all
      * encryption parameter specific size information to zero.
@@ -151,7 +176,6 @@ public class Ciphertext implements Cloneable {
 
     public void resize(Context context, ParmsIdType parmsId, int size) {
 
-
         if (!context.isParametersSet()) {
             throw new IllegalArgumentException("encryption parameters are not set correctly");
         }
@@ -174,6 +198,7 @@ public class Ciphertext implements Cloneable {
             throw new IllegalArgumentException("invalid size");
         }
         // resize data
+        // todo: need mulSafe?
         int newDataSize = Common.mulSafe(size, polyModulusDegree, false, coeffModulusSize);
         data.resize(newDataSize);
 

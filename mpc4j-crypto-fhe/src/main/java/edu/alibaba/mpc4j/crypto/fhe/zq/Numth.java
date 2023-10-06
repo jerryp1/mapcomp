@@ -121,7 +121,25 @@ public class Numth {
      * @return A Modulus object with prime value
      */
     public static Modulus getPrime(long factor, int bitSize) {
-        return getPrimes(factor, bitSize, 1)[0];
+//        return getPrimes(factor, bitSize, 1)[0];
+
+        // [2, 61]
+        assert bitSize <= Constants.MOD_BIT_COUNT_MAX && bitSize >= Constants.MOD_BIT_COUNT_MIN;
+
+        // Start with (2^bit_size - 1) / (factor * factor)  +  1
+        long value = ( (1L << bitSize) - 1) / factor * factor + 1;
+        // min value of bitSize-bit integer
+        long lowerBound = 1L << (bitSize - 1);
+        int i = 0;
+        while (value > lowerBound) {
+            Modulus mod = new Modulus(value);
+            if (mod.isPrime()) {
+               return mod;
+            }
+            value -= factor;
+        }
+
+        throw new IllegalArgumentException("failed to find enough qualifying primes, please check factor and bitSize");
     }
 
 

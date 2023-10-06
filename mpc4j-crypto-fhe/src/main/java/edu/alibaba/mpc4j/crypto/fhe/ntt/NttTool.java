@@ -62,7 +62,7 @@ public class NttTool {
     /**
      * 对一个 RnsIter 整体进行处理, long[] + rnsIterCoeffCount 来构成一个 RnsIter 对象，避免了 new RnsIter 带来的额外开销
      *
-     * @param rnsIter k * N
+     * @param rnsIter           k * N
      * @param rnsIterCoeffCount
      * @param coeffModulusSize
      * @param tables
@@ -79,7 +79,7 @@ public class NttTool {
     /**
      * [0, N) ---> NttForward, [N, 2N) ---> NttForward
      *
-     * @param rnsIter k * N
+     * @param rnsIter          k * N
      * @param coeffModulusSize k
      * @param tables
      */
@@ -128,6 +128,60 @@ public class NttTool {
                 i -> nttNegAcyclicHarvey(operand.getRnsIter(i), coeffModulusSize, tables)
         );
     }
+
+    /**
+     * 处理一个完整的 polyIter = long[] + N + k
+     *
+     * @param operand
+     * @param operandCoeffCount
+     * @param operandCoeffModulusSize
+     * @param size
+     * @param tables
+     */
+    public static void nttNegAcyclicHarveyPolyIter(
+            long[] operand,
+            int operandCoeffCount,
+            int operandCoeffModulusSize,
+            int size,
+            NttTables[] tables) {
+
+        // 遍历每一个密文多项式
+        for (int i = 0; i < size; i++) {
+            int rnsStartIndex = i * operandCoeffCount * operandCoeffModulusSize;
+            // 遍历每一个 rns 下的 多项式
+            for (int j = 0; j < operandCoeffModulusSize; j++) {
+                // 处理每一个 CoeffIter
+                nttNegAcyclicHarvey(
+                        operand,
+                        rnsStartIndex + j * operandCoeffCount,
+                        tables[j]
+                );
+            }
+        }
+    }
+
+    public static void inverseNttNegAcyclicHarveyPolyIter(
+            long[] operand,
+            int operandCoeffCount,
+            int operandCoeffModulusSize,
+            int size,
+            NttTables[] tables) {
+
+        // 遍历每一个密文多项式
+        for (int i = 0; i < size; i++) {
+            int rnsStartIndex = i * operandCoeffCount * operandCoeffModulusSize;
+            // 遍历每一个 rns 下的 多项式
+            for (int j = 0; j < operandCoeffModulusSize; j++) {
+                // 处理每一个 CoeffIter
+                inverseNttNegAcyclicHarvey(
+                        operand,
+                        rnsStartIndex + j * operandCoeffCount,
+                        tables[j]
+                );
+            }
+        }
+    }
+
 
 
     public static void nttNegAcyclicHarvey(long[] operand, NttTables tables) {
@@ -251,9 +305,6 @@ public class NttTool {
         );
 
     }
-
-
-
 
 
     public static void inverseNttNegAcyclicHarvey(PolyIter operand, int size, NttTables[] tables) {
