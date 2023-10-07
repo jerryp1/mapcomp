@@ -92,7 +92,7 @@ public class Alpr21SingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpPi
         MathPreconditions.checkGreaterOrEqual("keyword_hash_byte_length",
             hashByteLength * Byte.SIZE, PirUtils.getBitLength(n) + CommonConstants.STATS_BIT_LENGTH
         );
-        prg = PrgFactory.createInstance(envType, hashByteLength + byteL);
+        prg = PrgFactory.createInstance(envType, hashByteLength + hashByteLength + byteL);
         sqOprfReceiver.init(1);
         stopWatch.stop();
         long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -140,6 +140,18 @@ public class Alpr21SingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpPi
 
         stopWatch.start();
         ByteBuffer itemHash = ByteBuffer.wrap(hash.digestToBytes(ObjectUtils.objectToByteArray(item)));
+        SqOprfReceiverOutput sqOprfReceiverOutput = sqOprfReceiver.oprf(new byte[][]{itemHash.array()});
+        // split the OPRF key into hash_key || encrypt_key
+        byte[] concatKey = prg.extendToBytes(sqOprfReceiverOutput.getPrf(0));
+        byte[] hashKey = new byte[hashByteLength];
+        byte[] encryptKey = new byte[hashByteLength + byteL];
+        ByteBuffer.wrap(concatKey).get(hashKey).get(encryptKey);
+        stopWatch.stop();
+        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, sqOprfTime, "Client runs sq-OPRF");
+
+        stopWatch.start();
         byte[][] ciphertexts = new byte[hashNum][byteL];
         for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
             int x = prfs[hashIndex].getInteger(itemHash.array(), binNum);
@@ -148,17 +160,10 @@ public class Alpr21SingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpPi
         stopWatch.stop();
         long pirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, pirTime, "Client runs PIR");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, pirTime, "Client runs PIR");
 
         stopWatch.start();
-        SqOprfReceiverOutput sqOprfReceiverOutput = sqOprfReceiver.oprf(new byte[][]{itemHash.array()});
-        stopWatch.stop();
-        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, sqOprfTime, "Client runs sq-OPRF");
-
-        stopWatch.start();
-        byte[] value = handleResponse(itemHash, ciphertexts, sqOprfReceiverOutput);
+        byte[] value = handleResponse(ciphertexts, hashKey, encryptKey);
         stopWatch.stop();
         long valueTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -168,13 +173,14 @@ public class Alpr21SingleKeywordCpPirClient<T> extends AbstractSingleKeywordCpPi
         return value;
     }
 
-    private byte[] handleResponse(ByteBuffer itemHash, byte[][] ciphertexts, SqOprfReceiverOutput sqOprfReceiverOutput) {
-        byte[] key = prg.extendToBytes(sqOprfReceiverOutput.getPrf(0));
+    private byte[] handleResponse(byte[][] ciphertexts, byte[] hashKey, byte[] encryptKey) {
         for (int hashIndex = 0; hashIndex < hashNum; hashIndex++) {
+            // decrypt using encrypt_key
             byte[] ciphertext = ciphertexts[hashIndex];
-            byte[] plaintext = BytesUtils.xor(ciphertext, key);
+            byte[] plaintext = BytesUtils.xor(ciphertext, encryptKey);
             byte[] hash = BytesUtils.clone(plaintext, 0, hashByteLength);
-            if (ByteBuffer.wrap(hash).equals(itemHash)) {
+            // match using hash_key
+            if (BytesUtils.equals(hash, hashKey)) {
                 return BytesUtils.clone(plaintext, hashByteLength, byteL);
             }
         }
