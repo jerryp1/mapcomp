@@ -160,7 +160,13 @@ public class Cmg21KwPirServer extends AbstractKwPirServer {
         if (maxRetrievalSize > 1) {
             params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096;
         } else {
-            params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
+            if (keywordLabelMap.size() <= 100000) {
+                params = Cmg21KwPirParams.SERVER_100K_CLIENT_MAX_1;
+            } else if (keywordLabelMap.size() <= (1 << 20)) {
+                params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
+            } else {
+                params = Cmg21KwPirParams.SERVER_16M_CLIENT_MAX_1;
+            }
         }
         setInitInput(keywordLabelMap, maxRetrievalSize, labelByteLength);
         logPhaseInfo(PtoState.INIT_BEGIN);
