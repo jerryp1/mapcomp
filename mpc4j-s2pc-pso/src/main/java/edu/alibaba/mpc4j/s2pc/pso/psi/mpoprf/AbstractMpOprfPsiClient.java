@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
@@ -38,6 +39,10 @@ public abstract class AbstractMpOprfPsiClient<T> extends AbstractPsiClient<T> {
      */
     private final MpOprfReceiver mpOprfReceiver;
     /**
+     * PEQT byte length
+     */
+    private int peqtByteLength;
+    /**
      * PEQT hash
      */
     private Hash peqtHash;
@@ -69,7 +74,11 @@ public abstract class AbstractMpOprfPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
+        // todo 需要新增区分安全性
+        peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
+//        peqtByteLength = config.getSecurityModel().equals(SecurityModel.MALICIOUS) ?
+//            PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
+//            PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         byte[][] clientElementByteArrays = clientElementArrayList.stream()
             .map(ObjectUtils::objectToByteArray)

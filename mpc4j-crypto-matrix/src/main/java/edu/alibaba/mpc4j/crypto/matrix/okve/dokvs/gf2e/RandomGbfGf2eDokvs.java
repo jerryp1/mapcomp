@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
@@ -21,11 +22,15 @@ import java.util.Arrays;
 public class RandomGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> {
 
     RandomGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
-        super(envType, n, l, key, new SecureRandom());
+        super(envType, n, l, CommonConstants.STATS_BIT_LENGTH, key, new SecureRandom());
     }
 
     RandomGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
-        super(envType, n, l, key, secureRandom);
+        super(envType, n, l, CommonConstants.STATS_BIT_LENGTH, key, secureRandom);
+    }
+
+    public RandomGbfGf2eDokvs(EnvType envType, int n, int m, int l, int hashNum, byte[] key) {
+        super(envType, n, m, l, hashNum, key, new SecureRandom());
     }
 
     @Override

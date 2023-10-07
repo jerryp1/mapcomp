@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
@@ -17,6 +18,7 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.MpOprfPsiPtoDesc.PtoStep;
 
@@ -39,6 +41,10 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
      */
     private final MpOprfSender mpOprfSender;
     /**
+     * PEQT byte length
+     */
+    private int peqtByteLength;
+    /**
      * filter type
      */
     private final FilterType filterType;
@@ -50,6 +56,7 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
     public AbstractMpOprfPsiServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, MpOprfPsiConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
         mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
+
         addSubPtos(mpOprfSender);
         filterType = config.getFilterType();
     }
@@ -75,7 +82,11 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
+        // todo 需要新增区分安全性
+        peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
+//        peqtByteLength = config.getSecurityModel().equals(SecurityModel.MALICIOUS) ?
+//            PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
+//            PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         stopWatch.stop();
         long prepareInputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

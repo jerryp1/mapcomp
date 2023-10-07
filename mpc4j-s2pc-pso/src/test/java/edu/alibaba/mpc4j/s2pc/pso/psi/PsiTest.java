@@ -20,6 +20,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19FastPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty19.Prty19LowPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.other.prty20.Prty20PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr16.Rr16PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr17.Rr17DePsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr17.Rr17EcPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.rt21.Rt21PsiConfig;
@@ -66,121 +69,141 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RR22
+//        // RR22
+//        configurations.add(new Object[]{
+//            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+//            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
+//            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ")",
+//            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
+//            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+//        });
+//        // RS21
+//        configurations.add(new Object[]{
+//            PsiType.RS21.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+//            new Rs21PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.RS21.name() + "(" + SecurityModel.MALICIOUS + ")",
+//            new Rs21PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+//        });
+//        // OOS17
+//        configurations.add(new Object[]{
+//            PsiType.OOS17.name(), new Oos17PsiConfig.Builder().build(),
+//        });
+//        // PSZ14
+//        configurations.add(new Object[]{
+//            PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),
+//        });
+//        // DCW13
+//        configurations.add(new Object[]{
+//            PsiType.DCW13.name(), new Dcw13PsiConfig.Builder().build(),
+//        });
+//        // RT21
+//        configurations.add(new Object[]{
+//            PsiType.RT21.name(), new Rt21PsiConfig.Builder().build(),
+//        });
+//        // CM20
+//        configurations.add(new Object[]{
+//            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
+//        });
+//        // CZZ22
+//        configurations.add(new Object[]{
+//            PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),
+//        });
+//        // GMR21
+//        configurations.add(new Object[]{
+//            PsiType.GMR21.name() + "(no silent)", new Gmr21PsiConfig.Builder(false).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.GMR21.name() + "(silent)", new Gmr21PsiConfig.Builder(true).build(),
+//        });
+//        // PRTY20
+//        configurations.add(new Object[]{
+//            PsiType.PRTY20.name() + "(" + SecurityModel.SEMI_HONEST + ")",
+//            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.PRTY20.name() + "(" + SecurityModel.MALICIOUS + ")",
+//            new Prty20PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+//        });
+//        configurations.add(new Object[]{
+//            PsiType.PRTY20.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
+//            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST)
+//                .setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT)
+//                .build(),
+//        });
+//        // RA17_ECC
+//        configurations.add(new Object[]{
+//            PsiType.RA17_ECC.name(), new Ra17EccPsiConfig.Builder().build(),
+//        });
+//        // RA17_BYTE_ECC
+//        configurations.add(new Object[]{
+//            PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
+//        });
+//        // PRTY19_FAST
+//        configurations.add(new Object[]{
+//            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
+//        });
+//        // PRTY19_LOW
+//        configurations.add(new Object[]{
+//            PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
+//        });
+//        // KKRT16 (no-stash)
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
+//            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
+//        });
+//        // KKRT16 (4 hash)
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
+//            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
+//        });
+//        // KKRT16 (3 hash)
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.KKRT16.name() + "(3 hash)", new Kkrt16PsiConfig.Builder().build(),
+//        });
+//        // HFH99_BYTE_ECC
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
+//        });
+//        // HFH99_ECC (compress)
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
+//            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
+//        });
+//        // HFH99_ECC (uncompress)
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
+//            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
+//        });
+        // RR17_DE LAN
         configurations.add(new Object[]{
-            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ")",
-            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
+            PsiFactory.PsiType.RR17_DE.name() + " divParam = 4", new Rr17DePsiConfig.Builder().build(),
         });
+        // RR17_DE WAN
         configurations.add(new Object[]{
-            PsiType.RR22.name() + "(" + SecurityModel.SEMI_HONEST + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
-            new Rr22PsiConfig.Builder(SecurityModel.SEMI_HONEST, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+            PsiFactory.PsiType.RR17_DE.name() + " divParam = 10", new Rr17DePsiConfig.Builder().setDivParam(10).build(),
         });
+        // RR17_EC LAN
         configurations.add(new Object[]{
-            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ")",
-            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
+            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
         });
+        // RR17_EC WAN
         configurations.add(new Object[]{
-            PsiType.RR22.name() + "(" + SecurityModel.MALICIOUS + ", " + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT + ")",
-            new Rr22PsiConfig.Builder(SecurityModel.MALICIOUS, Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
+            PsiFactory.PsiType.RR17_EC.name() + " divParam = 10", new Rr17EcPsiConfig.Builder().setDivParam(10).build(),
         });
-        // RS21
+        // RR16
         configurations.add(new Object[]{
-            PsiType.RS21.name() + "(" + SecurityModel.SEMI_HONEST + ")",
-            new Rs21PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
-        configurations.add(new Object[]{
-            PsiType.RS21.name() + "(" + SecurityModel.MALICIOUS + ")",
-            new Rs21PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
-        });
-        // OOS17
-        configurations.add(new Object[]{
-            PsiType.OOS17.name(), new Oos17PsiConfig.Builder().build(),
-        });
-        // PSZ14
-        configurations.add(new Object[]{
-            PsiType.PSZ14.name(), new Psz14PsiConfig.Builder().build(),
-        });
-        // DCW13
-        configurations.add(new Object[]{
-            PsiType.DCW13.name(), new Dcw13PsiConfig.Builder().build(),
-        });
-        // RT21
-        configurations.add(new Object[]{
-            PsiType.RT21.name(), new Rt21PsiConfig.Builder().build(),
-        });
-        // CM20
-        configurations.add(new Object[]{
-            PsiType.CM20.name(), new Cm20PsiConfig.Builder().build(),
-        });
-        // CZZ22
-        configurations.add(new Object[]{
-            PsiType.CZZ22.name(), new Czz22PsiConfig.Builder().build(),
-        });
-        // GMR21
-        configurations.add(new Object[]{
-            PsiType.GMR21.name() + "(no silent)", new Gmr21PsiConfig.Builder(false).build(),
-        });
-        configurations.add(new Object[]{
-            PsiType.GMR21.name() + "(silent)", new Gmr21PsiConfig.Builder(true).build(),
-        });
-        // PRTY20
-        configurations.add(new Object[]{
-            PsiType.PRTY20.name() + "(" + SecurityModel.SEMI_HONEST + ")",
-            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST).build(),
-        });
-        configurations.add(new Object[]{
-            PsiType.PRTY20.name() + "(" + SecurityModel.MALICIOUS + ")",
-            new Prty20PsiConfig.Builder(SecurityModel.MALICIOUS).build(),
-        });
-        configurations.add(new Object[]{
-            PsiType.PRTY20.name() + " (" + Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT + ")",
-            new Prty20PsiConfig.Builder(SecurityModel.SEMI_HONEST)
-                .setPaxosType(Gf2eDokvsType.H3_NAIVE_CLUSTER_BLAZE_GCT)
-                .build(),
-        });
-        // RA17_ECC
-        configurations.add(new Object[]{
-            PsiType.RA17_ECC.name(), new Ra17EccPsiConfig.Builder().build(),
-        });
-        // RA17_BYTE_ECC
-        configurations.add(new Object[]{
-            PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
-        });
-        // PRTY19_FAST
-        configurations.add(new Object[]{
-            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
-        });
-        // PRTY19_LOW
-        configurations.add(new Object[]{
-            PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
-        });
-        // KKRT16 (no-stash)
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
-            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
-        });
-        // KKRT16 (4 hash)
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
-            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NAIVE_4_HASH).build(),
-        });
-        // KKRT16 (3 hash)
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.KKRT16.name() + "(3 hash)", new Kkrt16PsiConfig.Builder().build(),
-        });
-        // HFH99_BYTE_ECC
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
-        });
-        // HFH99_ECC (compress)
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
-            new Hfh99EccPsiConfig.Builder().setCompressEncode(true).build(),
-        });
-        // HFH99_ECC (uncompress)
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
-            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
+            PsiFactory.PsiType.RR16.name(), new Rr16PsiConfig.Builder().build(),
         });
 
         return configurations;

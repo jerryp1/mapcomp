@@ -16,6 +16,9 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.other.dcw13.Dcw13PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.cm20.Cm20PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.czz22.Czz22PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mqrpmt.gmr21.Gmr21PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr16.Rr16PsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr17.Rr17DePsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psi.other.rr17.Rr17EcPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99ByteEccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.pke.hfh99.Hfh99EccPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.cuckoo.kkrt16.Kkrt16PsiConfig;
@@ -183,4 +186,17 @@ public class PsiConfigUtils {
         Gf2kDokvsType okvsType = Gf2kDokvsType.valueOf(okvsTypeString);
         return new Rr22PsiConfig.Builder(securityModel, okvsType).build();
     }
+
+    private static PsiConfig createRr17DePsiConfig(Properties properties) {
+        int divParam = PropertiesUtils.readInt(properties, "divParam");
+        return new Rr17DePsiConfig.Builder().setDivParam(divParam).build();
+    }
+    private static PsiConfig createRr17EcPsiConfig(Properties properties) {
+        int divParam = PropertiesUtils.readInt(properties, "divParam");
+        return new Rr17EcPsiConfig.Builder().setDivParam(divParam).build();
+    }
+    private static PsiConfig createRr16PsiConfig() {
+        return new Rr16PsiConfig.Builder().build();
+    }
+
 }
