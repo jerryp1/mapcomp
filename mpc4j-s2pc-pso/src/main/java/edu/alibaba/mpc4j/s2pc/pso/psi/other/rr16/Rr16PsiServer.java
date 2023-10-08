@@ -9,15 +9,13 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.filter.Filter;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.common.tool.filter.SparseRandomBloomFilter;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
-import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.RandomGbfGf2eDokvs;
+import edu.alibaba.mpc4j.common.tool.utils.*;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossParty;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
@@ -55,30 +53,19 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
      * OKVS keys
      */
     private byte[][] hashKeys;
+
     /**
-     * 关联密钥
+     * hash function for BF
+     */
+    private Prf gbfHash;
+    /**
+     * correlated keys
      */
     private byte[][] q1;
-    /**
-     * GBF
-     */
-    private RandomGbfGf2eDokvs<byte[]> gbf;
     /**
      * OT number
      */
     private int nOt;
-    /**
-     * Bloom Filter position num
-     */
-    private int nBf;
-    /**
-     * GBF hash num
-     */
-    private int hashNum;
-    /**
-     * PEQT byte length
-     */
-    private int peqtByteLength;
     /**
      * filter type
      */
@@ -104,25 +91,22 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
 
         stopWatch.start();
         ctSender.init();
-        this.hashKeys = ctSender.coinToss(1, CommonConstants.BLOCK_BIT_LENGTH);
-        peqtByteLength = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
+        hashKeys = ctSender.coinToss(1, CommonConstants.BLOCK_BIT_LENGTH);
+        int peqtByteLength = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
-
-        this.nBf = SparseRandomBloomFilter.bitSize(maxClientElementSize);
-        this.hashNum = SparseRandomBloomFilter.getHashNum(maxClientElementSize);
-        // 初始化COT协议
+        // init COT
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
-        this.nOt = Rr16PsiUtils.getOtBatchSize(maxClientElementSize);
+        nOt = Rr16PsiUtils.getOtBatchSize(maxClientElementSize);
         coreCotSender.init(delta, nOt);
         stopWatch.stop();
         long initCotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.INIT_STEP, 1, 4, initCotTime, "Server generates key");
 
-        // 执行COT协议
+        // run COT protocol
         stopWatch.start();
-        this.cotSenderOutput = coreCotSender.send(nOt);
+        cotSenderOutput = coreCotSender.send(nOt);
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -161,13 +145,15 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
+        gbfHash = PrfFactory.createInstance(envType, Integer.BYTES * SparseRandomBloomFilter.getHashNum(clientElementSize));
+        gbfHash.setKey(hashKeys[0]);
         DataPacketHeader piHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Rr16PsiPtoDesc.PtoStep.CLIENT_SEND_PERMUTATION.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> piPayload = rpc.receive(piHeader).getPayload();
-        this.q1 = handlePiPayload(piPayload);
-        this.gbf = new RandomGbfGf2eDokvs<>(envType, clientElementSize, nBf, CommonConstants.BLOCK_BIT_LENGTH, hashNum, hashKeys[0]);
+        q1 = piPayload.stream().map(x -> cotSenderOutput.getR1(IntUtils.byteArrayToInt(x))).toArray(byte[][]::new);
+
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -179,7 +165,7 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
         List<byte[]> serverPrfs = serverElementStream
             .map(element -> {
                 byte[] elementByteArray = ObjectUtils.objectToByteArray(element);
-                byte[] prf = gbf.decode(q1, elementByteArray);
+                byte[] prf = Rr16PsiUtils.decode(q1, elementByteArray, gbfHash);
                 return peqtHash.digestToBytes(prf);
             })
             .collect(Collectors.toList());
@@ -216,13 +202,8 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
 
     void checkClientResponse(List<byte[]> responsePayload){
         int[] index = responsePayload.subList(0, responsePayload.size() - 1).stream().mapToInt(IntUtils::byteArrayToInt).toArray();
-        byte[] zero = new byte[this.cotSenderOutput.getR0(0).length];
-        IntStream.range(0, index.length).forEach(i -> BytesUtils.xori(zero, this.cotSenderOutput.getR0(index[i])));
+        byte[] zero = new byte[cotSenderOutput.getR0(0).length];
+        IntStream.range(0, index.length).forEach(i -> BytesUtils.xori(zero, cotSenderOutput.getR0(index[i])));
         assert BytesUtils.equals(zero, responsePayload.get(responsePayload.size() - 1));
-    }
-
-    byte[][] handlePiPayload(List<byte[]> piPayload) {
-        return IntStream.range(0, nBf).mapToObj(index ->
-            cotSenderOutput.getR1(IntUtils.byteArrayToInt(piPayload.get(index)))).toArray(byte[][]::new);
     }
 }

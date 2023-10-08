@@ -34,8 +34,7 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     /**
      * Garbled Bloom Filter needs λ hashes
      */
-//    protected static final int SPARSE_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
-    protected final int sparseHashNum;
+    protected static final int SPARSE_HASH_NUM = CommonConstants.STATS_BIT_LENGTH;
     /**
      * we only need to use one hash key
      */
@@ -50,7 +49,6 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     public static int getM(int n) {
         MathPreconditions.checkPositive("n", n);
         // m = n / ln(2) * σ, flooring so that m % Byte.SIZE = 0.
-        // todo check这个需不需要变
         return CommonUtils.getByteLength(
             (int) Math.ceil(n * CommonConstants.STATS_BIT_LENGTH / Math.log(2))
         ) * Byte.SIZE;
@@ -61,17 +59,9 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
      */
     protected final Prf hash;
 
-    AbstractGbfGf2eDokvs(EnvType envType, int n, int l, int hashNum, byte[] key, SecureRandom secureRandom) {
+    AbstractGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
         super(n, getM(n), l, secureRandom);
-        sparseHashNum = hashNum;
-        hash = PrfFactory.createInstance(envType, Integer.BYTES * hashNum);
-        hash.setKey(key);
-    }
-
-    AbstractGbfGf2eDokvs(EnvType envType, int n, int m, int l, int hashNum, byte[] key, SecureRandom secureRandom) {
-        super(n, m, l, secureRandom);
-        sparseHashNum = hashNum;
-        hash = PrfFactory.createInstance(envType, Integer.BYTES * hashNum);
+        hash = PrfFactory.createInstance(envType, Integer.BYTES * SPARSE_HASH_NUM);
         hash.setKey(key);
     }
 
@@ -82,7 +72,7 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
 
     @Override
     public int maxSparsePositionNum() {
-        return sparseHashNum;
+        return SPARSE_HASH_NUM;
     }
 
     @Override

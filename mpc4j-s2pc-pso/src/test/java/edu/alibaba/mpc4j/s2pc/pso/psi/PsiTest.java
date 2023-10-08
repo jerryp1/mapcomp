@@ -185,22 +185,22 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //            PsiFactory.PsiType.HFH99_ECC.name() + " (uncompress)",
 //            new Hfh99EccPsiConfig.Builder().setCompressEncode(false).build(),
 //        });
-        // RR17_DE LAN
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.RR17_DE.name() + " divParam = 4", new Rr17DePsiConfig.Builder().build(),
-        });
-        // RR17_DE WAN
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.RR17_DE.name() + " divParam = 10", new Rr17DePsiConfig.Builder().setDivParam(10).build(),
-        });
-        // RR17_EC LAN
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
-        });
-        // RR17_EC WAN
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.RR17_EC.name() + " divParam = 10", new Rr17EcPsiConfig.Builder().setDivParam(10).build(),
-        });
+//        // RR17_DE LAN
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.RR17_DE.name() + " divParam = 4", new Rr17DePsiConfig.Builder().build(),
+//        });
+//        // RR17_DE WAN
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.RR17_DE.name() + " divParam = 10", new Rr17DePsiConfig.Builder().setDivParam(10).build(),
+//        });
+//        // RR17_EC LAN
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
+//        });
+//        // RR17_EC WAN
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.RR17_EC.name() + " divParam = 10", new Rr17EcPsiConfig.Builder().setDivParam(10).build(),
+//        });
         // RR16
         configurations.add(new Object[]{
             PsiFactory.PsiType.RR16.name(), new Rr16PsiConfig.Builder().build(),

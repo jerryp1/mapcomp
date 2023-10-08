@@ -26,11 +26,11 @@ import java.security.SecureRandom;
 public class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements SparseConstantGf2eDokvs<T> {
 
     public DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key) {
-        super(envType, n, l, CommonConstants.STATS_BIT_LENGTH, key, new SecureRandom());
+        super(envType, n, l, key, new SecureRandom());
     }
 
     public DistinctGbfGf2eDokvs(EnvType envType, int n, int l, byte[] key, SecureRandom secureRandom) {
-        super(envType, n, l, CommonConstants.STATS_BIT_LENGTH, key, secureRandom);
+        super(envType, n, l, key, secureRandom);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements 
         byte[] keyBytes = ObjectUtils.objectToByteArray(key);
         int[] hashes = IntUtils.byteArrayToIntArray(hash.getBytes(keyBytes));
         // we now use the method provided in VOLE-PSI to get distinct hash indexes
-        for (int j = 0; j < sparseHashNum; j++) {
+        for (int j = 0; j < SPARSE_HASH_NUM; j++) {
             // hj = r % (m - j)
             int modulus = m - j;
             int hj = Math.abs(hashes[j] % modulus);
@@ -65,7 +65,7 @@ public class DistinctGbfGf2eDokvs<T> extends AbstractGbfGf2eDokvs<T> implements 
 
     @Override
     public int sparsePositionNum() {
-        return sparseHashNum;
+        return SPARSE_HASH_NUM;
     }
 
     @Override

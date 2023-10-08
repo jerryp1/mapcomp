@@ -1,13 +1,21 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi.other.rr16;
 
+import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Rr16PsiUtils {
     /**
-     * 私有构造函数。
+     * private constructor.
      */
     private Rr16PsiUtils() {
         // empty
@@ -16,7 +24,7 @@ public class Rr16PsiUtils {
     /**
      * Not取值查找表
      */
-    private static final Map<Integer, Integer> N_OT_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap N_OT_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         N_OT_INIT_MATRIX.put(2, 8295);
@@ -63,7 +71,7 @@ public class Rr16PsiUtils {
     /**
      * Notone取值查找表
      */
-    private static final Map<Integer, Integer> N_ONE_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap N_ONE_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         N_ONE_INIT_MATRIX.put(2, 517);
@@ -110,7 +118,7 @@ public class Rr16PsiUtils {
     /**
      * CncThreshold取值查找表
      */
-    private static final Map<Integer, Integer> T_CNC_INIT_MATRIX = new HashMap<>();
+    private static final TIntIntMap T_CNC_INIT_MATRIX = new TIntIntHashMap();
 
     static {
         T_CNC_INIT_MATRIX.put(2, 138);
@@ -199,5 +207,24 @@ public class Rr16PsiUtils {
         }
         throw new IllegalArgumentException(
             "MaxBatch Size = " + maxBatchSize + " exceeds supported size = " + (1 << 23));
+    }
+
+    /**
+     * get the value from GBF
+     *
+     * @param storage GBF storage
+     * @param key GBF input
+     * @param gbfHash hash function used to map input into specific position
+     * @return w的值。
+     */
+    public static byte[] decode(byte[][] storage, byte[] key, Prf gbfHash) {
+        int[] sparsePositions = Arrays.stream(IntUtils.byteArrayToIntArray(gbfHash.getBytes(ObjectUtils.objectToByteArray(key))))
+            .map(hi -> Math.abs(hi % storage.length)).distinct().toArray();
+        byte[] value = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
+        for (int position : sparsePositions) {
+            BytesUtils.xori(value, storage[position]);
+        }
+        assert BytesUtils.isFixedReduceByteArray(value, CommonConstants.BLOCK_BYTE_LENGTH, CommonConstants.BLOCK_BIT_LENGTH);
+        return value;
     }
 }

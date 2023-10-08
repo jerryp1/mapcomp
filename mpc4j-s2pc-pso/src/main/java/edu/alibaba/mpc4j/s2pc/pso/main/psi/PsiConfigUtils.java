@@ -84,6 +84,12 @@ public class PsiConfigUtils {
                 return createRs21PsiConfig(properties);
             case RR22:
                 return createRr22PsiConfig(properties);
+            case RR16:
+                return createRr16PsiConfig();
+            case RR17_DE:
+                return createRr17DePsiConfig(properties);
+            case RR17_EC:
+                return createRr17EcPsiConfig(properties);
             default:
                 throw new IllegalArgumentException("Invalid " + PsiType.class.getSimpleName() + ": " + psiType.name());
         }

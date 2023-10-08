@@ -41,10 +41,6 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
      */
     private final MpOprfSender mpOprfSender;
     /**
-     * PEQT byte length
-     */
-    private int peqtByteLength;
-    /**
      * filter type
      */
     private final FilterType filterType;
@@ -52,11 +48,15 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
      * PEQT hash
      */
     private Hash peqtHash;
+    /**
+     * SecurityModel
+     */
+    private final SecurityModel securityModel;
 
     public AbstractMpOprfPsiServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, MpOprfPsiConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
+        securityModel = config.getSecurityModel();
         mpOprfSender = OprfFactory.createMpOprfSender(serverRpc, clientParty, config.getMpOprfConfig());
-
         addSubPtos(mpOprfSender);
         filterType = config.getFilterType();
     }
@@ -82,11 +82,12 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // todo 需要新增区分安全性
-        peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
-//        peqtByteLength = config.getSecurityModel().equals(SecurityModel.MALICIOUS) ?
-//            PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
-//            PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
+        /**
+         * PEQT byte length
+         */
+        int peqtByteLength = securityModel.equals(SecurityModel.MALICIOUS) ?
+            PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
+            PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         stopWatch.stop();
         long prepareInputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
