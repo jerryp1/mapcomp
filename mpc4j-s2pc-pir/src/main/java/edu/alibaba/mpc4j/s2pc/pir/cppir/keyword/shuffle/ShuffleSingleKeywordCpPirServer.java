@@ -88,6 +88,8 @@ public class ShuffleSingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpP
             : "rowNum * columnNum must be greater than or equal to n (" + n + "): " + rowNum * columnNum;
         // pad the database
         ArrayList<T> keyArrayList = new ArrayList<>(keyValueMap.keySet());
+        // for the security proof reason, we need to shuffle the inputs
+        Collections.shuffle(keyArrayList, secureRandom);
         byte[][] initHashes = new byte[rowNum * columnNum][byteFullEcc.pointByteLength()];
         byte[][] initValues = new byte[rowNum * columnNum][byteL];
         IntStream indexIntStream = IntStream.range(0, rowNum * columnNum);

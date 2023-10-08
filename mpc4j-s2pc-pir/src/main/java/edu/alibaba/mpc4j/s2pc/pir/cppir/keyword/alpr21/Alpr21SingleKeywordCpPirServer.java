@@ -108,7 +108,7 @@ public class Alpr21SingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpPi
         MathPreconditions.checkGreaterOrEqual("keyword_hash_byte_length",
             hashByteLength * Byte.SIZE, PirUtils.getBitLength(n) + CommonConstants.STATS_BIT_LENGTH
         );
-        prg = PrgFactory.createInstance(envType, hashByteLength + byteL);
+        prg = PrgFactory.createInstance(envType, hashByteLength + hashByteLength + byteL);
         sqOprfKey = sqOprfSender.keyGen();
         sqOprfSender.init(1, sqOprfKey);
         stopWatch.stop();
@@ -172,9 +172,15 @@ public class Alpr21SingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpPi
             } else {
                 secureRandom.nextBytes(value);
             }
-            byte[] concatHashValue = Bytes.concat(keywordHash.array(), value);
-            byte[] oprfKey = sqOprfKey.getPrf(keywordHash.array());
-            BytesUtils.xori(concatHashValue, prg.extendToBytes(oprfKey));
+            byte[] oprfKey = prg.extendToBytes(sqOprfKey.getPrf(keywordHash.array()));
+            // split the OPRF key into hash_key || encrypt_key
+            byte[] hashKey = new byte[hashByteLength];
+            byte[] encryptKey = new byte[hashByteLength + byteL];
+            ByteBuffer.wrap(oprfKey).get(hashKey).get(encryptKey);
+            // value = hash_key || value
+            byte[] concatHashValue = Bytes.concat(hashKey, value);
+            // encrypt using encrypt_key
+            BytesUtils.xori(concatHashValue, encryptKey);
             cuckooHashBinItems[binIndex] = concatHashValue;
         });
         return ZlDatabase.create((hashByteLength + byteL) * Byte.SIZE, cuckooHashBinItems);
@@ -186,20 +192,20 @@ public class Alpr21SingleKeywordCpPirServer<T> extends AbstractSingleKeywordCpPi
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
+        sqOprfSender.oprf(1);
+        stopWatch.stop();
+        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, sqOprfTime, "Server runs sq-OPRF");
+
+        stopWatch.start();
         for (int i = 0; i < hashNum; i++) {
             singleIndexCpPirServer.pir();
         }
         stopWatch.stop();
         long pirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, pirTime, "Server runs PIR");
-
-        stopWatch.start();
-        sqOprfSender.oprf(1);
-        stopWatch.stop();
-        long sqOprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, sqOprfTime, "Server runs sq-OPRF");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, pirTime, "Server runs PIR");
 
         logPhaseInfo(PtoState.PTO_END);
         return SingleKeywordCpPirServerOutput.UNKNOWN;
