@@ -42,8 +42,8 @@ public abstract class AbstractSingleIndexCpPirClient extends AbstractTwoPartyPto
     }
 
     protected void setPtoInput(int x) {
-        // extra info is managed by the protocol itself
         checkInitialized();
         MathPreconditions.checkNonNegativeInRange("index", x, n);
+        extraInfo++;
     }
 }

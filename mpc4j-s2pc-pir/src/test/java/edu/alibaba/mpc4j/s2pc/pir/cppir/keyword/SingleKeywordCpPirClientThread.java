@@ -1,29 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.pir.cppir.index;
+package edu.alibaba.mpc4j.s2pc.pir.cppir.keyword;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Single Index Client-specific Preprocessing PIR client thread.
+ * Single Keyword Client-specific Preprocessing PIR client thread.
  *
- * @author Weiran Liu
- * @date 2023/8/25
+ * @author Liqiang Peng
+ * @date 2023/9/14
  */
-class SingleIndexCpPirClientThread extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SingleIndexCpPirClientThread.class);
-    /**
-     * random state
-     */
-    private final SecureRandom secureRandom;
+class SingleKeywordCpPirClientThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SingleKeywordCpPirClientThread.class);
     /**
      * client
      */
-    private final SingleIndexCpPirClient client;
+    private final SingleKeywordCpPirClient<String> client;
     /**
      * database size
      */
@@ -39,18 +35,22 @@ class SingleIndexCpPirClientThread extends Thread {
     /**
      * retrieval result
      */
-    private final TIntObjectMap<byte[]> retrievalResult;
+    private final Map<String, byte[]> retrievalResult;
+    /**
+     * retrieval list
+     */
+    private final List<String> queryList;
 
-    SingleIndexCpPirClientThread(SingleIndexCpPirClient client, int n, int l, int queryNum) {
+    SingleKeywordCpPirClientThread(SingleKeywordCpPirClient<String> client, int n, int l, List<String> queryList) {
         this.client = client;
         this.n = n;
         this.l = l;
-        this.queryNum = queryNum;
-        secureRandom = new SecureRandom();
-        retrievalResult = new TIntObjectHashMap<>(queryNum);
+        this.queryList = queryList;
+        this.queryNum = queryList.size();
+        retrievalResult = new HashMap<>(queryNum);
     }
 
-    TIntObjectMap<byte[]> getRetrievalResult() {
+    public Map<String, byte[]> getRetrievalResult() {
         return retrievalResult;
     }
 
@@ -65,9 +65,10 @@ class SingleIndexCpPirClientThread extends Thread {
             client.getRpc().reset();
 
             for (int i = 0; i < queryNum; i++) {
-                int x = secureRandom.nextInt(n);
-                byte[] value = client.pir(x);
-                retrievalResult.put(x, value);
+                byte[] value = client.pir(queryList.get(i));
+                if (!(value == null)) {
+                    retrievalResult.put(queryList.get(i), value);
+                }
             }
             LOGGER.info(
                 "Client: The Online Communication costs {}MB", client.getRpc().getSendByteLength() * 1.0 / (1 << 20)

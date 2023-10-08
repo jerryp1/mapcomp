@@ -73,7 +73,6 @@ public class SparseRandomBloomFilter<T> extends AbstractBloomFilter<T> {
         if (nLogValue > MAX_LOG_N) {
             throw new IllegalArgumentException("n is greater than the max supported n = " + (1 << 23) + ": " + maxSize);
         }
-//        return SBF_BIT_LENGTH_INIT_MATRIX.get(nLogValue);
         return CommonUtils.getByteLength(SBF_BIT_LENGTH_INIT_MATRIX.get(nLogValue)) * Byte.SIZE;
     }
 

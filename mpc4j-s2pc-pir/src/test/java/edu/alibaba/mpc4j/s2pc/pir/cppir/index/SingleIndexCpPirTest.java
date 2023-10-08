@@ -6,7 +6,9 @@ import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.SingleIndexCpPirFactory.SingleIndexCpPirType;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirConfig;
 import gnu.trove.map.TIntObjectMap;
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,6 +45,10 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // XOSPAM
+        configurations.add(new Object[]{
+            SingleIndexCpPirType.LLP23_SHUFFLE.name(), new ShuffleSingleIndexCpPirConfig.Builder().build()
+        });
         // SPAM
         configurations.add(new Object[]{
             SingleIndexCpPirType.MIR23_SPAM.name(), new SpamSingleIndexCpPirConfig.Builder().build()
@@ -50,6 +56,10 @@ public class SingleIndexCpPirTest extends AbstractTwoPartyPtoTest {
         // PIANO
         configurations.add(new Object[]{
             SingleIndexCpPirType.ZPSZ23_PIANO.name(), new PianoSingleIndexCpPirConfig.Builder().build()
+        });
+        // SIMPLE
+        configurations.add(new Object[]{
+            SingleIndexCpPirType.HHCM23_SIMPLE.name(), new SimpleSingleIndexCpPirConfig.Builder().build()
         });
 
         return configurations;

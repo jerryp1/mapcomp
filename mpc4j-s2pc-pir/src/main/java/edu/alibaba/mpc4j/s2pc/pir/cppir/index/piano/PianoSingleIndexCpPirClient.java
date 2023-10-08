@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
  * @author Weiran Liu
  * @date 2023/8/25
  */
-public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient {
+public class PianoSingleIndexCpPirClient extends AbstractSingleIndexCpPirClient {
     /**
      * chunk size
      */
@@ -62,8 +62,12 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
      * missing entries
      */
     private TIntObjectMap<byte[]> missingEntries;
+    /**
+     * local cache entries
+     */
+    private TIntObjectMap<byte[]> localCacheEntries;
 
-    public PianoSingleIndexCpPsiClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
+    public PianoSingleIndexCpPirClient(Rpc clientRpc, Party serverParty, PianoSingleIndexCpPirConfig config) {
         super(PianoSingleIndexCpPirDesc.getInstance(), clientRpc, serverParty, config);
     }
 
@@ -84,7 +88,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         long paramTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(
-            PtoState.PTO_STEP, 0, 1, paramTime,
+            PtoState.INIT_STEP, 0, 1, paramTime,
             String.format(
                 "Client sets params: n = %d, ChunkSize = %d, ChunkNum = %d, n (pad) = %d, Q = %d, M1 = %d, M2 (per group) = %d",
                 n, chunkSize, chunkNum, chunkSize * chunkNum, roundQueryNum, m1, m2PerGroup
@@ -115,6 +119,7 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
             )
             .collect(Collectors.toCollection(ArrayList::new));
         missingEntries = new TIntObjectHashMap<>();
+        localCacheEntries = new TIntObjectHashMap<>();
         stopWatch.stop();
         long allocateTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -191,15 +196,15 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
     public byte[] pir(int x) throws MpcAbortException {
         setPtoInput(x);
         if (missingEntries.containsKey(x)) {
-            return requestMissingQuery(x);
+            return requestMissQuery(x);
+        } else if (localCacheEntries.containsKey(x)) {
+            return requestCacheQuery(x);
         } else {
             return requestActualQuery(x);
         }
     }
 
-    private byte[] requestMissingQuery(int x) throws MpcAbortException {
-        logPhaseInfo(PtoState.PTO_BEGIN);
-
+    private byte[] requestMissQuery(int x) throws MpcAbortException {
         stopWatch.start();
         DataPacketHeader queryRequestHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
@@ -226,6 +231,53 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
 
         logPhaseInfo(PtoState.PTO_END);
         return missingEntries.get(x);
+    }
+
+    private byte[] requestCacheQuery(int x) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        // when client asks a query with x in cache, we make a dummy query, otherwise we would also leak information.
+        ByteBuffer queryByteBuffer = ByteBuffer.allocate(Short.BYTES * (chunkNum - 1));
+        for (int i = 0; i < chunkNum - 1; i++) {
+            queryByteBuffer.putShort((short) secureRandom.nextInt(chunkSize));
+        }
+        List<byte[]> queryRequestPayload = Collections.singletonList(queryByteBuffer.array());
+        DataPacketHeader queryRequestHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_QUERY.ordinal(), extraInfo,
+            rpc.ownParty().getPartyId(), otherParty().getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(queryRequestHeader, queryRequestPayload));
+        stopWatch.stop();
+        long queryTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, queryTime, "Client requests dummy query");
+
+        DataPacketHeader queryResponseHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
+            otherParty().getPartyId(), rpc.ownParty().getPartyId()
+        );
+        List<byte[]> queryResponsePayload = rpc.receive(queryResponseHeader).getPayload();
+
+        stopWatch.start();
+        MpcAbortPreconditions.checkArgument(queryResponsePayload.size() == 1);
+        byte[] responseByteArray = queryResponsePayload.get(0);
+        MpcAbortPreconditions.checkArgument(responseByteArray.length == byteL * chunkNum);
+        // ignore the result
+        // we need to obtain value here, because local cache may be cleaned in preprocessing().
+        byte[] value = localCacheEntries.get(x);
+        currentQueryNum++;
+        stopWatch.stop();
+        long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, responseTime, "Client handles dummy response");
+
+        // when query num exceeds the maximum, rerun preprocessing.
+        if (currentQueryNum >= roundQueryNum) {
+            preprocessing();
+        }
+
+        return value;
     }
 
     private byte[] requestActualQuery(int x) throws MpcAbortException {
@@ -297,10 +349,11 @@ public class PianoSingleIndexCpPsiClient extends AbstractSingleIndexCpPirClient 
         ArrayList<PianoBackupHint> backupHints = backupHintGroup.get(puncturedChunkId);
         MpcAbortPreconditions.checkArgument(backupHints.size() > 0);
         PianoBackupHint backupHint = backupHints.remove(0);
-        // adds the x to the set and adds the set to the local set list
+        // adds x to the set and adds the set to the local set list
         primaryHints[primaryHintId] = new PianoProgrammedPrimaryHint(backupHint, x, value);
+        // add x to the local cache
+        localCacheEntries.put(x, value);
         currentQueryNum++;
-        extraInfo++;
         stopWatch.stop();
         long refreshTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
