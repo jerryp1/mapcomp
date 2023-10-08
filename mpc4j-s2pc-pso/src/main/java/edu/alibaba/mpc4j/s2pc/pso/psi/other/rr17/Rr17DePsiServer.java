@@ -36,27 +36,35 @@ import java.util.stream.IntStream;
  */
 public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
     /**
-     * OPRF发送方
+     * Lcot sender
      */
     private final LcotSender lcotSender;
     /**
-     * InverseOPRF接收方
+     * Lcot senderOutput
+     */
+    private LcotSenderOutput lcotSenderOutput;
+    /**
+     * Lcot receiver in the second time
      */
     private final LcotReceiver lcotInvReceiver;
     /**
-     * CoinToss发送方
+     *  Lcot receiverOutput in the second time
+     */
+    private LcotReceiverOutput lcotInvReceiverOutput;
+    /**
+     * CoinToss sender
      */
     private final CoinTossParty coinTossSender;
     /**
-     * 过滤器类型
+     * filter type
      */
     private final FilterFactory.FilterType filterType;
     /**
-     * PEQT哈希函数
+     * PEQT hash function
      */
     private Hash peqtHash;
     /**
-     * Input哈希函数
+     * hash function for input elements
      */
     private Hash h1;
     /**
@@ -64,33 +72,28 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
      */
     private int encodeInputByteLength;
     /**
-     * 布谷鸟哈希桶所用的哈希函数
+     * hash
      */
     private PhaseHashBin phaseHashBin;
     /**
-     * phase哈希桶个数
+     * The number of hash bin
      */
     private int binNum;
     /**
-     * 哈希桶maxsize
+     * The maximum size of each hash bin
      */
     private int binSize;
     /**
-     * OPRF发送方输出
-     */
-    private LcotSenderOutput lcotSenderOutput;
-    /**
-     *  InverseOPRF接收方输出
-     */
-    private LcotReceiverOutput lcotInvReceiverOutput;
-    /**
-     * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+     *  This parameter decide the number of PhaseHash, the paper uses 4 or 10
      */
     private final int divParam4PhaseHash;
     /**
-     * hash表中的数据以及是否为真实值的flag
+     * The data in hash table
      */
     private byte[][] serverByteArrays;
+    /**
+     * Whether the data in hash table is valid
+     */
     private boolean[] ind4ValidElement;
 
     public Rr17DePsiServer(Rpc serverRpc, Party clientParty, Rr17DePsiConfig config) {
@@ -111,30 +114,25 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        // 初始化hash bin的number和size
         coinTossSender.init();
         byte[][] hashKeys = coinTossSender.coinToss(1, CommonConstants.BLOCK_BIT_LENGTH);
         int maxItemSize = Math.max(maxClientElementSize, maxServerElementSize);
         binNum = Math.max(maxItemSize / divParam4PhaseHash, 1);
         binSize = MaxBinSizeUtils.expectMaxBinSize(maxItemSize, binNum);
         phaseHashBin = new PhaseHashBin(envType, binNum, maxItemSize, hashKeys[0]);
-
-        // 初始化hash bin中元素的byte长度
         int l = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
         h1 = HashFactory.createInstance(envType, l);
         encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
-        //初始化最终peqt时发送的byte长度和hash函数
         int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
             CommonUtils.getByteLength(2 * LongUtils.ceilLog2(Math.max(2, binSize * clientElementSize)));
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
-        // 初始化OT
+        // init OT
         lcotSender.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
         lcotInvReceiver.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
-
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime, "Key exchange and OT init");
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime, "Server exchange key and init OT");
         logPhaseInfo(PtoState.INIT_END);
     }
 
@@ -144,7 +142,6 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 将消息插入到Hash中
         phaseHashBin.insertItems(serverElementArrayList.stream().map(arr ->
             BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr))))
             .collect(Collectors.toList()));
@@ -152,7 +149,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         stopWatch.stop();
         long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, hashTime, "Server Hash Insertion");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, hashTime, "Server hash insertion");
 
         stopWatch.start();
         lcotSenderOutput = lcotSender.send(binSize * binNum);
@@ -164,7 +161,6 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lcotTime, "Server LOT");
 
         stopWatch.start();
-        // 发送服务端哈希桶PRF过滤器
         List<byte[]> serverPrfPayload = generatePrfPayload();
         DataPacketHeader serverPrfHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Rr17DePsiPtoDesc.PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo++,
@@ -181,7 +177,6 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
     }
 
     private byte[][] generateElementByteArrays() {
-        // 桶中的元素，后面的是贮存区中的元素
         ind4ValidElement = new boolean[binNum * binSize];
         return IntStream.range(0, ind4ValidElement.length).mapToObj(elementIndex -> {
             HashBinEntry<BigInteger> hashBinEntry = phaseHashBin.getBin(elementIndex / binSize).get(elementIndex % binSize);
@@ -192,8 +187,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
 
     private List<byte[]> generatePrfPayload() {
         int peqtHashInputLength = lcotSenderOutput.getOutputByteLength() + encodeInputByteLength;
-        IntStream serverElementStream = IntStream.range(0, binNum * binSize);
-        serverElementStream = parallel ? serverElementStream.parallel() : serverElementStream;
+        IntStream serverElementStream = parallel ? IntStream.range(0, binNum * binSize).parallel() : IntStream.range(0, binNum * binSize);
         List<byte[]> prfList = Collections.synchronizedList(new LinkedList<>());
         serverElementStream.forEach(index -> {
             int binIndex = index / binSize;
@@ -209,7 +203,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
             }
         });
         Collections.shuffle(prfList, secureRandom);
-        // 构建过滤器
+        // constructing filter
         Filter<byte[]> prfFilter = FilterFactory.createFilter(envType, filterType, serverElementSize * binSize, secureRandom);
         prfList.forEach(prfFilter::put);
         return prfFilter.toByteArrayList();

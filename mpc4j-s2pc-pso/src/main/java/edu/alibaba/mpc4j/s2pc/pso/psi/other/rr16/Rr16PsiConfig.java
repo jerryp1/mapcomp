@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  */
 public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
     /**
-     * 核LOT协议配置项
+     * LOT config
      */
     private final CoreCotConfig coreCotConfig;
 
@@ -52,9 +52,9 @@ public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rr16PsiConfig> {
         /**
-         * 核COT协议配置项
+         * COT config
          */
-        private CoreCotConfig coreCotConfig;
+        private final CoreCotConfig coreCotConfig;
 
         private final CoinTossConfig coinTossConfig;
         /**

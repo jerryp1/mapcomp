@@ -22,7 +22,7 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * Not取值查找表
+     * Not table
      */
     private static final TIntIntMap N_OT_INIT_MATRIX = new TIntIntHashMap();
 
@@ -52,10 +52,10 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * 得到Not的值，见https://github.com/osu-crypto/libPSI/。
+     * number of Not, refer: https://github.com/osu-crypto/libPSI/
      *
-     * @param maxBatchSize 最大批处理数量。
-     * @return w的值。
+     * @param maxBatchSize maximum batch size
+     * @return number of OT instance
      */
     public static int getOtBatchSize(int maxBatchSize) {
         assert maxBatchSize > 0;
@@ -69,7 +69,7 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * Notone取值查找表
+     * Notone table
      */
     private static final TIntIntMap N_ONE_INIT_MATRIX = new TIntIntHashMap();
 
@@ -99,10 +99,10 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * 得到Notone的值，见https://github.com/osu-crypto/libPSI/。
+     * the Notone choice number in OT, refer: https://github.com/osu-crypto/libPSI/
      *
-     * @param maxBatchSize 最大批处理数量。
-     * @return w的值。
+     * @param maxBatchSize maximum batch size
+     * @return Notone choice number
      */
     public static int getOtOneCount(int maxBatchSize) {
         assert maxBatchSize > 0;
@@ -116,7 +116,7 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * CncThreshold取值查找表
+     * CncThreshold table
      */
     private static final TIntIntMap T_CNC_INIT_MATRIX = new TIntIntHashMap();
 
@@ -146,10 +146,10 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * 得到Threshold的值，见https://github.com/osu-crypto/libPSI/。
+     * get the quantity threshold of choice 1 in OT, refer: https://github.com/osu-crypto/libPSI/
      *
-     * @param maxBatchSize 最大批处理数量。
-     * @return w的值。
+     * @param maxBatchSize maximum batch size
+     * @return the quantity threshold
      */
     public static int getCncThreshold(int maxBatchSize) {
         assert maxBatchSize > 0;
@@ -163,7 +163,7 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * CncProb取值查找表
+     * CncProb table
      */
     private static final Map<Integer, Double> P_CNC_INIT_MATRIX = new HashMap<>();
 
@@ -193,10 +193,10 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * 得到Prob的值，见https://github.com/osu-crypto/libPSI/。
+     * get the value of Prob for different input size, refer: https://github.com/osu-crypto/libPSI/
      *
-     * @param maxBatchSize 最大批处理数量。
-     * @return w的值。
+     * @param maxBatchSize maximum batch size
+     * @return Prob
      */
     public static double getCncProb(int maxBatchSize) {
         assert maxBatchSize > 0;

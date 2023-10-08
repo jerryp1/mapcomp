@@ -18,21 +18,21 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  */
 public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
-     * LOT配置项
+     * LOT configure
      */
     private final LcotConfig lcotConfig;
 
     /**
-     * CoinTossing配置项
+     * CoinToss configure
      */
     private final CoinTossConfig coinTossConfig;
 
     /**
-     * 过滤器类型
+     * filter type
      */
     private final FilterFactory.FilterType filterType;
     /**
-     * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+     * The parameter decide the number of PhaseHash
      */
     private final int divParam4PhaseHash;
 
@@ -65,19 +65,19 @@ public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements Filt
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rr17DePsiConfig> {
         /**
-         * LOT类型
+         * LOT type
          */
         private final LcotConfig lcotConfig;
         /**
-         * CoinToss类型
+         * CoinToss configure
          */
         private final CoinTossConfig coinTossConfig;
         /**
-         * 过滤器类型
+         * filter type
          */
         private FilterFactory.FilterType filterType;
         /**
-         * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+         * The parameter decide the number of PhaseHash, the paper uses 4 or 10
          */
         private int divParam4PhaseHash;
 
@@ -93,7 +93,7 @@ public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements Filt
             return this;
         }
         public Builder setDivParam(int divParam4PhaseHash) {
-            // LAN下的设置为4， WAN下的设置为10
+            // 4 for LAN setting, 10 for WAN setting
             this.divParam4PhaseHash = divParam4PhaseHash;
             return this;
         }

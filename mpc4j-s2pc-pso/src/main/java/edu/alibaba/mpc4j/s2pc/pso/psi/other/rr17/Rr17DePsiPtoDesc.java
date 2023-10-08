@@ -15,20 +15,20 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  */
 public class Rr17DePsiPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) -947977268059832451L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "RR17_DE_PSI";
 
     /**
-     * 协议步骤
+     * protocol steps
      */
     enum PtoStep {
         /**
-         * 服务端发送哈希桶PRF
+         * server send PRFs to client
          */
         SERVER_SEND_PRFS,
     }

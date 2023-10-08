@@ -7,8 +7,15 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.crypto.commit.Commit;
+import edu.alibaba.mpc4j.common.tool.crypto.commit.CommitFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
+import edu.alibaba.mpc4j.common.tool.crypto.hash.HashFactory;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.Prf;
+import edu.alibaba.mpc4j.common.tool.crypto.prf.PrfFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.MaxBinSizeUtils;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.HashBinEntry;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.PhaseHashBin;
 import edu.alibaba.mpc4j.common.tool.utils.*;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossParty;
@@ -16,12 +23,12 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotSenderOutput;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
+import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
 import org.bouncycastle.crypto.Commitment;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,31 +42,56 @@ import java.util.stream.IntStream;
  */
 public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
     /**
-     * OPRF发送方
+     * lcot sender
      */
     private final LcotSender lcotSender;
     /**
-     * CoinToss发送方
+     * CoinToss sender
      */
     private final CoinTossParty coinTossSender;
     /**
-     * Rr17计算方均需要初始化和计算的参数与函数
+     * the number of phaseHash bin
      */
-    private Rr17EcPsiComTools tools;
+    public int binNum;
     /**
-     * phase哈希桶个数
+     * the maximum size of phaseHash bin
      */
-    private int binNum;
-    /**
-     * 哈希桶maxsize
-     */
-    private int binSize;
+    public int binSize;
     /**
      * OPRF发送方输出
      */
     private LcotSenderOutput lcotSenderOutput;
+
     /**
-     * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+     * PEQT hash function
+     */
+    public Hash peqtHash;
+    /**
+     * Input hash function
+     */
+    public Hash h1;
+    /**
+     * hash
+     */
+    public PhaseHashBin phaseHashBin;
+    /**
+     * LOT input Length
+     */
+    public int encodeInputByteLength;
+    /**
+     * Enc PRF
+     */
+    public Prf prfEnc;
+    /**
+     * Tag PRF
+     */
+    public Prf prfTag;
+    /**
+     * Tag PRF byte length
+     */
+    public int tagPrfByteLength;
+    /**
+     * This parameter decide the number of PhaseHash, the paper uses 4 or 10
      */
     private final int divParam4PhaseHash;
 
@@ -78,16 +110,27 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-
         int maxItemSize = Math.max(maxClientElementSize, maxServerElementSize);
         binNum = Math.max(maxItemSize / divParam4PhaseHash, 1);
         binSize = MaxBinSizeUtils.expectMaxBinSize(maxItemSize, binNum);
-
         coinTossSender.init();
         byte[][] hashKeys = coinTossSender.coinToss(3, CommonConstants.BLOCK_BIT_LENGTH);
-        tools = new Rr17EcPsiComTools(envType, maxServerElementSize, maxClientElementSize, hashKeys, binNum, binSize, clientElementSize, parallel);
-        lcotSender.init(tools.encodeInputByteLength * Byte.SIZE, binNum * binSize);
 
+        int l = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
+        int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
+            CommonUtils.getByteLength(2 * LongUtils.ceilLog2(Math.max(2, binSize * clientElementSize)));
+        tagPrfByteLength = CommonConstants.STATS_BYTE_LENGTH + CommonUtils.getByteLength(64 + LongUtils.ceilLog2(maxClientElementSize));
+        encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
+
+        h1 = HashFactory.createInstance(envType, l);
+        prfEnc =  PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        prfEnc.setKey(hashKeys[1]);
+        prfTag = PrfFactory.createInstance(envType, tagPrfByteLength);
+        prfTag.setKey(hashKeys[2]);
+        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+        phaseHashBin = new PhaseHashBin(envType, binNum, maxItemSize, hashKeys[0]);
+
+        lcotSender.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -102,10 +145,9 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        // 将消息插入到Hash中
-        tools.phaseHashBin.insertItems(serverElementArrayList.stream().map(arr ->
-            BigIntegerUtils.byteArrayToNonNegBigInteger(tools.h1.digestToBytes(ObjectUtils.objectToByteArray(arr)))).collect(Collectors.toList()));
-        tools.phaseHashBin.insertPaddingItems(BigInteger.ZERO);
+        phaseHashBin.insertItems(serverElementArrayList.stream().map(arr ->
+            BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr)))).collect(Collectors.toList()));
+        phaseHashBin.insertPaddingItems(BigInteger.ZERO);
         stopWatch.stop();
         long hashTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -119,15 +161,13 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lcotTime, "Server LOT");
 
         stopWatch.start();
-        // 发送服务端哈希桶PRF过滤器
+        // server sends the filter of PRFs
         List<byte[]> serverPrfPayload = generatePrfPayload();
         DataPacketHeader serverPrfHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Rr17EcPsiPtoDesc.PtoStep.SERVER_SEND_TUPLES.ordinal(), extraInfo,
+            encodeTaskId, getPtoDesc().getPtoId(), Rr17EcPsiPtoDesc.PtoStep.SERVER_SEND_TUPLES.ordinal(), extraInfo++,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(serverPrfHeader, serverPrfPayload));
-        extraInfo++;
-
         lcotSenderOutput = null;
         stopWatch.stop();
         long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -139,48 +179,32 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
 
 
     private List<byte[]> generatePrfPayload() {
-        List<byte[]> prfList;
-        // todo 为了并行化，代码有些难看，主要原因是Commit要初始化多个
-        if(parallel){
-            int parallelNum = ForkJoinPool.getCommonPoolParallelism();
-            int eachThreadNum = Math.max(binNum * binSize / parallelNum, 1);
-            prfList = IntStream.range(0, Math.min(parallelNum, binNum * binSize)).parallel().mapToObj(tIndex -> {
-                int startIndex = eachThreadNum * tIndex, endIndex = (tIndex == parallelNum - 1) ? binNum * binSize : eachThreadNum * (tIndex + 1);
-                return IntStream.range(startIndex, endIndex).mapToObj(index -> generateCommit(index, tIndex))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            }).flatMap(Collection::stream).collect(Collectors.toList());
-        }else{
-            IntStream serverElementStream = IntStream.range(0, binNum * binSize);
-            prfList = serverElementStream.mapToObj(index -> generateCommit(index, 0))
-                .filter(Objects::nonNull).collect(Collectors.toList());
-        }
-        Collections.shuffle(prfList, secureRandom);
-        return prfList;
-    }
-
-    private byte[] generateCommit(int index, int tIndex){
-        int binIndex = index / binSize;
-        int entryIndex = index % binSize;
-        HashBinEntry<BigInteger> hashBinEntry = tools.phaseHashBin.getBin(binIndex).get(entryIndex);
-        if (hashBinEntry.getHashIndex() == 0) {
-            byte[] rx = BytesUtils.randomByteArray(CommonConstants.BLOCK_BYTE_LENGTH, secureRandom);
-            byte[] elementByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(tools.phaseHashBin.dephaseItem(binIndex, hashBinEntry.getItem()), tools.h1.getOutputByteLength());
-            byte[] phasedElementByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(hashBinEntry.getItem(), tools.encodeInputByteLength);
-            Commitment commitment = tools.commits[tIndex].commit(ByteBuffer.allocate(
-                rx.length + elementByteArray.length).put(elementByteArray).put(rx).array());
-            ByteBuffer tupleArray = ByteBuffer.allocate(commitment.getSecret().length + commitment.getCommitment().length + binSize * (tools.tagPrfByteLength +  CommonConstants.BLOCK_BYTE_LENGTH))
-                .put(commitment.getSecret()).put(commitment.getCommitment());
-            for(int i = 0; i < binSize; i++){
-                byte[] encode = tools.peqtHash.digestToBytes(ByteBuffer.allocate(
-                        lcotSenderOutput.getOutputByteLength() + phasedElementByteArray.length)
-                    .put(phasedElementByteArray).put(lcotSenderOutput.getRb(binIndex * binSize + i, phasedElementByteArray)).array());
-                byte[] tag = tools.prfTag.getBytes(encode);
-                byte[] enc = tools.prfEnc.getBytes(encode);
-                tupleArray.put(tag).put(BytesUtils.xor(rx, enc));
-            }
-            return tupleArray.array();
-        }
-        return null;
+        IntStream serverElementStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
+        return serverElementStream.mapToObj(binIndex -> {
+            Commit commit = CommitFactory.createInstance(envType);
+            return IntStream.range(0, binSize).mapToObj(entryIndex -> {
+                HashBinEntry<BigInteger> hashBinEntry = phaseHashBin.getBin(binIndex).get(entryIndex);
+                if (hashBinEntry.getHashIndex() == 0) {
+                    byte[] rx = BytesUtils.randomByteArray(CommonConstants.BLOCK_BYTE_LENGTH, secureRandom);
+                    byte[] elementByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(phaseHashBin.dephaseItem(binIndex, hashBinEntry.getItem()), h1.getOutputByteLength());
+                    byte[] phasedElementByteArray = BigIntegerUtils.nonNegBigIntegerToByteArray(hashBinEntry.getItem(), encodeInputByteLength);
+                    Commitment commitment = commit.commit(ByteBuffer.allocate(
+                        rx.length + elementByteArray.length).put(elementByteArray).put(rx).array());
+                    ByteBuffer tupleArray = ByteBuffer.allocate(commitment.getSecret().length + commitment.getCommitment().length
+                            + binSize * (tagPrfByteLength + CommonConstants.BLOCK_BYTE_LENGTH))
+                        .put(commitment.getSecret()).put(commitment.getCommitment());
+                    for(int i = 0; i < binSize; i++){
+                        byte[] encode = peqtHash.digestToBytes(ByteBuffer.allocate(
+                                lcotSenderOutput.getOutputByteLength() + phasedElementByteArray.length)
+                            .put(phasedElementByteArray).put(lcotSenderOutput.getRb(binIndex * binSize + i, phasedElementByteArray)).array());
+                        byte[] tag = prfTag.getBytes(encode);
+                        byte[] enc = prfEnc.getBytes(encode);
+                        tupleArray.put(tag).put(BytesUtils.xor(rx, enc));
+                    }
+                    return tupleArray.array();
+                }
+                return null;
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).flatMap(Collection::stream).collect(Collectors.toList());
     }
 }

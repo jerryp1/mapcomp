@@ -37,21 +37,27 @@ import java.util.stream.Stream;
  */
 public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
     /**
-     * OPRF接收方
+     * Lcot receiver instance
      */
     private final LcotReceiver lcotReceiver;
+    /**
+     * Lcot receiverOutput
+     */
     private LcotReceiverOutput lcotReceiverOutput;
     /**
-     * Inverse OPRF发送方
+     * Inverse Lcot sender (in dual execution)
      */
     private final LcotSender lcotInvSender;
+    /**
+     * Inverse Lcot senderOutput (in dual execution)
+     */
     private LcotSenderOutput lcotInvSenderOutput;
     /**
      * CoinToss Receiver
      */
     private final CoinTossParty coinTossReceiver;
     /**
-     * PEQT哈希函数
+     * PEQT hash function
      */
     private Hash peqtHash;
     /**
@@ -63,33 +69,36 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
      */
     private int encodeInputByteLength;
     /**
-     * 哈希桶数量
+     * the number of hash functions
      */
     private int binNum;
     /**
-     * 哈希桶maxsize
+     * the maximum size of each hash bin
      */
     private int binSize;
     /**
-     * 布谷鸟哈希
+     * hash
      */
     private PhaseHashBin phaseHashBin;
     /**
-     * 服务端元素的PRF结果
+     * The filter constructed with the PRFs of server's elements
      */
     Filter<byte[]> serverPrfFilter;
     /**
-     * 查找原始输入的map
+     * The map from the processed results to original values
      */
     Map<BigInteger, T> elementMap;
     /**
-     * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+     * This parameter decide the number of PhaseHash, the paper uses 4 or 10
      */
     private final int divParam4PhaseHash;
     /**
-     * hash表中的数据以及是否为真实值的flag
+     * The data in hash table
      */
     private byte[][] clientByteArrays;
+    /**
+     * Whether the data in hash table is valid
+     */
     private boolean[] ind4ValidElement;
 
     public Rr17DePsiClient(Rpc clientRpc, Party serverParty, Rr17DePsiConfig config) {
@@ -139,7 +148,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
 
         stopWatch.start();
         elementMap = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
-        // 将客户端消息插入到HashBin中
+        // insert the elements of client into HashBin
         Stream<T> elementStream = parallel ? clientElementArrayList.stream().parallel() : clientElementArrayList.stream();
         phaseHashBin.insertItems(elementStream.map(arr -> {
             BigInteger intArr = BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr)));
@@ -162,7 +171,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
         logStepInfo(PtoState.PTO_STEP, 2, 3, lcotTime, "Client LOT");
 
         stopWatch.start();
-        // 接收服务端PRF
+        // receives PRFs from server
         DataPacketHeader serverPrfHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Rr17DePsiPtoDesc.PtoStep.SERVER_SEND_PRFS.ordinal(), extraInfo++,
             otherParty().getPartyId(), ownParty().getPartyId()
@@ -191,7 +200,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
     private Set<T> handleServerPrf(List<byte[]> serverPrfPayload) {
         int peqtHashInputLength = lcotReceiverOutput.getOutputByteLength() + encodeInputByteLength;
         serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
-        // 遍历布谷鸟哈希中的哈希桶
+        // Iterating over hash buckets in hash table
         IntStream intStream = parallel ? IntStream.range(0, binNum * binSize).parallel() : IntStream.range(0, binNum * binSize);
         Set<T> intersection = intStream.mapToObj(elementIndex -> {
             int binIndex = elementIndex / binSize;

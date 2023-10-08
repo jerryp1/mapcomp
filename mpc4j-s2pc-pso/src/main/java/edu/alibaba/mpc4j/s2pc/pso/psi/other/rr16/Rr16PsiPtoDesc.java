@@ -35,23 +35,23 @@ public class Rr16PsiPtoDesc implements PtoDesc {
     }
 
     /**
-     * 协议步骤
+     * protocol step
      */
     enum PtoStep {
         /**
-         * 发送方发送challenge
+         * server sends challenge of OT choice bits
          */
         SERVER_SEND_CHANLLEGE,
         /**
-         * 接收方发送response
+         * client sends response
          */
         CLIENT_SEND_RESPONSE,
         /**
-         * 接收方发送permutation pi
+         * client sends permutation pi
          */
         CLIENT_SEND_PERMUTATION,
         /**
-         * 服务方发送PRFs
+         * server sends PRFs
          */
         SERVER_SEND_PRFS,
     }

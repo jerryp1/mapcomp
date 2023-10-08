@@ -17,16 +17,16 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  */
 public class Rr17EcPsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
     /**
-     * LOT配置项
+     * LOT configure
      */
     private final LcotConfig lcotConfig;
 
     /**
-     * CoinTossing配置项
+     * CoinTossing configure
      */
     private final CoinTossConfig coinTossConfig;
     /**
-     * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+     * This parameter decide the number of PhaseHash, the paper uses 4 or 10
      */
     private final int divParam4PhaseHash;
 
@@ -57,15 +57,15 @@ public class Rr17EcPsiConfig extends AbstractMultiPartyPtoConfig implements PsiC
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rr17EcPsiConfig> {
         /**
-         * LOT类型
+         * LOT configure
          */
         private final LcotConfig lcotConfig;
         /**
-         * CoinToss类型
+         * CoinToss configure
          */
         private final CoinTossConfig coinTossConfig;
         /**
-         * 决定PhaseHash number的系数，真实结果有max element size / divParam4PhaseHash 决定
+         * This parameter decide the number of PhaseHash, the paper uses 4 or 10
          */
         private int divParam4PhaseHash;
 
@@ -76,7 +76,7 @@ public class Rr17EcPsiConfig extends AbstractMultiPartyPtoConfig implements PsiC
         }
 
         public Builder setDivParam(int divParam4PhaseHash) {
-            // LAN下的设置为4， WAN下的设置为10
+            // 4 in LAN setting, 10 in WAN setting
             this.divParam4PhaseHash = divParam4PhaseHash;
             return this;
         }

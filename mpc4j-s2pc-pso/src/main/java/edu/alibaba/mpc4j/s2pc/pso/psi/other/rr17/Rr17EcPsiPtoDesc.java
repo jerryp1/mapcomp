@@ -28,18 +28,18 @@ public class Rr17EcPsiPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         /**
-         * 服务端发送哈希桶PRF
+         * server send PRF of items in hash bins
          */
         SERVER_SEND_TUPLES,
     }
 
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final Rr17EcPsiPtoDesc INSTANCE = new Rr17EcPsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Rr17EcPsiPtoDesc() {
         // empty

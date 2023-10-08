@@ -22,9 +22,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.list.linked.TIntLinkedList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -69,18 +66,14 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
      * OT choices
      */
     private boolean[] choiceBits;
-    private boolean[] invChoiceBits;
     /**
      * OT number
      */
     private int nOt;
-
     /**
-     * Array of index of valid OT instances (0 & 1)
+     * Set of challenge index
      */
-    private List<Integer> otZeroList, otOneList;
     private TIntSet usedOne, usedZero;
-
     /**
      * Array of index of valid OT instances (0 & 1)
      */
@@ -106,13 +99,7 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
 
         stopWatch.start();
         ctReceiver.init();
-        /**
-         * hash key for BF
-         */
         byte[][] hashKeys = ctReceiver.coinToss(1, CommonConstants.BLOCK_BIT_LENGTH);
-        /**
-         * PEQT byte length
-         */
         int peqtByteLength = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         nOt = Rr16PsiUtils.getOtBatchSize(maxClientElementSize);
@@ -133,7 +120,6 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         List<Boolean> choiceList = Arrays.asList(BinaryUtils.binaryToObjectBinary(choiceBits));
         Collections.shuffle(choiceList, secureRandom);
         choiceBits = BinaryUtils.objectBinaryToBinary(choiceList.toArray(new Boolean[nOt]));
-
         // run COT protocol
         cotReceiverOutput = coreCotReceiver.receive(choiceBits);
         stopWatch.stop();
@@ -142,9 +128,8 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         logStepInfo(PtoState.INIT_STEP, 2, 4, cotTime, "Client OT");
 
         stopWatch.start();
-
-        this.otZeroList = new LinkedList<>();
-        this.otOneList = new LinkedList<>();
+        // generate and shuffle the index for 0/1 OT choice bit while waiting challenge
+        List<Integer> otZeroList = new LinkedList<>(), otOneList = new LinkedList<>();
         IntStream.range(0, nOt).forEach(index -> {
             if(choiceBits[index])
                 otOneList.add(index);
@@ -152,10 +137,6 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         });
         Collections.shuffle(otZeroList, secureRandom);
         Collections.shuffle(otOneList, secureRandom);
-
-//        invChoiceBits = new boolean[nOt];
-//        IntStream.range(0, nOt).forEach(i -> invChoiceBits[i] = !choiceBits[i]);
-
         DataPacketHeader cncChallengeHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), Rr16PsiPtoDesc.PtoStep.SERVER_SEND_CHANLLEGE.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
@@ -173,20 +154,9 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(cncResponseHeader, cncResponsePayload));
-
+        // generate the valid index array
         oneIndex = otOneList.stream().filter(s -> !usedOne.contains(s)).toArray(Integer[]::new);
         zeroIndex = otZeroList.stream().filter(s -> !usedOne.contains(s)).toArray(Integer[]::new);
-
-//        List<Integer> tmp = new LinkedList<>(), tmp2 = new LinkedList<>();
-//        IntStream.range(0, nOt).forEach(i -> {
-//            if(choiceBits[i]) tmp.add(i);
-//            if(invChoiceBits[i]) tmp2.add(i);
-//        });
-//        Collections.shuffle(tmp, secureRandom);
-//        Collections.shuffle(tmp2, secureRandom);
-//        oneIndex = tmp.toArray(new Integer[0]);
-//        zeroIndex = tmp2.toArray(new Integer[0]);
-
         stopWatch.stop();
         long responseTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -216,8 +186,7 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime, "Client prepares inputs and generates Permutation");
 
         stopWatch.start();
-        IntStream clientElementIndexIntStream = IntStream.range(0, clientElementSize);
-        clientElementIndexIntStream = parallel ? clientElementIndexIntStream.parallel() : clientElementIndexIntStream;
+        IntStream clientElementIndexIntStream = parallel ? IntStream.range(0, clientElementSize).parallel() : IntStream.range(0, clientElementSize);
         ArrayList<byte[]> clientOprfArrayList = clientElementIndexIntStream
             .mapToObj(index -> peqtHash.digestToBytes(Rr16PsiUtils.decode(gbfStorage, clientElementByteArrays[index], gbfHash)))
             .collect(Collectors.toCollection(ArrayList::new));
@@ -259,10 +228,8 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
             int index = IntUtils.byteArrayToInt(x);
             if (cotReceiverOutput.getChoice(index)){
                 usedOne.add(index);
-//                choiceBits[index] = false;
             } else {
                 usedZero.add(index);
-//                invChoiceBits[index] = false;
                 BytesUtils.xori(response, cotReceiverOutput.getRb(index));
                 challenge.add(x);
             }

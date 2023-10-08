@@ -38,22 +38,21 @@ import java.util.stream.Stream;
  */
 public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
     /**
-     * 核COT协议发送方
+     * COT sender
      */
     private final CoreCotSender coreCotSender;
     /**
-     * CT协议发送方
+     * COT receiver
      */
     private final CoinTossParty ctSender;
     /**
-     * COT发送方输出
+     * COT senderOutput
      */
     private CotSenderOutput cotSenderOutput;
     /**
-     * OKVS keys
+     * hash key for BF
      */
     private byte[][] hashKeys;
-
     /**
      * hash function for BF
      */
@@ -160,8 +159,7 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
         logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime, "Server receives msg");
 
         stopWatch.start();
-        Stream<T> serverElementStream = serverElementArrayList.stream();
-        serverElementStream = parallel ? serverElementStream.parallel() : serverElementStream;
+        Stream<T> serverElementStream = parallel ? serverElementArrayList.stream().parallel() : serverElementArrayList.stream();
         List<byte[]> serverPrfs = serverElementStream
             .map(element -> {
                 byte[] elementByteArray = ObjectUtils.objectToByteArray(element);
