@@ -128,7 +128,7 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         logStepInfo(PtoState.INIT_STEP, 2, 4, cotTime, "Client OT");
 
         stopWatch.start();
-        // generate and shuffle the index for 0/1 OT choice bit while waiting challenge
+        // generate and shuffle the index for 0/1 OT choice bit while waiting the challenge from server
         List<Integer> otZeroList = new LinkedList<>(), otOneList = new LinkedList<>();
         IntStream.range(0, nOt).forEach(index -> {
             if(choiceBits[index])

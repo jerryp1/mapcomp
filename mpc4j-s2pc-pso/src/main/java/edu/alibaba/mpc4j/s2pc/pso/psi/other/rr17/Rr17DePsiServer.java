@@ -64,7 +64,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
      */
     private Hash peqtHash;
     /**
-     * hash function for input elements
+     * h1: {0, 1}^* → {0, 1}^l
      */
     private Hash h1;
     /**
@@ -84,7 +84,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
      */
     private int binSize;
     /**
-     *  This parameter decide the number of PhaseHash, the paper uses 4 or 10
+     *  This parameter decide the number of PhaseHash
      */
     private final int divParam4PhaseHash;
     /**

@@ -13,6 +13,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * RR16-PSI utilities.
+ *
+ * @author Ziyuan Liang, Feng Han
+ * @date 2023/9/7
+ */
 public class Rr16PsiUtils {
     /**
      * private constructor.
@@ -52,7 +58,7 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * number of Not, refer: https://github.com/osu-crypto/libPSI/
+     * number of ot, refer: https://github.com/osu-crypto/libPSI/
      *
      * @param maxBatchSize maximum batch size
      * @return number of OT instance
@@ -99,10 +105,10 @@ public class Rr16PsiUtils {
     }
 
     /**
-     * the Notone choice number in OT, refer: https://github.com/osu-crypto/libPSI/
+     * the number of "not-one" choices in OT, refer: https://github.com/osu-crypto/libPSI/
      *
      * @param maxBatchSize maximum batch size
-     * @return Notone choice number
+     * @return the number of "not-one" choices
      */
     public static int getOtOneCount(int maxBatchSize) {
         assert maxBatchSize > 0;
@@ -214,7 +220,7 @@ public class Rr16PsiUtils {
      *
      * @param storage GBF storage
      * @param key GBF input
-     * @param gbfHash hash function used to map input into specific position
+     * @param gbfHash hash function to generate BF index
      * @return w的值。
      */
     public static byte[] decode(byte[][] storage, byte[] key, Prf gbfHash) {

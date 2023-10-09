@@ -24,7 +24,7 @@ public class Rr17EcPsiPtoDesc implements PtoDesc {
     private static final String PTO_NAME = "RR17_EC_PSI";
 
     /**
-     * 协议步骤
+     * protocol steps
      */
     enum PtoStep {
         /**

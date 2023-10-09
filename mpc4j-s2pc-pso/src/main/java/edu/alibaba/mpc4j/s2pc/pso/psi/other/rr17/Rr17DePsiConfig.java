@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.other.rr17;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.lcot.LcotConfig;
@@ -30,7 +31,7 @@ public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements Filt
     /**
      * filter type
      */
-    private final FilterFactory.FilterType filterType;
+    private final FilterType filterType;
     /**
      * The parameter decide the number of PhaseHash
      */

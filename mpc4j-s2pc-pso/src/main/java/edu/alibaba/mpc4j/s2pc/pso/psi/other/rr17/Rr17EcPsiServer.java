@@ -67,7 +67,7 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
      */
     public Hash peqtHash;
     /**
-     * Input hash function
+     * h1: {0, 1}^* → {0, 1}^l
      */
     public Hash h1;
     /**
@@ -91,7 +91,7 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
      */
     public int tagPrfByteLength;
     /**
-     * This parameter decide the number of PhaseHash, the paper uses 4 or 10
+     * This parameter decide the number of PhaseHash
      */
     private final int divParam4PhaseHash;
 

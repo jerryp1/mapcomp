@@ -3,10 +3,12 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.other.rr16;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.filter.FilterFactory;
+import edu.alibaba.mpc4j.common.tool.filter.FilterFactory.FilterType;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
+import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
@@ -16,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/06
  */
-public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements PsiConfig {
+public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements FilterPsiConfig {
     /**
      * LOT config
      */
@@ -60,7 +62,7 @@ public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements PsiCon
         /**
          * filter type
          */
-        private FilterFactory.FilterType filterType;
+        private FilterType filterType;
 
         public Builder() {
             coreCotConfig = CoreCotFactory.createDefaultConfig(SecurityModel.MALICIOUS);

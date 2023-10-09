@@ -34,12 +34,12 @@ public class Rr17DePsiPtoDesc implements PtoDesc {
     }
 
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final Rr17DePsiPtoDesc INSTANCE = new Rr17DePsiPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor.
      */
     private Rr17DePsiPtoDesc() {
         // empty

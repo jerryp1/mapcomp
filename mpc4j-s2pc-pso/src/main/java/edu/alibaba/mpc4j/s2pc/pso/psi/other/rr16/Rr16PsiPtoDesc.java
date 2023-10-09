@@ -3,12 +3,11 @@ package edu.alibaba.mpc4j.s2pc.pso.psi.other.rr16;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-
 /**
- * RR16-PSI协议信息。此方案的核心是使用cut-of-choose来限制OT+GBF方案中receiver在OT中可设置1的数量，论文来源：
+ * RR16-PSI protocol description
  * Peter Rindal and Mike Rosulek. Improved Private Set Intersection against Malicious Adversaries.
  * Advances in Cryptology 2017.
- * 为了与RR17做区分，在此和libPsi中命名一致，采用ePrint上的发表时间
+ * To be consistent with libPsi, we refer it as RR16
  *
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/06

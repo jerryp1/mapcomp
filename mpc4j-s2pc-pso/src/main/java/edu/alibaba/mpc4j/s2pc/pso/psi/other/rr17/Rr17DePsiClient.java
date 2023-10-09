@@ -61,7 +61,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
      */
     private Hash peqtHash;
     /**
-     * input hash
+     * h1: {0, 1}^* → {0, 1}^l
      */
     private Hash h1;
     /**
@@ -89,7 +89,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
      */
     Map<BigInteger, T> elementMap;
     /**
-     * This parameter decide the number of PhaseHash, the paper uses 4 or 10
+     * This parameter decide the number of PhaseHash
      */
     private final int divParam4PhaseHash;
     /**

@@ -85,7 +85,7 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
         /**
          * PEQT byte length
          */
-        int peqtByteLength = securityModel.equals(SecurityModel.MALICIOUS) ?
+        int peqtByteLength = securityModel.equals(SecurityModel.MALICIOUS) | securityModel.equals(SecurityModel.COVERT) ?
             PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
             PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
