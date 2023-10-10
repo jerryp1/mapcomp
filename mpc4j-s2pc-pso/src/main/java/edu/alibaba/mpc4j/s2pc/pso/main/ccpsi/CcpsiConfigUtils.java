@@ -9,7 +9,12 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.rs21.Rs21CcpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.ccpsi.CcpsiConfig;
 
 import java.util.Properties;
-
+/**
+ * CCPSI config utilities.
+ *
+ * @author Feng Han
+ * @date 2023/10/10
+ */
 public class CcpsiConfigUtils {
     /**
      * private constructor.

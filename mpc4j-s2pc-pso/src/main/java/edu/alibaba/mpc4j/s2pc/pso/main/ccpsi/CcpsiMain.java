@@ -28,6 +28,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * CCPSI main.
+ *
+ * @author Feng Han
+ * @date 2023/10/10
+ */
 public class CcpsiMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(CcpsiMain4Batch.class);
     /**
