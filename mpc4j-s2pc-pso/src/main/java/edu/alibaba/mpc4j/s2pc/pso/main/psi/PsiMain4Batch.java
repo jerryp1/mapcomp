@@ -29,13 +29,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * PSI main.
- *
- * @author Ziyuan Liang, Feng Han
- * @date 2023/08/11
- */
-public class PsiMain {
+public class PsiMain4Batch {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
     /**
      * protocol type name
@@ -62,14 +56,13 @@ public class PsiMain {
      */
     private final Properties properties;
 
-    public PsiMain(Properties properties) {
+    public PsiMain4Batch(Properties properties) {
         this.properties = properties;
         serverStopWatch = new StopWatch();
         clientStopWatch = new StopWatch();
     }
 
-    public void runNetty() throws Exception {
-        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
+    public void runNetty(Rpc ownRpc) throws Exception {
         if (ownRpc.ownParty().getPartyId() == 0) {
             runServer(ownRpc, ownRpc.getParty(1));
         } else if (ownRpc.ownParty().getPartyId() == 1) {
@@ -88,9 +81,9 @@ public class PsiMain {
         int[] serverLogSetSizes = PropertiesUtils.readLogIntArray(properties, "server_log_set_size");
         int[] clientLogSetSizes = PropertiesUtils.readLogIntArray(properties, "client_log_set_size");
         Preconditions.checkArgument(
-                serverLogSetSizes.length == clientLogSetSizes.length,
-                "# of server log_set_size = %s, $ of client log_set_size = %s, they must be equal",
-                serverLogSetSizes.length, clientLogSetSizes.length
+            serverLogSetSizes.length == clientLogSetSizes.length,
+            "# of server log_set_size = %s, $ of client log_set_size = %s, they must be equal",
+            serverLogSetSizes.length, clientLogSetSizes.length
         );
         int setSizeNum = serverLogSetSizes.length;
         int[] serverSetSizes = Arrays.stream(serverLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
@@ -118,12 +111,10 @@ public class PsiMain {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
         String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
-                + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-                + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
+            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
-        // 建立连接
-        serverRpc.connect();
         // 启动测试
         int taskId = 0;
         // 预热
@@ -135,14 +126,12 @@ public class PsiMain {
             int clientSetSize = clientSetSizes[setSizeIndex];
             Set<ByteBuffer> serverElementSet = readServerElementSet(serverSetSize, elementByteLength);
             runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, clientSetSize,
-                     printWriter);
+                printWriter);
             taskId++;
             runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, clientSetSize,
-                     printWriter);
+                printWriter);
             taskId++;
         }
-        // 断开连接
-        serverRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }
@@ -150,14 +139,14 @@ public class PsiMain {
     private Set<ByteBuffer> readServerElementSet(int setSize, int elementByteLength) throws IOException {
         LOGGER.info("Server read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-                Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength))),
-                CommonConstants.DEFAULT_CHARSET
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, elementByteLength))),
+            CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         Set<ByteBuffer> serverElementSet = bufferedReader.lines()
-                .map(Hex::decode)
-                .map(ByteBuffer::wrap)
-                .collect(Collectors.toSet());
+            .map(Hex::decode)
+            .map(ByteBuffer::wrap)
+            .collect(Collectors.toSet());
         bufferedReader.close();
         inputStreamReader.close();
         return serverElementSet;
@@ -182,13 +171,9 @@ public class PsiMain {
     }
 
     public void runServer(Rpc serverRpc, Party clientParty, PsiConfig config, int taskId, boolean parallel,
-                           Set<ByteBuffer> serverElementSet, int clientSetSize,
-                           PrintWriter printWriter) throws MpcAbortException {
+                          Set<ByteBuffer> serverElementSet, int clientSetSize,
+                          PrintWriter printWriter) throws MpcAbortException {
         int serverSetSize = serverElementSet.size();
-        LOGGER.info(
-            "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-            serverRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
-        );
         PsiServer<ByteBuffer> psiServer = PsiFactory.createServer(serverRpc, clientParty, config);
         psiServer.setTaskId(taskId);
         psiServer.setParallel(parallel);
@@ -219,12 +204,12 @@ public class PsiMain {
         long ptoSendByteLength = psiServer.getRpc().getSendByteLength();
         // 写入统计结果
         String info = psiServer.ownParty().getPartyId()
-                + "\t" + serverSetSize
-                + "\t" + clientSetSize
-                + "\t" + psiServer.getParallel()
-                + "\t" + ForkJoinPool.getCommonPoolParallelism()
-                + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-                + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + serverSetSize
+            + "\t" + clientSetSize
+            + "\t" + psiServer.getParallel()
+            + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
         // 同步
         psiServer.getRpc().synchronize();
@@ -241,9 +226,9 @@ public class PsiMain {
         int[] serverLogSetSizes = PropertiesUtils.readLogIntArray(properties, "server_log_set_size");
         int[] clientLogSetSizes = PropertiesUtils.readLogIntArray(properties, "client_log_set_size");
         Preconditions.checkArgument(
-                serverLogSetSizes.length == clientLogSetSizes.length,
-                "# of server log_set_size = %s, $ of client log_set_size = %s, they must be equal",
-                serverLogSetSizes.length, clientLogSetSizes.length
+            serverLogSetSizes.length == clientLogSetSizes.length,
+            "# of server log_set_size = %s, $ of client log_set_size = %s, they must be equal",
+            serverLogSetSizes.length, clientLogSetSizes.length
         );
         int setSizeNum = serverLogSetSizes.length;
         int[] serverSetSizes = Arrays.stream(serverLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
@@ -271,12 +256,10 @@ public class PsiMain {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
         String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
-                + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-                + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
+            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", clientRpc.ownParty().getPartyName());
-        // 建立连接
-        clientRpc.connect();
         // 启动测试
         int taskId = 0;
         // 预热
@@ -289,15 +272,13 @@ public class PsiMain {
             Set<ByteBuffer> clientElementSet = readClientElementSet(clientSetSize, elementByteLength);
             // 多线程
             runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, serverSetSize,
-                    printWriter);
+                printWriter);
             taskId++;
             // 单线程
             runClient(clientRpc, serverParty, config, taskId, false, clientElementSet, serverSetSize,
-                    printWriter);
+                printWriter);
             taskId++;
         }
-        // 断开连接
-        clientRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }
@@ -305,14 +286,14 @@ public class PsiMain {
     private Set<ByteBuffer> readClientElementSet(int setSize, int elementByteLength) throws IOException {
         LOGGER.info("Client read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-                Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, elementByteLength))),
-                CommonConstants.DEFAULT_CHARSET
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, elementByteLength))),
+            CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         Set<ByteBuffer> clientElementSet = bufferedReader.lines()
-                .map(Hex::decode)
-                .map(ByteBuffer::wrap)
-                .collect(Collectors.toSet());
+            .map(Hex::decode)
+            .map(ByteBuffer::wrap)
+            .collect(Collectors.toSet());
         bufferedReader.close();
         inputStreamReader.close();
         return clientElementSet;
@@ -338,12 +319,12 @@ public class PsiMain {
     }
 
     public void runClient(Rpc clientRpc, Party serverParty, PsiConfig config, int taskId, boolean parallel,
-                           Set<ByteBuffer> clientElementSet, int serverSetSize,
-                           PrintWriter printWriter) throws MpcAbortException {
+                          Set<ByteBuffer> clientElementSet, int serverSetSize,
+                          PrintWriter printWriter) throws MpcAbortException {
         int clientSetSize = clientElementSet.size();
         LOGGER.info(
-                "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
-                clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
+            "{}: serverSetSize = {}, clientSetSize = {}, parallel = {}",
+            clientRpc.ownParty().getPartyName(), serverSetSize, clientSetSize, parallel
         );
         PsiClient<ByteBuffer> psiClient = PsiFactory.createClient(clientRpc, serverParty, config);
         psiClient.setTaskId(taskId);
@@ -375,12 +356,12 @@ public class PsiMain {
         long ptoSendByteLength = psiClient.getRpc().getSendByteLength();
         // 写入统计结果
         String info = psiClient.ownParty().getPartyId()
-                + "\t" + clientSetSize
-                + "\t" + serverSetSize
-                + "\t" + psiClient.getParallel()
-                + "\t" + ForkJoinPool.getCommonPoolParallelism()
-                + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-                + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + clientSetSize
+            + "\t" + serverSetSize
+            + "\t" + psiClient.getParallel()
+            + "\t" + ForkJoinPool.getCommonPoolParallelism()
+            + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
         printWriter.println(info);
         psiClient.getRpc().synchronize();
         psiClient.getRpc().reset();

@@ -123,9 +123,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         int l = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
         h1 = HashFactory.createInstance(envType, l);
         encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
-        int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
-            CommonUtils.getByteLength(2 * LongUtils.ceilLog2(Math.max(2, binSize * clientElementSize)));
-        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+
         // init OT
         lcotSender.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
         lcotInvReceiver.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
@@ -142,6 +140,10 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
+        int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
+            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long)binSize * clientElementSize))));
+        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+
         phaseHashBin.insertItems(serverElementArrayList.stream().map(arr ->
             BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr))))
             .collect(Collectors.toList()));
@@ -190,8 +192,8 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         IntStream serverElementStream = parallel ? IntStream.range(0, binNum * binSize).parallel() : IntStream.range(0, binNum * binSize);
         List<byte[]> prfList = Collections.synchronizedList(new LinkedList<>());
         serverElementStream.forEach(index -> {
-            int binIndex = index / binSize;
             if (ind4ValidElement[index]) {
+                int binIndex = index / binSize;
                 byte[] halfElementPrf = lcotInvReceiverOutput.getRb(index);
                 byte[] elementByteArray = serverByteArrays[index];
                 for(int i = 0; i < binSize; i++){
@@ -202,6 +204,9 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
                 }
             }
         });
+
+//        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime, "Server exchange key and init OT");
+
         Collections.shuffle(prfList, secureRandom);
         // constructing filter
         Filter<byte[]> prfFilter = FilterFactory.createFilter(envType, filterType, serverElementSize * binSize, secureRandom);

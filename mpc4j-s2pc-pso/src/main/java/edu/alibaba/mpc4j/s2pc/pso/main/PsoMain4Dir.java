@@ -1,19 +1,21 @@
 package edu.alibaba.mpc4j.s2pc.pso.main;
 
+import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.pso.main.ccpsi.CcpsiMain4Batch;
 import edu.alibaba.mpc4j.s2pc.pso.main.psi.PsiMain;
+import edu.alibaba.mpc4j.s2pc.pso.main.psi.PsiMain4Batch;
 import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuBlackIpMain;
 import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class PsoMain4Dir {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain4Dir.class);
 
     /**
      * 主函数。
@@ -24,48 +26,49 @@ public class PsoMain4Dir {
         PropertiesUtils.loadLog4jProperties();
         File folder = new File(args[0]);
         File[] files = folder.listFiles();
-        List<String> allFileName = new LinkedList<>(), failFileName = new LinkedList<>();
+        List<String> allFileName = new LinkedList<>();
         if (files != null) {
             for (File file : files) {
-                if (file.isFile()) {
+                if (file.isFile() & file.getName().endsWith(".txt")) {
                     LOGGER.info(file.getName());
                     allFileName.add(file.getPath());
                 }
             }
         }
+        Collections.sort(allFileName);
+        Rpc ownRpc = null;
         for(String fileName : allFileName){
-            try{
-                // read config
-                LOGGER.info("read PTO config:{}", fileName);
-                Properties properties = PropertiesUtils.loadProperties(fileName);
-                // 读取协议类型
-                String ptoType = PropertiesUtils.readString(properties, "pto_type");
-                LOGGER.info("pto_type = " + ptoType);
-                switch (ptoType) {
-                    case PsuBlackIpMain.PTO_TYPE_NAME:
-                        PsuBlackIpMain psuBlackIpMain = new PsuBlackIpMain(properties);
-                        psuBlackIpMain.run();
-                        break;
-                    case PsuMain.PTO_TYPE_NAME:
-                        PsuMain psuMain = new PsuMain(properties);
-                        psuMain.runNetty();
-                        break;
-                    case PsiMain.PTO_TYPE_NAME:
-                        PsiMain psiMain = new PsiMain(properties);
-                        psiMain.runNetty();
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Invalid pto_type: " + ptoType);
-                }
-            }catch(Exception e){
-                e.printStackTrace();
-                failFileName.add(fileName);
+            // read config
+            LOGGER.info("read PTO config:{}", fileName);
+            Properties properties = PropertiesUtils.loadProperties(fileName);
+            // 读取协议类型
+            String ptoType = PropertiesUtils.readString(properties, "pto_type");
+            LOGGER.info("pto_type = " + ptoType);
+            properties.setProperty("own_name", args[1]);
+            if(ownRpc == null){
+                //直接在这里初始化并连接netty
+                ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
+                ownRpc.connect();
             }
-        }
-        if(!failFileName.isEmpty()){
-            LOGGER.error("those files fail:");
-            for(String fileName : failFileName){
-                LOGGER.error(fileName);
+            switch (ptoType) {
+                case PsuBlackIpMain.PTO_TYPE_NAME:
+                    PsuBlackIpMain psuBlackIpMain = new PsuBlackIpMain(properties);
+                    psuBlackIpMain.run();
+                    break;
+                case PsuMain.PTO_TYPE_NAME:
+                    PsuMain psuMain = new PsuMain(properties);
+                    psuMain.runNetty();
+                    break;
+                case PsiMain.PTO_TYPE_NAME:
+                    PsiMain4Batch psiMain4Batch = new PsiMain4Batch(properties);
+                    psiMain4Batch.runNetty(ownRpc);
+                    break;
+                case CcpsiMain4Batch.PTO_TYPE_NAME:
+                    CcpsiMain4Batch ccpsiMain = new CcpsiMain4Batch(properties);
+                    ccpsiMain.runNetty(ownRpc);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid pto_type: " + ptoType);
             }
         }
         System.exit(0);

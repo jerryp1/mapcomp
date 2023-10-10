@@ -128,9 +128,6 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
         int l = PsiUtils.getMaliciousPeqtByteLength(maxServerElementSize, maxClientElementSize);
         h1 = HashFactory.createInstance(envType, l);
         encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
-        int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
-            CommonUtils.getByteLength(2 * LongUtils.ceilLog2(Math.max(2, binSize * clientElementSize)));
-        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
         lcotReceiver.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
         lcotInvSender.init(encodeInputByteLength * Byte.SIZE, binNum * binSize);
 
@@ -147,6 +144,10 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
+        int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
+            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long)binSize * clientElementSize))));
+        peqtHash = HashFactory.createInstance(envType, peqtByteLength);
+
         elementMap = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
         // insert the elements of client into HashBin
         Stream<T> elementStream = parallel ? clientElementArrayList.stream().parallel() : clientElementArrayList.stream();
