@@ -18,10 +18,10 @@ import java.util.Objects;
 import java.util.Properties;
 
 /**
- * PSI main tests.
+ * client circuit PSI main tests.
  *
- * @author Ziyuan Liang, Feng Han
- * @date 2023/08/11
+ * @author Feng Han
+ * @date 2023/10/10
  */
 @RunWith(Parameterized.class)
 public class MainCcpsiTest extends AbstractTwoPartyPtoTest {
@@ -97,7 +97,7 @@ public class MainCcpsiTest extends AbstractTwoPartyPtoTest {
     }
 
     private Properties readConfig(String path) {
-        String configPath = Objects.requireNonNull(edu.alibaba.mpc4j.s2pc.pso.main.psi.MainPsiTest.class.getClassLoader().getResource(path)).getPath();
+        String configPath = Objects.requireNonNull(MainCcpsiTest.class.getClassLoader().getResource(path)).getPath();
         return PropertiesUtils.loadProperties(configPath);
     }
 }
