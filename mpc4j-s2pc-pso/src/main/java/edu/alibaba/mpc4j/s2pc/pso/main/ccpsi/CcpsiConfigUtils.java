@@ -28,11 +28,11 @@ public class CcpsiConfigUtils {
         String cPsiTypeString = PropertiesUtils.readString(properties, "circuit_psi_pto_name");
         CcpsiType psiType = CcpsiType.valueOf(cPsiTypeString);
         switch (psiType) {
-            case PSTY19:
-                return createCgs22CcPsiConfig(properties);
-            case RS21:
-                return createPsty19CcPsiConfig(properties);
             case CGS22:
+                return createCgs22CcPsiConfig(properties);
+            case PSTY19:
+                return createPsty19CcPsiConfig(properties);
+            case RS21:
                 return createRs21CcPsiConfig(properties);
             default:
                 throw new IllegalArgumentException("Invalid " + CcpsiType.class.getSimpleName() + ": " + psiType.name());
