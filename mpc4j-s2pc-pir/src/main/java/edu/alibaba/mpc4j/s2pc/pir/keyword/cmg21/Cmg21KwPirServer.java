@@ -160,9 +160,7 @@ public class Cmg21KwPirServer extends AbstractKwPirServer {
         if (maxRetrievalSize > 1) {
             params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096;
         } else {
-            if (keywordLabelMap.size() <= 100000) {
-                params = Cmg21KwPirParams.SERVER_100K_CLIENT_MAX_1;
-            } else if (keywordLabelMap.size() <= (1 << 20)) {
+            if (keywordLabelMap.size() <= (1 << 20)) {
                 params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
             } else {
                 params = Cmg21KwPirParams.SERVER_16M_CLIENT_MAX_1;
@@ -223,13 +221,14 @@ public class Cmg21KwPirServer extends AbstractKwPirServer {
         setPtoInput();
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        stopWatch.start();
         // OPRF
         DataPacketHeader blindHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_BLIND.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> blindPayload = rpc.receive(blindHeader).getPayload();
+
+        stopWatch.start();
         List<byte[]> blindPrfPayload = handleBlindPayload(blindPayload);
         DataPacketHeader blindPrfHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SERVER_SEND_BLIND_PRF.ordinal(), extraInfo,

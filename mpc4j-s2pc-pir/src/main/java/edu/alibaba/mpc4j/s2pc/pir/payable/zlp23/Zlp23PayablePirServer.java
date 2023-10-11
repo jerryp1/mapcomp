@@ -15,7 +15,6 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirFactory;
 import edu.alibaba.mpc4j.s2pc.pir.keyword.KwPirServer;
-import edu.alibaba.mpc4j.s2pc.pir.keyword.cmg21.Cmg21KwPirParams;
 import edu.alibaba.mpc4j.s2pc.pir.payable.AbstractPayablePirServer;
 
 import java.math.BigInteger;
@@ -63,7 +62,7 @@ public class Zlp23PayablePirServer extends AbstractPayablePirServer {
         stopWatch.start();
         // encode map
         Map<ByteBuffer, ByteBuffer> encodedMap = computeKeywordPrf(keywordLabelMap);
-        kwPirServer.init(Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, encodedMap, 1, labelByteLength);
+        kwPirServer.init(encodedMap, 1, labelByteLength);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

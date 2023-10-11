@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -35,7 +34,7 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1000;
+    private static final int DEFAULT_NUM = 10000;
     /**
      * default Zl
      */
@@ -101,18 +100,18 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
 
     private void testPto(int s, boolean parallel) {
         // create inputs
-//        Zl zl = ZlFactory.createInstance(EnvType.STANDARD, 8);
-//        ZlVector x0 = ZlVector.create(zl, new BigInteger[]{BigInteger.valueOf(130)});
-//        ZlVector x1 = ZlVector.create(zl, new BigInteger[]{BigInteger.valueOf(141)});
-//        ZlVector x0 = ZlVector.createRandom(ZlTruncTest.DEFAULT_ZL, ZlTruncTest.DEFAULT_NUM, SECURE_RANDOM);
-//        ZlVector x1 = ZlVector.createRandom(ZlTruncTest.DEFAULT_ZL, ZlTruncTest.DEFAULT_NUM, SECURE_RANDOM);
+        BigInteger n = ZlTruncTest.DEFAULT_ZL.getRangeBound();
+        BigInteger bound = n.divide(BigInteger.valueOf(3));
         BigInteger[] x = new BigInteger[ZlTruncTest.DEFAULT_NUM];
         BigInteger[] x0 = new BigInteger[ZlTruncTest.DEFAULT_NUM];
         BigInteger[] x1 = new BigInteger[ZlTruncTest.DEFAULT_NUM];
         for (int i = 0; i < ZlTruncTest.DEFAULT_NUM; i++) {
-            x[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL() - 2, SECURE_RANDOM);
-            x1[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
-            x0[i] = x[i].subtract(x1[i]).mod(ZlTruncTest.DEFAULT_ZL.getRangeBound());
+            do {
+                x[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
+                x1[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
+                x0[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
+                x[i] = x0[i].add(x1[i]).mod(n);
+            } while(x[i].compareTo(bound) >= 0 && x[i].subtract(n).abs().compareTo(bound) >= 0);
         }
         ZlVector x0Vector = ZlVector.create(ZlTruncTest.DEFAULT_ZL, x0);
         ZlVector x1Vector = ZlVector.create(ZlTruncTest.DEFAULT_ZL, x1);

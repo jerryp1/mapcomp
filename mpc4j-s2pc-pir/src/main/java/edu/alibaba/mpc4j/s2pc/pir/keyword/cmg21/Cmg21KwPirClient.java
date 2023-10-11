@@ -117,9 +117,7 @@ public class Cmg21KwPirClient extends AbstractKwPirClient {
         if (maxRetrievalSize > 1) {
             params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_4096;
         } else {
-            if (serverElementSize <= 100000) {
-                params = Cmg21KwPirParams.SERVER_100K_CLIENT_MAX_1;
-            } else if (serverElementSize <= (1 << 20)) {
+            if (serverElementSize <= (1 << 20)) {
                 params = Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1;
             } else {
                 params = Cmg21KwPirParams.SERVER_16M_CLIENT_MAX_1;

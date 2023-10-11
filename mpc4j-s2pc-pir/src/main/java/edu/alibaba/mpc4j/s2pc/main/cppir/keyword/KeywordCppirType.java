@@ -12,6 +12,10 @@ public enum KeywordCppirType {
      */
     LLP23_SHUFFLE,
     /**
+     * ALPR21 + shuffle
+     */
+    LLP23_INDEX_SHUFFLE,
+    /**
      * ALPR21 + PIANO
      */
     ZPSZ23_PIANO,

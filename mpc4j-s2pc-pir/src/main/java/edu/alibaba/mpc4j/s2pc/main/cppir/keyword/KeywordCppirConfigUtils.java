@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.main.cppir.keyword;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.piano.PianoSingleIndexCpPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.cppir.index.shuffle.ShuffleSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.simple.SimpleSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.index.spam.SpamSingleIndexCpPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.cppir.keyword.SingleKeywordCpPirConfig;
@@ -45,6 +46,10 @@ public class KeywordCppirConfigUtils {
             case HHCM23_SIMPLE:
                 return new Alpr21SingleKeywordCpPirConfig.Builder()
                     .setSingleIndexCpPirConfig(new SimpleSingleIndexCpPirConfig.Builder().build())
+                    .build();
+            case LLP23_INDEX_SHUFFLE:
+                return new Alpr21SingleKeywordCpPirConfig.Builder()
+                    .setSingleIndexCpPirConfig(new ShuffleSingleIndexCpPirConfig.Builder().build())
                     .build();
             case LLP23_SHUFFLE:
                 return new ShuffleSingleKeywordCpPirConfig.Builder().build();
