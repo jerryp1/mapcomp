@@ -25,7 +25,7 @@ public class ShuffleSingleKeywordCpPirConfig extends AbstractMultiPartyPtoConfig
     }
 
     @Override
-    public SingleKeywordCpPirType getProType() {
+    public SingleKeywordCpPirType getPtoType() {
         return SingleKeywordCpPirType.LLP23_SHUFFLE;
     }
 

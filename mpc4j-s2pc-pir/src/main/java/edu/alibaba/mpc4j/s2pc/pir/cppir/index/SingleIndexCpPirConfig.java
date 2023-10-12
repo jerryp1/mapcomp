@@ -15,5 +15,5 @@ public interface SingleIndexCpPirConfig extends MultiPartyPtoConfig {
      *
      * @return protocol type.
      */
-    SingleIndexCpPirType getProType();
+    SingleIndexCpPirType getPtoType();
 }

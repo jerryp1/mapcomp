@@ -59,7 +59,7 @@ public class Zlp23PayablePirClient extends AbstractPayablePirClient {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        kwPirClient.init(Cmg21KwPirParams.SERVER_1M_CLIENT_MAX_1, serverElementSize, 1, valueByteLength);
+        kwPirClient.init(1, serverElementSize, valueByteLength);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

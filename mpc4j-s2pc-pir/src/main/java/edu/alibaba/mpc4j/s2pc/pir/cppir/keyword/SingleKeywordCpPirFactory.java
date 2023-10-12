@@ -47,7 +47,7 @@ public class SingleKeywordCpPirFactory implements PtoFactory {
      * @return a server.
      */
     public static <T> SingleKeywordCpPirServer<T> createServer(Rpc serverRpc, Party clientParty, SingleKeywordCpPirConfig config) {
-        SingleKeywordCpPirType type = config.getProType();
+        SingleKeywordCpPirType type = config.getPtoType();
         switch (type) {
             case LLP23_SHUFFLE:
                 return new ShuffleSingleKeywordCpPirServer<>(serverRpc, clientParty, (ShuffleSingleKeywordCpPirConfig) config);
@@ -69,7 +69,7 @@ public class SingleKeywordCpPirFactory implements PtoFactory {
      * @return a client.
      */
     public static <T> SingleKeywordCpPirClient<T> createClient(Rpc clientRpc, Party serverParty, SingleKeywordCpPirConfig config) {
-        SingleKeywordCpPirType type = config.getProType();
+        SingleKeywordCpPirType type = config.getPtoType();
         switch (type) {
             case LLP23_SHUFFLE:
                 return new ShuffleSingleKeywordCpPirClient<>(clientRpc, serverParty, (ShuffleSingleKeywordCpPirConfig) config);

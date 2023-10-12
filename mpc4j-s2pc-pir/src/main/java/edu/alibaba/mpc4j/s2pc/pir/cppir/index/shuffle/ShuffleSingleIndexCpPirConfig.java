@@ -18,7 +18,7 @@ public class ShuffleSingleIndexCpPirConfig extends AbstractMultiPartyPtoConfig i
     }
 
     @Override
-    public SingleIndexCpPirType getProType() {
+    public SingleIndexCpPirType getPtoType() {
         return SingleIndexCpPirType.LLP23_SHUFFLE;
     }
 

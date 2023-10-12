@@ -18,7 +18,7 @@ public class SpamSingleIndexCpPirConfig extends AbstractMultiPartyPtoConfig impl
     }
 
     @Override
-    public SingleIndexCpPirType getProType() {
+    public SingleIndexCpPirType getPtoType() {
         return SingleIndexCpPirType.MIR23_SPAM;
     }
 
