@@ -25,7 +25,7 @@ class PianoSingleCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "ZPSZ23_PIANO";
+    private static final String PTO_NAME = "PIANO_CPPIR";
 
     /**
      * the protocol step

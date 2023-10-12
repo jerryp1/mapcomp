@@ -22,7 +22,7 @@ class SpamSingleCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "MIR24_SPAM";
+    private static final String PTO_NAME = "SPAM_CPPIR";
 
     /**
      * the protocol step

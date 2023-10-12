@@ -23,7 +23,7 @@ class SimpleSingleCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "HHCM23_SIMPLE";
+    private static final String PTO_NAME = "SIMPLE_CPPIR";
 
     /**
      * the protocol step

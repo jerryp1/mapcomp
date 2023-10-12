@@ -17,7 +17,7 @@ class PaiSingleCpPirDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "LLP23_INDEX_PAI";
+    private static final String PTO_NAME = "PAI_CPPIR";
 
     /**
      * the protocol step
