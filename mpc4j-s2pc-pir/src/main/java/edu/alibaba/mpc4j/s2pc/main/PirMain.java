@@ -6,8 +6,8 @@ import edu.alibaba.mpc4j.s2pc.main.ccpsi.CcpsiMain;
 import edu.alibaba.mpc4j.s2pc.main.payablepir.PayablePirMain;
 import edu.alibaba.mpc4j.s2pc.main.scpsi.ScpsiMain;
 import edu.alibaba.mpc4j.s2pc.main.ucpsi.UcpsiMain;
-import edu.alibaba.mpc4j.s2pc.main.cppir.index.IndexCppirMain;
-import edu.alibaba.mpc4j.s2pc.main.cppir.keyword.KeywordCppirMain;
+import edu.alibaba.mpc4j.s2pc.main.cppir.index.SingleCpPirMain;
+import edu.alibaba.mpc4j.s2pc.main.cppir.keyword.SingleCpKsPirMain;
 import edu.alibaba.mpc4j.s2pc.main.kwpir.KwPirMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,13 +53,13 @@ public class PirMain {
                 BatchIndexPirMain batchIndexPirMain = new BatchIndexPirMain(properties);
                 batchIndexPirMain.run();
                 break;
-            case IndexCppirMain.TASK_NAME:
-                IndexCppirMain indexCppirMain = new IndexCppirMain(properties);
-                indexCppirMain.run();
+            case SingleCpPirMain.TASK_NAME:
+                SingleCpPirMain singleCpPirMain = new SingleCpPirMain(properties);
+                singleCpPirMain.run();
                 break;
-            case KeywordCppirMain.TASK_NAME:
-                KeywordCppirMain keywordCppirMain = new KeywordCppirMain(properties);
-                keywordCppirMain.run();
+            case SingleCpKsPirMain.TASK_NAME:
+                SingleCpKsPirMain singleCpKsPirMain = new SingleCpKsPirMain(properties);
+                singleCpKsPirMain.run();
                 break;
             case KwPirMain.TASK_NAME:
                 KwPirMain kwPirMain = new KwPirMain(properties);
