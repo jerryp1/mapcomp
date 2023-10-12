@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+
 import java.math.BigInteger;
 import java.util.Random;
 
