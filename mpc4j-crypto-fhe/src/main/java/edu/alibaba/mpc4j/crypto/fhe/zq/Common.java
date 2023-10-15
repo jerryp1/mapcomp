@@ -152,6 +152,14 @@ public class Common {
         return Integer.compareUnsigned( in1, in2) > 0;
     }
 
+    public static boolean unsignedGeq(int in1, int in2) {
+        return Integer.compareUnsigned( in1, in2) >= 0;
+    }
+
+    public static boolean unsignedGeq(long in1, long in2) {
+        return Long.compareUnsigned(in1, in2) >= 0;
+    }
+
 
     public static long reverseBits(long operand, int bitCount) {
         assert bitCount >= 0;

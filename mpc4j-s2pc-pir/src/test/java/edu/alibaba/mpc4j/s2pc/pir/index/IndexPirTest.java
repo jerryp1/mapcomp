@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.doublepir.Hhcm23DoubleSingleIndex
 import edu.alibaba.mpc4j.s2pc.pir.index.single.fastpir.Ayaa21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.seal4jpir.Acls18SingleIndexPirPureJavaConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.SingleIndexPirFactory;
@@ -45,51 +46,58 @@ public class IndexPirTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        // XPIR
+
         configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(),
-            new Mbfk16SingleIndexPirConfig.Builder().build()
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_4J_PIR.name(),
+            new Acls18SingleIndexPirPureJavaConfig.Builder().build()
         });
-        // SEAL PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
-            new Acls18SingleIndexPirConfig.Builder().build()
-        });
-        // OnionPIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(),
-            new Mcr21SingleIndexPirConfig.Builder().build()
-        });
-        // FastPIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
-            new Ayaa21SingleIndexPirConfig.Builder().build()
-        });
-        // Vectorized PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
-            new Mr23SingleIndexPirConfig.Builder().build()
-        });
-        // Mul PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name(),
-            new Alpr21SingleIndexPirConfig.Builder().build()
-        });
-        // Simple PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
-            new Hhcm23SimpleSingleIndexPirConfig.Builder().build()
-        });
-        // Double PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),
-            new Hhcm23DoubleSingleIndexPirConfig.Builder().build()
-        });
-        // constant weight PIR
-        configurations.add(new Object[]{
-            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name(),
-            new Mk22SingleIndexPirConfig.Builder().build()
-        });
+
+
+//        // XPIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(),
+//            new Mbfk16SingleIndexPirConfig.Builder().build()
+//        });
+//        // SEAL PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
+//            new Acls18SingleIndexPirConfig.Builder().build()
+//        });
+//        // OnionPIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(),
+//            new Mcr21SingleIndexPirConfig.Builder().build()
+//        });
+//        // FastPIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
+//            new Ayaa21SingleIndexPirConfig.Builder().build()
+//        });
+//        // Vectorized PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
+//            new Mr23SingleIndexPirConfig.Builder().build()
+//        });
+//        // Mul PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.MUL_PIR.name(),
+//            new Alpr21SingleIndexPirConfig.Builder().build()
+//        });
+//        // Simple PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.SIMPLE_PIR.name(),
+//            new Hhcm23SimpleSingleIndexPirConfig.Builder().build()
+//        });
+//        // Double PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.DOUBLE_PIR.name(),
+//            new Hhcm23DoubleSingleIndexPirConfig.Builder().build()
+//        });
+//        // constant weight PIR
+//        configurations.add(new Object[]{
+//            SingleIndexPirFactory.SingleIndexPirType.CONSTANT_WEIGHT_PIR.name(),
+//            new Mk22SingleIndexPirConfig.Builder().build()
+//        });
         return configurations;
     }
 

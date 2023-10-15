@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -13,6 +14,25 @@ import java.util.Random;
  * @date 2023/8/9
  */
 public class Numth {
+
+
+    public static ArrayList<Integer> naf(int value) {
+
+        // 这里无法确定长度，所以只能先用 vector
+        ArrayList<Integer> res = new ArrayList<Integer>();
+
+        boolean sign = value < 0;
+        value = Math.abs(value);
+        for (int i = 0; value != 0; i++) {
+
+            int zi = (value & 0x1) != 0 ? 2 - (value & 0x3)  : 0;
+            value = (value - zi) >>> 1;
+            if (zi != 0) {
+                res.add( (sign ? -zi : zi) * (1 << i) );
+            }
+        }
+        return res;
+    }
 
 
     public static boolean isPrime(long a) {

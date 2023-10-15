@@ -1,5 +1,9 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -7,7 +11,7 @@ import java.util.Arrays;
  * @author Qixian Zhou
  * @date 2023/8/31
  */
-public class DynArray implements Cloneable {
+public class DynArray implements Cloneable, Serializable {
 
     private int capacity = 0;
 
@@ -262,6 +266,20 @@ public class DynArray implements Cloneable {
 
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof DynArray)) return false;
+
+        DynArray dynArray = (DynArray) o;
+
+        return new EqualsBuilder()
+                .append(capacity, dynArray.capacity)
+                .append(size, dynArray.size)
+                .append(data, dynArray.data).isEquals();
+    }
+
+    @Override
     public DynArray clone() {
         try {
             DynArray clone = (DynArray) super.clone();
@@ -273,6 +291,12 @@ public class DynArray implements Cloneable {
         }
     }
 
+
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(capacity).append(size).append(data).toHashCode();
+    }
 
     @Override
     public String toString() {

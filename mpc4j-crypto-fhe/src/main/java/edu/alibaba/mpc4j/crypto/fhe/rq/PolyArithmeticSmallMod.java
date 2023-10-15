@@ -133,6 +133,80 @@ public class PolyArithmeticSmallMod {
     }
 
     /**
+     * RnsIter = long[] + index + N + k 来表示
+     *
+     * @param poly1
+     * @param poly1StartIndex
+     * @param poly1N
+     * @param poly1K
+     * @param poly2
+     * @param poly2StartIndex
+     * @param poly2N
+     * @param poly2K
+     * @param coeffModulusSize
+     * @param modulus
+     * @param result
+     * @param resultStartIndex
+     * @param resultN
+     * @param resultK
+     */
+    public static void addPolyCoeffModRnsIter(
+            long[] poly1,
+            int poly1StartIndex,
+            int poly1N,
+            int poly1K,
+            long[] poly2,
+            int poly2StartIndex,
+            int poly2N,
+            int poly2K,
+            int coeffModulusSize,
+            Modulus[] modulus,
+            long[] result,
+            int resultStartIndex,
+            int resultN,
+            int resultK
+    ) {
+
+        assert coeffModulusSize > 0;
+        // 必须是 coeffCount 相同的 rnsIter
+        assert poly1N == poly2N;
+        assert poly1N == resultN;
+
+        int coeffCount = poly1N;
+
+        // 开始逐 modulus 处理
+        for (int j = 0; j < coeffModulusSize; j++) {
+            assert !modulus[j].isZero();
+            long modulusValue = modulus[j].getValue();
+            int startIndex = j * coeffCount;
+            // 开始处理每一个 modulus 下的多项式
+            // 根据 coeffCount 决定是否开并发以获取最优的效率
+
+            if (coeffCount > 8192) {
+                IntStream.range(0, coeffCount).parallel().forEach(
+                        i -> {
+                            assert poly1[poly1StartIndex + startIndex + i] < modulusValue;
+                            assert poly2[poly2StartIndex + startIndex + i] < modulusValue;
+
+                            long sum = poly1[poly1StartIndex + startIndex + i] + poly2[poly2StartIndex + startIndex + i];
+                            result[resultStartIndex + startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
+                        }
+                );
+            } else {
+                long sum;
+                for (int i = 0; i < coeffCount; i++) {
+                    assert poly1[poly1StartIndex + startIndex + i] < modulusValue;
+                    assert poly2[poly2StartIndex + startIndex + i] < modulusValue;
+                    sum = poly1[poly1StartIndex + startIndex + i] + poly2[poly2StartIndex + startIndex + i];
+                    result[resultStartIndex + startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
+                }
+            }
+        }
+
+    }
+
+
+    /**
      * 注意函数命名，这里处理的是一个 完整的RnsIter, 通过 long[] + coeffCount 来指定一个RnsIter（避免new一个对象）。
      *
      * @param rnsIter1
@@ -332,6 +406,25 @@ public class PolyArithmeticSmallMod {
         }
 
     }
+    public static void multiplyPolyScalarCoeffModCoeffIter(long[] poly,
+                                                           int startIndex,
+                                                           int coeffCount,
+                                                           MultiplyUintModOperand scalar,
+                                                           Modulus modulus,
+                                                           int resultStartIndex,
+                                                           long[] result) {
+
+        assert coeffCount > 0;
+        assert !modulus.isZero();
+        assert startIndex % coeffCount == 0 && resultStartIndex % coeffCount == 0;
+
+
+        // poly[i] * scalar mod moudlus
+        for (int i = 0; i < coeffCount; i++) {
+            result[resultStartIndex + i] = UintArithmeticSmallMod.multiplyUintMod(poly[startIndex + i], scalar, modulus);
+        }
+
+    }
 
 
     public static void multiplyPolyScalarCoeffMod(long[] poly,
@@ -425,6 +518,51 @@ public class PolyArithmeticSmallMod {
                 ));
     }
 
+    /**
+     * 处理一整个 RnsIter = long[] + startIndex + N
+     *
+     * @param poly
+     * @param polyStartIndex
+     * @param polyCoeffCount
+     * @param coeffModulusSize
+     * @param scalar
+     * @param modulus
+     * @param result
+     * @param resultStartIndex
+     * @param resultCoeffCount
+     */
+    public static void multiplyPolyScalarCoeffModRnsIter(
+            long[] poly,
+            int polyStartIndex,
+            int polyCoeffCount,
+            int coeffModulusSize,
+            long scalar,
+            Modulus[] modulus,
+            long[] result,
+            int resultStartIndex,
+            int resultCoeffCount) {
+
+        assert coeffModulusSize > 0;
+        assert polyCoeffCount == resultCoeffCount;
+
+        // 避免重复 new , 写在循环外面
+        MultiplyUintModOperand scalarShoup = new MultiplyUintModOperand();
+        // 遍历每一个多项式
+        for (int j = 0; j < coeffModulusSize; j++) {
+            Modulus curModulus = modulus[j];
+            assert !curModulus.isZero();
+            scalarShoup.set(UintArithmeticSmallMod.barrettReduce64(scalar, curModulus), curModulus);
+
+            for (int k = 0; k < polyCoeffCount; k++) {
+                result[resultStartIndex + j * resultCoeffCount + k] = UintArithmeticSmallMod.multiplyUintMod(
+                        poly[polyStartIndex + j * polyCoeffCount + k],
+                        scalarShoup,
+                        curModulus
+                );
+            }
+        }
+    }
+
     public static void multiplyPolyScalarCoeffModPolyIter(
             long[] poly,
             int polyCoeffCount,
@@ -461,7 +599,6 @@ public class PolyArithmeticSmallMod {
                 }
             }
         }
-
     }
 
 
@@ -1385,7 +1522,8 @@ public class PolyArithmeticSmallMod {
         assert poly != result;
         assert !modulus.isZero();
         assert UintCore.getPowerOfTwo(coeffCount) >= 0;
-        assert shift < coeffCount;
+        // todo: 是否需要这个条件？
+//        assert shift < coeffCount;
         // Nothing to do, just copy
         if (shift == 0) {
             System.arraycopy(

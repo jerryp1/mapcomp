@@ -81,7 +81,6 @@ public class RnsTool {
     long qLastModT;
 
 
-
     /**
      * @param polyModulusDegree N
      * @param coeffModulus      Ciphertext coeffs (q or Q) in Rns representation
@@ -516,6 +515,76 @@ public class RnsTool {
     }
 
     /**
+     * 处理一个 RnsIter, long[] + startIndex + N + k 来表示这个 RnsIter
+     *
+     * @param input
+     * @param destination
+     */
+    public void fastBConvMTildeRnsIter(long[] input,
+                                       int inputStartIndex,
+                                       int inputCoeffCount,
+                                       int inputCoeffModulusSize,
+                                       long[] destination,
+                                       int destinationStartIndex,
+                                       int destinationCoeffCount,
+                                       int destinationCoeffModulusSize
+    ) {
+
+        assert input != null && destination != null;
+        assert inputCoeffCount == coeffCount;
+        assert destinationCoeffCount == coeffCount;
+        assert inputCoeffModulusSize == baseQ.getSize();
+        assert destinationCoeffModulusSize == baseBskMTilde.getSize();
+
+
+        int baseQSize = baseQ.getSize();
+        int baseBskSize = baseBsk.getSize();
+
+        // We need to multiply first the input with m_tilde mod q
+        // This is to facilitate Montgomery reduction in the next step of multiplication
+        // This is NOT an ideal approach: as mentioned in BEHZ16, multiplication by
+        // m_tilde can be easily merge into the base conversion operation; however, then
+        // we could not use the BaseConverter as below without modifications.
+        // k * N
+        RnsIter temp = new RnsIter(baseQSize, coeffCount);
+        // (input * \tilde m) mod q
+        PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+                input,
+                inputStartIndex,
+                inputCoeffCount,
+                baseQSize,
+                mTilde.getValue(),
+                baseQ.getBase(),
+                temp.coeffIter,
+                0,
+                coeffCount
+        );
+
+
+        // Now convert to Bsk
+//        long[][] tempOut = new long[baseBskSize][coeffCount];
+        long[] tempOut = new long[baseBskSize * coeffCount];
+        baseQToBskConv.fastConvertArray(temp, tempOut);
+
+        // Finally convert to {m_tilde}
+        // mTilde is a single modulus, so baseSize is 1.
+//        long[][] tempOut2 = new long[1][coeffCount];
+        // 1 * coeffCount
+        long[] tempOut2 = new long[coeffCount];
+        baseQToMTildeConv.fastConvertArray(temp, tempOut2);
+
+        // update destination, Now input is in Bsk U {\tilde m}
+        // [tempOut, tempOut2] 组合为一个数组拷贝给 destination, 等价于  destination.update(tempOut, tempOut2);
+
+        // copy tempOut
+        System.arraycopy(tempOut, 0, destination, destinationStartIndex, tempOut.length);
+        // copy tempOut2
+        System.arraycopy(tempOut2, 0, destination, destinationStartIndex + tempOut.length, tempOut2.length);
+
+    }
+
+
+    /**
      * In-place convert
      *
      * @param input       in q
@@ -557,6 +626,79 @@ public class RnsTool {
 
         // update destination, Now input is in Bsk U {\tilde m}
         destination.update(tempOut, tempOut2);
+    }
+
+    /**
+     * 处理单个 RnsIter = long[] + startIndex + N + k
+     *
+     * @param input
+     * @param destination
+     */
+    public void smMrqRnsIter(
+            long[] input,
+            int inputStartIndex,
+            int inputCoeffCount,
+            int inputCoeffModulusSize,
+            long[] destination,
+            int destinationStartIndex,
+            int destinationCoeffCount,
+            int destinationCoeffModulusSize) {
+
+        assert input != null;
+        assert inputCoeffCount == coeffCount;
+        assert destination != null;
+        assert destinationCoeffCount == coeffCount;
+
+        // input's base must be Bsk U {\tilde m}
+        assert inputCoeffModulusSize == baseBskMTilde.getSize();
+        assert destinationCoeffModulusSize == baseBsk.getSize();
+
+        int baseBskSize = baseBsk.getSize();
+        // input base size is baseBskSize + 1, so last row index is baseBskSize, just the input mod \tilde m
+        int inputMTildeStart = baseBskSize * coeffCount;
+        long mTildeDiv2 = mTilde.getValue() >>> 1;
+
+        // line-1: r_{\tilde m} = [-c^{''}_{\tilde m} / q]_{\tilde m}
+        long[] rMTilde = new long[coeffCount];
+        // using startIndex to avoid new inputMTilde
+        // 只处理一个 CoeffIter
+        PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                            input,
+                        inputStartIndex + inputMTildeStart,
+                        coeffCount,
+                        negInvProdQModMTilde,
+                        mTilde,
+                        0,
+                        rMTilde);
+
+
+        // line 2-4
+        IntStream.range(0, baseBskSize).parallel().forEach(
+                i -> {
+                    MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
+                    prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
+
+                    IntStream.range(0, coeffCount).parallel().forEach(
+                            j -> {
+                                long temp = rMTilde[j];
+                                if (temp >= mTildeDiv2) {
+                                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
+                                }
+                                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
+                                destination[destinationStartIndex + i * destinationCoeffCount + j] =
+                                        UintArithmeticSmallMod.multiplyUintMod(
+                                                UintArithmeticSmallMod.multiplyAddUintMod(
+                                                        temp,
+                                                        prodQModBskElt,
+                                                        input[inputStartIndex + i * inputCoeffCount + j],
+                                                        baseBsk.getBase(i)),
+                                                invMTildeModBsk[i],
+                                                baseBsk.getBase(i)
+                                        );
+                            }
+                    );
+                }
+        );
     }
 
 
@@ -614,6 +756,64 @@ public class RnsTool {
         );
     }
 
+
+    public void fastFloorRnsIter(
+            long[] input,
+            int inputStartIndex,
+            int inputCoeffCount,
+            int inputCoeffModulusSize,
+            long[] destination,
+            int destinationStartIndex,
+            int destinationCoeffCount,
+            int destinationCoeffModulusSize) {
+
+        assert input != null;
+        assert inputCoeffCount == coeffCount;
+        assert destination != null;
+        assert destinationCoeffCount == coeffCount;
+        // add
+        assert inputCoeffModulusSize == baseQ.getSize() + baseBsk.getSize();
+        assert destinationCoeffModulusSize == baseBsk.getSize();
+
+        int baseQSize = baseQ.getSize();
+        int baseBskSize = baseBsk.getSize();
+
+        // Convert q -> Bsk
+        // input 的结构是 [0, baseQSize * N | ..., (baseQSize + baseBskSize) * N)
+//        RnsIter inputInBaseQ = input.subIter(0, baseQ.getSize());
+        int inputInBaseQ = 0;
+        // 处理 [0, baseQSize * N)
+        baseQToBskConv.fastConvertArrayRnsIter(
+                input,
+                inputStartIndex + inputInBaseQ, // + 0
+                inputCoeffCount,
+                baseQ.getSize(), // 一定要注意这里，这里没有传入 inputCoeffModulusSize
+                destination,
+                destinationStartIndex,
+                destinationCoeffCount,
+                destinationCoeffModulusSize
+        );
+//        RnsIter inputInBaseBsk = input.subIter(baseQ.getSize());
+        int inputInBsk = baseQSize * coeffCount;
+
+        IntStream.range(0, baseBskSize).parallel().forEach(
+                i -> {
+                    IntStream.range(0, coeffCount).parallel().forEach(
+                            j -> {
+                                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
+                                destination[destinationStartIndex +  i * coeffCount + j] =
+                                        UintArithmeticSmallMod.multiplyUintMod(
+                                                input[inputStartIndex + inputInBsk + i * coeffCount + j] + (baseBsk.getBase(i).getValue() - destination[destinationStartIndex + i * coeffCount + j]),
+                                                invProdQModBsk[i],
+                                                baseBsk.getBase(i)
+                                        );
+                            }
+                    );
+                }
+        );
+    }
+
+
     /**
      * @param input       Input in base q U Bsk
      * @param destination Output in base Bsk
@@ -649,6 +849,111 @@ public class RnsTool {
                     );
                 }
         );
+    }
+
+    /**
+     * Ref Lemma 6 the equation (13) in BEHZ16
+     *
+     * @param input       in base Bsk
+     * @param destination in base q
+     */
+    public void fastBConvSkRnsIter(
+            long[] input,
+            int inputStartIndex,
+            int inputCoeffCount,
+            int inputCoeffModulusSize,
+            long[] destination,
+            int destinationStartIndex,
+            int destinationCoeffCount,
+            int destinationCoeffModulusSize) {
+
+        assert inputCoeffCount == coeffCount;
+        assert inputCoeffModulusSize == baseBsk.getSize();
+        assert destinationCoeffModulusSize == baseQ.getSize();
+        assert destinationCoeffCount == coeffCount;
+
+        int baseQSize = baseQ.getSize();
+        int baseBSize = baseB.getSize();
+
+        // Fast convert B -> q; input is in Bsk but we only use B
+        // 处理 [0, baseBSize * N)
+//        RnsIter inputInBaseB = input.subIter(0, baseBSize);
+        int inputInBaseB = 0;
+        baseBToQConv.fastConvertArrayRnsIter(
+                input,
+                inputStartIndex + inputInBaseB,
+                coeffCount,
+                baseBSize,
+                destination,
+                destinationStartIndex,
+                destinationCoeffCount,
+                destinationCoeffModulusSize
+        );
+
+        // Compute alpha_sk
+        // Fast convert B -> {m_sk}; input is in Bsk but we only use B
+        long[] temp = new long[coeffCount];
+//        RnsIter tempIter = new RnsIter(temp, coeffCount);
+        // Compute alpha_sk
+        // Fast convert B -> {m_sk}; input is in Bsk but we only use B
+        baseBToMskConv.fastConvertArrayRnsIter(
+                input,
+                inputStartIndex + inputInBaseB,
+                coeffCount,
+                baseBSize,
+                temp,
+                0,
+                coeffCount,
+                1
+        );
+        // temp will be changed?
+
+        // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
+        // Note: input_sk is allocated in input[base_B_size]
+        long[] alphaSk = new long[coeffCount];
+        IntStream.range(0, coeffCount).parallel().forEach(
+                // It is not necessary for the negation to be reduced modulo the small prime
+                i -> alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
+                        temp[i] + (mSk.getValue() - input[inputStartIndex + baseBSize * coeffCount + i]),
+                        invProdBModMsk,
+                        mSk
+                )
+        );
+        // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
+        // alpha_sk here is not a centered reduction, so we need to apply a correction below.
+
+        long mSkDiv2 = mSk.getValue() >>> 1;
+        IntStream.range(0, baseQSize).parallel().forEach(
+                i -> {
+                    MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
+                    prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
+
+                    MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
+                    negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
+
+                    IntStream.range(0, coeffCount).parallel().forEach(
+                            j -> {
+                                // Correcting alpha_sk since it represents a negative value
+                                if (alphaSk[j] > mSkDiv2) {
+                                    destination[destinationStartIndex + i * coeffCount + j] =
+                                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                                    UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
+                                                    prodBModQElt,
+                                                    destination[ destinationStartIndex + i * coeffCount + j],
+                                                    baseQ.getBase(i)
+                                            );
+                                } else {
+                                    destination[destinationStartIndex + i * coeffCount + j] =
+                                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                                    alphaSk[j],
+                                                    negProdBModQElt,
+                                                    destination[destinationStartIndex + i * coeffCount + j],
+                                                    baseQ.getBase(i)
+
+                                            );
+                                }
+                            });
+                });
     }
 
     /**
@@ -1028,6 +1333,9 @@ public class RnsTool {
         baseQToTConv.exactConvertArray(phase, destination);
     }
 
+    public long getInvQLastModT() {
+        return invQLastModT;
+    }
 
     public BaseConverter getBaseBToMskConv() {
         return baseBToMskConv;
@@ -1063,5 +1371,13 @@ public class RnsTool {
 
     public RnsBase getBaseBsk() {
         return baseBsk;
+    }
+
+    public MultiplyUintModOperand[] getInvQLastModQ() {
+        return invQLastModQ;
+    }
+
+    public NttTables[] getBaseBskNttTables() {
+        return baseBskNttTables;
     }
 }

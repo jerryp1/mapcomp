@@ -2,12 +2,16 @@ package edu.alibaba.mpc4j.crypto.fhe.keys;
 
 import edu.alibaba.mpc4j.crypto.fhe.Ciphertext;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.io.Serializable;
 
 /**
  * @author Qixian Zhou
  * @date 2023/9/14
  */
-public class PublicKey implements Cloneable {
+public class PublicKey implements Cloneable, Serializable {
 
 
     private Ciphertext pk;
@@ -45,5 +49,22 @@ public class PublicKey implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof PublicKey)) return false;
+
+        PublicKey publicKey = (PublicKey) o;
+
+        return new EqualsBuilder().append(pk, publicKey.pk).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(pk).toHashCode();
     }
 }

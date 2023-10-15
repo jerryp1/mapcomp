@@ -63,6 +63,10 @@ public class Context {
         this(params, true, CoeffModulus.SecurityLevelType.TC128);
     }
 
+    public Context(EncryptionParams params,  boolean expandModChain) {
+        this(params, expandModChain, CoeffModulus.SecurityLevelType.TC128);
+    }
+
     /**
      * Creates an instance of Context, and performs several pre-computations
      * on the given EncryptionParameters.

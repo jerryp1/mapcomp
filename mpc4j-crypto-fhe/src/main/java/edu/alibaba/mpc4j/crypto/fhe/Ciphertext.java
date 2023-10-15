@@ -6,14 +6,17 @@ import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.utils.DynArray;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author Qixian Zhou
  * @date 2023/9/13
  */
-public class Ciphertext implements Cloneable {
+public class Ciphertext implements Cloneable, Serializable {
 
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
 
@@ -89,8 +92,8 @@ public class Ciphertext implements Cloneable {
         // Then resize
         resizeInternal(assign.size, assign.polyModulusDegree, assign.coeffModulusSize);
 
-        // copy data
-        System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.getData().length);
+        // copy data, 注意这里长度的计算 是以 size 为准，而不是 capacity
+        System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.size * assign.polyModulusDegree * assign.coeffModulusSize);
     }
 
 
@@ -371,5 +374,23 @@ public class Ciphertext implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof Ciphertext)) return false;
+
+        Ciphertext that = (Ciphertext) o;
+
+        return new EqualsBuilder().append(isNttForm, that.isNttForm).append(size, that.size).append(polyModulusDegree, that.polyModulusDegree).append(coeffModulusSize, that.coeffModulusSize).append(scale, that.scale).append(correctionFactor, that.correctionFactor).append(parmsId, that.parmsId).append(data, that.data).isEquals();
+    }
+
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(parmsId).append(isNttForm).append(size).append(polyModulusDegree).append(coeffModulusSize).append(scale).append(correctionFactor).append(data).toHashCode();
     }
 }

@@ -5,15 +5,18 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.HashFunction;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.*;
 import java.util.Arrays;
 
 /**
  * @author Qixian Zhou
  * @date 2023/8/30
  */
-public class ParmsIdType implements Cloneable {
+public class ParmsIdType implements Cloneable, Serializable {
 
     public long[] value;
+
+
 
     /**
      * return a zero parms id

@@ -186,6 +186,78 @@ public class BaseConverter {
     }
 
     /**
+     * RnsIter = long[] + index + N + k
+     *
+     * out 这种表示 整个 long[] 就是一个完整的 RnsIter, 所以不需要其他辅助信息来确定
+     *
+     * @param in
+     * @param inStartIndex
+     * @param inCoeffCount
+     * @param inCoeffModulusSize
+     * @param out
+     */
+    public void fastConvertArrayRnsIter(
+            long[] in,
+            int inStartIndex,
+            int inCoeffCount,
+            int inCoeffModulusSize,
+            long[] out,
+            int outStartIndex,
+            int outCoeffCount,
+            int outCoeffModulusSize
+            ) {
+
+        assert inCoeffModulusSize == inBase.getSize(); // k
+        assert outCoeffModulusSize == outBase.getSize();
+        assert inCoeffCount == outCoeffCount;
+
+
+        int count = inCoeffCount;
+        // N * k
+        long[][] temp = new long[inCoeffCount][inCoeffModulusSize];
+        // 暂时没有把 temp 改为 1D Array 是因为  dotProductMod 的对应改动会比较复杂
+        // 后面尝试修改
+
+        //  |x_i * \tilde{q_i}|_{q_i}  i \in [0, k), the result is length-k array
+        //  Now we have N x, so need N * k array store
+        IntStream.range(0, inBase.getSize()).parallel().forEach(
+                i -> {
+                    if (inBase.getInvPuncturedProdModBaseArray(i).operand == 1) {
+                        // no need mul
+                        IntStream.range(0, count).parallel().forEach(
+                                j -> temp[j][i] = UintArithmeticSmallMod.barrettReduce64(
+                                        in[inStartIndex + i * inCoeffCount + j], inBase.getBase(i)));
+                    } else {
+                        // need mul
+                        IntStream.range(0, count).parallel().forEach(
+                                j -> temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
+                                        in[inStartIndex + i * inCoeffCount + j],
+                                        inBase.getInvPuncturedProdModBaseArray(i),
+                                        inBase.getBase(i)));
+                    }
+                }
+        );
+
+
+        IntStream.range(0, outBase.getSize()).parallel().forEach(
+                i -> {
+                    IntStream.range(0, count).parallel().forEach(
+                            j -> {
+                                out[outStartIndex + i * count + j] =
+                                        UintArithmeticSmallMod.dotProductMod(
+                                                temp[j],
+                                                baseChangeMatrix[i],
+                                                inBase.getSize(),
+                                                outBase.getBase(i));
+                            }
+                    );
+                }
+        );
+
+    }
+
+
+    /**
      * @param in
      * @param out treat as an array: outBasse.size * outBase.polyModulus
      */

@@ -15,7 +15,7 @@ public class Constants {
     public static final int MOD_BIT_COUNT_MAX = 61;
     public static final int MOD_BIT_COUNT_MIN = 2;
 
-    public static final int MULTIPLY_ACCUMULATE_MOD_MAX = (1 << (128 - (MOD_BIT_COUNT_MAX << 1)));
+
 
     // Bounds for number of coefficient moduli (no hard requirement)
     public static final int COEFF_MOD_COUNT_MIN = 1;
@@ -38,6 +38,9 @@ public class Constants {
     public static final int CIPHERTEXT_SIZE_MAX = 16;
     public static final int CIPHERTEXT_SIZE_MIN = 2;
 
+    public static final int MULTIPLY_ACCUMULATE_MOD_MAX = (1 << (128 - (MOD_BIT_COUNT_MAX << 1)));
+//    public static final int MULTIPLY_ACCUMULATE_INTERNAL_MOD_MAX = (1 << (128 - ( << 1)));
+    public static final int MULTIPLY_ACCUMULATE_USER_MOD_MAX = (1 << (128 - (USER_MOD_BIT_COUNT_MAX << 1)));
 
 
 

@@ -1,14 +1,17 @@
 package edu.alibaba.mpc4j.crypto.fhe.keys;
 
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author Qixian Zhou
  * @date 2023/9/14
  */
-public class KeySwitchKeys implements Cloneable {
+public class KeySwitchKeys implements Cloneable, Serializable {
 
 
     private PublicKey[][] keys = new PublicKey[0][0];
@@ -82,5 +85,22 @@ public class KeySwitchKeys implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof KeySwitchKeys)) return false;
+
+        KeySwitchKeys that = (KeySwitchKeys) o;
+
+        return new EqualsBuilder().append(keys, that.keys).append(parmsId, that.parmsId).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(keys).append(parmsId).toHashCode();
     }
 }

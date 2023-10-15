@@ -4,18 +4,13 @@ import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
-import edu.alibaba.mpc4j.crypto.fhe.rns.BaseConverter;
-import edu.alibaba.mpc4j.crypto.fhe.rns.RnsBase;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 
 /**
  * @author Qixian Zhou

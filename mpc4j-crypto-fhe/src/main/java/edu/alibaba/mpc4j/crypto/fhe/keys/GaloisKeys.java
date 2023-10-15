@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.crypto.fhe.keys;
 
 import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 
+import java.io.Serializable;
+
 /**
  * @author Qixian Zhou
  * @date 2023/9/14
@@ -31,4 +33,8 @@ public class GaloisKeys extends KeySwitchKeys {
     }
 
 
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }

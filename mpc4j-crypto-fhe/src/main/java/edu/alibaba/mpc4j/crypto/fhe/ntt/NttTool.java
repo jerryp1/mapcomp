@@ -103,6 +103,47 @@ public class NttTool {
     }
 
     /**
+     * 处理一个 RnsIter = long[] + startIndex , 不关心 long[] 到底是什么，只要 long[] + startIndex 指向一个RnsIter 的起点即可
+     *
+     * @param polyIter
+     * @param startIndex
+     * @param coeffModulusSize
+     * @param tables
+     */
+    public static void nttNegAcyclicHarveyLazyRnsIter(
+            long[] polyIter,
+            int startIndex,
+            int coeffModulusSize,
+            NttTables[] tables) {
+
+        assert startIndex % (coeffModulusSize * tables[0].getCoeffCount()) == 0;
+        assert coeffModulusSize == tables.length;
+
+        int coeffCount = tables[0].getCoeffCount();
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                // 依次处理单个 CoeffCount
+                i -> nttNegAcyclicHarveyLazy(
+                        polyIter,
+                        startIndex +  i * coeffCount,
+                        tables[i])
+        );
+    }
+
+    public static void inverseNttNegAcyclicHarveyLazyRnsIter(
+            long[] polyIter,
+            int startIndex,
+            int coeffModulusSize,
+            NttTables[] tables) {
+
+        assert startIndex % (coeffModulusSize * tables[0].getCoeffCount()) == 0;
+
+        IntStream.range(0, coeffModulusSize).parallel().forEach(
+                i -> inverseNttNegAcyclicHarveyLazy(polyIter,startIndex +  i * tables[i].getCoeffCount(), tables[i])
+        );
+    }
+
+    /**
      * polyIter + startIndx = RnsIter
      *
      * @param polyIter
@@ -174,6 +215,28 @@ public class NttTool {
             for (int j = 0; j < operandCoeffModulusSize; j++) {
                 // 处理每一个 CoeffIter
                 inverseNttNegAcyclicHarvey(
+                        operand,
+                        rnsStartIndex + j * operandCoeffCount,
+                        tables[j]
+                );
+            }
+        }
+    }
+
+    public static void inverseNttNegAcyclicHarveyLazyPolyIter(
+            long[] operand,
+            int operandCoeffCount,
+            int operandCoeffModulusSize,
+            int size,
+            NttTables[] tables) {
+
+        // 遍历每一个密文多项式
+        for (int i = 0; i < size; i++) {
+            int rnsStartIndex = i * operandCoeffCount * operandCoeffModulusSize;
+            // 遍历每一个 rns 下的 多项式
+            for (int j = 0; j < operandCoeffModulusSize; j++) {
+                // 处理每一个 CoeffIter
+                inverseNttNegAcyclicHarveyLazy(
                         operand,
                         rnsStartIndex + j * operandCoeffCount,
                         tables[j]
