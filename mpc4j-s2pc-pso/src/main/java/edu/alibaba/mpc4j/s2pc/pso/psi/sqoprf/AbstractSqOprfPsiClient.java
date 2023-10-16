@@ -37,10 +37,6 @@ public abstract class AbstractSqOprfPsiClient<T> extends AbstractPsiClient<T> {
      * sq-OPRF receiver
      */
     private final SqOprfReceiver sqOprfReceiver;
-    /**
-     * prf filter
-     */
-    private Filter<byte[]> serverPrfFilter;
 
     public AbstractSqOprfPsiClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, SqOprfPsiConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
@@ -98,78 +94,7 @@ public abstract class AbstractSqOprfPsiClient<T> extends AbstractPsiClient<T> {
         List<byte[]> serverPrfPayload = rpc.receive(serverPrfFilterHeader).getPayload();
 
         stopWatch.start();
-        serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
-        Set<T> intersection = IntStream.range(0, clientElementSize)
-            .mapToObj(elementIndex -> {
-                T element = clientElementArrayList.get(elementIndex);
-                byte[] elementPrf = clientOprfArrayList.get(elementIndex);
-                return serverPrfFilter.mightContain(elementPrf) ? element : null;
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-        stopWatch.stop();
-        long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, serverPrfTime, "Client computes intersection");
-
-        logPhaseInfo(PtoState.PTO_END);
-        return intersection;
-    }
-
-    public void setup(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
-        setInitInput(maxClientElementSize, maxServerElementSize);
-        logPhaseInfo(PtoState.INIT_BEGIN);
-
-        stopWatch.start();
-        sqOprfReceiver.init(maxClientElementSize);
-        stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 2, initTime);
-
-        stopWatch.start();
-        DataPacketHeader serverPrfFilterHeader = new DataPacketHeader(
-            11111111, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_PRF_FILTER.ordinal(), 0,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> serverPrfPayload = rpc.receive(serverPrfFilterHeader).getPayload();
-        serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
-        stopWatch.stop();
-        long receiveTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 2, 2, receiveTime);
-
-        logPhaseInfo(PtoState.INIT_END);
-    }
-
-    public Set<T> psiOnline(Set<T> clientElementSet, int serverSetSize) throws MpcAbortException {
-        setPtoInput(clientElementSet, serverSetSize);
-        logPhaseInfo(PtoState.PTO_BEGIN);
-
-        stopWatch.start();
-        int peqtByteLength = PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
-        Hash peqtHash = HashFactory.createInstance(envType, peqtByteLength);
-        byte[][] clientElementByteArrays = clientElementArrayList.stream()
-            .map(ObjectUtils::objectToByteArray)
-            .toArray(byte[][]::new);
-        stopWatch.stop();
-        long setupTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, setupTime, "Client inits tools");
-
-        stopWatch.start();
-        SqOprfReceiverOutput oprfReceiverOutput = sqOprfReceiver.oprf(clientElementByteArrays);
-        IntStream oprfIndexIntStream = IntStream.range(0, clientElementSize);
-        oprfIndexIntStream = parallel ? oprfIndexIntStream.parallel() : oprfIndexIntStream;
-        ArrayList<byte[]> clientOprfArrayList = oprfIndexIntStream
-            .mapToObj(index -> peqtHash.digestToBytes(oprfReceiverOutput.getPrf(index)))
-            .collect(Collectors.toCollection(ArrayList::new));
-        stopWatch.stop();
-        long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, oprfTime, "Client runs OPRF");
-
-        stopWatch.start();
+        Filter<byte[]> serverPrfFilter = FilterFactory.createFilter(envType, serverPrfPayload);
         Set<T> intersection = IntStream.range(0, clientElementSize)
             .mapToObj(elementIndex -> {
                 T element = clientElementArrayList.get(elementIndex);

@@ -43,13 +43,8 @@ class PsiClientThread extends Thread {
     @Override
     public void run() {
         try {
-            if(client instanceof Ra17ByteEccPsiClient){
-                ((Ra17ByteEccPsiClient<ByteBuffer>) client).setup(clientElementSet.size(), serverElementSize);
-                intersectionSet = ((Ra17ByteEccPsiClient<ByteBuffer>) client).psiOnline(clientElementSet, serverElementSize);
-            }else{
-                client.init(clientElementSet.size(), serverElementSize);
-                intersectionSet = client.psi(clientElementSet, serverElementSize);
-            }
+            client.init(clientElementSet.size(), serverElementSize);
+            intersectionSet = client.psi(clientElementSet, serverElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

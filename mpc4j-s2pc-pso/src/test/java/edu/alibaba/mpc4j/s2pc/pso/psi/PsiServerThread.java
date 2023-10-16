@@ -35,14 +35,8 @@ class PsiServerThread extends Thread {
     @Override
     public void run() {
         try {
-            if(server instanceof Ra17ByteEccPsiServer){
-                ((Ra17ByteEccPsiServer<ByteBuffer>) server).setup(serverElementSet.size(), clientElementSize, serverElementSet);
-                ((Ra17ByteEccPsiServer<ByteBuffer>) server).psiOnline(clientElementSize);
-            }else{
-                server.init(serverElementSet.size(), clientElementSize);
-                server.psi(serverElementSet, clientElementSize);
-            }
-
+            server.init(serverElementSet.size(), clientElementSize);
+            server.psi(serverElementSet, clientElementSize);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

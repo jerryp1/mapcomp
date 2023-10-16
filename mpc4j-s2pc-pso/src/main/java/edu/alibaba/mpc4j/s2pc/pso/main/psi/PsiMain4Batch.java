@@ -11,10 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.AbstractSqOprfPsiClient;
-import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.AbstractSqOprfPsiServer;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -90,9 +87,6 @@ public class PsiMain4Batch {
         int setSizeNum = serverLogSetSizes.length;
         int[] serverSetSizes = Arrays.stream(serverLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         int[] clientSetSizes = Arrays.stream(clientLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
-        // 读取特殊参数
-        LOGGER.info("read PTO config");
-        PsiConfig config = PsiConfigUtils.createPsiConfig(properties);
         // 生成输入文件
         LOGGER.info("generate warm-up element files");
         PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, WARMUP_ELEMENT_BYTE_LENGTH);
@@ -218,11 +212,7 @@ public class PsiMain4Batch {
         // 初始化协议
         LOGGER.info("{} init", psiServer.ownParty().getPartyName());
         serverStopWatch.start();
-        if(config.getPtoType().equals(PsiType.RA17_BYTE_ECC)){
-            ((AbstractSqOprfPsiServer<ByteBuffer>) psiServer).setup(serverSetSize, clientSetSize, serverElementSet);
-        }else{
-            psiServer.init(serverSetSize, clientSetSize);
-        }
+        psiServer.init(serverSetSize, clientSetSize);
         serverStopWatch.stop();
         long initTime = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
         serverStopWatch.reset();
@@ -234,11 +224,7 @@ public class PsiMain4Batch {
         // 执行协议
         LOGGER.info("{} execute", psiServer.ownParty().getPartyName());
         serverStopWatch.start();
-        if(config.getPtoType().equals(PsiType.RA17_BYTE_ECC)){
-            ((AbstractSqOprfPsiServer<ByteBuffer>) psiServer).psiOnline(clientSetSize);
-        }else{
-            psiServer.psi(serverElementSet, clientSetSize);
-        }
+        psiServer.psi(serverElementSet, clientSetSize);
         serverStopWatch.stop();
         long ptoTime = serverStopWatch.getTime(TimeUnit.MILLISECONDS);
         serverStopWatch.reset();
@@ -378,11 +364,7 @@ public class PsiMain4Batch {
         // 初始化协议
         LOGGER.info("{} init", psiClient.ownParty().getPartyName());
         clientStopWatch.start();
-        if(config.getPtoType().equals(PsiType.RA17_BYTE_ECC)){
-            ((AbstractSqOprfPsiClient<ByteBuffer>) psiClient).setup(clientSetSize, serverSetSize);
-        }else{
-            psiClient.init(clientSetSize, serverSetSize);
-        }
+        psiClient.init(clientSetSize, serverSetSize);
         clientStopWatch.stop();
         long initTime = clientStopWatch.getTime(TimeUnit.MILLISECONDS);
         clientStopWatch.reset();
@@ -394,11 +376,7 @@ public class PsiMain4Batch {
         // 执行协议
         LOGGER.info("{} execute", psiClient.ownParty().getPartyName());
         clientStopWatch.start();
-        if(config.getPtoType().equals(PsiType.RA17_BYTE_ECC)){
-            ((AbstractSqOprfPsiClient<ByteBuffer>) psiClient).psiOnline(clientElementSet, serverSetSize);
-        }else{
-            psiClient.psi(clientElementSet, serverSetSize);
-        }
+        psiClient.psi(clientElementSet, serverSetSize);
         clientStopWatch.stop();
         long ptoTime = clientStopWatch.getTime(TimeUnit.MILLISECONDS);
         clientStopWatch.reset();

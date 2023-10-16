@@ -145,10 +145,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[]{
 //            PsiType.RA17_ECC.name(), new Ra17EccPsiConfig.Builder().build(),
 //        });
-        // RA17_BYTE_ECC
-        configurations.add(new Object[]{
-            PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
-        });
+//        // RA17_BYTE_ECC
+//        configurations.add(new Object[]{
+//            PsiType.RA17_BYTE_ECC.name(), new Ra17ByteEccPsiConfig.Builder().build(),
+//        });
 //        // PRTY19_FAST
 //        configurations.add(new Object[]{
 //            PsiType.PRTY19_FAST.name(), new Prty19FastPsiConfig.Builder().build(),
@@ -193,10 +193,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.RR17_DE.name() + " divParam = 10", new Rr17DePsiConfig.Builder().setDivParam(10).build(),
 //        });
-//        // RR17_EC LAN
-//        configurations.add(new Object[]{
-//            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
-//        });
+        // RR17_EC LAN
+        configurations.add(new Object[]{
+            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
+        });
 //        // RR17_EC WAN
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.RR17_EC.name() + " divParam = 10", new Rr17EcPsiConfig.Builder().setDivParam(10).build(),
