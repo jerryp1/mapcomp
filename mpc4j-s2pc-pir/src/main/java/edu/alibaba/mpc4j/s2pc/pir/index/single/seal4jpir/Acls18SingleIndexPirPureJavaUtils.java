@@ -13,7 +13,6 @@ import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.keys.SecretKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
@@ -21,9 +20,7 @@ import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.utils.SerializationUtils;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
-import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
-import org.checkerframework.checker.units.qual.C;
 
 /**
  * @author Qixian Zhou
@@ -35,6 +32,29 @@ public class Acls18SingleIndexPirPureJavaUtils {
     private Acls18SingleIndexPirPureJavaUtils() {
         // empty
     }
+
+
+    public static List<Plaintext> deserializePlaintextsFromCoeffWithoutBatchEncode(List<long[]> coeffList, Context context) {
+
+        int size = coeffList.size();
+        List<Plaintext> plaintexts = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            Plaintext plaintext = new Plaintext(context.firstContextData().getParms().getPolyModulusDegree());
+            long[] coeffs = coeffList.get(i);
+            // just copy
+            int len = coeffs.length;
+            System.arraycopy(
+                    coeffs,
+                    0,
+                    plaintext.getData(),
+                    0,
+                    len
+            );
+            plaintexts.add(plaintext);
+        }
+        return plaintexts;
+    }
+
 
     /**
      * generate encryption params.
@@ -54,21 +74,12 @@ public class Acls18SingleIndexPirPureJavaUtils {
     }
 
 
-    public static void nttTransformInplace(
-            Context context,
-            List<Plaintext> plaintextList) {
-
-
+    public static void nttTransformInplace(Context context, List<Plaintext> plaintextList) {
         Evaluator evaluator = new Evaluator(context);
         for (Plaintext plaintext : plaintextList) {
+            // NTT Form 的 Plaintext 的 CoeffCount 会发生变化
             evaluator.transformToNttInplace(plaintext, context.getFirstParmsId());
         }
-
-        for (Plaintext plaintext : plaintextList) {
-            System.out.println("plaintext:" + plaintext.getCoeffCount());
-//            assert plaintext.isNttForm();
-        }
-
     }
 
 
@@ -92,6 +103,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
             int numPtxts = (int) Math.ceil((double) nvec[i] / coeffCount);
             for (int j = 0; j < numPtxts; j++) {
                 pt.setZero();
+
                 if (indices[i] >= coeffCount * j && indices[j] <= coeffCount * (j + 1)) {
 
                     int realIndex = indices[i] - coeffCount * j;
@@ -104,9 +116,12 @@ public class Acls18SingleIndexPirPureJavaUtils {
                         }
                     }
 
-                    int logTotal = (int) Math.ceil(DoubleUtils.log2((double) total));
+                    long logTotal = (long) Math.ceil(DoubleUtils.log2((double) total));
                     long[] temp = new long[1];
-                    Numth.tryInvertUintMod(1L << logTotal, parms.getPlainModulus().getValue(), temp);
+                    Numth.tryInvertUintMod(
+                            1L << logTotal,
+                            parms.getPlainModulus().getValue(),
+                            temp);
                     pt.set(realIndex, temp[0]);
                 }
                 result.add(encryptor.encryptSymmetric(pt));
@@ -117,7 +132,6 @@ public class Acls18SingleIndexPirPureJavaUtils {
         for (Ciphertext c : result) {
             resultBytes.add(SerializationUtils.serializeObject(c));
         }
-
         return resultBytes;
     }
 
@@ -163,7 +177,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
 
         List<Plaintext> cur = database;
         List<Plaintext> intermediatePlain = new ArrayList<>();
-        int expansionRation = computeExpansionRatio(parms);
+        int expansionRatio = computeExpansionRatio(parms);
         for (int i = 0; i < nvec.length; i++) {
             List<Ciphertext> expandedQuery = new ArrayList<>();
 
@@ -176,14 +190,8 @@ public class Acls18SingleIndexPirPureJavaUtils {
                     }
                 }
 
-                List<Ciphertext> expandedQueryPart = expandQuery
-                        (context, parms, query.get(i).get(j), galoisKey, (int) total);
-
-
-                for (Ciphertext ciphertext : expandedQueryPart) {
-                    expandedQuery.add(ciphertext);
-                }
-
+                List<Ciphertext> expandedQueryPart = expandQuery(context, parms, query.get(i).get(j), galoisKey, (int) total);
+                expandedQuery.addAll(expandedQueryPart);
                 expandedQueryPart.clear();
             }
 
@@ -205,8 +213,6 @@ public class Acls18SingleIndexPirPureJavaUtils {
 
             for (int k = 0; k < product; k++) {
                 evaluator.multiplyPlain(expandedQuery.get(0), cur.get(k), intermediateCtxts.get(k));
-
-
                 for (int j = 1; j < nvec[i]; j++) {
                     evaluator.multiplyPlain(expandedQuery.get(j), cur.get(k + j * product), temp);
                     evaluator.addInplace(intermediateCtxts.get(k), temp);
@@ -227,12 +233,11 @@ public class Acls18SingleIndexPirPureJavaUtils {
             } else {
 
                 intermediatePlain.clear();
-                intermediatePlain = new ArrayList<>(expansionRation * product);
+                intermediatePlain = new ArrayList<>(expansionRatio * product);
 
                 cur = intermediatePlain;
 
                 for (int rr = 0; rr < product; rr++) {
-
                     evaluator.modSwitchToInplace(intermediateCtxts.get(rr), context.getLastParmsId());
                     List<Plaintext> plains = decomposeToPlaintexts(context.lastContextData().getParms(), intermediateCtxts.get(rr));
                     intermediatePlain.addAll(plains);
@@ -253,8 +258,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
         long ptBitMask = (1L << ptBitsPerCoeff) - 1;
 
         List<Plaintext> result = IntStream.range(0, computeExpansionRatio(parms) * ct.getSize()).mapToObj(
-                e -> new Plaintext()
-        ).collect(Collectors.toList());
+                e -> new Plaintext()).collect(Collectors.toList());
         int ptIter = 0;
 
         for (int polyIndex = 0; polyIndex < ct.getSize(); polyIndex++) {
@@ -269,7 +273,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
                     for (int c = 0; c < coeffCount; c++) {
                         result.get(ptIter).getData()[c] =
                                 (ct.getData()
-                                        [ct.indexAt(polyIndex) + coeffModIndex * coeffModCount + c] >>> shift) & ptBitMask;
+                                        [ct.indexAt(polyIndex) + coeffModIndex * coeffCount + c] >>> shift) & ptBitMask;
 
                     }
                     ++ptIter;
@@ -293,20 +297,16 @@ public class Acls18SingleIndexPirPureJavaUtils {
         Evaluator evaluator = new Evaluator(context);
 
         int logm = (int) Math.ceil(DoubleUtils.log2(m));
-        System.out.println("m: " + m + ", logm: " + logm);
-
         Plaintext two = new Plaintext("2");
         int n = parms.getPolyModulusDegree();
         int logn = (int) Math.ceil(DoubleUtils.log2(parms.getPolyModulusDegree()));
-        System.out.println("n: " + n);
-        System.out.println("logn: " + logn);
         assert logm <= logn;
 
         int[] galoisElts = new int[logn];
         for (int i = 0; i < logn; i++) {
             galoisElts[i] = (int) (
-                    (n + UintArithmetic.exponentUint(2, i))
-                            / UintArithmetic.exponentUint(2, i));
+                    (n + UintArithmetic.exponentUint(2L, i))
+                            / UintArithmetic.exponentUint(2L, i));
         }
 
         List<Ciphertext> temp = new ArrayList<>();
@@ -322,15 +322,9 @@ public class Acls18SingleIndexPirPureJavaUtils {
                 newTemp.add(new Ciphertext());
             }
 
-
             int indexRaw = (n << 1) - (1 << i);
             int index = (indexRaw * galoisElts[i]) % (n << 1);
-
-            System.out.println("i: " + i + ", indexRaw: " + indexRaw + ", index: " + index);
-
-
             for (int a = 0; a < temp.size(); a++) {
-
                 evaluator.applyGalois(
                         temp.get(a),
                         galoisElts[i],
@@ -339,7 +333,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
                 );
 
                 evaluator.add(temp.get(a), tempCtxtRotated, newTemp.get(a));
-
+                // debug 下 assert 无法通过，因为 indexRaw > coeffCount
                 multiplyPowerOfX(temp.get(a), tempCtxtShifted, indexRaw, context);
 
                 multiplyPowerOfX(tempCtxtRotated, tempCtxtRotatedShifted, index, context);
@@ -359,6 +353,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
 
         int indexRaw = (n << 1) - (1 << (logm - 1));
         int index = (indexRaw * galoisElts[logm - 1]) % (n << 1);
+
         for (int a = 0; a < temp.size(); a++) {
 
             if (a >= (m - (1 << (logm - 1)))) {
@@ -376,7 +371,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
                         tempCtxtRotated
                 );
 
-                evaluator.add(temp.get(a), tempCtxtShifted, newTemp.get(a));
+                evaluator.add(temp.get(a), tempCtxtRotated, newTemp.get(a));
 
                 multiplyPowerOfX(temp.get(a), tempCtxtShifted, indexRaw, context);
 
@@ -388,21 +383,12 @@ public class Acls18SingleIndexPirPureJavaUtils {
                         newTemp.get(a + temp.size())
                 );
             }
-
         }
-//        Ciphertext first = newTemp.get(0);
-//        System.out.println("newTemp size: " + newTemp.size());
-//        System.out.println("m: " + m);
+
         // auto last = newtemp.begin() + m; 这是获取容器里第 m 个元素，index = m - 1
-//        Ciphertext last = newTemp.get(m-1);
+        // vector<Ciphertext> newVec(first, last); 这是指的是从  [first, last] 这个区间的元素作为 vector
         // 返回[0, m) 的元素
         return newTemp.subList(0, m);
-
-
-//        List<Ciphertext> newVec = new ArrayList<>();
-//        newVec.add(first);
-//        newVec.add(last);
-//        return newVec;
     }
 
 
@@ -418,18 +404,16 @@ public class Acls18SingleIndexPirPureJavaUtils {
         for (int i = 0; i < encryptedCount; i++) {
             // 依次处理每一个 CoeffIter
             for (int j = 0; j < coeffModCount; j++) {
-
                 PolyArithmeticSmallMod.negAcyclicShiftPolyCoeffModCoeffIter(
                         encrypted.getData(),
-                        encrypted.indexAt(i) + j * coeffModCount,
+                        encrypted.indexAt(i) + j * coeffCount,
                         coeffCount,
                         index,
                         parms.getCoeffModulus()[j],
                         destination.getData(),
-                        destination.indexAt(i) + j * coeffModCount
+                        destination.indexAt(i) + j * coeffCount
                 );
             }
-
         }
     }
 
@@ -437,18 +421,12 @@ public class Acls18SingleIndexPirPureJavaUtils {
     /**
      * decode response.
      *
-     * @param encryptionParams encryption params.
-     * @param secretKey        secret key.
-     * @param response         response ciphertext.
-     * @param dimension        dimension.
+     * @param secretKey secret key.
+     * @param response  response ciphertext.
+     * @param dimension dimension.
      * @return BFV plaintext.
      */
-    public static long[] decryptReply(
-            Context context,
-            EncryptionParams encryptionParams,
-            SecretKey secretKey,
-            List<byte[]> response, int dimension) {
-
+    public static long[] decryptReply(Context context, SecretKey secretKey, List<byte[]> response, int dimension) {
 
         EncryptionParams parms = context.lastContextData().getParms();
         ParmsIdType parmsId = context.getLastParmsId();
@@ -510,7 +488,8 @@ public class Acls18SingleIndexPirPureJavaUtils {
 
     public static void composeToCiphertext(EncryptionParams parms, List<Plaintext> pts, Ciphertext ct) {
 
-        composeToCiphertext(parms,
+        composeToCiphertext(
+                parms,
                 pts,
                 pts.size() / computeExpansionRatio(parms),
                 ct);
@@ -519,11 +498,11 @@ public class Acls18SingleIndexPirPureJavaUtils {
     public static void composeToCiphertext(EncryptionParams parms, List<Plaintext> pts, int ctPolyCount, Ciphertext ct) {
 
         int ptBitsPerCoeff = (int) DoubleUtils.log2(parms.getPlainModulus().getValue());
-
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModCount = parms.getCoeffModulus().length;
 
         ct.resize(ctPolyCount);
+
         int ptIndex = 0;
 
         for (int polyIndex = 0; polyIndex < ctPolyCount; polyIndex++) {
@@ -536,10 +515,8 @@ public class Acls18SingleIndexPirPureJavaUtils {
 
                 int shift = 0;
                 for (int i = 0; i < localExpansionRatio; i++) {
-
                     for (int c = 0; c < pts.get(ptIndex).getCoeffCount(); c++) {
                         if (shift == 0) {
-
                             ct.getData()[
                                     ct.indexAt(polyIndex)
                                             + coeffModIndex * coeffCount + c
@@ -551,7 +528,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
                                     ] += (pts.get(ptIndex).at(c) << shift);
                         }
                     }
-                    ptIndex++; // 这样 ptIndex 不是很快会超出范围吗？
+                    ptIndex++;
                     shift += ptBitsPerCoeff;
                 }
             }
@@ -566,20 +543,34 @@ public class Acls18SingleIndexPirPureJavaUtils {
      * @return expansion ratio.
      */
     public static int expansionRatio(Context context) {
-        // 这里为什么使用 lastContext 呢？
+        // 这里为什么使用 lastContext 呢？只用一个moduli，最大可能限度减少密文大小
         return computeExpansionRatio(context.lastContextData().getParms()) << 1;
     }
 
     private static int computeExpansionRatio(EncryptionParams parms) {
 
         int expansionRatio = 0;
-        int planBitsPerCoeff = (int) DoubleUtils.log2((double) parms.getPlainModulus().getValue());
+        int ptBitsPerCoeff = (int) DoubleUtils.log2((double) parms.getPlainModulus().getValue());
         for (Modulus coeffModulus : parms.getCoeffModulus()) {
             double coeffBitSize = DoubleUtils.log2(coeffModulus.getValue());
-            expansionRatio += Math.ceil(coeffBitSize / planBitsPerCoeff);
+            expansionRatio += Math.ceil(coeffBitSize / ptBitsPerCoeff);
         }
         return expansionRatio;
+    }
 
+    public static GaloisKeys generateGaloisKeys(Context context, KeyGenerator keyGenerator) {
+
+        EncryptionParams parms = context.firstContextData().getParms();
+        int degree = parms.getPolyModulusDegree();
+        int logN = UintCore.getPowerOfTwo(degree);
+
+        int[] galoisElts = new int[logN];
+        for (int i = 0; i < logN; i++) {
+            galoisElts[i] = (int) ((degree + UintArithmetic.exponentUint(2L, i)) / UintArithmetic.exponentUint(2L, i));
+        }
+
+        GaloisKeys galoisKeys = keyGenerator.createGaloisKeys(galoisElts);
+        return galoisKeys;
     }
 
 

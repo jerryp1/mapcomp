@@ -46,23 +46,21 @@ public class IndexPirTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-
+        // SEAL_4J PIR
         configurations.add(new Object[]{
             SingleIndexPirFactory.SingleIndexPirType.SEAL_4J_PIR.name(),
             new Acls18SingleIndexPirPureJavaConfig.Builder().build()
         });
-
-
 //        // XPIR
 //        configurations.add(new Object[]{
 //            SingleIndexPirFactory.SingleIndexPirType.XPIR.name(),
 //            new Mbfk16SingleIndexPirConfig.Builder().build()
 //        });
-//        // SEAL PIR
-//        configurations.add(new Object[]{
-//            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
-//            new Acls18SingleIndexPirConfig.Builder().build()
-//        });
+        // SEAL PIR
+        configurations.add(new Object[]{
+            SingleIndexPirFactory.SingleIndexPirType.SEAL_PIR.name(),
+            new Acls18SingleIndexPirConfig.Builder().build()
+        });
 //        // OnionPIR
 //        configurations.add(new Object[]{
 //            SingleIndexPirFactory.SingleIndexPirType.ONION_PIR.name(),
@@ -73,7 +71,7 @@ public class IndexPirTest extends AbstractTwoPartyPtoTest {
 //            SingleIndexPirFactory.SingleIndexPirType.FAST_PIR.name(),
 //            new Ayaa21SingleIndexPirConfig.Builder().build()
 //        });
-//        // Vectorized PIR
+        // Vectorized PIR
 //        configurations.add(new Object[]{
 //            SingleIndexPirFactory.SingleIndexPirType.VECTORIZED_PIR.name(),
 //            new Mr23SingleIndexPirConfig.Builder().build()

@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
+import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.GaloisKeys;
 import edu.alibaba.mpc4j.crypto.fhe.keys.KeySwitchKeys;
@@ -1908,8 +1909,8 @@ public class Evaluator {
         // 注意 这个和参数的 N 是不同的
         int plainCoeffCount = plain.getCoeffCount();
 
-        System.out.println("coeffCount: " + coeffCount);
-        System.out.println("plainCoeffCount: " + plainCoeffCount);
+//        System.out.println("coeffCount: " + coeffCount);
+//        System.out.println("plainCoeffCount: " + plainCoeffCount);
 
         long plainUpperHalfThreshold = contextData.getPlainUpperHalfThreshold();
         long[] plainUpperHalfIncrement = contextData.getPlainUpperHalfIncrement();
@@ -2362,9 +2363,9 @@ public class Evaluator {
         }
 
         encryptedNtt.setScale(encryptedNtt.getScale() * plainNtt.scale());
-
-
-
+        if (!isScaleWithinBounds(encryptedNtt.getScale(), contextData)) {
+            throw new IllegalArgumentException("scale out of bounds");
+        }
 
     }
 
@@ -2931,5 +2932,25 @@ public class Evaluator {
     private boolean areSameScale(Ciphertext value1, Plaintext value2) {
         return Common.areClose(value1.getScale(), value2.getScale());
     }
+
+    private boolean isScaleWithinBounds(double scale, Context.ContextData contextData) {
+
+        int scaleBitCountBound = 0;
+        switch (contextData.getParms().getScheme()) {
+
+            case BFV:
+            case BGV:
+                scaleBitCountBound = contextData.getParms().getPlainModulus().getBitCount();
+                break;
+            case CKKS:
+                scale = contextData.getTotalCoeffModulusBitCount();
+                break;
+            default:
+                // Unsupported scheme; check will fail
+                scaleBitCountBound = -1;
+        }
+        return !(scale <= 0 || (int) DoubleUtils.log2(scale) >= scaleBitCountBound);
+    }
+
 
 }

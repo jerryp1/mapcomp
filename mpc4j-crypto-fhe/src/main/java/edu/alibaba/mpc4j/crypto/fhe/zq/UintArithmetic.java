@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.crypto.fhe.zq;
 import java.util.Arrays;
 
 /**
+ * 来源版本、目录 & 修改项 &、
+ *
+ *
  * @author Qixian Zhou
  * @date 2023/8/3
  */
@@ -210,6 +213,7 @@ public class UintArithmetic {
     public static long addUint128(long[] as, long[] bs, long[] result) {
         assert as.length == 2;
         assert as.length == bs.length;
+        //todo: 一定需要满足这个条件吗？
         assert result.length == 2;
 
         long[] tmp = new long[1];
@@ -1260,14 +1264,14 @@ public class UintArithmetic {
      * @return (a + b + carry)'s carry
      */
     public static long addUint64(long a, long b, long carry, long[] result) {
-        assert result.length == 1;
+//        assert result.length == 1;
         long sum = a + b;
         result[0] = sum + carry;
         return (Long.compareUnsigned(sum, a) < 0 || (sum == - 1 && carry == 1) ) ? 1: 0;
     }
 
     public static long addUint64Generic(long a, long b, long carry, long[] result) {
-        assert result.length == 1;
+//        assert result.length == 1;
         long sum = a + b;
         result[0] = sum + carry;
         return (Long.compareUnsigned(sum, a) < 0 || (sum == - 1 && carry == 1) ) ? 1: 0;

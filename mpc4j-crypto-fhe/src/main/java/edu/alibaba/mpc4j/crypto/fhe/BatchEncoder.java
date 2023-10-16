@@ -19,7 +19,8 @@ import java.util.Arrays;
  */
 public class BatchEncoder {
 
-
+    // 阻止编译器警告，一般来说听编译器的
+    @SuppressWarnings("FieldMayBeFinal")
     private Context context;
 
     private int slots;

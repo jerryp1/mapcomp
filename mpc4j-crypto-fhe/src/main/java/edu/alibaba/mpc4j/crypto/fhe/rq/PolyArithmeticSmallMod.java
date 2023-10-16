@@ -40,8 +40,7 @@ public class PolyArithmeticSmallMod {
      Modulus[] modulus,
      long[] result,
      int resultCoeffCount,
-     int resultCoeffModulusSize
-    ) {
+     int resultCoeffModulusSize) {
 
         assert operand1CoeffCount == operand2CoeffCount;
         assert operand1CoeffCount == resultCoeffCount;

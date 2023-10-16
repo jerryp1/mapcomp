@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
  */
 public class BaseConverter {
 
+
     // input base, size of k: q1, q2, ..., qk, prod is q
     private RnsBase inBase;
 

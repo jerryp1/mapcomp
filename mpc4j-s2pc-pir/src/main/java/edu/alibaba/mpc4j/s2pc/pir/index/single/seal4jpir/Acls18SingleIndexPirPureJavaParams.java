@@ -39,6 +39,7 @@ public class Acls18SingleIndexPirPureJavaParams implements SingleIndexPirParams 
         this.polyModulusDegree = polyModulusDegree;
         this.plainModulusBitLength = plainModulusBitLength;
         this.dimension = dimension;
+
         this.encryptionParams = Acls18SingleIndexPirPureJavaUtils.generateEncryptionParams(
                 polyModulusDegree, (1L << plainModulusBitLength) + 1
         );

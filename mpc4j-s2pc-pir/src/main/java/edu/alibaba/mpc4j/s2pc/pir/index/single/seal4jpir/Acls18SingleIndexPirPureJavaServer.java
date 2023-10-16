@@ -25,10 +25,6 @@ import java.util.stream.IntStream;
 import static edu.alibaba.mpc4j.s2pc.pir.index.single.seal4jpir.Acls18SingleIndexPirPureJavaPtoDesc.getInstance;
 
 
-/**
- * @author Qixian Zhou
- * @date 2023/10/13
- */
 public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirServer {
 
     /**
@@ -55,9 +51,11 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
      * BFV plaintext in NTT form
      */
 //    private List<byte[][]> encodedDatabase;
-
     private List<List<Plaintext>> encodedDatabase;
 
+    /**
+     * context
+     */
     Context context;
 
 
@@ -135,6 +133,7 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
 
         stopWatch.start();
         List<byte[]> serverResponsePayload = generateResponsePureJava(clientQueryPayload, encodedDatabase);
+
         DataPacketHeader serverResponseHeader = new DataPacketHeader(
                 encodeTaskId, getPtoDesc().getPtoId(), Acls18SingleIndexPirPureJavaPtoDesc.PtoStep.SERVER_SEND_RESPONSE.ordinal(), extraInfo,
                 rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -151,9 +150,9 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
     @Override
     public void setPublicKey(List<byte[]> clientPublicKeysPayload) throws MpcAbortException {
         MpcAbortPreconditions.checkArgument(clientPublicKeysPayload.size() == 1);
+
         byte[] bytes = clientPublicKeysPayload.remove(0);
         galoisKeys = SerializationUtils.deserializeObject(bytes);
-
     }
 
 
@@ -305,6 +304,7 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
 
 
     private List<Plaintext> preprocessDatabasePureJava(int partitionIndex) {
+
         byte[] combinedBytes = new byte[databases[partitionIndex].rows() * partitionByteLength];
         IntStream.range(0, databases[partitionIndex].rows()).forEach(rowIndex -> {
             byte[] element = databases[partitionIndex].getBytesData(rowIndex);
@@ -340,7 +340,8 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
             long[] paddingCoeffsArray = new long[params.getPolyModulusDegree()];
             System.arraycopy(coeffs, 0, paddingCoeffsArray, 0, coeffs.length);
             // Pad the rest with 1s
-            IntStream.range(coeffs.length, params.getPolyModulusDegree()).forEach(j -> paddingCoeffsArray[j] = 1L);
+            IntStream.range(coeffs.length, params.getPolyModulusDegree()).
+                    forEach(j -> paddingCoeffsArray[j] = 1L);
             coeffsList.add(paddingCoeffsArray);
         }
         // Add padding plaintext to make database a matrix
@@ -349,17 +350,13 @@ public class Acls18SingleIndexPirPureJavaServer extends AbstractSingleIndexPirSe
         IntStream.range(0, (prod - currentPlaintextSize))
                 .mapToObj(i -> IntStream.range(0, params.getPolyModulusDegree()).mapToLong(i1 -> 1L).toArray())
                 .forEach(coeffsList::add);
+        // long[] 转换为明文
+        List<Plaintext> result = Acls18SingleIndexPirPureJavaUtils.deserializePlaintextsFromCoeffWithoutBatchEncode(
+                coeffsList,
+                context
+        );
 
-        List<Plaintext> result = new ArrayList<>(coeffsList.size());
-        for (long[] longs : coeffsList) {
-            System.out.println("longs: " + longs.length);
-
-            result.add(
-                    new Plaintext(longs)
-            );
-        }
-
-        // transform to NTT
+        // 明文转换为NTT, 主要是为了加速 密文*明文
         Acls18SingleIndexPirPureJavaUtils.nttTransformInplace(context, result);
         return result;
     }

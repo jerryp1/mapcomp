@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.context;
 
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
@@ -8,7 +7,6 @@ import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTablesCreateIter;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
-import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
 import edu.alibaba.mpc4j.crypto.fhe.rns.RnsBase;
 import edu.alibaba.mpc4j.crypto.fhe.rns.RnsTool;

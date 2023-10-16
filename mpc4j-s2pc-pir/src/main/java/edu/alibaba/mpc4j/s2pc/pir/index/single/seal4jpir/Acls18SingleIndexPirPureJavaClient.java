@@ -25,7 +25,6 @@ import java.util.stream.IntStream;
 
 public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirClient {
 
-
     /**
      * SEAL PIR params
      */
@@ -38,12 +37,14 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
      * dimension size
      */
     private int[] dimensionSize;
-
-
+    /**
+     * key generator
+     */
     private KeyGenerator keyGenerator;
-
+    /**
+     *  Context
+     */
     private Context context;
-
     /**
      * public key
      */
@@ -62,7 +63,7 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
         setInitInput(serverElementSize, elementBitLength);
         assert (indexPirParams instanceof Acls18SingleIndexPirPureJavaParams);
         params = (Acls18SingleIndexPirPureJavaParams) indexPirParams;
-        context = ((Acls18SingleIndexPirPureJavaParams) indexPirParams).getContext();
+        context = params.getContext();
 
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -156,8 +157,6 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
         int plaintextSize = CommonUtils.getUnitNum(serverElementSize, elementSizeOfPlaintext);
         dimensionSize = PirUtils.computeDimensionLength(plaintextSize, params.getDimension());
 
-
-
         return generateKeyPair();
     }
 
@@ -168,7 +167,11 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
         int[] indices = PirUtils.computeIndices(indexOfPlaintext, dimensionSize);
         return Acls18SingleIndexPirPureJavaUtils.generateQuery(
                 context,
-                params.getEncryptionParamsSelf(), publicKey, secretKey, indices, dimensionSize
+                params.getEncryptionParamsSelf(),
+                publicKey,
+                secretKey,
+                indices,
+                dimensionSize
         );
 
     }
@@ -190,7 +193,6 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
         intStream.forEach(partitionIndex -> {
             long[] coeffs = Acls18SingleIndexPirPureJavaUtils.decryptReply(
                     context,
-                    params.getEncryptionParamsSelf(),
                     secretKey,
                     response.subList(partitionIndex * partitionResponseSize, (partitionIndex + 1) * partitionResponseSize),
                     params.getDimension()
@@ -219,13 +221,12 @@ public class Acls18SingleIndexPirPureJavaClient extends AbstractSingleIndexPirCl
 
         keyGenerator = new KeyGenerator(context);
         secretKey = keyGenerator.getSecretKey();
+
         publicKey = new PublicKey();
         keyGenerator.createPublicKey(publicKey);
 
         // GaloisKey
-        GaloisKeys galoisKeys = new GaloisKeys();
-        keyGenerator.createGaloisKeys(galoisKeys);
-
+        GaloisKeys galoisKeys = Acls18SingleIndexPirPureJavaUtils.generateGaloisKeys(context, keyGenerator);
         List<byte[]> publicKeys = new ArrayList<>();
 
         byte[] galoisKeysBytes = SerializationUtils.serializeObject(galoisKeys);

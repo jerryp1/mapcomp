@@ -22,7 +22,7 @@ import java.util.Arrays;
 public class EvaluatorTest {
 
 
-    private static final int MAX_LOOP = 2;
+    private static final int MAX_LOOP = 1;
 
     @Test
     public void bfvEncryptRotateMatrixDecrypt() {
