@@ -15,3 +15,10 @@ circuit_psi_pto_name = PSTY19
 cuckoo_hash_bin_type = NAIVE_2_HASH
 silent = false
 append_string = _no_silent_naive_2_hash
+
+server_name = server
+server_ip = localhost
+server_port = 8090
+client_name = client
+client_ip = localhost
+client_port = 8091
