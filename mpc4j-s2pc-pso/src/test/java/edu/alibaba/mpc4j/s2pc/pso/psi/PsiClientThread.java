@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiClient;
 
 import java.nio.ByteBuffer;
 import java.util.Set;
@@ -42,8 +43,13 @@ class PsiClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(clientElementSet.size(), serverElementSize);
-            intersectionSet = client.psi(clientElementSet, serverElementSize);
+            if(client instanceof Ra17ByteEccPsiClient){
+                ((Ra17ByteEccPsiClient<ByteBuffer>) client).setup(clientElementSet.size(), serverElementSize);
+                intersectionSet = ((Ra17ByteEccPsiClient<ByteBuffer>) client).psiOnline(clientElementSet, serverElementSize);
+            }else{
+                client.init(clientElementSet.size(), serverElementSize);
+                intersectionSet = client.psi(clientElementSet, serverElementSize);
+            }
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

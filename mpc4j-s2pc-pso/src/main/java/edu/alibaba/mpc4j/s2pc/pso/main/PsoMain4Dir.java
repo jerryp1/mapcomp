@@ -36,6 +36,7 @@ public class PsoMain4Dir {
             }
         }
         Collections.sort(allFileName);
+        allFileName.forEach(LOGGER::info);
         Rpc ownRpc = null;
         for(String fileName : allFileName){
             // read config
@@ -45,6 +46,9 @@ public class PsoMain4Dir {
             String ptoType = PropertiesUtils.readString(properties, "pto_type");
             LOGGER.info("pto_type = " + ptoType);
             properties.setProperty("own_name", args[1]);
+            if(args[1].equals("server")){
+                PsiMain4Batch.generateInputFiles(properties);
+            }
             if(ownRpc == null){
                 //直接在这里初始化并连接netty
                 ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
