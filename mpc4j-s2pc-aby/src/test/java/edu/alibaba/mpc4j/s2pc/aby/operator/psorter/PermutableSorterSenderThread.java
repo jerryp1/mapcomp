@@ -57,7 +57,7 @@ class PermutableSorterSenderThread extends Thread {
         try {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            sender.init(l, l * num * numSorted);
+            sender.init(l, num * numSorted);
             stopWatch.stop();
             long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

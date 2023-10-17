@@ -8,6 +8,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -15,6 +18,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.AbstractPermutableSorterParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSenderOutput;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -34,11 +42,16 @@ public class Ahi22PermutableSorterReceiver extends AbstractPermutableSorterParty
      * Zl circuit receiver.
      */
     private final ZlcParty zlcReceiver;
+    /**
+     * Zl mux receiver.
+     */
+    private final ZlMuxParty zlMuxReceiver;
 
     public Ahi22PermutableSorterReceiver(Rpc rpc, Party otherParty, Ahi22PermutableSorterConfig config) {
         super(Ahi22PermutableSorterPtoDesc.getInstance(), rpc, otherParty, config);
         bit2aReceiver = Bit2aFactory.createReceiver(rpc, otherParty, config.getBit2aConfig());
         zlcReceiver = ZlcFactory.createReceiver(rpc, otherParty, config.getZlcConfig());
+        zlMuxReceiver = ZlMuxFactory.createReceiver(rpc, otherParty, config.getZlMuxConfig());
         zl = config.getBit2aConfig().getZl();
         l = zl.getL();
         byteL = zl.getByteL();
@@ -52,6 +65,7 @@ public class Ahi22PermutableSorterReceiver extends AbstractPermutableSorterParty
         stopWatch.start();
         bit2aReceiver.init(maxL, maxNum);
         zlcReceiver.init(maxNum);
+        zlMuxReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -97,8 +111,14 @@ public class Ahi22PermutableSorterReceiver extends AbstractPermutableSorterParty
         // reveal
 //        zlcReceiver.revealOther(s0);
 //        zlcReceiver.revealOther(s1);
+        SquareZlVector[] result = zlcReceiver.add(s0, zlMuxReceiver.mux(xiArray, zlcReceiver.sub(s1, s0)));
 
-        return zlcReceiver.add(s0, zlcReceiver.mul(f1, zlcReceiver.sub(s1, s0)));
+//        SquareZlVector[] result = new SquareZlVector[numSort];
+//        for (int i = 0; i < numSort; i ++) {
+//            result[i] = zlcReceiver.add(s0[i], zlMuxReceiver.mux(xiArray[i], zlcReceiver.sub(s1[i], s0[i])));
+//        }
+        return result;
+//        return null;
     }
 
     void checkInputs(MpcZ2Vector[][] xiArrays) {

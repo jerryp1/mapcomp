@@ -18,7 +18,10 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PermutableSorterTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * @author Li Peng
@@ -33,11 +36,16 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
      * Zl circuit config.
      */
     private final ZlcConfig zlcConfig;
+    /**
+     * Zl mux config.
+     */
+    private final ZlMuxConfig zlMuxConfig;
 
     private Ahi22PermutableSorterConfig(Ahi22PermutableSorterConfig.Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.bit2aConfig, builder.zlcConfig);
+        super(SecurityModel.SEMI_HONEST, builder.bit2aConfig, builder.zlcConfig, builder.zlMuxConfig);
         this.bit2aConfig = builder.bit2aConfig;
         this.zlcConfig = builder.zlcConfig;
+        this.zlMuxConfig = builder.zlMuxConfig;
     }
 
     @Override
@@ -58,6 +66,10 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
         return zlcConfig;
     }
 
+    public ZlMuxConfig getZlMuxConfig() {
+        return zlMuxConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Ahi22PermutableSorterConfig> {
         /**
          * bit2a config.
@@ -67,13 +79,18 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
          * Zl circuit config.
          */
         private ZlcConfig zlcConfig;
+        /**
+         * Zl mux config.
+         */
+        private final ZlMuxConfig zlMuxConfig;
 
         public Builder(Bit2aConfig bit2aConfig) {
             this.bit2aConfig = bit2aConfig;
             this.zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, bit2aConfig.getZl());
+            this.zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
-        public Builder setCotConfig(ZlcConfig zlcConfig) {
+        public Builder setZlcConfig(ZlcConfig zlcConfig) {
             this.zlcConfig = zlcConfig;
             return this;
         }

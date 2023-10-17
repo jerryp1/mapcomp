@@ -52,7 +52,7 @@ class PermutableSorterReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(l, l * num * numSorted);
+            receiver.init(l,  num * numSorted);
             z1 = receiver.sort(x1);
         } catch (MpcAbortException e) {
             e.printStackTrace();

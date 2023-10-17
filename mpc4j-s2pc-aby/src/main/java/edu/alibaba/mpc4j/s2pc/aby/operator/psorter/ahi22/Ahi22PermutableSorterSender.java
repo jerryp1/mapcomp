@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -14,6 +13,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.AbstractPermutableSorterParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -33,11 +34,16 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
      * Zl circuit sender.
      */
     private final ZlcParty zlcSender;
+    /**
+     * Zl mux sender.
+     */
+    private final ZlMuxParty zlMuxSender;
 
     public Ahi22PermutableSorterSender(Rpc rpc, Party otherParty, Ahi22PermutableSorterConfig config) {
         super(Ahi22PermutableSorterPtoDesc.getInstance(), rpc, otherParty, config);
         bit2aSender = Bit2aFactory.createSender(rpc, otherParty, config.getBit2aConfig());
         zlcSender = ZlcFactory.createSender(rpc, otherParty, config.getZlcConfig());
+        zlMuxSender = ZlMuxFactory.createSender(rpc, otherParty, config.getZlMuxConfig());
         zl = config.getBit2aConfig().getZl();
         l = zl.getL();
         byteL = zl.getByteL();
@@ -51,6 +57,7 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
         stopWatch.start();
         bit2aSender.init(maxL, maxNum);
         zlcSender.init(maxNum);
+        zlMuxSender.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -80,7 +87,7 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
         stopWatch.stop();
         long b2aTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        System.out.println("### b2a: " + b2aTime + " ms.");
+
 
         stopWatch.start();
         SquareZlVector[] ones = IntStream.range(0, numSort).mapToObj(i -> SquareZlVector.createOnes(zl, num)).toArray(SquareZlVector[]::new);
@@ -108,17 +115,22 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
         stopWatch.stop();
         long s0s1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        System.out.println("### s0s1: " + s0s1Time + " ms.");
+
 
         stopWatch.start();
         // reveal
 //        ZlVector[] trueS0 = zlcSender.revealOwn(s0);
 //        ZlVector[] trueS1 = zlcSender.revealOwn(s1);
-
-        SquareZlVector[] result = zlcSender.add(s0, zlcSender.mul(f1, zlcSender.sub(s1, s0)));
+//        SquareZlVector[] result = new SquareZlVector[numSort];
+//        for (int i = 0; i < numSort; i ++) {
+//            result[i] = zlcSender.add(s0[i], zlMuxSender.mux(xiArray[i], zlcSender.sub(s1[i], s0[i])));
+//        }
+        SquareZlVector[] result = zlcSender.add(s0, zlMuxSender.mux(xiArray, zlcSender.sub(s1, s0)));
         stopWatch.stop();
         long resultTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
+        System.out.println("### b2a: " + b2aTime + " ms.");
+        System.out.println("### s0s1: " + s0s1Time + " ms.");
         System.out.println("### result: " + resultTime + " ms.");
 
         return result;
@@ -129,4 +141,23 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
             MathPreconditions.checkEqual("Number of input bits", "1", xi.length, 1));
     }
 
+//    private SquareZlVector[] mul(SquareZlVector[] x) throws MpcAbortException {
+////        MathPreconditions.checkEqual("x.length", "y.length", x.length, y.length);
+//        Prg prg = PrgFactory.createInstance(envType, byteL);
+////        BitVector[] inputBits = Arrays.stream(y).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
+//        for (int i = 0; i < numSort; i++) {
+//            CotSenderOutput cotSenderOutput = cotSender.send(num);
+//            // generate random rs
+//            BigInteger[] rs = ZlVector.createRandom(zl, num, secureRandom).getElements();
+//            int finalI = i;
+//            byte[][] r0s = IntStream.range(0, num)
+//                .mapToObj(j -> rs[finalI])
+//                .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
+//                .toArray(byte[][]::new);
+//            byte[][] r1s = IntStream.range(0, num)
+//                .mapToObj(j -> zl.add(rs[finalI], x[]))
+//                .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
+//                .toArray(byte[][]::new);
+//        }
+//    }
 }

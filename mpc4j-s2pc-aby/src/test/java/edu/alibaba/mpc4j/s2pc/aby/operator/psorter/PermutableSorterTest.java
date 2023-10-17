@@ -45,7 +45,7 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
     /**
      * default num of sorted elements
      */
-    private static final int DEFAULT_NUM_SORTED = 2000;
+    private static final int DEFAULT_NUM_SORTED = 1 << 19;
     /**
      * large num of sorted elements
      */
