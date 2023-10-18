@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 /**
  * KKRT16-PSI client
  *
- * @author Anonymous
+ * @author Weiran Liu
  * @date 2022/9/20
  */
 public class Kkrt16PsiClient<T> extends AbstractPsiClient<T> {

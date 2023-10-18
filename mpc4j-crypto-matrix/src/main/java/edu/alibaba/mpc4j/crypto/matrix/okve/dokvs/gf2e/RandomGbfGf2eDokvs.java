@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;

@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.pso.psi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.pso.psi.sqoprf.ra17.Ra17ByteEccPsiServer;
 
 import java.nio.ByteBuffer;
 import java.util.Set;

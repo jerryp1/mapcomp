@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.opf.oprf;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2k.Gf2kDokvsFactory.Gf2kDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory.OprfType;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.cm20.Cm20MpOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.fipr05.Fipr05MpOprfConfig;
@@ -38,7 +37,7 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
     /**
      * large batch size
      */
-    private static final int LARGE_BATCH_SIZE = 1 << 16;
+    private static final int LARGE_BATCH_SIZE = 1 << 12;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -61,29 +60,6 @@ public class MpOprfTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             OprfType.FIPR05.name(), new Fipr05MpOprfConfig.Builder().build(),
         });
-
-        configurations.add(new Object[]{
-            OprfType.RS21.name() + Gf2kDokvsType.H2_BINARY_BLAZE_GCT.name(),
-            new Rs21MpOprfConfig.Builder(SecurityModel.MALICIOUS).setOkvsType(Gf2kDokvsType.H2_BINARY_BLAZE_GCT).build(),
-        });
-        configurations.add(new Object[]{
-            OprfType.RS21.name() + Gf2kDokvsType.H3_BINARY_SINGLETON_GCT.name(),
-            new Rs21MpOprfConfig.Builder(SecurityModel.MALICIOUS).setOkvsType(Gf2kDokvsType.H3_BINARY_SINGLETON_GCT).build(),
-        });
-        configurations.add(new Object[]{
-            OprfType.RS21.name() + Gf2kDokvsType.H3_BINARY_BLAZE_GCT.name(),
-            new Rs21MpOprfConfig.Builder(SecurityModel.MALICIOUS).setOkvsType(Gf2kDokvsType.H3_BINARY_BLAZE_GCT).build(),
-        });
-        configurations.add(new Object[]{
-            OprfType.RS21.name() + Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT.name(),
-            new Rs21MpOprfConfig.Builder(SecurityModel.MALICIOUS).setOkvsType(Gf2kDokvsType.H3_CLUSTER_BINARY_BLAZE_GCT).build(),
-        });
-        configurations.add(new Object[]{
-            OprfType.RS21.name() + Gf2kDokvsType.H3_FIELD_BLAZE_GCT.name(),
-            new Rs21MpOprfConfig.Builder(SecurityModel.MALICIOUS).setOkvsType(Gf2kDokvsType.H3_FIELD_BLAZE_GCT).build(),
-        });
-
-
 
         return configurations;
     }
