@@ -168,9 +168,6 @@ public class BytesUtils {
         if(resBitNum != 0){
             byteArray[zeroByteNum] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
-//        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-//            BinaryUtils.setBoolean(byteArray, binaryIndex, false);
-//        }
     }
 
     /**
@@ -202,12 +199,6 @@ public class BytesUtils {
         }
         // 如果没有前面几位需要置为0的byte，或者前面若干位确实是0，则返回true
         return resBitNum == 0 || (byteArray[zeroByteNum] & BYTE_WITH_FIX_NUM_OF_ONE[resBitNum]) == byteArray[zeroByteNum];
-//        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-//            if (BinaryUtils.getBoolean(byteArray, binaryIndex)) {
-//                return false;
-//            }
-//        }
-//        return true;
     }
 
     /**
@@ -225,14 +216,6 @@ public class BytesUtils {
             return false;
         }
         return isReduceByteArray(byteArray, bitLength);
-//        assert bitLength >= 0 && bitLength <= byteLength * Byte.SIZE
-//            : "bitLength must be in range [0, " + byteLength * Byte.SIZE + "]: " + bitLength;
-//        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-//            if (BinaryUtils.getBoolean(byteArray, binaryIndex)) {
-//                return false;
-//            }
-//        }
-//        return true;
     }
 
     /**
@@ -248,7 +231,6 @@ public class BytesUtils {
         if((bitLength & 7) != 0){
             vector[0] = BYTE_WITH_FIX_NUM_OF_ONE[bitLength & 7];
         }
-//        BytesUtils.reduceByteArray(vector, bitLength);
         return vector;
     }
 
@@ -499,8 +481,6 @@ public class BytesUtils {
         if(resBitNum != 0){
             ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
-//        Arrays.fill(ones, (byte) 0xff);
-//        reduceByteArray(ones, bitLength);
         return BytesUtils.xor(x, ones);
     }
 
@@ -519,8 +499,6 @@ public class BytesUtils {
         if(resBitNum != 0){
             ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
-//        Arrays.fill(ones, (byte) 0xff);
-//        reduceByteArray(ones, bitLength);
         xori(x, ones);
     }
 
