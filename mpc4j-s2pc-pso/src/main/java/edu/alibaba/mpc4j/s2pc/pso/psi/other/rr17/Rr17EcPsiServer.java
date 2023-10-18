@@ -40,7 +40,7 @@ import java.util.stream.IntStream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/05
  */
-public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
+public class Rr17EcPsiServer<T> extends AbstractPsiServer<T> {
     /**
      * lcot sender
      */
@@ -123,7 +123,7 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
         encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
 
         h1 = HashFactory.createInstance(envType, l);
-        prfEnc =  PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        prfEnc = PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
         prfEnc.setKey(hashKeys[1]);
         prfTag = PrfFactory.createInstance(envType, tagPrfByteLength);
         prfTag.setKey(hashKeys[2]);
@@ -193,7 +193,7 @@ public class Rr17EcPsiServer <T> extends AbstractPsiServer<T> {
                     ByteBuffer tupleArray = ByteBuffer.allocate(commitment.getSecret().length + commitment.getCommitment().length
                             + binSize * (tagPrfByteLength + CommonConstants.BLOCK_BYTE_LENGTH))
                         .put(commitment.getSecret()).put(commitment.getCommitment());
-                    for(int i = 0; i < binSize; i++){
+                    for (int i = 0; i < binSize; i++) {
                         byte[] encode = peqtHash.digestToBytes(ByteBuffer.allocate(
                                 lcotSenderOutput.getOutputByteLength() + phasedElementByteArray.length)
                             .put(phasedElementByteArray).put(lcotSenderOutput.getRb(binIndex * binSize + i, phasedElementByteArray)).array());

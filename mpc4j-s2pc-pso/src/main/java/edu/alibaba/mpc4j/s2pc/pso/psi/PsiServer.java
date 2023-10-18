@@ -15,7 +15,7 @@ public interface PsiServer<T> extends TwoPartyPto {
     /**
      * init protocol
      *
-     * @param maxServerElementSize   max size of elements of server
+     * @param maxServerElementSize max size of elements of server
      * @param maxClientElementSize max size of elements of client
      * @throws MpcAbortException If protocol aborts
      */
@@ -24,8 +24,8 @@ public interface PsiServer<T> extends TwoPartyPto {
     /**
      * run the protocol
      *
-     * @param serverElementSet    the set of server's elements
-     * @param clientElementSize  the size of elements of client
+     * @param serverElementSet  the set of server's elements
+     * @param clientElementSize the size of elements of client
      * @throws MpcAbortException If protocol aborts
      */
     void psi(Set<T> serverElementSet, int clientElementSize) throws MpcAbortException;

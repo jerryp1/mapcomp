@@ -219,7 +219,7 @@ public class Rr16PsiUtils {
      * get the value from GBF
      *
      * @param storage GBF storage
-     * @param key GBF input
+     * @param key     GBF input
      * @param gbfHash hash function to generate BF index
      * @return w的值。
      */

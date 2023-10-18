@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.s2pc.pcg.ct.CoinTossFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.core.CoreCotFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.FilterPsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory;
 
 /**
@@ -46,7 +45,9 @@ public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements Filter
         return coreCotConfig;
     }
 
-    public CoinTossConfig getCoinTossConfig() { return coinTossConfig; }
+    public CoinTossConfig getCoinTossConfig() {
+        return coinTossConfig;
+    }
 
     public FilterFactory.FilterType getFilterType() {
         return filterType;

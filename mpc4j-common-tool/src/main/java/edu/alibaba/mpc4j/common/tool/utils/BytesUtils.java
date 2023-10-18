@@ -165,7 +165,7 @@ public class BytesUtils {
         int resBitNum = bitLength & 7;
         int zeroByteNum = (byteArray.length * Byte.SIZE - bitLength) >> 3;
         Arrays.fill(byteArray, 0, zeroByteNum, (byte) 0x00);
-        if(resBitNum != 0){
+        if (resBitNum != 0) {
             byteArray[zeroByteNum] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
     }
@@ -192,8 +192,8 @@ public class BytesUtils {
             : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
         int resBitNum = bitLength & 7;
         int zeroByteNum = (byteArray.length * Byte.SIZE - bitLength) >> 3;
-        for(int byteIndex = 0; byteIndex < zeroByteNum; byteIndex++){
-            if(byteArray[byteIndex] != 0){
+        for (int byteIndex = 0; byteIndex < zeroByteNum; byteIndex++) {
+            if (byteArray[byteIndex] != 0) {
                 return false;
             }
         }
@@ -228,7 +228,7 @@ public class BytesUtils {
         int byteLength = CommonUtils.getByteLength(bitLength);
         byte[] vector = new byte[byteLength];
         Arrays.fill(vector, (byte) 0xFF);
-        if((bitLength & 7) != 0){
+        if ((bitLength & 7) != 0) {
             vector[0] = BYTE_WITH_FIX_NUM_OF_ONE[bitLength & 7];
         }
         return vector;
@@ -478,7 +478,7 @@ public class BytesUtils {
         int resBitNum = bitLength & 7;
         int zeroByteNum = (x.length * Byte.SIZE - bitLength) >> 3;
         Arrays.fill(ones, zeroByteNum, ones.length, (byte) 0xff);
-        if(resBitNum != 0){
+        if (resBitNum != 0) {
             ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
         return BytesUtils.xor(x, ones);
@@ -496,7 +496,7 @@ public class BytesUtils {
         int resBitNum = bitLength & 7;
         int zeroByteNum = (x.length * Byte.SIZE - bitLength) >> 3;
         Arrays.fill(ones, zeroByteNum, ones.length, (byte) 0xff);
-        if(resBitNum != 0){
+        if (resBitNum != 0) {
             ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
         xori(x, ones);

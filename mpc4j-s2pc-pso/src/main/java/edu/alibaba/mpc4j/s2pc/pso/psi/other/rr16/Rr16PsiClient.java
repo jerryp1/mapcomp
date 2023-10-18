@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/06
  */
-public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
+public class Rr16PsiClient<T> extends AbstractPsiClient<T> {
     /**
      * core COT receiver
      */
@@ -131,7 +131,7 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         // generate and shuffle the index for 0/1 OT choice bit while waiting the challenge from server
         List<Integer> otZeroList = new LinkedList<>(), otOneList = new LinkedList<>();
         IntStream.range(0, nOt).forEach(index -> {
-            if(choiceBits[index])
+            if (choiceBits[index])
                 otOneList.add(index);
             else otZeroList.add(index);
         });
@@ -226,7 +226,7 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         byte[] response = new byte[cotReceiverOutput.getRb(0).length];
         cncChallengeList.forEach(x -> {
             int index = IntUtils.byteArrayToInt(x);
-            if (cotReceiverOutput.getChoice(index)){
+            if (cotReceiverOutput.getChoice(index)) {
                 usedOne.add(index);
             } else {
                 usedZero.add(index);
@@ -238,11 +238,11 @@ public class Rr16PsiClient <T> extends AbstractPsiClient<T> {
         return challenge;
     }
 
-    private List<byte[]> generatePermutation(){
+    private List<byte[]> generatePermutation() {
         byte[] filterBytes = filter.getStorage();
         gbfStorage = new byte[filter.getM()][];
         int[] indexes = new int[gbfStorage.length];
-        for(int i = 0, start0 = 0, start1 = 0; i < gbfStorage.length; i++){
+        for (int i = 0, start0 = 0, start1 = 0; i < gbfStorage.length; i++) {
             indexes[i] = BinaryUtils.getBoolean(filterBytes, i) || start0 >= zeroIndex.length ? oneIndex[start1++] : zeroIndex[start0++];
         }
         IntStream intStream = parallel ? IntStream.range(0, gbfStorage.length).parallel() : IntStream.range(0, gbfStorage.length);

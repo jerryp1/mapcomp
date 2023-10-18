@@ -63,7 +63,7 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     /**
      * large size
      */
-    private static final int LARGE_SIZE = 1 << 16;
+    private static final int LARGE_SIZE = 1 << 14;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

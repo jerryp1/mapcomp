@@ -48,7 +48,9 @@ public class Rr17EcPsiConfig extends AbstractMultiPartyPtoConfig implements PsiC
         return lcotConfig;
     }
 
-    public CoinTossConfig getCoinTossConfig() {return coinTossConfig; }
+    public CoinTossConfig getCoinTossConfig() {
+        return coinTossConfig;
+    }
 
     public int getDivParam4PhaseHash() {
         return divParam4PhaseHash;

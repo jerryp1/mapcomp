@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/05
  */
-public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
+public class Rr17DePsiServer<T> extends AbstractPsiServer<T> {
     /**
      * Lcot sender
      */
@@ -48,7 +48,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
      */
     private final LcotReceiver lcotInvReceiver;
     /**
-     *  Lcot receiverOutput in the second time
+     * Lcot receiverOutput in the second time
      */
     private LcotReceiverOutput lcotInvReceiverOutput;
     /**
@@ -84,7 +84,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
      */
     private int binSize;
     /**
-     *  This parameter decide the number of PhaseHash
+     * This parameter decide the number of PhaseHash
      */
     private final int divParam4PhaseHash;
     /**
@@ -99,7 +99,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
     public Rr17DePsiServer(Rpc serverRpc, Party clientParty, Rr17DePsiConfig config) {
         super(Rr17DePsiPtoDesc.getInstance(), serverRpc, clientParty, config);
         lcotSender = LcotFactory.createSender(serverRpc, clientParty, config.getLcotConfig());
-        lcotInvReceiver= LcotFactory.createReceiver(serverRpc, clientParty, config.getLcotConfig());
+        lcotInvReceiver = LcotFactory.createReceiver(serverRpc, clientParty, config.getLcotConfig());
         coinTossSender = CoinTossFactory.createSender(serverRpc, clientParty, config.getCoinTossConfig());
         divParam4PhaseHash = config.getDivParam4PhaseHash();
         addSubPtos(lcotSender);
@@ -141,11 +141,11 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
 
         stopWatch.start();
         int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
-            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long)binSize * clientElementSize))));
+            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long) binSize * clientElementSize))));
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
 
         phaseHashBin.insertItems(serverElementArrayList.stream().map(arr ->
-            BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr))))
+                BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr))))
             .collect(Collectors.toList()));
         phaseHashBin.insertPaddingItems(BigInteger.ZERO);
         stopWatch.stop();
@@ -156,7 +156,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         stopWatch.start();
         lcotSenderOutput = lcotSender.send(binSize * binNum);
         serverByteArrays = generateElementByteArrays();
-        lcotInvReceiverOutput= lcotInvReceiver.receive(serverByteArrays);
+        lcotInvReceiverOutput = lcotInvReceiver.receive(serverByteArrays);
         stopWatch.stop();
         long lcotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -170,7 +170,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
         );
         rpc.send(DataPacket.fromByteArrayList(serverPrfHeader, serverPrfPayload));
         lcotSenderOutput = null;
-        lcotInvReceiverOutput=null;
+        lcotInvReceiverOutput = null;
         stopWatch.stop();
         long serverPrfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -196,7 +196,7 @@ public class Rr17DePsiServer <T> extends AbstractPsiServer<T> {
                 int binIndex = index / binSize;
                 byte[] halfElementPrf = lcotInvReceiverOutput.getRb(index);
                 byte[] elementByteArray = serverByteArrays[index];
-                for(int i = 0; i < binSize; i++){
+                for (int i = 0; i < binSize; i++) {
                     byte[] elementPrf = BytesUtils.xor(halfElementPrf, lcotSenderOutput.getRb(
                         binIndex * binSize + i, BytesUtils.paddingByteArray(elementByteArray, encodeInputByteLength)));
                     prfList.add(peqtHash.digestToBytes(ByteBuffer.allocate(peqtHashInputLength)

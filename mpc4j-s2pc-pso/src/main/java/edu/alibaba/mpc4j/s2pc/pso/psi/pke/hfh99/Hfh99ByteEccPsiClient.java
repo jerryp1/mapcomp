@@ -38,7 +38,7 @@ public class Hfh99ByteEccPsiClient<T> extends AbstractPsiClient<T> {
      */
     private Hash peqtHash;
     /**
-     *The key of client: β
+     * The key of client: β
      */
     private byte[] beta;
 

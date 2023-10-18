@@ -41,7 +41,7 @@ import java.util.stream.Stream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/05
  */
-public class Rr17EcPsiClient <T> extends AbstractPsiClient<T> {
+public class Rr17EcPsiClient<T> extends AbstractPsiClient<T> {
     /**
      * Lcot receiver
      */
@@ -131,7 +131,7 @@ public class Rr17EcPsiClient <T> extends AbstractPsiClient<T> {
         encodeInputByteLength = CommonUtils.getByteLength(l * Byte.SIZE - (int) Math.round(Math.floor(DoubleUtils.log2(binNum))));
 
         h1 = HashFactory.createInstance(envType, l);
-        prfEnc =  PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
+        prfEnc = PrfFactory.createInstance(envType, CommonConstants.BLOCK_BYTE_LENGTH);
         prfEnc.setKey(hashKeys[1]);
         prfTag = PrfFactory.createInstance(envType, tagPrfByteLength);
         prfTag.setKey(hashKeys[2]);
@@ -200,7 +200,7 @@ public class Rr17EcPsiClient <T> extends AbstractPsiClient<T> {
         return intersection;
     }
 
-    private Map<BigInteger, byte[][]> generateTupleHashMap(){
+    private Map<BigInteger, byte[][]> generateTupleHashMap() {
         int encodeInputLength = lcotReceiverOutput.getOutputByteLength() + encodeInputByteLength;
         Map<BigInteger, byte[][]> map = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
@@ -217,7 +217,7 @@ public class Rr17EcPsiClient <T> extends AbstractPsiClient<T> {
                     byte[][] value = {enc, elementByteArray};
                     map.put(tag, value);
                 }
-        }));
+            }));
         return map;
     }
 
@@ -235,12 +235,12 @@ public class Rr17EcPsiClient <T> extends AbstractPsiClient<T> {
                 int copyStartIndex = secretLength + commitLength + i * eachMesLength;
                 byte[] tagArray = Arrays.copyOfRange(tuple, copyStartIndex, copyStartIndex + tagPrfByteLength);
                 BigInteger tag = BigIntegerUtils.byteArrayToBigInteger(tagArray);
-                if(tuplesMap.containsKey(tag)) {
+                if (tuplesMap.containsKey(tag)) {
                     byte[][] clientTuple = tuplesMap.get(tag);
                     byte[] ry = Arrays.copyOfRange(tuple, copyStartIndex + tagPrfByteLength, copyStartIndex + eachMesLength);
                     BytesUtils.xori(ry, clientTuple[0]);
                     byte[] clientMessage = ByteBuffer.allocate(h1.getOutputByteLength() + ry.length).put(clientTuple[1]).put(ry).array();
-                    if(commit.isRevealed(clientMessage, new Commitment(serverSecret, serverCommitment))){
+                    if (commit.isRevealed(clientMessage, new Commitment(serverSecret, serverCommitment))) {
                         return elementMap.get(BigIntegerUtils.byteArrayToNonNegBigInteger(clientTuple[1]));
                     }
                 }

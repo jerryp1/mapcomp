@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/06
  */
-public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
+public class Rr16PsiServer<T> extends AbstractPsiServer<T> {
     /**
      * COT sender
      */
@@ -191,14 +191,14 @@ public class Rr16PsiServer <T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_END);
     }
 
-    List<byte[]> genChallengePayload(int maxBatchSize){
+    List<byte[]> genChallengePayload(int maxBatchSize) {
         double cncProb = Rr16PsiUtils.getCncProb(maxBatchSize);
         return IntStream.range(0, nOt).mapToObj(i ->
-            secureRandom.nextDouble() < cncProb ? IntUtils.intToByteArray(i) : null)
+                secureRandom.nextDouble() < cncProb ? IntUtils.intToByteArray(i) : null)
             .filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    void checkClientResponse(List<byte[]> responsePayload){
+    void checkClientResponse(List<byte[]> responsePayload) {
         int[] index = responsePayload.subList(0, responsePayload.size() - 1).stream().mapToInt(IntUtils::byteArrayToInt).toArray();
         byte[] zero = new byte[cotSenderOutput.getR0(0).length];
         IntStream.range(0, index.length).forEach(i -> BytesUtils.xori(zero, cotSenderOutput.getR0(index[i])));

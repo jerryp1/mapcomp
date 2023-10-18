@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  * @author Ziyuan Liang, Feng Han
  * @date 2023/10/05
  */
-public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
+public class Rr17DePsiClient<T> extends AbstractPsiClient<T> {
     /**
      * Lcot receiver instance
      */
@@ -145,7 +145,7 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
 
         stopWatch.start();
         int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
-            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long)binSize * clientElementSize))));
+            CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long) binSize * clientElementSize))));
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
 
         elementMap = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
@@ -208,10 +208,10 @@ public class Rr17DePsiClient <T> extends AbstractPsiClient<T> {
             if (ind4ValidElement[elementIndex]) {
                 byte[] elementByteArray = clientByteArrays[elementIndex];
                 byte[] halfElementPrf = lcotReceiverOutput.getRb(elementIndex);
-                for(int i = 0; i < binSize; i++){
+                for (int i = 0; i < binSize; i++) {
                     byte[] elementPrf = BytesUtils.xor(halfElementPrf, lcotInvSenderOutput.getRb(binIndex * binSize + i, elementByteArray));
                     byte[] clientPrf = peqtHash.digestToBytes(ByteBuffer.allocate(peqtHashInputLength).put(elementByteArray).put(elementPrf).array());
-                    if(serverPrfFilter.mightContain(clientPrf))
+                    if (serverPrfFilter.mightContain(clientPrf))
                         return elementMap.get(phaseHashBin.dephaseItem(binIndex, BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray)));
                 }
             }

@@ -54,7 +54,9 @@ public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements Filt
         return lcotConfig;
     }
 
-    public CoinTossConfig getCoinTossConfig() {return coinTossConfig; }
+    public CoinTossConfig getCoinTossConfig() {
+        return coinTossConfig;
+    }
 
     public FilterFactory.FilterType getFilterType() {
         return filterType;
@@ -93,6 +95,7 @@ public class Rr17DePsiConfig extends AbstractMultiPartyPtoConfig implements Filt
             this.filterType = filterType;
             return this;
         }
+
         public Builder setDivParam(int divParam4PhaseHash) {
             // 4 for LAN setting, 10 for WAN setting
             this.divParam4PhaseHash = divParam4PhaseHash;
