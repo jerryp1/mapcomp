@@ -74,8 +74,8 @@ public class Rrk20ZlCorrReceiver extends AbstractZlCorrParty {
         stopWatch.start();
         getMsbBitVector(xi);
         SquareZ2Vector drelu = dreluReceiver.drelu(xi);
-        SquareZ2Vector one = SquareZ2Vector.createOnes(num);
-        drelu.getBitVector().xori(one.getBitVector());
+        SquareZ2Vector oneZ2Vector = SquareZ2Vector.createOnes(num);
+        drelu.getBitVector().xori(oneZ2Vector.getBitVector());
         stopWatch.stop();
         long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -118,21 +118,20 @@ public class Rrk20ZlCorrReceiver extends AbstractZlCorrParty {
         msb = SquareZ2Vector.create(msbBitVector, false);
     }
 
-    private ZlVector handleCorrPayload(List<byte[]> siPayload, LnotReceiverOutput lnotReceiverOutput) {
-        byte[][] siArray = siPayload.toArray(new byte[0][]);
-        BigInteger[] rb = new BigInteger[num];
-        BigInteger[] t = new BigInteger[num];
-        for (int index = 0; index < num; index++) {
-            byte[] rv = lnotReceiverOutput.getRb(index);
-            t[index] = zl.createRandom(rv);
-        }
-        ZlVector vector = ZlVector.create(zl, t);
-        for (int index = 0; index < num; index++) {
-            int v = lnotReceiverOutput.getChoice(index);
-            rb[index] = BigIntegerUtils.byteArrayToBigInteger(siArray[v * num + index]);
-        }
-        ZlVector sVector = ZlVector.create(zl, rb);
-        sVector.subi(vector);
-        return sVector;
+    private ZlVector handleCorrPayload(List<byte[]> sList, LnotReceiverOutput lnotReceiverOutput) {
+        byte[][] sArray = sList.toArray(new byte[0][]);
+        IntStream intStream = IntStream.range(0, num);
+        intStream = parallel ? intStream.parallel() : intStream;
+        BigInteger[] t = intStream
+            .mapToObj(index -> {
+                byte[] rv = lnotReceiverOutput.getRb(index);
+                return zl.createRandom(rv);
+            }).toArray(BigInteger[]::new);
+        BigInteger[] rb = IntStream.range(0, num)
+            .mapToObj(index -> {
+                int v = lnotReceiverOutput.getChoice(index);
+                return BigIntegerUtils.byteArrayToBigInteger(sArray[v * num + index]);
+            }).toArray(BigInteger[]::new);
+        return ZlVector.create(zl, rb).sub(ZlVector.create(zl, t));
     }
 }

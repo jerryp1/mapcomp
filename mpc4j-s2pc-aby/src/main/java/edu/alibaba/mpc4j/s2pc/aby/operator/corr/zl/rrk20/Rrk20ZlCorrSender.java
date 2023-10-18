@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.s2pc.aby.operator.corr.zl.rrk20.Rrk20ZlCorrPtoDesc.*;
@@ -116,7 +117,7 @@ public class Rrk20ZlCorrSender extends AbstractZlCorrParty {
     }
 
     private List<byte[]> generateCorrPayload(SquareZ2Vector drelu, LnotSenderOutput lnotSenderOutput, SquareZ2Vector msb) {
-        ZlVector[] si = new ZlVector[4];
+        ZlVector[] s = new ZlVector[4];
         for (int i = 0; i < 4; i++) {
             BitVector j0, j1, t;
             if (i == 0) {
@@ -147,18 +148,21 @@ public class Rrk20ZlCorrSender extends AbstractZlCorrParty {
                     return zl.neg(c);
                 }
             }).toArray(BigInteger[]::new);
-            si[i] = ZlVector.create(zl, sIntArray);
+            s[i] = ZlVector.create(zl, sIntArray);
         }
         List<byte[]> corrPayload = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            BigInteger[] ints = new BigInteger[num];
-            for (int index = 0; index < num; index++) {
-                ints[index] = zl.createRandom(lnotSenderOutput.getRb(index, i));
-            }
-            ZlVector rb = si[i].add(ZlVector.create(zl, ints));
-            for (int index = 0; index < num; index++) {
-                corrPayload.add(BigIntegerUtils.bigIntegerToByteArray(rb.getElement(index)));
-            }
+            int finalI = i;
+            IntStream intStream = IntStream.range(0, num);
+            intStream = parallel ? intStream.parallel() : intStream;
+            BigInteger[] randomInts = intStream
+                .mapToObj(index -> zl.createRandom(lnotSenderOutput.getRb(index, finalI)))
+                .toArray(BigInteger[]::new);
+            ZlVector rb = s[i].add(ZlVector.create(zl, randomInts));
+            corrPayload.addAll(IntStream.range(0, num)
+                .mapToObj(index -> BigIntegerUtils.bigIntegerToByteArray(rb.getElement(index)))
+                .collect(Collectors.toList())
+            );
         }
         return corrPayload;
     }

@@ -50,6 +50,10 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
      * cot sender
      */
     private final CotSender cotSender;
+    /**
+     * zl range bound
+     */
+    private BigInteger n;
 
     public Gp23ZlCorrSender(Rpc senderRpc, Party receiverParty, Gp23ZlCorrConfig config) {
         super(getInstance(), senderRpc, receiverParty, config);
@@ -65,7 +69,7 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        z2cSender.init(maxL * maxNum);
+        z2cSender.init(maxNum);
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         cotSender.init(delta, 2 * maxL * maxNum);
@@ -84,7 +88,7 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
 
         stopWatch.start();
         // set y_b = x_b + N/2 mod N
-        BigInteger n = zl.getRangeBound();
+        n = zl.getRangeBound();
         BigInteger[] nPrime = IntStream.range(0, num)
             .mapToObj(i -> n.shiftRight(1))
             .toArray(BigInteger[]::new);
@@ -92,7 +96,6 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
         BitVector[] i0 = getIi(yi);
         MpcZ2Vector ai = generateK0Share(i0);
         MpcZ2Vector bi = generateK1Share(i0);
-        //bi.getBitVector().xori(BitVectorFactory.createOnes(num));
         stopWatch.stop();
         long genKiShareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -101,16 +104,16 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
         stopWatch.start();
         int[] rs0 = booleanShareToArithShare(ai);
         int[] rs1 = booleanShareToArithShare(bi);
-        BigInteger[] aiShare = new BigInteger[num];
-        BigInteger[] biShare = new BigInteger[num];
-        BigInteger[] corri = new BigInteger[num];
-        for (int index = 0; index < num; index++) {
-            int value = ai.getBitVector().get(index) ? 1 : 0;
-            aiShare[index] = BigInteger.valueOf(value + 2L * rs0[index]).mod(n);
-            value = bi.getBitVector().get(index) ? 1 : 0;
-            biShare[index] = BigInteger.valueOf(value + 2L * rs1[index]).mod(n);
-            corri[index] = biShare[index].subtract(aiShare[index]).mod(n);
-        }
+        IntStream intStream = IntStream.range(0, num);
+        intStream = parallel ? intStream.parallel() : intStream;
+        BigInteger[] corri = intStream
+            .mapToObj(index -> {
+                int bitValue = ai.getBitVector().get(index) ? 1 : 0;
+                BigInteger t1 = BigInteger.valueOf(bitValue + 2L * rs0[index]).mod(n);
+                bitValue = bi.getBitVector().get(index) ? 1 : 0;
+                BigInteger t2 = BigInteger.valueOf(bitValue + 2L * rs1[index]).mod(n);
+                return zl.sub(t2, t1);
+            }).toArray(BigInteger[]::new);
         stopWatch.stop();
         long shareConvertTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -121,15 +124,15 @@ public class Gp23ZlCorrSender extends AbstractZlCorrParty {
     }
 
     private BitVector[] getIi(ZlVector xi) {
-        BigInteger b1 = zl.getRangeBound().divide(BigInteger.valueOf(3));
-        BigInteger b2 = zl.getRangeBound().shiftLeft(1).divide(BigInteger.valueOf(3)).add(BigInteger.ONE);
+        BigInteger lowerBound = n.divide(BigInteger.valueOf(3));
+        BigInteger upperBound = n.shiftLeft(1).divide(BigInteger.valueOf(3)).add(BigInteger.ONE);
         IntStream intStream = IntStream.range(0, num);
         intStream = parallel ? intStream.parallel() : intStream;
         int[][] i0 = intStream.mapToObj(index -> {
             BigInteger x = xi.getElement(index);
-            if (x.compareTo(b1) <= 0) {
+            if (x.compareTo(lowerBound) <= 0) {
                 return new int[]{0, 0};
-            } else if (x.compareTo(b2) > 0) {
+            } else if (x.compareTo(upperBound) > 0) {
                 return new int[]{1, 0};
             } else {
                 return new int[]{0, 1};

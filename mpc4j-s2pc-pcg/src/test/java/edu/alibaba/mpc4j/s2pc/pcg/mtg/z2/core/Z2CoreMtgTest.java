@@ -76,7 +76,7 @@ public class Z2CoreMtgTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM, false);
+        testPto(64000, false);
     }
 
     @Test

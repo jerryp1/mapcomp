@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -23,6 +24,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.rrk20.Rrk20ZlTruncPtoDesc.PtoStep;
@@ -83,13 +85,12 @@ public class Rrk20ZlTruncSender extends AbstractZlTruncParty {
         // DReLU
         SquareZ2Vector drelu = dreluSender.drelu(xi);
         stopWatch.stop();
-        long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long dreluTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, prepareTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, dreluTime);
 
         stopWatch.start();
         LnotSenderOutput lnotSenderOutput = lnotSender.send(num);
-        // compute lnot input
         List<byte[]> sPayload = generateCorrPayload(drelu, lnotSenderOutput, msb);
         DataPacketHeader sHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SENDS_S.ordinal(), extraInfo,
@@ -106,15 +107,14 @@ public class Rrk20ZlTruncSender extends AbstractZlTruncParty {
             .mapToObj(i -> BigInteger.ONE.shiftLeft(l - s))
             .toArray(BigInteger[]::new);
         ZlVector shift = ZlVector.create(zl, r1);
-        BigInteger[] r2 = rDiv(xi.getZlVector().getElements(), zl.getRangeBound(), s);
-        ZlVector r = ZlVector.create(zl, r2);
+        ZlVector r = rDiv(xi.getZlVector().getElements(), zl.getRangeBound(), s);
         r.setParallel(parallel);
         r.addi(corr.mul(shift));
         SquareZlVector squareZlVector = SquareZlVector.create(r, false);
         stopWatch.stop();
-        long outputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long handleOutputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, outputTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, handleOutputTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return squareZlVector;
@@ -132,7 +132,7 @@ public class Rrk20ZlTruncSender extends AbstractZlTruncParty {
     private List<byte[]> generateCorrPayload(SquareZ2Vector drelu, LnotSenderOutput lnotSenderOutput, SquareZ2Vector msb) {
         corr = ZlVector.createRandom(zl, num, secureRandom);
         corr.setParallel(parallel);
-        ZlVector[] si = new ZlVector[4];
+        ZlVector[] s = new ZlVector[4];
         for (int i = 0; i < 4; i++) {
             BitVector j0, j1, t;
             if (i == 0) {
@@ -163,33 +163,36 @@ public class Rrk20ZlTruncSender extends AbstractZlTruncParty {
                     return zl.neg(c);
                 }
             }).toArray(BigInteger[]::new);
-            si[i] = ZlVector.create(zl, sIntArray);
+            s[i] = ZlVector.create(zl, sIntArray);
         }
         List<byte[]> corrPayload = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            BigInteger[] ints = new BigInteger[num];
-            for (int index = 0; index < num; index++) {
-                ints[index] = zl.createRandom(lnotSenderOutput.getRb(index, i));
-            }
-            ZlVector rb = si[i].add(ZlVector.create(zl, ints));
-            for (int index = 0; index < num; index++) {
-                corrPayload.add(BigIntegerUtils.bigIntegerToByteArray(rb.getElement(index)));
-            }
+            int finalI = i;
+            IntStream intStream = IntStream.range(0, num);
+            intStream = parallel ? intStream.parallel() : intStream;
+            BigInteger[] randomInts = intStream
+                .mapToObj(index -> zl.createRandom(lnotSenderOutput.getRb(index, finalI)))
+                .toArray(BigInteger[]::new);
+            ZlVector rb = s[i].add(ZlVector.create(zl, randomInts));
+            corrPayload.addAll(IntStream.range(0, num)
+                .mapToObj(index -> BigIntegerUtils.bigIntegerToByteArray(rb.getElement(index)))
+                .collect(Collectors.toList())
+            );
         }
         return corrPayload;
     }
 
-    private BigInteger[] rDiv(BigInteger[] input, BigInteger n, int d) {
-        int num = input.length;
-        BigInteger nHalf = n.shiftRight(1);
+    private ZlVector rDiv(BigInteger[] input, BigInteger n, int s) {
+        BigInteger nPrime = n.shiftRight(1);
         IntStream intStream = IntStream.range(0, num);
         intStream = parallel ? intStream.parallel() : intStream;
-        return intStream.mapToObj(index -> {
-            if (input[index].compareTo(nHalf) < 0) {
-                return input[index].shiftRight(d);
+        BigInteger[] shiftElements =  intStream.mapToObj(index -> {
+            if (input[index].compareTo(nPrime) < 0) {
+                return input[index].shiftRight(s);
             } else {
-                return input[index].subtract(n).shiftRight(d).mod(n);
+                return input[index].subtract(n).shiftRight(s).mod(n);
             }
         }).toArray(BigInteger[]::new);
+        return ZlVector.create(zl, shiftElements);
     }
 }

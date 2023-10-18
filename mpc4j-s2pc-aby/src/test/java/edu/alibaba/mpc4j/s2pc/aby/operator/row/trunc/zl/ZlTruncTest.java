@@ -38,21 +38,31 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Double.SIZE);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RRK+20 + silent OT
+        configurations.add(new Object[]{
+            ZlTruncFactory.ZlTruncType.RRK20.name() + " silent OT",
+            new Rrk20ZlTruncConfig.Builder(true).build()
+        });
+        // GP23 + silent OT
+        configurations.add(new Object[]{
+            ZlTruncFactory.ZlTruncType.GP23.name() + " silent OT",
+            new Gp23ZlTruncConfig.Builder(true).build()
+        });
         // RRK+20
         configurations.add(new Object[]{
             ZlTruncFactory.ZlTruncType.RRK20.name(),
-            new Rrk20ZlTruncConfig.Builder(true).build()
+            new Rrk20ZlTruncConfig.Builder(false).build()
         });
         // GP23
         configurations.add(new Object[]{
             ZlTruncFactory.ZlTruncType.GP23.name(),
-            new Gp23ZlTruncConfig.Builder(true).build()
+            new Gp23ZlTruncConfig.Builder(false).build()
         });
 
         return configurations;
