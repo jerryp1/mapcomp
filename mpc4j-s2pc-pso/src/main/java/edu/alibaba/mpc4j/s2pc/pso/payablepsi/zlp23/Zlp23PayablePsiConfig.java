@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.SqOprfConfig;
 import edu.alibaba.mpc4j.s2pc.opf.sqoprf.ra17.Ra17ByteEccSqOprfConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.impl.direct.DirectCotConfig;
 import edu.alibaba.mpc4j.s2pc.pso.payablepsi.PayablePsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.payablepsi.PayablePsiFactory;
 
@@ -70,7 +71,8 @@ public class Zlp23PayablePsiConfig extends AbstractMultiPartyPtoConfig implement
         private CuckooHashBinFactory.CuckooHashBinType cuckooHashBinType;
 
         public Builder() {
-            osnConfig = new Gmr21OsnConfig.Builder(false).build();
+            osnConfig = new Gmr21OsnConfig.Builder(false)
+                .setCotConfig(new DirectCotConfig.Builder(SecurityModel.MALICIOUS).build()).build();
             sqOprfConfig = new Ra17ByteEccSqOprfConfig.Builder().build();
             cuckooHashBinType = CuckooHashBinFactory.CuckooHashBinType.NO_STASH_NAIVE;
         }
