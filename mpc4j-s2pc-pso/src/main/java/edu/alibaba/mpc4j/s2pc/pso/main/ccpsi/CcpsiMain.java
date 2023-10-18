@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * @date 2023/10/10
  */
 public class CcpsiMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CcpsiMain4Batch.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CcpsiMain.class);
     /**
      * protocol type name
      */
