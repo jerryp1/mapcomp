@@ -6,6 +6,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
+ * Permutable Sorter Party Interface.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */
@@ -26,5 +28,5 @@ public interface PermutableSorterParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZlVector[] sort(SquareZ2Vector[][] xiArrays) throws MpcAbortException;
+    SquareZlVector sort(SquareZ2Vector[] xiArrays) throws MpcAbortException;
 }

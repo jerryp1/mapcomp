@@ -1,29 +1,19 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.psorter.ahi22;
 
-import edu.alibaba.mpc4j.common.circuit.zl.MpcZlParty;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.bcp13.Bcp13ShHammingConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.bcp13.Bcp13ShHammingConfig.Builder;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.rrk20.Rrk20ZlMaxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PermutableSorterTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
+ * Ahi22 Permutable Sorter Config.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */

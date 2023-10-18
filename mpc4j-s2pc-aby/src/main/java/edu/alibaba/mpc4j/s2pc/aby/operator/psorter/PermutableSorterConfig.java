@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PermutableSorterTypes;
 
 /**
+ * Permutable Sorter Config.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */

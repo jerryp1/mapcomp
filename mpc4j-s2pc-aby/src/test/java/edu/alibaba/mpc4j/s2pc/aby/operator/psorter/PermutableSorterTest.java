@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -30,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
- * Bit2a test.
+ * Permutable sorter test.
  *
  * @author Li Peng
  * @date 2023/10/12
@@ -41,19 +39,11 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1;
+    private static final int DEFAULT_NUM = 1000;
     /**
-     * default num of sorted elements
+     * large num
      */
-    private static final int DEFAULT_NUM_SORTED = 1 << 19;
-    /**
-     * large num of sorted elements
-     */
-    private static final int LARGE_NUM_SORTED = 1 << 18;
-    /**
-     * small Zl
-     */
-    private static final Zl SMALL_ZL = ZlFactory.createInstance(EnvType.STANDARD, 1);
+    private static final int LARGE_NUM = 1 << 18;
     /**
      * default Zl
      */
@@ -62,12 +52,6 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-
-//        // AHI+22 small zl
-//        Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(SMALL_ZL).build();
-//        configurations.add(new Object[]{
-//            PermutableSorterTypes.AHI22.name(), new Ahi22PermutableSorterConfig.Builder(bit2aConfig).build()
-//        });
 
         // AHI+22 default zl
         Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(DEFAULT_ZL).build();
@@ -120,34 +104,31 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void testDefaultNum() {
-        testPto(DEFAULT_NUM_SORTED, false);
+        testPto(DEFAULT_NUM, false);
     }
 
     @Test
     public void testParallelDefaultNum() {
-        testPto(DEFAULT_NUM_SORTED, true);
+        testPto(DEFAULT_NUM, true);
     }
 
     @Test
     public void testLargeNum() {
-        testPto(LARGE_NUM_SORTED, false);
+        testPto(LARGE_NUM, false);
     }
 
     @Test
     public void testParallelLargeNum() {
-        testPto(LARGE_NUM_SORTED, true);
+        testPto(LARGE_NUM, true);
     }
 
-    private void testPto(int numSorted, boolean parallel) {
+    private void testPto(int num, boolean parallel) {
         // specified for the 1 bit case.
-
         // create inputs
-        BitVector[] x0 = IntStream.range(0, numSorted).mapToObj(i ->
-            BitVectorFactory.createRandom(DEFAULT_NUM, SECURE_RANDOM)).toArray(BitVector[]::new);
-        BitVector[] x1 = IntStream.range(0, numSorted).mapToObj(i ->
-            BitVectorFactory.createRandom(DEFAULT_NUM, SECURE_RANDOM)).toArray(BitVector[]::new);
-        SquareZ2Vector[][] x0Share = Arrays.stream(x0).map(x -> new SquareZ2Vector[]{SquareZ2Vector.create(x, false)}).toArray(SquareZ2Vector[][]::new);
-        SquareZ2Vector[][] x1Share = Arrays.stream(x1).map(x -> new SquareZ2Vector[]{SquareZ2Vector.create(x, false)}).toArray(SquareZ2Vector[][]::new);
+        BitVector x0 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
+        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
+        SquareZ2Vector[] x0Share = new SquareZ2Vector[]{SquareZ2Vector.create(x0, false)};
+        SquareZ2Vector[] x1Share = new SquareZ2Vector[]{SquareZ2Vector.create(x1, false)};
 
         // init the protocol
         PermutableSorterParty sender = PermutableSorterFactory.createSender(firstRpc, secondRpc.ownParty(), config);
@@ -169,8 +150,8 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            SquareZlVector[] shareZ0 = senderThread.getZ0();
-            SquareZlVector[] shareZ1 = receiverThread.getZ1();
+            SquareZlVector shareZ0 = senderThread.getZ0();
+            SquareZlVector shareZ1 = receiverThread.getZ1();
             assertOutput(x0, x1, shareZ0, shareZ1);
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
@@ -182,34 +163,28 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
         new Thread(receiver::destroy).start();
     }
 
-    private void assertOutput(BitVector[] x0, BitVector[] x1, SquareZlVector[] z0, SquareZlVector[] z1) {
-        int num = x0[0].bitNum();
-        int numSort = x0.length;
-        Assert.assertEquals(num, z0[0].getNum());
-        Assert.assertEquals(num, z1[0].getNum());
+    private void assertOutput(BitVector x0, BitVector x1, SquareZlVector z0, SquareZlVector z1) {
+        int num = x0.bitNum();
+        Assert.assertEquals(num, z0.getNum());
+        Assert.assertEquals(num, z1.getNum());
 
-        BitVector[] x = IntStream.range(0, numSort).mapToObj(i -> x0[i].xor(x1[i])).toArray(BitVector[]::new);
-        BigInteger[][] resultOrder = IntStream.range(0, numSort).mapToObj(i -> {
-            BigInteger[] elements0 = z0[i].getZlVector().getElements();
-            BigInteger[] elements1 = z1[i].getZlVector().getElements();
-            return IntStream.range(0, num).mapToObj(j -> config.getZl().add(elements0[j],(elements1[j]))).toArray(BigInteger[]::new);
-        }).toArray(BigInteger[][]::new);
+        BitVector x = x0.xor(x1);
+        BigInteger[] elements0 = z0.getZlVector().getElements();
+        BigInteger[] elements1 = z1.getZlVector().getElements();
+        BigInteger[] resultOrder = IntStream.range(0, num).mapToObj(i -> config.getZl().add(elements0[i], (elements1[i]))).toArray(BigInteger[]::new);
 
-        for (int i = 0; i < num; i++) {
-            // obtain ture order
-            int finalI = i;
-            BigInteger[] tureValue = IntStream.range(0, numSort).mapToObj(j -> x[j].get(finalI) ? BigInteger.ONE : BigInteger.ZERO).toArray(BigInteger[]::new);
-            Tuple[] tuples = IntStream.range(0, numSort).mapToObj(j -> new Tuple(tureValue[j], BigInteger.valueOf(j))).toArray(Tuple[]::new);
-            Arrays.sort(tuples);
-            BigInteger[] tureOrder = IntStream.range(0, numSort).mapToObj(j -> tuples[j].getValue()).toArray(BigInteger[]::new);
-            BigInteger[] reverseTureOrder = new BigInteger[numSort];
-            for (int j = 0; j < numSort; j ++) {
-                reverseTureOrder[tureOrder[j].intValue()] = BigInteger.valueOf(j).add(BigInteger.ONE);
-            }
-            // verify
-            for (int j = 0; j < numSort; j++) {
-                Assert.assertEquals(resultOrder[j][i], reverseTureOrder[j]);
-            }
+        // obtain ture order
+        BigInteger[] tureValue = IntStream.range(0, num).mapToObj(j -> x.get(j) ? BigInteger.ONE : BigInteger.ZERO).toArray(BigInteger[]::new);
+        Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(tureValue[j], BigInteger.valueOf(j))).toArray(Tuple[]::new);
+        Arrays.sort(tuples);
+        BigInteger[] tureOrder = IntStream.range(0, num).mapToObj(j -> tuples[j].getValue()).toArray(BigInteger[]::new);
+        BigInteger[] reverseTureOrder = new BigInteger[num];
+        for (int j = 0; j < num; j++) {
+            reverseTureOrder[tureOrder[j].intValue()] = BigInteger.valueOf(j).add(BigInteger.ONE);
+        }
+        // verify
+        for (int j = 0; j < num; j++) {
+            Assert.assertEquals(resultOrder[j], reverseTureOrder[j]);
         }
     }
 

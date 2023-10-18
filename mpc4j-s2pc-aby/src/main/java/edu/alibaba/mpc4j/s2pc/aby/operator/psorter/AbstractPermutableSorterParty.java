@@ -4,22 +4,17 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxParty;
-
-import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
+ * Abstract Permutable Sorter Party.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */
-public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto implements PermutableSorterParty  {
+public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto implements PermutableSorterParty {
     /**
      * max l
      */
@@ -32,10 +27,6 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
      * num of elements in single vector.
      */
     protected int num;
-    /**
-     * num of elements to be sorted.
-     */
-    protected int numSort;
     /**
      * Zl instance
      */
@@ -57,7 +48,6 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
         super(ptoDesc, rpc, otherParty, config);
     }
 
-
     protected void setInitInput(int maxL, int maxNum) {
         MathPreconditions.checkPositive("maxL", maxL);
         this.maxL = maxL;
@@ -66,11 +56,10 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
         initState();
     }
 
-    protected void setPtoInput(SquareZ2Vector[][] xiArray) {
-        num = xiArray[0][0].getNum();
-        numSort = xiArray.length;
+    protected void setPtoInput(SquareZ2Vector[] xiArray) {
+        num = xiArray[0].getNum();
+        l = xiArray.length;
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
-
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }
 }

@@ -17,11 +17,11 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 /**
+ * Ahi22 Permutable Sorter Sorter.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */
@@ -45,7 +45,6 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
         zlcSender = ZlcFactory.createSender(rpc, otherParty, config.getZlcConfig());
         zlMuxSender = ZlMuxFactory.createSender(rpc, otherParty, config.getZlMuxConfig());
         zl = config.getBit2aConfig().getZl();
-        l = zl.getL();
         byteL = zl.getByteL();
     }
 
@@ -67,97 +66,56 @@ public class Ahi22PermutableSorterSender extends AbstractPermutableSorterParty {
     }
 
     @Override
-    public SquareZlVector[] sort(SquareZ2Vector[][] xiArrays) throws MpcAbortException {
-//        stopWatch.start();
-        checkInputs(xiArrays);
-        setPtoInput(xiArrays);
-//        stopWatch.stop();
-//        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        System.out.println("### init: " + initTime + " ms.");
+    public SquareZlVector sort(SquareZ2Vector[] xiArray) throws MpcAbortException {
+        checkInputs(xiArray);
+        setPtoInput(xiArray);
+        logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        SquareZ2Vector[] xiArray = Arrays.stream(xiArrays).map(xi -> xi[0]).toArray(SquareZ2Vector[]::new);
-        // 先尝试分开写
-//        SquareZlVector[] f1 = new SquareZlVector[numSort];
-//        for (int i = 0; i < numSort; i++) {
-//            f1[i] =  bit2aSender.bit2a(xiArray[i]);
-//        }
-        SquareZlVector[] f1 = bit2aSender.bit2a(xiArray);
+        SquareZ2Vector xi = xiArray[0];
+        SquareZlVector result = execute(xi);
         stopWatch.stop();
-        long b2aTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
+        long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
 
+        logStepInfo(PtoState.PTO_STEP, 1, 1, ptoTime);
 
-        stopWatch.start();
-        SquareZlVector[] ones = IntStream.range(0, numSort).mapToObj(i -> SquareZlVector.createOnes(zl, num)).toArray(SquareZlVector[]::new);
-
-        SquareZlVector[] f0 = zlcSender.sub(ones, f1);
-        SquareZlVector[] s0 = new SquareZlVector[numSort];
-        SquareZlVector[] s1 = new SquareZlVector[numSort];
-        // s0
-        for (int i = 0; i < numSort; i++) {
-            if (i == 0) {
-                BigInteger[] zeros = IntStream.range(0, num).mapToObj(j -> BigInteger.ZERO).toArray(BigInteger[]::new);
-                s0[i] = zlcSender.add(SquareZlVector.create(zl, zeros, false),f0[i]);
-                continue;
-            }
-            s0[i] = zlcSender.add(s0[i - 1], f0[i]);
-        }
-        // s1
-        for (int i = 0; i < numSort; i++) {
-            if (i == 0) {
-                s1[i] = zlcSender.add(s0[numSort- 1], f1[i]);
-                continue;
-            }
-            s1[i] = zlcSender.add(s1[i - 1], f1[i]);
-        }
-        stopWatch.stop();
-        long s0s1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-
-
-        stopWatch.start();
-        // reveal
-//        ZlVector[] trueS0 = zlcSender.revealOwn(s0);
-//        ZlVector[] trueS1 = zlcSender.revealOwn(s1);
-//        SquareZlVector[] result = new SquareZlVector[numSort];
-//        for (int i = 0; i < numSort; i ++) {
-//            result[i] = zlcSender.add(s0[i], zlMuxSender.mux(xiArray[i], zlcSender.sub(s1[i], s0[i])));
-//        }
-        SquareZlVector[] result = zlcSender.add(s0, zlMuxSender.mux(xiArray, zlcSender.sub(s1, s0)));
-        stopWatch.stop();
-        long resultTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        System.out.println("### b2a: " + b2aTime + " ms.");
-        System.out.println("### s0s1: " + s0s1Time + " ms.");
-        System.out.println("### result: " + resultTime + " ms.");
+        logPhaseInfo(PtoState.PTO_END);
 
         return result;
     }
 
-    void checkInputs(MpcZ2Vector[][] xiArrays) {
-        Arrays.stream(xiArrays).forEach(xi ->
-            MathPreconditions.checkEqual("Number of input bits", "1", xi.length, 1));
+    void checkInputs(MpcZ2Vector[] xiArrays) {
+        MathPreconditions.checkEqual("Number of input bits", "1", xiArrays.length, 1);
     }
 
-//    private SquareZlVector[] mul(SquareZlVector[] x) throws MpcAbortException {
-////        MathPreconditions.checkEqual("x.length", "y.length", x.length, y.length);
-//        Prg prg = PrgFactory.createInstance(envType, byteL);
-////        BitVector[] inputBits = Arrays.stream(y).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
-//        for (int i = 0; i < numSort; i++) {
-//            CotSenderOutput cotSenderOutput = cotSender.send(num);
-//            // generate random rs
-//            BigInteger[] rs = ZlVector.createRandom(zl, num, secureRandom).getElements();
-//            int finalI = i;
-//            byte[][] r0s = IntStream.range(0, num)
-//                .mapToObj(j -> rs[finalI])
-//                .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
-//                .toArray(byte[][]::new);
-//            byte[][] r1s = IntStream.range(0, num)
-//                .mapToObj(j -> zl.add(rs[finalI], x[]))
-//                .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
-//                .toArray(byte[][]::new);
-//        }
-//    }
+    private SquareZlVector execute(SquareZ2Vector xi) throws MpcAbortException {
+        SquareZlVector f1 = bit2aSender.bit2a(xi);
+
+        SquareZlVector ones = SquareZlVector.createOnes(zl, num);
+        BigInteger[] f0BigInt = zlcSender.sub(ones, f1).getZlVector().getElements();
+        BigInteger[] f1BigInt = f1.getZlVector().getElements();
+        BigInteger[] s0BigInt = new BigInteger[num];
+        BigInteger[] s1BigInt = new BigInteger[num];
+        // s0
+        for (int i = 0; i < num; i++) {
+            if (i == 0) {
+                s0BigInt[i] = f0BigInt[i];
+                continue;
+            }
+            s0BigInt[i] = zl.add(s0BigInt[i - 1], f0BigInt[i]);
+        }
+        // s1
+        for (int i = 0; i < num; i++) {
+            if (i == 0) {
+                s1BigInt[i] = zl.add(s0BigInt[num - 1], f1BigInt[i]);
+                continue;
+            }
+            s1BigInt[i] = zl.add(s1BigInt[i - 1], f1BigInt[i]);
+        }
+
+        SquareZlVector s0 = SquareZlVector.create(zl, s0BigInt, false);
+        SquareZlVector s1 = SquareZlVector.create(zl, s1BigInt, false);
+
+        return zlcSender.add(s0, zlMuxSender.mux(xi, zlcSender.sub(s1, s0)));
+    }
 }
