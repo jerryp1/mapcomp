@@ -84,6 +84,11 @@ public class MillionaireTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
+    public void te() {
+        testPto(63, 1000, false);
+    }
+
+    @Test
     public void test7Num() {
         testPto(DEFAULT_L, 7, false);
     }

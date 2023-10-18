@@ -58,6 +58,7 @@ public abstract class AbstractZlTruncParty extends AbstractTwoPartyPto implement
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         zl = xi.getZl();
         l = zl.getL();
+        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
         byteL = zl.getByteL();
     }
 }
