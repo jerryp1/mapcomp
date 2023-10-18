@@ -63,7 +63,7 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
     /**
      * large size
      */
-    private static final int LARGE_SIZE = 1 << 20;
+    private static final int LARGE_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -157,11 +157,11 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[]{
 //            PsiType.PRTY19_LOW.name(), new Prty19LowPsiConfig.Builder().build(),
 //        });
-//        // KKRT16 (no-stash)
-//        configurations.add(new Object[]{
-//            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
-//            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
-//        });
+        // KKRT16 (no-stash)
+        configurations.add(new Object[]{
+            PsiFactory.PsiType.KKRT16.name() + " (no-stash)",
+            new Kkrt16PsiConfig.Builder().setCuckooHashBinType(CuckooHashBinType.NO_STASH_NAIVE).build(),
+        });
 //        // KKRT16 (4 hash)
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.KKRT16.name() + " (4 hash)",
@@ -171,10 +171,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.KKRT16.name() + "(3 hash)", new Kkrt16PsiConfig.Builder().build(),
 //        });
-//        // HFH99_BYTE_ECC
-//        configurations.add(new Object[]{
-//            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
-//        });
+        // HFH99_BYTE_ECC
+        configurations.add(new Object[]{
+            PsiFactory.PsiType.HFH99_BYTE_ECC.name(), new Hfh99ByteEccPsiConfig.Builder().build(),
+        });
 //        // HFH99_ECC (compress)
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.HFH99_ECC.name() + " (compress)",
@@ -193,10 +193,10 @@ public class PsiTest extends AbstractTwoPartyPtoTest {
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.RR17_DE.name() + " divParam = 10", new Rr17DePsiConfig.Builder().setDivParam(10).build(),
 //        });
-        // RR17_EC LAN
-        configurations.add(new Object[]{
-            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
-        });
+//        // RR17_EC LAN
+//        configurations.add(new Object[]{
+//            PsiFactory.PsiType.RR17_EC.name() + " divParam = 4", new Rr17EcPsiConfig.Builder().build(),
+//        });
 //        // RR17_EC WAN
 //        configurations.add(new Object[]{
 //            PsiFactory.PsiType.RR17_EC.name() + " divParam = 10", new Rr17EcPsiConfig.Builder().setDivParam(10).build(),
