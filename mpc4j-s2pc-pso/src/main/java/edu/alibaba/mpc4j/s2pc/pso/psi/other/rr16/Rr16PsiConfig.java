@@ -49,6 +49,7 @@ public class Rr16PsiConfig extends AbstractMultiPartyPtoConfig implements Filter
         return coinTossConfig;
     }
 
+    @Override
     public FilterFactory.FilterType getFilterType() {
         return filterType;
     }

@@ -147,8 +147,7 @@ public class Rr17DePsiClient<T> extends AbstractPsiClient<T> {
         int peqtByteLength = CommonConstants.STATS_BYTE_LENGTH +
             CommonUtils.getByteLength(2 * (LongUtils.ceilLog2(Math.max(2, (long) binSize * clientElementSize))));
         peqtHash = HashFactory.createInstance(envType, peqtByteLength);
-
-        elementMap = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
+        elementMap = parallel ? new ConcurrentHashMap<>(clientElementSize) : new HashMap<>(clientElementSize);
         // insert the elements of client into HashBin
         Stream<T> elementStream = parallel ? clientElementArrayList.stream().parallel() : clientElementArrayList.stream();
         phaseHashBin.insertItems(elementStream.map(arr -> {
@@ -211,8 +210,9 @@ public class Rr17DePsiClient<T> extends AbstractPsiClient<T> {
                 for (int i = 0; i < binSize; i++) {
                     byte[] elementPrf = BytesUtils.xor(halfElementPrf, lcotInvSenderOutput.getRb(binIndex * binSize + i, elementByteArray));
                     byte[] clientPrf = peqtHash.digestToBytes(ByteBuffer.allocate(peqtHashInputLength).put(elementByteArray).put(elementPrf).array());
-                    if (serverPrfFilter.mightContain(clientPrf))
+                    if (serverPrfFilter.mightContain(clientPrf)) {
                         return elementMap.get(phaseHashBin.dephaseItem(binIndex, BigIntegerUtils.byteArrayToNonNegBigInteger(elementByteArray)));
+                    }
                 }
             }
             return null;

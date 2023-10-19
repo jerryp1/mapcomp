@@ -75,9 +75,6 @@ public abstract class AbstractMpOprfPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        /**
-         * PEQT byte length
-         */
         int peqtByteLength = securityModel.equals(SecurityModel.MALICIOUS) | securityModel.equals(SecurityModel.COVERT) ?
             PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
             PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);
