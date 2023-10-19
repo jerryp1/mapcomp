@@ -29,7 +29,7 @@ public class CcpsiConfigUtils {
         // empty
     }
 
-    public static CcpsiConfig createCPsiConfig(Properties properties) {
+    public static CcpsiConfig createCpsiConfig(Properties properties) {
         // read PSI type
         String cPsiTypeString = PropertiesUtils.readString(properties, "circuit_psi_pto_name");
         CcpsiType psiType = CcpsiType.valueOf(cPsiTypeString);
