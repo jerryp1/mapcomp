@@ -80,13 +80,12 @@ public class PolyArithmeticSmallMod {
         assert Arrays.stream(operand2).parallel().allMatch(n -> n < modulus.getValue());
 
         long modulusValue = modulus.getValue();
+        long sum;
+        for (int i = 0; i < coeffCount; i++) {
+            sum = operand1[i] + operand2[i];
+            result[i] = sum >= modulusValue ? sum - modulusValue : sum;
+        }
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    long sum = operand1[i] + operand2[i];
-                    result[i] = sum >= modulusValue ? sum - modulusValue : sum;
-                }
-        );
     }
 
     /**
@@ -115,20 +114,12 @@ public class PolyArithmeticSmallMod {
 
         long modulusValue = modulus.getValue();
         // 实测 大于这个的时候，并行更快
-        if (coeffCount > 8192) {
-            IntStream.range(0, coeffCount).parallel().forEach(
-                    i -> {
-                        long sum = operand1Array[startIndex1 + i] + operand2Array[startIndex2 + i];
-                        result[resultStartIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-                    }
-            );
-        } else {
-            long sum;
-            for (int i = 0; i < coeffCount; i++) {
-                sum = operand1Array[startIndex1 + i] + operand2Array[startIndex2 + i];
-                result[resultStartIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-            }
+        long sum;
+        for (int i = 0; i < coeffCount; i++) {
+            sum = operand1Array[startIndex1 + i] + operand2Array[startIndex2 + i];
+            result[resultStartIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
         }
+
     }
 
     /**
@@ -179,27 +170,14 @@ public class PolyArithmeticSmallMod {
             long modulusValue = modulus[j].getValue();
             int startIndex = j * coeffCount;
             // 开始处理每一个 modulus 下的多项式
-            // 根据 coeffCount 决定是否开并发以获取最优的效率
-
-            if (coeffCount > 8192) {
-                IntStream.range(0, coeffCount).parallel().forEach(
-                        i -> {
-                            assert poly1[poly1StartIndex + startIndex + i] < modulusValue;
-                            assert poly2[poly2StartIndex + startIndex + i] < modulusValue;
-
-                            long sum = poly1[poly1StartIndex + startIndex + i] + poly2[poly2StartIndex + startIndex + i];
-                            result[resultStartIndex + startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-                        }
-                );
-            } else {
-                long sum;
-                for (int i = 0; i < coeffCount; i++) {
-                    assert poly1[poly1StartIndex + startIndex + i] < modulusValue;
-                    assert poly2[poly2StartIndex + startIndex + i] < modulusValue;
-                    sum = poly1[poly1StartIndex + startIndex + i] + poly2[poly2StartIndex + startIndex + i];
-                    result[resultStartIndex + startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-                }
+            long sum;
+            for (int i = 0; i < coeffCount; i++) {
+                assert poly1[poly1StartIndex + startIndex + i] < modulusValue;
+                assert poly2[poly2StartIndex + startIndex + i] < modulusValue;
+                sum = poly1[poly1StartIndex + startIndex + i] + poly2[poly2StartIndex + startIndex + i];
+                result[resultStartIndex + startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
             }
+
         }
 
     }
@@ -237,25 +215,14 @@ public class PolyArithmeticSmallMod {
             // 开始处理每一个 modulus 下的多项式
             // 根据 coeffCount 决定是否开并发以获取最优的效率
 
-            if (coeffCount > 8192) {
-                IntStream.range(0, coeffCount).parallel().forEach(
-                        i -> {
-                            assert rnsIter1[startIndex + i] < modulusValue;
-                            assert rnsIter2[startIndex + i] < modulusValue;
-
-                            long sum = rnsIter1[startIndex + i] + rnsIter2[startIndex + i];
-                            result[startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-                        }
-                );
-            } else {
-                long sum;
-                for (int i = 0; i < coeffCount; i++) {
-                    assert rnsIter1[startIndex + i] < modulusValue;
-                    assert rnsIter2[startIndex + i] < modulusValue;
-                    sum = rnsIter1[startIndex + i] + rnsIter2[startIndex + i];
-                    result[startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
-                }
+            long sum;
+            for (int i = 0; i < coeffCount; i++) {
+                assert rnsIter1[startIndex + i] < modulusValue;
+                assert rnsIter2[startIndex + i] < modulusValue;
+                sum = rnsIter1[startIndex + i] + rnsIter2[startIndex + i];
+                result[startIndex + i] = sum >= modulusValue ? sum - modulusValue : sum;
             }
+
         }
 
     }
@@ -285,22 +252,18 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = result.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            long modulusValue = modulus[i].getValue();
 
-                    long modulusValue = modulus[i].getValue();
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> {
-                                assert operand1.coeffIter[i * polyModulusDegree + j] < modulusValue;
-                                assert operand2.coeffIter[i * polyModulusDegree + j] < modulusValue;
+            for (int j = 0; j < polyModulusDegree; j++) {
+                assert operand1.coeffIter[i * polyModulusDegree + j] < modulusValue;
+                assert operand2.coeffIter[i * polyModulusDegree + j] < modulusValue;
 
-                                long sum = operand1.coeffIter[i * polyModulusDegree + j] + operand2.coeffIter[i * polyModulusDegree + j];
-                                result.coeffIter[i * polyModulusDegree + j] = sum >= modulusValue ? sum - modulusValue : sum;
-                            }
-                    );
-                }
-        );
+                long sum = operand1.coeffIter[i * polyModulusDegree + j] + operand2.coeffIter[i * polyModulusDegree + j];
+                result.coeffIter[i * polyModulusDegree + j] = sum >= modulusValue ? sum - modulusValue : sum;
+            }
+        }
     }
 
     public static void addPolyCoeffMod(PolyIter operand1, PolyIter operand2, int size, Modulus[] modulus, PolyIter result) {
@@ -310,10 +273,9 @@ public class PolyArithmeticSmallMod {
         assert operand2.getCoeffModulusSize() == result.getCoeffModulusSize();
 
         int coeffModulusSize = result.getCoeffModulusSize();
-
-        IntStream.range(0, size).parallel().forEach(
-                i -> addPolyCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i))
-        );
+        for (int i = 0; i < size; i++) {
+            addPolyCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
+        }
     }
 
 
@@ -335,10 +297,9 @@ public class PolyArithmeticSmallMod {
         assert coeffCount > 0;
         assert !modulus.isZero();
 
-        // poly[i] * scalar mod moudlus
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[i] = UintArithmeticSmallMod.multiplyUintMod(poly[i], scalar, modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[i] = UintArithmeticSmallMod.multiplyUintMod(poly[i], scalar, modulus);
+        }
     }
 
 
@@ -365,9 +326,10 @@ public class PolyArithmeticSmallMod {
         assert startIndex % coeffCount == 0 && resultStartIndex % coeffCount == 0;
 
         // poly[i] * scalar mod moudlus
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[resultStartIndex + i] = UintArithmeticSmallMod.multiplyUintMod(poly[startIndex + i], scalar, modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[resultStartIndex + i] = UintArithmeticSmallMod.multiplyUintMod(poly[startIndex + i], scalar, modulus);
+
+        }
     }
 
     /**
@@ -405,6 +367,7 @@ public class PolyArithmeticSmallMod {
         }
 
     }
+
     public static void multiplyPolyScalarCoeffModCoeffIter(long[] poly,
                                                            int startIndex,
                                                            int coeffCount,
@@ -485,19 +448,15 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = poly.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
+            curScalar.set(UintArithmeticSmallMod.barrettReduce64(scalar, modulus[i]), modulus[i]);
+            for (int j = 0; j < polyModulusDegree; j++) {
+                result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.multiplyUintMod(poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i]);
+            }
+        }
 
-                    MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
-                    curScalar.set(UintArithmeticSmallMod.barrettReduce64(scalar, modulus[i]), modulus[i]);
-
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> result.coeffIter[i * polyModulusDegree + j]
-                                    = UintArithmeticSmallMod.multiplyUintMod(poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i])
-                    );
-                }
-        );
     }
 
 
@@ -507,14 +466,17 @@ public class PolyArithmeticSmallMod {
                                                   Modulus[] modulus,
                                                   PolyIter result) {
         assert size > 0;
-        IntStream.range(0, size).parallel().forEach(
-                i -> multiplyPolyScalarCoeffMod(
-                        poly.getRnsIter(i),
-                        poly.getCoeffModulusSize(),
-                        scalar,
-                        modulus,
-                        result.getRnsIter(i)
-                ));
+
+        for (int i = 0; i < size; i++) {
+
+            multiplyPolyScalarCoeffMod(
+                    poly.getRnsIter(i),
+                    poly.getCoeffModulusSize(),
+                    scalar,
+                    modulus,
+                    result.getRnsIter(i));
+        }
+
     }
 
     /**
@@ -613,10 +575,9 @@ public class PolyArithmeticSmallMod {
         assert coeffCount > 0;
         assert !modulus.isZero();
         assert scalar < modulus.getValue();
-
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[i] = UintArithmeticSmallMod.addUintMod(poly[i], scalar, modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[i] = UintArithmeticSmallMod.addUintMod(poly[i], scalar, modulus);
+        }
     }
 
     public static void addPolyScalarCoeffMod(long[] poly, int startIndex, int coeffCount, long scalar, Modulus modulus, int resultStartIndex, long[] result) {
@@ -625,9 +586,9 @@ public class PolyArithmeticSmallMod {
         assert !modulus.isZero();
         assert scalar < modulus.getValue();
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[resultStartIndex + i] = UintArithmeticSmallMod.addUintMod(poly[startIndex + i], scalar, modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[resultStartIndex + i] = UintArithmeticSmallMod.addUintMod(poly[startIndex + i], scalar, modulus);
+        }
     }
 
 
@@ -638,16 +599,12 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = result.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
-
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.addUintMod(poly.coeffIter[i * polyModulusDegree + j], scalar, modulus[i])
-                    );
-                }
-
-        );
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.addUintMod(poly.coeffIter[i * polyModulusDegree + j], scalar, modulus[i]);
+            }
+        }
     }
 
     /**
@@ -664,7 +621,7 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = result.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
+        IntStream.range(0, size).forEach(
                 i -> addPolyScalarCoeffMod(poly.getRnsIter(i), coeffModulusSize, scalar, modulus, result.getRnsIter(i))
         );
 
@@ -680,10 +637,10 @@ public class PolyArithmeticSmallMod {
 
         assert coeffCount > 0;
         assert !modulus.isZero();
+        for (int i = 0; i < coeffCount; i++) {
+            result[i] = UintArithmeticSmallMod.barrettReduce64(poly[i], modulus);
+        }
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[i] = UintArithmeticSmallMod.barrettReduce64(poly[i], modulus)
-        );
     }
 
     public static void moduloPolyCoeffs(long[] poly, int startIndex, int coeffCount, Modulus modulus, int resultStartIndex, long[] result) {
@@ -691,9 +648,9 @@ public class PolyArithmeticSmallMod {
         assert coeffCount > 0;
         assert !modulus.isZero();
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[resultStartIndex + i] = UintArithmeticSmallMod.barrettReduce64(poly[startIndex + i], modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[resultStartIndex + i] = UintArithmeticSmallMod.barrettReduce64(poly[startIndex + i], modulus);
+        }
     }
 
 
@@ -704,14 +661,12 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = poly.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.barrettReduce64(poly.coeffIter[i * polyModulusDegree + j], modulus[i])
-                    );
-                }
-        );
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.barrettReduce64(poly.coeffIter[i * polyModulusDegree + j], modulus[i]);
+            }
+        }
     }
 
     public static void moduloPolyCoeffs(PolyIter polyArray, int size, Modulus[] modulus, PolyIter result) {
@@ -721,9 +676,10 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = polyArray.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
-                i -> moduloPolyCoeffs(polyArray.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i))
-        );
+        for (int i = 0; i < size; i++) {
+            moduloPolyCoeffs(polyArray.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
+        }
+
     }
 
 
@@ -733,9 +689,9 @@ public class PolyArithmeticSmallMod {
         assert !modulus.isZero();
         assert scalar < modulus.getValue();
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> result[i] = UintArithmeticSmallMod.subUintMod(poly[i], scalar, modulus)
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            result[i] = UintArithmeticSmallMod.subUintMod(poly[i], scalar, modulus);
+        }
     }
 
 
@@ -746,15 +702,13 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = poly.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.subUintMod(poly.coeffIter[i * polyModulusDegree + j], scalar, modulus[i])
-                    );
-                }
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.subUintMod(poly.coeffIter[i * polyModulusDegree + j], scalar, modulus[i]);
+            }
+        }
 
-        );
     }
 
     public static void subPolyScalarCoeffMod(PolyIter poly, int size, long scalar, Modulus[] modulus, PolyIter result) {
@@ -764,7 +718,7 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = poly.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
+        IntStream.range(0, size).forEach(
                 i -> subPolyScalarCoeffMod(poly.getRnsIter(i), coeffModulusSize, scalar, modulus, result.getRnsIter(i))
         );
     }
@@ -835,16 +789,16 @@ public class PolyArithmeticSmallMod {
 
 
         long modulusValue = modulus.getValue();
+        long[] tempResult = new long[1];
+        long borrow;
+        for (int i = 0; i < coeffCount; i++) {
+            tempResult = new long[1];
+            borrow = UintArithmetic.subUint64(operand1[i], operand2[i], tempResult);
+            // borrow = 0 ---> result[i] = tempResult[0]
+            // borrow = 1 ---> result[i] = tempResult[0] + modulusValue
+            result[i] = tempResult[0] + (modulusValue & (-borrow));
+        }
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    long[] tempResult = new long[1];
-                    long borrow = UintArithmetic.subUint64(operand1[i], operand2[i], tempResult);
-                    // borrow = 0 ---> result[i] = tempResult[0]
-                    // borrow = 1 ---> result[i] = tempResult[0] + modulusValue
-                    result[i] = tempResult[0] + (modulusValue & (-borrow));
-                }
-        );
     }
 
 
@@ -856,19 +810,17 @@ public class PolyArithmeticSmallMod {
 
         long modulusValue = modulus.getValue();
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
+        for (int i = 0; i < coeffCount; i++) {
+            assert operand1[startIndex1 + i] < modulusValue;
+            assert operand2[startIndex2 + i] < modulusValue;
 
-                    assert operand1[startIndex1 + i] < modulusValue;
-                    assert operand2[startIndex2 + i] < modulusValue;
+            long[] tempResult = new long[1];
+            long borrow = UintArithmetic.subUint64(operand1[startIndex1 + i], operand2[startIndex2 + i], tempResult);
+            // borrow = 0 ---> result[i] = tempResult[0]
+            // borrow = 1 ---> result[i] = tempResult[0] + modulusValue
+            result[resultStartIndex + i] = tempResult[0] + (modulusValue & (-borrow));
+        }
 
-                    long[] tempResult = new long[1];
-                    long borrow = UintArithmetic.subUint64(operand1[startIndex1 + i], operand2[startIndex2 + i], tempResult);
-                    // borrow = 0 ---> result[i] = tempResult[0]
-                    // borrow = 1 ---> result[i] = tempResult[0] + modulusValue
-                    result[resultStartIndex + i] = tempResult[0] + (modulusValue & (-borrow));
-                }
-        );
     }
 
 
@@ -880,23 +832,18 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = result.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                assert operand1.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
+                assert operand2.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
 
-                i -> {
-                    assert !modulus[i].isZero();
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> {
-                                assert operand1.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
-                                assert operand2.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
+                long[] temp = new long[1];
+                long borrow = UintArithmetic.subUint64(operand1.coeffIter[i * polyModulusDegree + j], operand2.coeffIter[i * polyModulusDegree + j], temp);
+                result.coeffIter[i * polyModulusDegree + j] = temp[0] + (modulus[i].getValue() & (-borrow));
+            }
+        }
 
-                                long[] temp = new long[1];
-                                long borrow = UintArithmetic.subUint64(operand1.coeffIter[i * polyModulusDegree + j], operand2.coeffIter[i * polyModulusDegree + j], temp);
-                                result.coeffIter[i * polyModulusDegree + j] = temp[0] + (modulus[i].getValue() & (-borrow));
-                            }
-                    );
-                }
-
-        );
     }
 
     public static void subPolyCoeffMod(PolyIter operand1, PolyIter operand2, int size, Modulus[] modulus, PolyIter result) {
@@ -907,11 +854,10 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = result.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
-                i -> {
-                    subPolyCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
-                }
-        );
+        for (int i = 0; i < size; i++) {
+
+            subPolyCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
+        }
     }
 
     /**
@@ -932,37 +878,36 @@ public class PolyArithmeticSmallMod {
         long constRation0 = modulus.getConstRatio()[0];
         long constRation1 = modulus.getConstRatio()[1];
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    long[] z = new long[2];
-                    long tmp3, carry;
-                    long[] tmp1 = new long[1];
-                    long[] tmp2 = new long[2];
+        for (int i = 0; i < coeffCount; i++) {
+            long[] z = new long[2];
+            long tmp3, carry;
+            long[] tmp1 = new long[1];
+            long[] tmp2 = new long[2];
 
-                    // Reduces z using base 2^64 Barrett reduction
-                    // x * y
-                    UintArithmetic.multiplyUint64(operand1[i], operand2[i], z);
+            // Reduces z using base 2^64 Barrett reduction
+            // x * y
+            UintArithmetic.multiplyUint64(operand1[i], operand2[i], z);
 
-                    // Multiply input and const_ratio
-                    // Round 1
-                    carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
-                    UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
-                    tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+            // Multiply input and const_ratio
+            // Round 1
+            carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+            UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+            tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
 
-                    // Round 2
-                    UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
-                    carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+            // Round 2
+            UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+            carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
 
-                    // This is all we care about
-                    tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+            // This is all we care about
+            tmp1[0] = z[1] * constRation1 + tmp3 + carry;
 
-                    // Barrett subtraction
-                    tmp3 = z[0] - tmp1[0] * modulusValue;
+            // Barrett subtraction
+            tmp3 = z[0] - tmp1[0] * modulusValue;
 
-                    // Claim: One more subtraction is enough
-                    result[i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
-                }
-        );
+            // Claim: One more subtraction is enough
+            result[i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+        }
+
     }
 
 
@@ -1029,35 +974,35 @@ public class PolyArithmeticSmallMod {
         long constRation0 = modulus.getConstRatio()[0];
         long constRation1 = modulus.getConstRatio()[1];
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    long[] z = new long[2];
-                    long tmp3, carry;
-                    long[] tmp1 = new long[1];
-                    long[] tmp2 = new long[2];
-                    // Reduces z using base 2^64 Barrett reduction
-                    UintArithmetic.multiplyUint64(operand1Array[startIndex1 + i], operand2Array[startIndex2 + i], z);
 
-                    // Multiply input and const_ratio
-                    // Round 1
-                    carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
-                    UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
-                    tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+        for (int i = 0; i < coeffCount; i++) {
+            long[] z = new long[2];
+            long tmp3, carry;
+            long[] tmp1 = new long[1];
+            long[] tmp2 = new long[2];
+            // Reduces z using base 2^64 Barrett reduction
+            UintArithmetic.multiplyUint64(operand1Array[startIndex1 + i], operand2Array[startIndex2 + i], z);
 
-                    // Round 2
-                    UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
-                    carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+            // Multiply input and const_ratio
+            // Round 1
+            carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+            UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+            tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
 
-                    // This is all we care about
-                    tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+            // Round 2
+            UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+            carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
 
-                    // Barrett subtraction
-                    tmp3 = z[0] - tmp1[0] * modulusValue;
+            // This is all we care about
+            tmp1[0] = z[1] * constRation1 + tmp3 + carry;
 
-                    // Claim: One more subtraction is enough
-                    result[resultStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
-                }
-        );
+            // Barrett subtraction
+            tmp3 = z[0] - tmp1[0] * modulusValue;
+
+            // Claim: One more subtraction is enough
+            result[resultStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+        }
+
     }
 
     /**
@@ -1096,48 +1041,43 @@ public class PolyArithmeticSmallMod {
         assert resultStartIndex % (coeffCount * coeffModulusSize) == 0;
 
 
-        // 处理 RnsIter 下的每一个子多项式
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                j -> {
-                    assert !modulus[j].isZero();
+        for (int j = 0; j < coeffModulusSize; j++) {
+            assert !modulus[j].isZero();
 
-                    int polyStartIndex = j * coeffCount;
-                    long modulusValue = modulus[j].getValue();
-                    long constRation0 = modulus[j].getConstRatio()[0];
-                    long constRation1 = modulus[j].getConstRatio()[1];
+            int polyStartIndex = j * coeffCount;
+            long modulusValue = modulus[j].getValue();
+            long constRation0 = modulus[j].getConstRatio()[0];
+            long constRation1 = modulus[j].getConstRatio()[1];
 
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            i -> {
-                                // 处理多项式的 每一个系数
-                                long[] z = new long[2];
-                                long tmp3, carry;
-                                long[] tmp1 = new long[1];
-                                long[] tmp2 = new long[2];
-                                // Reduces z using base 2^64 Barrett reduction
-                                UintArithmetic.multiplyUint64(polyIter1[startIndex1 + polyStartIndex + i], polyIter2[startIndex2 + polyStartIndex + i], z);
+            for (int i = 0; i < coeffCount; i++) {
+                // 处理多项式的 每一个系数
+                long[] z = new long[2];
+                long tmp3, carry;
+                long[] tmp1 = new long[1];
+                long[] tmp2 = new long[2];
+                // Reduces z using base 2^64 Barrett reduction
+                UintArithmetic.multiplyUint64(polyIter1[startIndex1 + polyStartIndex + i], polyIter2[startIndex2 + polyStartIndex + i], z);
 
-                                // Multiply input and const_ratio
-                                // Round 1
-                                carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
-                                UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
-                                tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+                // Multiply input and const_ratio
+                // Round 1
+                carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+                UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+                tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
 
-                                // Round 2
-                                UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
-                                carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+                // Round 2
+                UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+                carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
 
-                                // This is all we care about
-                                tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+                // This is all we care about
+                tmp1[0] = z[1] * constRation1 + tmp3 + carry;
 
-                                // Barrett subtraction
-                                tmp3 = z[0] - tmp1[0] * modulusValue;
+                // Barrett subtraction
+                tmp3 = z[0] - tmp1[0] * modulusValue;
 
-                                // Claim: One more subtraction is enough
-                                resultPolyIter[resultStartIndex + polyStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
-                            }
-                    );
-                }
-        );
+                // Claim: One more subtraction is enough
+                resultPolyIter[resultStartIndex + polyStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+            }
+        }
     }
 
     /**
@@ -1166,36 +1106,34 @@ public class PolyArithmeticSmallMod {
         long constRation0 = modulus.getConstRatio()[0];
         long constRation1 = modulus.getConstRatio()[1];
 
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    // 处理多项式的 每一个系数
-                    long[] z = new long[2];
-                    long tmp3, carry;
-                    long[] tmp1 = new long[1];
-                    long[] tmp2 = new long[2];
-                    // Reduces z using base 2^64 Barrett reduction
-                    UintArithmetic.multiplyUint64(polyIter1[startIndex1 + i], polyIter2[startIndex2 + i], z);
+        for (int i = 0; i < coeffCount; i++) {
+            // 处理多项式的 每一个系数
+            long[] z = new long[2];
+            long tmp3, carry;
+            long[] tmp1 = new long[1];
+            long[] tmp2 = new long[2];
+            // Reduces z using base 2^64 Barrett reduction
+            UintArithmetic.multiplyUint64(polyIter1[startIndex1 + i], polyIter2[startIndex2 + i], z);
 
-                    // Multiply input and const_ratio
-                    // Round 1
-                    carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
-                    UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
-                    tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+            // Multiply input and const_ratio
+            // Round 1
+            carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+            UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+            tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
 
-                    // Round 2
-                    UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
-                    carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+            // Round 2
+            UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+            carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
 
-                    // This is all we care about
-                    tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+            // This is all we care about
+            tmp1[0] = z[1] * constRation1 + tmp3 + carry;
 
-                    // Barrett subtraction
-                    tmp3 = z[0] - tmp1[0] * modulusValue;
+            // Barrett subtraction
+            tmp3 = z[0] - tmp1[0] * modulusValue;
 
-                    // Claim: One more subtraction is enough
-                    resultPolyIter[resultStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
-                }
-        );
+            // Claim: One more subtraction is enough
+            resultPolyIter[resultStartIndex + i] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+        }
 
     }
 
@@ -1208,45 +1146,42 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = result.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
 
-                    long modulusValue = modulus[i].getValue();
-                    long constRation0 = modulus[i].getConstRatio()[0];
-                    long constRation1 = modulus[i].getConstRatio()[1];
+            long modulusValue = modulus[i].getValue();
+            long constRation0 = modulus[i].getConstRatio()[0];
+            long constRation1 = modulus[i].getConstRatio()[1];
 
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> {
-                                long[] z = new long[2];
-                                long tmp3, carry;
-                                long[] tmp1 = new long[1];
-                                long[] tmp2 = new long[2];
-                                // Reduces z using base 2^64 Barrett reduction
-                                UintArithmetic.multiplyUint64(operand1.coeffIter[i * polyModulusDegree + j], operand2.coeffIter[i * polyModulusDegree + j], z);
+            for (int j = 0; j < polyModulusDegree; j++) {
+                long[] z = new long[2];
+                long tmp3, carry;
+                long[] tmp1 = new long[1];
+                long[] tmp2 = new long[2];
+                // Reduces z using base 2^64 Barrett reduction
+                UintArithmetic.multiplyUint64(operand1.coeffIter[i * polyModulusDegree + j], operand2.coeffIter[i * polyModulusDegree + j], z);
 
-                                // Multiply input and const_ratio
-                                // Round 1
-                                carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
-                                UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
-                                tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
+                // Multiply input and const_ratio
+                // Round 1
+                carry = UintArithmetic.multiplyUint64Hw64(z[0], constRation0);
+                UintArithmetic.multiplyUint64(z[0], constRation1, tmp2);
+                tmp3 = tmp2[1] + UintArithmetic.addUint64(tmp2[0], carry, tmp1);
 
-                                // Round 2
-                                UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
-                                carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
+                // Round 2
+                UintArithmetic.multiplyUint64(z[1], constRation0, tmp2);
+                carry = tmp2[1] + UintArithmetic.addUint64(tmp1[0], tmp2[0], tmp1);
 
-                                // This is all we care about
-                                tmp1[0] = z[1] * constRation1 + tmp3 + carry;
+                // This is all we care about
+                tmp1[0] = z[1] * constRation1 + tmp3 + carry;
 
-                                // Barrett subtraction
-                                tmp3 = z[0] - tmp1[0] * modulusValue;
+                // Barrett subtraction
+                tmp3 = z[0] - tmp1[0] * modulusValue;
 
-                                // Claim: One more subtraction is enough
-                                result.coeffIter[i * polyModulusDegree + j] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
-                            }
-                    );
-                }
-        );
+                // Claim: One more subtraction is enough
+                result.coeffIter[i * polyModulusDegree + j] = tmp3 >= modulusValue ? tmp3 - modulusValue : tmp3;
+            }
+        }
+
     }
 
     public static void dyadicProductCoeffMod(PolyIter operand1, PolyIter operand2, int size, Modulus[] modulus, PolyIter result) {
@@ -1257,11 +1192,11 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = result.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
-                i -> {
-                    dyadicProductCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
-                }
-        );
+        for (int i = 0; i < size; i++) {
+
+            dyadicProductCoeffMod(operand1.getRnsIter(i), operand2.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
+        }
+
     }
 
 //    public static long polyInftyNormCoeffMod(long[] operand, int coeffCount, Modulus modulus) {
@@ -1423,9 +1358,9 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = poly.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
-                i -> negatePolyCoeffMod(poly.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i))
-        );
+        for (int i = 0; i < size; i++) {
+            negatePolyCoeffMod(poly.getRnsIter(i), coeffModulusSize, modulus, result.getRnsIter(i));
+        }
     }
 
 
@@ -1480,22 +1415,17 @@ public class PolyArithmeticSmallMod {
 
         int polyModulusDegree = poly.getPolyModulusDegree();
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                assert poly.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
 
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> {
-                                assert poly.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
-
-                                long nonZero = poly.coeffIter[i * polyModulusDegree + j] != 0 ? 1 : 0;
-                                // 0 ---> & 0 = 0
-                                // 1 ---> & -1 = & 0xFFFFFFF
-                                result.coeffIter[i * polyModulusDegree + j] = (modulus[i].getValue() - poly.coeffIter[i * polyModulusDegree + j]) & (-nonZero);
-                            }
-                    );
-                }
-        );
+                long nonZero = poly.coeffIter[i * polyModulusDegree + j] != 0 ? 1 : 0;
+                // 0 ---> & 0 = 0
+                // 1 ---> & -1 = & 0xFFFFFFF
+                result.coeffIter[i * polyModulusDegree + j] = (modulus[i].getValue() - poly.coeffIter[i * polyModulusDegree + j]) & (-nonZero);
+            }
+        }
     }
 
     /**
@@ -1521,7 +1451,7 @@ public class PolyArithmeticSmallMod {
         assert poly != result;
         assert !modulus.isZero();
         assert UintCore.getPowerOfTwo(coeffCount) >= 0;
-        // todo: 是否需要这个条件？
+        // todo: 是否需要这个条件？某些情况下，无法通过 ，但是不通过是不影响正确性的
 //        assert shift < coeffCount;
         // Nothing to do, just copy
         if (shift == 0) {
@@ -1594,22 +1524,20 @@ public class PolyArithmeticSmallMod {
 //        long indexRaw = shift;
         long coeffCountModMask = (long) (polyModulusDegree) - 1L;
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
-                    // handle each range: [i * N , (i + 1) * N)
-                    long indexRaw = shift;
-                    for (int j = 0; j < polyModulusDegree; j++, indexRaw++) {
-                        long index = indexRaw & coeffCountModMask;
-                        if ((indexRaw & (long) polyModulusDegree) == 0 || poly.coeffIter[i * polyModulusDegree + j] == 0) {
-                            // index + current range startPoint
-                            result.coeffIter[(int) index + i * polyModulusDegree] = poly.coeffIter[i * polyModulusDegree + j];
-                        } else {
-                            result.coeffIter[(int) index + i * polyModulusDegree] = modulus[i].getValue() - poly.coeffIter[i * polyModulusDegree + j];
-                        }
-                    }
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            // handle each range: [i * N , (i + 1) * N)
+            long indexRaw = shift;
+            for (int j = 0; j < polyModulusDegree; j++, indexRaw++) {
+                long index = indexRaw & coeffCountModMask;
+                if ((indexRaw & (long) polyModulusDegree) == 0 || poly.coeffIter[i * polyModulusDegree + j] == 0) {
+                    // index + current range startPoint
+                    result.coeffIter[(int) index + i * polyModulusDegree] = poly.coeffIter[i * polyModulusDegree + j];
+                } else {
+                    result.coeffIter[(int) index + i * polyModulusDegree] = modulus[i].getValue() - poly.coeffIter[i * polyModulusDegree + j];
                 }
-        );
+            }
+        }
     }
 
     public static void negAcyclicShiftPolyCoeffMod(PolyIter poly,
@@ -1622,14 +1550,15 @@ public class PolyArithmeticSmallMod {
 
         int coeffModulusSize = result.getCoeffModulusSize();
 
-        IntStream.range(0, size).parallel().forEach(
-                i -> negAcyclicShiftPolyCoeffMod(
-                        poly.getRnsIter(i),
-                        coeffModulusSize,
-                        shift,
-                        modulus,
-                        result.getRnsIter(i)
-                ));
+        for (int i = 0; i < size; i++) {
+            negAcyclicShiftPolyCoeffMod(
+                    poly.getRnsIter(i),
+                    coeffModulusSize,
+                    shift,
+                    modulus,
+                    result.getRnsIter(i)
+            );
+        }
     }
 
     /**
@@ -1699,18 +1628,17 @@ public class PolyArithmeticSmallMod {
         assert polyArray.getCoeffModulusSize() == result.getCoeffModulusSize();
 
         int coeffModulusSize = result.getCoeffModulusSize();
-        IntStream.range(0, size).parallel().forEach(
-                i -> {
-                    negAcyclicMultiplyPolyMonoCoeffMod(
-                            polyArray.getRnsIter(i),
-                            coeffModulusSize,
-                            monoCoeff,
-                            monoExponent,
-                            modulus,
-                            result.getRnsIter(i)
-                    );
-                }
-        );
+        for (int i = 0; i < size; i++) {
+            negAcyclicMultiplyPolyMonoCoeffMod(
+                    polyArray.getRnsIter(i),
+                    coeffModulusSize,
+                    monoCoeff,
+                    monoExponent,
+                    modulus,
+                    result.getRnsIter(i)
+            );
+        }
+
     }
 
     /**
@@ -1868,22 +1796,19 @@ public class PolyArithmeticSmallMod {
         // first mul
         RnsIter temp = new RnsIter(poly.getCoeffModulusSize(), poly.getPolyModulusDegree());
 
-        IntStream.range(0, coeffModulusSize).parallel().forEach(
-                i -> {
-                    assert !modulus[i].isZero();
-                    MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
-                    curScalar.set(UintArithmeticSmallMod.barrettReduce64(monoCoeff[i], modulus[i]), modulus[i]);
+        for (int i = 0; i < coeffModulusSize; i++) {
+            assert !modulus[i].isZero();
+            MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
+            curScalar.set(UintArithmeticSmallMod.barrettReduce64(monoCoeff[i], modulus[i]), modulus[i]);
 
-                    IntStream.range(0, polyModulusDegree).parallel().forEach(
-                            j -> {
-                                assert poly.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
+            for (int j = 0; j < polyModulusDegree; j++) {
+                assert poly.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
 
-                                temp.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.multiplyUintMod(
-                                        poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i]);
-                            }
-                    );
-                }
-        );
+                temp.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.multiplyUintMod(
+                        poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i]);
+            }
+        }
+
         // then neg acyclic
         negAcyclicShiftPolyCoeffMod(temp, coeffModulusSize, monoExponent, modulus, result);
 
@@ -1898,7 +1823,7 @@ public class PolyArithmeticSmallMod {
         assert polyArray.getCoeffModulusSize() == result.getCoeffModulusSize();
 
         int coeffModulusSize = result.getCoeffModulusSize();
-        IntStream.range(0, size).parallel().forEach(
+        IntStream.range(0, size).forEach(
                 i -> {
                     negAcyclicMultiplyPolyMonoCoeffMod(
                             polyArray.getRnsIter(i),
@@ -1927,7 +1852,6 @@ public class PolyArithmeticSmallMod {
 
 
         return Arrays.stream(operand)
-                .parallel()
                 .map(n -> UintArithmeticSmallMod.barrettReduce64(n, modulus))
                 .map(n -> n >= modulusNegThreshold ? modulus.getValue() - n : n)
                 .max().orElseThrow(() -> new IllegalArgumentException("operand is empty"));

@@ -404,8 +404,12 @@ public class KeyGenerator {
         // 实例化 destination
         // 通过 二维数组的 index 去实例化，可以影响到调用函数外的 destinations
         // 这里就是实例化了长度为 new PublicKey[decomposeModCount]
-        destinations[destinationIndex] = IntStream.range(0, decomposeModCount)
-                .mapToObj(i -> new PublicKey()).toArray(PublicKey[]::new);
+//        destinations[destinationIndex] = IntStream.range(0, decomposeModCount)
+//                .mapToObj(i -> new PublicKey()).toArray(PublicKey[]::new);
+        destinations[destinationIndex] = new PublicKey[decomposeModCount];
+        for (int i = 0; i < decomposeModCount; i++) {
+            destinations[destinationIndex][i] = new PublicKey();
+        }
 
         // 这里面是比较耗时的操作，所以考虑并发
 
@@ -560,58 +564,106 @@ public class KeyGenerator {
         // 实例化 destination
         // 通过 二维数组的 index 去实例化，可以影响到调用函数外的 destinations
         // 这里就是实例化了长度为 new PublicKey[decomposeModCount]
-        destinations[destinationIndex] = IntStream.range(0, decomposeModCount)
-                .mapToObj(i -> new PublicKey()).toArray(PublicKey[]::new);
+//        destinations[destinationIndex] = IntStream.range(0, decomposeModCount)
+//                .mapToObj(i -> new PublicKey()).toArray(PublicKey[]::new);
+        destinations[destinationIndex] = new PublicKey[decomposeModCount];
+        for (int i = 0; i < decomposeModCount; i++) {
+            destinations[destinationIndex][i] = new PublicKey();
+        }
 
+        for (int i = 0; i < decomposeModCount; i++) {
+            long[] temp = new long[coeffCount];
 
-        // 这里面是比较耗时的操作，所以考虑并发
-        IntStream.range(0, decomposeModCount).parallel().forEach(
-                i -> {
-                    long[] temp = new long[coeffCount];
+            RingLwe.encryptZeroSymmetric(
+                    secretKey,
+                    context,
+                    keyContextData.getParmsId(),
+                    true,
+                    saveSeed,
+                    destinations[destinationIndex][i].data() // 传入的是一个 Ciphertext
+            );
 
-                    RingLwe.encryptZeroSymmetric(
-                            secretKey,
-                            context,
-                            keyContextData.getParmsId(),
-                            true,
-                            saveSeed,
-                            destinations[destinationIndex][i].data() // 传入的是一个 Ciphertext
-                    );
+            long factor = UintArithmeticSmallMod.barrettReduce64(
+                    keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
 
-                    long factor = UintArithmeticSmallMod.barrettReduce64(
-                            keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
-//                    System.out.println("i: " + i + ", startIndex + i * coeffCount: " + startIndex + i * coeffCount);
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                    newKeys,
+                    startIndex + i * coeffCount,
+                    coeffCount,
+                    factor,
+                    keyModulus[i],
+                    0,
+                    temp
+            );
 
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            newKeys,
-                            startIndex + i * coeffCount,
-                            coeffCount,
-                            factor,
-                            keyModulus[i],
-                            0,
-                            temp
-                    );
+            // We use the SeqIter at get<3>(I) to find the i-th RNS factor of the first destination polynomial.
 
-                    // We use the SeqIter at get<3>(I) to find the i-th RNS factor of the first destination polynomial.
+            // destination[i].data() 是 Ciphertext, .getData() 是 Ciphertext 的底层数组，
+            // 可认为是 multi-poly in RNS, size * k * N
+            // 注意第二个参数，index 的计算，这里的逻辑有点复杂
+            // size * k * N , 这里不管是哪一个 密文 （destinations[destinationIndex][i].data().getData()）
+            // 都取 第 0 个 k * N , 然后在 k * N 里，取 第 i/k 个, 一个具体的例子
+            // i = 0 --> c0 (size * k * N ) --> c0[0] --> [0, k * N) ---> c0[0][i] --> c0[0][0] --> [0, N)
+            // i = 1 --->c1 (size * k * N ) ---> c1[0] ---> [0, k * N) ---> c1[0][i] --> c0[0][1] --> [N, 2N)
+            PolyArithmeticSmallMod.addPolyCoeffMod(
+                    destinations[destinationIndex][i].data().getData(), // 获取到完整的 PolyIter
+                    i * coeffCount, // 第 0个 RnsIter 的 第 i 个 CoeffIter
+                    temp,
+                    0,
+                    coeffCount,
+                    keyModulus[i],
+                    i * coeffCount,
+                    destinations[destinationIndex][i].data().getData());
+        }
 
-                    // destination[i].data() 是 Ciphertext, .getData() 是 Ciphertext 的底层数组，
-                    // 可认为是 multi-poly in RNS, size * k * N
-                    // 注意第二个参数，index 的计算，这里的逻辑有点复杂
-                    // size * k * N , 这里不管是哪一个 密文 （destinations[destinationIndex][i].data().getData()）
-                    // 都取 第 0 个 k * N , 然后在 k * N 里，取 第 i/k 个, 一个具体的例子
-                    // i = 0 --> c0 (size * k * N ) --> c0[0] --> [0, k * N) ---> c0[0][i] --> c0[0][0] --> [0, N)
-                    // i = 1 --->c1 (size * k * N ) ---> c1[0] ---> [0, k * N) ---> c1[0][i] --> c0[0][1] --> [N, 2N)
-                    PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destinations[destinationIndex][i].data().getData(), // 获取到完整的 PolyIter
-                            i * coeffCount, // 第 0个 RnsIter 的 第 i 个 CoeffIter
-                            temp,
-                            0,
-                            coeffCount,
-                            keyModulus[i],
-                            i * coeffCount,
-                            destinations[destinationIndex][i].data().getData());
-                }
-        );
+//        // 这里面是比较耗时的操作，所以考虑并发
+//        IntStream.range(0, decomposeModCount).parallel().forEach(
+//                i -> {
+//                    long[] temp = new long[coeffCount];
+//
+//                    RingLwe.encryptZeroSymmetric(
+//                            secretKey,
+//                            context,
+//                            keyContextData.getParmsId(),
+//                            true,
+//                            saveSeed,
+//                            destinations[destinationIndex][i].data() // 传入的是一个 Ciphertext
+//                    );
+//
+//                    long factor = UintArithmeticSmallMod.barrettReduce64(
+//                            keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
+////                    System.out.println("i: " + i + ", startIndex + i * coeffCount: " + startIndex + i * coeffCount);
+//
+//                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+//                            newKeys,
+//                            startIndex + i * coeffCount,
+//                            coeffCount,
+//                            factor,
+//                            keyModulus[i],
+//                            0,
+//                            temp
+//                    );
+//
+//                    // We use the SeqIter at get<3>(I) to find the i-th RNS factor of the first destination polynomial.
+//
+//                    // destination[i].data() 是 Ciphertext, .getData() 是 Ciphertext 的底层数组，
+//                    // 可认为是 multi-poly in RNS, size * k * N
+//                    // 注意第二个参数，index 的计算，这里的逻辑有点复杂
+//                    // size * k * N , 这里不管是哪一个 密文 （destinations[destinationIndex][i].data().getData()）
+//                    // 都取 第 0 个 k * N , 然后在 k * N 里，取 第 i/k 个, 一个具体的例子
+//                    // i = 0 --> c0 (size * k * N ) --> c0[0] --> [0, k * N) ---> c0[0][i] --> c0[0][0] --> [0, N)
+//                    // i = 1 --->c1 (size * k * N ) ---> c1[0] ---> [0, k * N) ---> c1[0][i] --> c0[0][1] --> [N, 2N)
+//                    PolyArithmeticSmallMod.addPolyCoeffMod(
+//                            destinations[destinationIndex][i].data().getData(), // 获取到完整的 PolyIter
+//                            i * coeffCount, // 第 0个 RnsIter 的 第 i 个 CoeffIter
+//                            temp,
+//                            0,
+//                            coeffCount,
+//                            keyModulus[i],
+//                            i * coeffCount,
+//                            destinations[destinationIndex][i].data().getData());
+//                }
+//        );
 
     }
 
@@ -651,9 +703,13 @@ public class KeyGenerator {
 //        );
 
         // 注意这个被调用的函数签名
-        IntStream.range(0, numKeys).parallel().forEach(
-                i -> generateOneKeySwitchKey(newKeys, i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed)
-        );
+        for (int i = 0; i < numKeys; i++) {
+            generateOneKeySwitchKey(newKeys, i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed);
+        }
+
+//        IntStream.range(0, numKeys).parallel().forEach(
+//                i -> generateOneKeySwitchKey(newKeys, i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed)
+//        );
 
     }
 
@@ -694,14 +750,23 @@ public class KeyGenerator {
         destination.resizeRows(numKeys);
 
         // 注意起点的计算
-        IntStream.range(0, numKeys).parallel().forEach(
-                i -> generateOneKeySwitchKey(
-                        newKeys,
-                        startIndex + i * coeffCount * coeffModulusSize,
-                        destination.data(),
-                        i,
-                        saveSeed)
-        );
+        for (int i = 0; i < numKeys; i++) {
+            generateOneKeySwitchKey(
+                    newKeys,
+                    startIndex + i * coeffCount * coeffModulusSize,
+                    destination.data(),
+                    i,
+                    saveSeed);
+        }
+
+//        IntStream.range(0, numKeys).parallel().forEach(
+//                i -> generateOneKeySwitchKey(
+//                        newKeys,
+//                        startIndex + i * coeffCount * coeffModulusSize,
+//                        destination.data(),
+//                        i,
+//                        saveSeed)
+//        );
     }
 
 

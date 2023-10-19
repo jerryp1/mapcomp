@@ -21,6 +21,73 @@ public class UintArithmeticSmallMod {
      * @param modulus
      * @return \sum a_i * b_i mod modulus
      */
+//    public static long dotProductMod(long[] operand1, long[] operand2, int count, Modulus modulus) {
+//        assert count >= 0;
+//
+//        long[] accumulator = new long[2];
+//        switch (count) {
+//            case 0:
+//                return 0;
+//            case 1:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 1);
+//                break;
+//            case 2:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 2);
+//                break;
+//            case 3:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 3);
+//                break;
+//            case 4:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 4);
+//                break;
+//            case 5:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 5);
+//                break;
+//            case 6:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 6);
+//                break;
+//            case 7:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 7);
+//                break;
+//            case 8:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 8);
+//                break;
+//            case 9:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 9);
+//                break;
+//            case 10:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 10);
+//                break;
+//            case 11:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 11);
+//                break;
+//            case 12:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 12);
+//                break;
+//            case 13:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 13);
+//                break;
+//            case 14:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 14);
+//                break;
+//            case 15:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 15);
+//                break;
+//            case 16:
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 16);
+//                break;
+//            default:
+//
+//                long[] c1 = Arrays.copyOfRange(operand1, 16, count);
+//                long[] c2 = Arrays.copyOfRange(operand2, 16, count);
+//                accumulator[0] = dotProductMod(c1, c2, count - 16, modulus);
+//                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 16);
+//                break;
+//        }
+//        return barrettReduce128(accumulator, modulus);
+//    }
+
+
     public static long dotProductMod(long[] operand1, long[] operand2, int count, Modulus modulus) {
         assert count >= 0;
 
@@ -29,64 +96,63 @@ public class UintArithmeticSmallMod {
             case 0:
                 return 0;
             case 1:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 1);
+                UintArithmetic.multiplyAccumulateUint64(operand1,0, operand2, 0, accumulator, 1);
                 break;
             case 2:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 2);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 2);
                 break;
             case 3:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 3);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 3);
                 break;
             case 4:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 4);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 4);
                 break;
             case 5:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 5);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 5);
                 break;
             case 6:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 6);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 6);
                 break;
             case 7:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 7);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 7);
                 break;
             case 8:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 8);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 8);
                 break;
             case 9:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 9);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 9);
                 break;
             case 10:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 10);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 10);
                 break;
             case 11:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 11);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0,  accumulator, 11);
                 break;
             case 12:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 12);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 12);
                 break;
             case 13:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 13);
+                UintArithmetic.multiplyAccumulateUint64(operand1,0, operand2, 0, accumulator, 13);
                 break;
             case 14:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 14);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0,  accumulator, 14);
                 break;
             case 15:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 15);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0,  accumulator, 15);
                 break;
             case 16:
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 16);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0,  accumulator, 16);
                 break;
             default:
 
                 long[] c1 = Arrays.copyOfRange(operand1, 16, count);
                 long[] c2 = Arrays.copyOfRange(operand2, 16, count);
                 accumulator[0] = dotProductMod(c1, c2, count - 16, modulus);
-                UintArithmetic.multiplyAccumulateUint64(operand1, operand2, accumulator, 16);
+                UintArithmetic.multiplyAccumulateUint64(operand1, 0, operand2, 0, accumulator, 16);
                 break;
         }
         return barrettReduce128(accumulator, modulus);
     }
-
 
     /**
      *
@@ -99,8 +165,12 @@ public class UintArithmeticSmallMod {
 
         assert operand < modulus.getValue();
 
-        if (exponent == 0) return 1;
-        if (exponent == 1) return operand;
+        if (exponent == 0) {
+            return 1;
+        }
+        if (exponent == 1) {
+            return operand;
+        }
 
         // Perform binary exponentiation.
         long power = operand;
@@ -115,7 +185,9 @@ public class UintArithmeticSmallMod {
                 intermediate = product;
             }
             exponent >>>= 1;
-            if (exponent == 0) break;
+            if (exponent == 0) {
+                break;
+            }
             product = multiplyUintMod(power, power, modulus);
             // update power
             power = product;

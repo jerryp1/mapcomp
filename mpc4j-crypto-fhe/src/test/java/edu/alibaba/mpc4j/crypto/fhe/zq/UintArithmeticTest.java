@@ -17,7 +17,6 @@ public class UintArithmeticTest {
 
     @Test
     public void exponentUintTest() {
-
         Assert.assertEquals(0, UintArithmetic.exponentUint(0, 1));
         Assert.assertEquals(1, UintArithmetic.exponentUint(1, 0));
         Assert.assertEquals(0, UintArithmetic.exponentUint(0, 0xFFFFFFFFFFFFFFFFL));
@@ -28,9 +27,6 @@ public class UintArithmeticTest {
         Assert.assertEquals(0, UintArithmetic.exponentUint( 0x10, 16));
         // 12389286314587456613
         Assert.assertEquals(0XABEF964309980465L, UintArithmetic.exponentUint( 123456789L, 13));
-
-
-
     }
 
 
@@ -778,6 +774,17 @@ public class UintArithmeticTest {
         Assert.assertEquals(0, input[1]);
         Assert.assertEquals(0x9B6DB6DB6DB6DB6DL, quotient[0]); // 11199808901895084909L
         Assert.assertEquals(0, quotient[1]);
+
+        // input is {0, 1} ---> 2^64
+        input[0] = 0;
+        input[1] = 1;
+        UintArithmetic.divideUint128Inplace(input, 1L << 32, quotient);
+        Assert.assertEquals(0, input[0]);
+        Assert.assertEquals(0, input[1]);
+        Assert.assertEquals(1L << 32, quotient[0]);
+        Assert.assertEquals(0, quotient[1]);
+
+
 
     }
 

@@ -287,9 +287,15 @@ public class Context {
             // Calculate coeff_div_plain_modulus (BFV-"Delta") and the remainder upper_half_increment
             // q/t
             long[] tempCoeffDivPlainModulus = new long[coeffModulusSize];
-            contextData.coeffDivPlainModulus = IntStream.range(0, parms.getCoeffModulus().length)
-                    .mapToObj(i -> new MultiplyUintModOperand())
-                    .toArray(MultiplyUintModOperand[]::new);
+//            contextData.coeffDivPlainModulus = IntStream.range(0, parms.getCoeffModulus().length)
+//                    .mapToObj(i -> new MultiplyUintModOperand())
+//                    .toArray(MultiplyUintModOperand[]::new);
+            contextData.coeffDivPlainModulus = new MultiplyUintModOperand[parms.getCoeffModulus().length];
+            for (int i = 0; i < parms.getCoeffModulus().length; i++) {
+                contextData.coeffDivPlainModulus[i] = new MultiplyUintModOperand();
+            }
+
+
             contextData.upperHalfIncrement = new long[coeffModulusSize];
             // extend plainModulus's length to coeffModulusSize
             long[] widePlainModulus = UintCore.duplicateUintIfNeeded(new long[]{plainModulus.getValue()}, plainModulus.getUint64Count(), coeffModulusSize, false);

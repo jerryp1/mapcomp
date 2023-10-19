@@ -12,7 +12,7 @@ public class UintCore {
 
     /**
      * @param value       a base-2^64 value
-     * @param uint64Count length of the base-2^64 value
+     * @param uint64Count number of uint64 used in value
      * @return
      */
     public static String uintToDecimalString(long[] value, int uint64Count) {
@@ -268,7 +268,7 @@ public class UintCore {
      * @param uint64Count
      * @return value[startIndex, startIndex + uint64Count) == 0
      */
-    public static boolean isZeroUint(long[] value, int startIndex,  int uint64Count) {
+    public static boolean isZeroUint(long[] value, int startIndex, int uint64Count) {
         assert uint64Count > 0;
 
         for (int i = startIndex; i < startIndex + uint64Count; i++) {
@@ -553,12 +553,12 @@ public class UintCore {
 
 
     /**
-     * the real bits in values, for example: [0, 0, 1]  63 + 63 + 1 = 127
-     * [1, 0, 0, ]  1 + 0 + 0 = 1 bits
+     * Compute the most significant bit-count in values[0, uint64Count).
+     * For example: [0, 0, 1] ---> 63 + 63 + 1 = 127 bits; [1, 0, 0, ] --->  1 + 0 + 0 = 1 bits
      *
-     * @param values      long values
-     * @param uint64Count how many 63-bits
-     * @return the real bits in the range values[..uint63Count]
+     * @param values      a base-2^64 value
+     * @param uint64Count number of uint64 count used in values
+     * @return the most significant bit-count in values[0, uint64Count)
      */
     public static int getSignificantBitCountUint(long[] values, int uint64Count) {
 

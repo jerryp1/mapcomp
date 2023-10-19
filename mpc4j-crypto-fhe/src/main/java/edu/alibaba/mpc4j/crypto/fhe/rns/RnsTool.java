@@ -197,30 +197,45 @@ public class RnsTool {
 
         // Compute prod(B) mod q = [q1, q2, ..., qk]
         prodBModQ = new long[baseQSize];
-        int finalBaseBSize = baseBSize;
-        IntStream.range(0, baseQSize).parallel().forEach(
-                i -> {
-                    prodBModQ[i] = UintArithmeticSmallMod.moduloUint(baseB.getBaseProd(), finalBaseBSize, baseQ.getBase(i));
-                }
-        );
+        for (int i = 0; i < baseQSize; i++) {
+            prodBModQ[i] = UintArithmeticSmallMod.moduloUint(baseB.getBaseProd(), baseBSize, baseQ.getBase(i));
+
+        }
 
         // Compute prod(q)^(-1) mod Bsk, which has many modulus
-        invProdQModBsk = IntStream.range(0, baseBskSize).parallel()
-                .mapToObj(i -> new MultiplyUintModOperand())
-                .toArray(MultiplyUintModOperand[]::new);
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                // first reduce prod(q) to Bsk[i]
-                i -> {
-                    long innerTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
-                    // then compute inverse
-                    long[] innerInvTemp = new long[1];
-                    if (!UintArithmeticSmallMod.tryInvertUintMod(innerTemp, baseBsk.getBase(i), innerInvTemp)) {
-                        throw new IllegalArgumentException("invalid rns bases");
-                    }
-                    // initialize a MultiplyUintModOperand
-                    invProdQModBsk[i].set(innerInvTemp[0], baseBsk.getBase(i));
-                }
-        );
+        invProdQModBsk = new MultiplyUintModOperand[baseBskSize];
+        for (int i = 0; i < baseBskSize; i++) {
+            invProdQModBsk[i] = new MultiplyUintModOperand();
+        }
+//        invProdQModBsk = IntStream.range(0, baseBskSize).parallel()
+//                .mapToObj(i -> new MultiplyUintModOperand())
+//                .toArray(MultiplyUintModOperand[]::new);
+
+
+        for (int i = 0; i < baseBskSize; i++) {
+            // // first reduce prod(q) to Bsk[i]
+            long innerTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
+            // then compute inverse
+            long[] innerInvTemp = new long[1];
+            if (!UintArithmeticSmallMod.tryInvertUintMod(innerTemp, baseBsk.getBase(i), innerInvTemp)) {
+                throw new IllegalArgumentException("invalid rns bases");
+            }
+            // initialize a MultiplyUintModOperand
+            invProdQModBsk[i].set(innerInvTemp[0], baseBsk.getBase(i));
+        }
+//        IntStream.range(0, baseBskSize).parallel().forEach(
+//                // first reduce prod(q) to Bsk[i]
+//                i -> {
+//                    long innerTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
+//                    // then compute inverse
+//                    long[] innerInvTemp = new long[1];
+//                    if (!UintArithmeticSmallMod.tryInvertUintMod(innerTemp, baseBsk.getBase(i), innerInvTemp)) {
+//                        throw new IllegalArgumentException("invalid rns bases");
+//                    }
+//                    // initialize a MultiplyUintModOperand
+//                    invProdQModBsk[i].set(innerInvTemp[0], baseBsk.getBase(i));
+//                }
+//        );
         // used for store the result of reduce and invert
         long temp;
         long[] invTemp = new long[1];
@@ -233,23 +248,26 @@ public class RnsTool {
         invProdBModMsk.set(invTemp[0], mSk);
 
         // Compute m_tilde^(-1) mod Bsk
-        invMTildeModBsk = IntStream.range(0, baseBskSize).
-                parallel().
-                mapToObj(i -> new MultiplyUintModOperand()).
-                toArray(MultiplyUintModOperand[]::new);
+//        invMTildeModBsk = IntStream.range(0, baseBskSize).
+//                parallel().
+//                mapToObj(i -> new MultiplyUintModOperand()).
+//                toArray(MultiplyUintModOperand[]::new);
+        invMTildeModBsk = new MultiplyUintModOperand[baseBskSize];
+        for (int i = 0; i < baseBskSize; i++) {
+            invMTildeModBsk[i] = new MultiplyUintModOperand();
+        }
 
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                i -> {
-                    long[] innerInvTemp = new long[1];
-                    if (!UintArithmeticSmallMod.tryInvertUintMod(
-                            UintArithmeticSmallMod.barrettReduce64(mTilde.getValue(), baseBsk.getBase(i)),
-                            baseBsk.getBase(i),
-                            innerInvTemp)) {
-                        throw new IllegalArgumentException("invalid rns bases");
-                    }
-                    invMTildeModBsk[i].set(innerInvTemp[0], baseBsk.getBase(i));
-                }
-        );
+        for (int i = 0; i < baseBskSize; i++) {
+            long[] innerInvTemp = new long[1];
+            if (!UintArithmeticSmallMod.tryInvertUintMod(
+                    UintArithmeticSmallMod.barrettReduce64(mTilde.getValue(), baseBsk.getBase(i)),
+                    baseBsk.getBase(i),
+                    innerInvTemp)) {
+                throw new IllegalArgumentException("invalid rns bases");
+            }
+            invMTildeModBsk[i].set(innerInvTemp[0], baseBsk.getBase(i));
+        }
+
 
         // Compute -prod(q)^(-1) mod m_tilde
         temp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, mTilde);
@@ -262,11 +280,15 @@ public class RnsTool {
 
         // Compute prod(q) mod Bsk
         prodQModBsk = new long[baseBskSize];
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                i -> {
-                    prodQModBsk[i] = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
-                }
-        );
+//        IntStream.range(0, baseBskSize).parallel().forEach(
+//                i -> {
+//                    prodQModBsk[i] = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
+//                }
+//        );
+        for (int i = 0; i < baseBskSize; i++) {
+            prodQModBsk[i] = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
+        }
+
 
         if (baseTGamma != null) {
             // Compute gamma^(-1) mod t
@@ -280,62 +302,60 @@ public class RnsTool {
             invGammaModT.set(invTemp[0], this.t);
 
             // Compute prod({t, gamma}) mod q
-            prodTGammaModQ = IntStream.range(0, baseQSize).parallel()
-                    .mapToObj(i -> new MultiplyUintModOperand())
-                    .toArray(MultiplyUintModOperand[]::new);
-            IntStream.range(0, baseQSize).parallel().forEach(
-                    i -> {
-                        prodTGammaModQ[i].set(
-                                // t * \gamma q_i
-                                // todo: why don't use baseTGamma.getBaseProd() mod baseQ.getBase(i), which can avoid repeat multiplication?
-                                UintArithmeticSmallMod.multiplyUintMod(baseTGamma.getBase(0).getValue(), baseTGamma.getBase(1).getValue(), baseQ.getBase(i)),
-                                baseQ.getBase(i)
-                        );
-                    }
-            );
+            prodTGammaModQ = new MultiplyUintModOperand[baseQSize];
+            for (int i = 0; i < baseQSize; i++) {
+                prodTGammaModQ[i] = new MultiplyUintModOperand();
+            }
+
+            for (int i = 0; i < baseQSize; i++) {
+                prodTGammaModQ[i].set(
+                        // t * \gamma q_i
+                        // todo: why don't use baseTGamma.getBaseProd() mod baseQ.getBase(i), which can avoid repeat multiplication?
+                        UintArithmeticSmallMod.multiplyUintMod(baseTGamma.getBase(0).getValue(), baseTGamma.getBase(1).getValue(), baseQ.getBase(i)),
+                        baseQ.getBase(i));
+            }
+
             // Compute -prod(q)^(-1) mod {t, gamma}
-            negInvQModTGamma = IntStream.range(0, baseTGammaSize)
-                    .parallel()
-                    .mapToObj(i -> new MultiplyUintModOperand())
-                    .toArray(MultiplyUintModOperand[]::new);
+            negInvQModTGamma = new MultiplyUintModOperand[baseTGammaSize];
+            for (int i = 0; i < baseTGammaSize; i++) {
+                negInvQModTGamma[i] = new MultiplyUintModOperand();
+            }
 //            note that we can not use Arrays.fill to initialize a object array, this way will lead to the every element in this array is a same object
 //            negInvQModTGamma = new MultiplyUintModOperand[baseTGammaSize];
 //            Arrays.fill(negInvQModTGamma, new MultiplyUintModOperand());
 
-            IntStream.range(0, baseTGammaSize).parallel().forEach(
-                    i -> {
-                        // q mod t, q mod gamma
-                        long curTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseTGamma.getBase(i));
-                        long[] curInvTemp = new long[1];
-                        if (!UintArithmeticSmallMod.tryInvertUintMod(curTemp, baseTGamma.getBase(i), curInvTemp)) {
-                            throw new IllegalArgumentException("invalid rns bases");
-                        }
-                        // neg
-                        negInvQModTGamma[i].set(
-                                UintArithmeticSmallMod.negateUintMod(curInvTemp[0], baseTGamma.getBase(i)),
-                                baseTGamma.getBase(i)
-                        );
-                    }
-            );
-
+            for (int i = 0; i < baseTGammaSize; i++) {
+                long curTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseTGamma.getBase(i));
+                long[] curInvTemp = new long[1];
+                if (!UintArithmeticSmallMod.tryInvertUintMod(curTemp, baseTGamma.getBase(i), curInvTemp)) {
+                    throw new IllegalArgumentException("invalid rns bases");
+                }
+                // neg
+                negInvQModTGamma[i].set(
+                        UintArithmeticSmallMod.negateUintMod(curInvTemp[0], baseTGamma.getBase(i)),
+                        baseTGamma.getBase(i)
+                );
+            }
         }
         // Compute q[last]^(-1) mod q[i] for i = 0..last-1, i.e. q_k mod q_1, q_k mod q_2, ..., q_k mod q_{k-1}
         // This is used by modulus switching and rescaling
-        invQLastModQ = IntStream.range(0, baseQSize - 1)
-                .mapToObj(i -> new MultiplyUintModOperand())
-                .toArray(MultiplyUintModOperand[]::new);
+//        invQLastModQ = IntStream.range(0, baseQSize - 1)
+//                .mapToObj(i -> new MultiplyUintModOperand())
+//                .toArray(MultiplyUintModOperand[]::new);
+        invQLastModQ = new MultiplyUintModOperand[baseQSize - 1];
+        for (int i = 0; i < baseQSize - 1; i++) {
+            invQLastModQ[i] = new MultiplyUintModOperand();
+        }
 
 
         long qLast = baseQ.getBase(baseQSize - 1).getValue();
-        IntStream.range(0, baseQSize - 1).parallel().forEach(
-                i -> {
-                    long[] curInvTemp = new long[1];
-                    if (!UintArithmeticSmallMod.tryInvertUintMod(qLast, baseQ.getBase(i), curInvTemp)) {
-                        throw new IllegalArgumentException("invalid rns bases");
-                    }
-                    invQLastModQ[i].set(curInvTemp[0], baseQ.getBase(i));
-                }
-        );
+        for (int i = 0; i < baseQSize - 1; i++) {
+            long[] curInvTemp = new long[1];
+            if (!UintArithmeticSmallMod.tryInvertUintMod(qLast, baseQ.getBase(i), curInvTemp)) {
+                throw new IllegalArgumentException("invalid rns bases");
+            }
+            invQLastModQ[i].set(curInvTemp[0], baseQ.getBase(i));
+        }
         // compute q_k mod t and (q_k)^{-1} mod t
         if (!t.isZero()) {
             if (!UintArithmeticSmallMod.tryInvertUintMod(qLast, this.t, invTemp)) {
@@ -367,21 +387,20 @@ public class RnsTool {
         // Algorihtm 1 line-2, 的第一个输入, |gamma * t|_{q_i} is the scalar
         // todo: remove RnsIter, just using long[]
         RnsIter temp = new RnsIter(baseQSize, coeffCount);
-        IntStream.range(0, baseQSize).forEach(
-                i -> {
-                    // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
-                    // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
-                    // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            input,
-                            i * coeffCount,
-                            coeffCount,
-                            prodTGammaModQ[i],
-                            baseQ.getBase(i),
-                            i * coeffCount,
-                            temp.coeffIter);
-                }
-        );
+        for (int i = 0; i < baseQSize; i++) {
+            // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
+            // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
+            // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                    input,
+                    i * coeffCount,
+                    coeffCount,
+                    prodTGammaModQ[i],
+                    baseQ.getBase(i),
+                    i * coeffCount,
+                    temp.coeffIter);
+        }
+
         // Make another temp destination to get the poly in mod {t, gamma}
         RnsIter tempTGamma = new RnsIter(baseTGammaSize, coeffCount);
         // Convert from q to {t, gamma}
@@ -389,18 +408,16 @@ public class RnsTool {
 
         // Multiply by -prod(q)^(-1) mod {t, gamma}
         // line-2
-        IntStream.range(0, baseTGammaSize).forEach(
-                i -> {
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            tempTGamma.coeffIter,
-                            i * coeffCount,
-                            coeffCount,
-                            negInvQModTGamma[i],
-                            baseTGamma.getBase(i),
-                            i * coeffCount,
-                            tempTGamma.coeffIter);
-                }
-        );
+        for (int i = 0; i < baseTGammaSize; i++) {
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                    tempTGamma.coeffIter,
+                    i * coeffCount,
+                    coeffCount,
+                    negInvQModTGamma[i],
+                    baseTGamma.getBase(i),
+                    i * coeffCount,
+                    tempTGamma.coeffIter);
+        }
         // Need to correct values in temp_t_gamma (gamma component only) which are
         // larger than floor(gamma/2)
         // for  ||_p --> []_p , i.e. [0, q) ---> [-q/2, q/2)
@@ -408,35 +425,33 @@ public class RnsTool {
 
         // Now compute the subtraction to remove error and perform final multiplication by
         // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
-        IntStream.range(0, coeffCount).forEach(
-                i -> {
-                    // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
-                    if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
+        for (int i = 0; i < coeffCount; i++) {
+            // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
+            if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
 
-                        // Compute -(gamma - a) instead of (a - gamma)
-                        destination[i] = UintArithmeticSmallMod.addUintMod(
-                                tempTGamma.getCoeff(0, i),
-                                UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
-                                t);
-                    } else {
-                        // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
-                        destination[i] = UintArithmeticSmallMod.subUintMod(
-                                tempTGamma.getCoeff(0, i),
-                                UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
-                                t);
-                    }
-                    // now handle multiplication
-                    // If this coefficient was non-zero, multiply by gamma^(-1)
-                    // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
-                    if (destination[i] != 0) {
-                        // Perform final multiplication by gamma inverse mod t
-                        destination[i] = UintArithmeticSmallMod.multiplyUintMod(
-                                destination[i],
-                                invGammaModT,
-                                t);
-                    }
-                }
-        );
+                // Compute -(gamma - a) instead of (a - gamma)
+                destination[i] = UintArithmeticSmallMod.addUintMod(
+                        tempTGamma.getCoeff(0, i),
+                        UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
+                        t);
+            } else {
+                // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
+                destination[i] = UintArithmeticSmallMod.subUintMod(
+                        tempTGamma.getCoeff(0, i),
+                        UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
+                        t);
+            }
+            // now handle multiplication
+            // If this coefficient was non-zero, multiply by gamma^(-1)
+            // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
+            if (destination[i] != 0) {
+                // Perform final multiplication by gamma inverse mod t
+                destination[i] = UintArithmeticSmallMod.multiplyUintMod(
+                        destination[i],
+                        invGammaModT,
+                        t);
+            }
+        }
     }
 
     /**
@@ -459,14 +474,12 @@ public class RnsTool {
         // ct(s) is also a poly under RNS base Q, so has baseQSize fractions.
         // Algorihtm 1 line-2, 的第一个输入, |gamma * t|_{q_i} is the scalar
         RnsIter temp = new RnsIter(baseQSize, coeffCount);
-        IntStream.range(0, baseQSize).parallel().forEach(
-                i -> {
-                    // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
-                    // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
-                    // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), i * coeffCount, temp.coeffIter);
-                }
-        );
+        for (int i = 0; i < baseQSize; i++) {
+            // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
+            // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
+            // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), i * coeffCount, temp.coeffIter);
+        }
         // Make another temp destination to get the poly in mod {t, gamma}
         RnsIter tempTGamma = new RnsIter(baseTGammaSize, coeffCount);
         // Convert from q to {t, gamma}
@@ -474,11 +487,10 @@ public class RnsTool {
 
         // Multiply by -prod(q)^(-1) mod {t, gamma}
         // line-2
-        IntStream.range(0, baseTGammaSize).parallel().forEach(
-                i -> {
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(tempTGamma.coeffIter, i * coeffCount, coeffCount, negInvQModTGamma[i], baseTGamma.getBase(i), i * coeffCount, tempTGamma.coeffIter);
-                }
-        );
+        for (int i = 0; i < baseTGammaSize; i++) {
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(tempTGamma.coeffIter, i * coeffCount, coeffCount, negInvQModTGamma[i], baseTGamma.getBase(i), i * coeffCount, tempTGamma.coeffIter);
+        }
+
         // Need to correct values in temp_t_gamma (gamma component only) which are
         // larger than floor(gamma/2)
         // for  ||_p --> []_p , i.e. [0, q) ---> [-q/2, q/2)
@@ -486,32 +498,31 @@ public class RnsTool {
 
         // Now compute the subtraction to remove error and perform final multiplication by
         // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
-        IntStream.range(0, coeffCount).parallel().forEach(
-                i -> {
-                    // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
-                    if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
+        for (int i = 0; i < coeffCount; i++) {
+            // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
+            if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
 
-                        // Compute -(gamma - a) instead of (a - gamma)
-                        destination[i] = UintArithmeticSmallMod.addUintMod(
-                                tempTGamma.getCoeff(0, i),
-                                UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
-                                t);
-                    } else {
-                        // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
-                        destination[i] = UintArithmeticSmallMod.subUintMod(
-                                tempTGamma.getCoeff(0, i),
-                                UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
-                                t);
-                    }
-                    // now handle multiplication
-                    // If this coefficient was non-zero, multiply by gamma^(-1)
-                    // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
-                    if (destination[i] != 0) {
-                        // Perform final multiplication by gamma inverse mod t
-                        destination[i] = UintArithmeticSmallMod.multiplyUintMod(destination[i], invGammaModT, t);
-                    }
-                }
-        );
+                // Compute -(gamma - a) instead of (a - gamma)
+                destination[i] = UintArithmeticSmallMod.addUintMod(
+                        tempTGamma.getCoeff(0, i),
+                        UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
+                        t);
+            } else {
+                // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
+                destination[i] = UintArithmeticSmallMod.subUintMod(
+                        tempTGamma.getCoeff(0, i),
+                        UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
+                        t);
+            }
+            // now handle multiplication
+            // If this coefficient was non-zero, multiply by gamma^(-1)
+            // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
+            if (destination[i] != 0) {
+                // Perform final multiplication by gamma inverse mod t
+                destination[i] = UintArithmeticSmallMod.multiplyUintMod(destination[i], invGammaModT, t);
+            }
+        }
+
     }
 
     /**
@@ -663,42 +674,41 @@ public class RnsTool {
         // using startIndex to avoid new inputMTilde
         // 只处理一个 CoeffIter
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            input,
-                        inputStartIndex + inputMTildeStart,
-                        coeffCount,
-                        negInvProdQModMTilde,
-                        mTilde,
-                        0,
-                        rMTilde);
+                input,
+                inputStartIndex + inputMTildeStart,
+                coeffCount,
+                negInvProdQModMTilde,
+                mTilde,
+                0,
+                rMTilde);
 
 
         // line 2-4
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                i -> {
-                    MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
-                    prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
+        for (int i = 0; i < baseBskSize; i++) {
 
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                long temp = rMTilde[j];
-                                if (temp >= mTildeDiv2) {
-                                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
-                                }
-                                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
-                                destination[destinationStartIndex + i * destinationCoeffCount + j] =
-                                        UintArithmeticSmallMod.multiplyUintMod(
-                                                UintArithmeticSmallMod.multiplyAddUintMod(
-                                                        temp,
-                                                        prodQModBskElt,
-                                                        input[inputStartIndex + i * inputCoeffCount + j],
-                                                        baseBsk.getBase(i)),
-                                                invMTildeModBsk[i],
-                                                baseBsk.getBase(i)
-                                        );
-                            }
-                    );
+            MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
+            prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
+
+            for (int j = 0; j < coeffCount; j++) {
+                long temp = rMTilde[j];
+                if (temp >= mTildeDiv2) {
+                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
                 }
-        );
+                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
+                destination[destinationStartIndex + i * destinationCoeffCount + j] =
+                        UintArithmeticSmallMod.multiplyUintMod(
+                                UintArithmeticSmallMod.multiplyAddUintMod(
+                                        temp,
+                                        prodQModBskElt,
+                                        input[inputStartIndex + i * inputCoeffCount + j],
+                                        baseBsk.getBase(i)),
+                                invMTildeModBsk[i],
+                                baseBsk.getBase(i)
+                        );
+            }
+
+        }
+
     }
 
 
@@ -728,32 +738,27 @@ public class RnsTool {
         // using startIndex to avoid new inputMTilde
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, baseBskSize * coeffCount, coeffCount, negInvProdQModMTilde, mTilde, 0, rMTilde);
 
-
         // line 2-4
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                i -> {
-                    MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
-                    prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
+        for (int i = 0; i < baseBskSize; i++) {
+            MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
+            prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
 
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                long temp = rMTilde[j];
-                                if (temp >= mTildeDiv2) {
-                                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
-                                }
-                                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
-                                destination.setCoeff(i, j,
-                                        UintArithmeticSmallMod.multiplyUintMod(
-                                                UintArithmeticSmallMod.multiplyAddUintMod(
-                                                        temp, prodQModBskElt, input.getCoeff(i, j), baseBsk.getBase(i)),
-                                                invMTildeModBsk[i],
-                                                baseBsk.getBase(i)
-                                        )
-                                );
-                            }
-                    );
+            for (int j = 0; j < coeffCount; j++) {
+                long temp = rMTilde[j];
+                if (temp >= mTildeDiv2) {
+                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
                 }
-        );
+                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
+                destination.setCoeff(i, j,
+                        UintArithmeticSmallMod.multiplyUintMod(
+                                UintArithmeticSmallMod.multiplyAddUintMod(
+                                        temp, prodQModBskElt, input.getCoeff(i, j), baseBsk.getBase(i)),
+                                invMTildeModBsk[i],
+                                baseBsk.getBase(i)
+                        )
+                );
+            }
+        }
     }
 
 
@@ -796,21 +801,18 @@ public class RnsTool {
 //        RnsIter inputInBaseBsk = input.subIter(baseQ.getSize());
         int inputInBsk = baseQSize * coeffCount;
 
-        IntStream.range(0, baseBskSize).parallel().forEach(
-                i -> {
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
-                                destination[destinationStartIndex +  i * coeffCount + j] =
-                                        UintArithmeticSmallMod.multiplyUintMod(
-                                                input[inputStartIndex + inputInBsk + i * coeffCount + j] + (baseBsk.getBase(i).getValue() - destination[destinationStartIndex + i * coeffCount + j]),
-                                                invProdQModBsk[i],
-                                                baseBsk.getBase(i)
-                                        );
-                            }
-                    );
-                }
-        );
+        for (int i = 0; i < baseBskSize; i++) {
+            for (int j = 0; j < coeffCount; j++) {
+
+                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
+                destination[destinationStartIndex + i * coeffCount + j] =
+                        UintArithmeticSmallMod.multiplyUintMod(
+                                input[inputStartIndex + inputInBsk + i * coeffCount + j] + (baseBsk.getBase(i).getValue() - destination[destinationStartIndex + i * coeffCount + j]),
+                                invProdQModBsk[i],
+                                baseBsk.getBase(i)
+                        );
+            }
+        }
     }
 
 
@@ -832,23 +834,20 @@ public class RnsTool {
         //
         RnsIter inputInBaseBsk = input.subIter(baseQ.getSize());
 
-        IntStream.range(0, baseBsk.getSize()).parallel().forEach(
-                i -> {
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
-                                destination.setCoeff(
-                                        i,
-                                        j,
-                                        UintArithmeticSmallMod.multiplyUintMod(
-                                                inputInBaseBsk.getCoeff(i, j) + (baseBsk.getBase(i).getValue() - destination.getCoeff(i, j)),
-                                                invProdQModBsk[i],
-                                                baseBsk.getBase(i))
-                                );
-                            }
-                    );
-                }
-        );
+        for (int i = 0; i < baseBsk.getSize(); i++) {
+
+            for (int j = 0; j < coeffCount; j++) {
+                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
+                destination.setCoeff(
+                        i,
+                        j,
+                        UintArithmeticSmallMod.multiplyUintMod(
+                                inputInBaseBsk.getCoeff(i, j) + (baseBsk.getBase(i).getValue() - destination.getCoeff(i, j)),
+                                invProdQModBsk[i],
+                                baseBsk.getBase(i))
+                );
+            }
+        }
     }
 
     /**
@@ -911,49 +910,47 @@ public class RnsTool {
         // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
         // Note: input_sk is allocated in input[base_B_size]
         long[] alphaSk = new long[coeffCount];
-        IntStream.range(0, coeffCount).parallel().forEach(
-                // It is not necessary for the negation to be reduced modulo the small prime
-                i -> alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
-                        temp[i] + (mSk.getValue() - input[inputStartIndex + baseBSize * coeffCount + i]),
-                        invProdBModMsk,
-                        mSk
-                )
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            // It is not necessary for the negation to be reduced modulo the small prime
+            alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
+                    temp[i] + (mSk.getValue() - input[inputStartIndex + baseBSize * coeffCount + i]),
+                    invProdBModMsk,
+                    mSk
+            );
+        }
         // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
         // alpha_sk here is not a centered reduction, so we need to apply a correction below.
 
         long mSkDiv2 = mSk.getValue() >>> 1;
-        IntStream.range(0, baseQSize).parallel().forEach(
-                i -> {
-                    MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
-                    prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
+        for (int i = 0; i < baseQSize; i++) {
+            MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
+            prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
 
-                    MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
-                    negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
+            MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
+            negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
 
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                // Correcting alpha_sk since it represents a negative value
-                                if (alphaSk[j] > mSkDiv2) {
-                                    destination[destinationStartIndex + i * coeffCount + j] =
-                                            UintArithmeticSmallMod.multiplyAddUintMod(
-                                                    UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
-                                                    prodBModQElt,
-                                                    destination[ destinationStartIndex + i * coeffCount + j],
-                                                    baseQ.getBase(i)
-                                            );
-                                } else {
-                                    destination[destinationStartIndex + i * coeffCount + j] =
-                                            UintArithmeticSmallMod.multiplyAddUintMod(
-                                                    alphaSk[j],
-                                                    negProdBModQElt,
-                                                    destination[destinationStartIndex + i * coeffCount + j],
-                                                    baseQ.getBase(i)
+            for (int j = 0; j < coeffCount; j++) {
+                // Correcting alpha_sk since it represents a negative value
+                if (alphaSk[j] > mSkDiv2) {
+                    destination[destinationStartIndex + i * coeffCount + j] =
+                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                    UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
+                                    prodBModQElt,
+                                    destination[destinationStartIndex + i * coeffCount + j],
+                                    baseQ.getBase(i)
+                            );
+                } else {
+                    destination[destinationStartIndex + i * coeffCount + j] =
+                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                    alphaSk[j],
+                                    negProdBModQElt,
+                                    destination[destinationStartIndex + i * coeffCount + j],
+                                    baseQ.getBase(i)
 
-                                            );
-                                }
-                            });
-                });
+                            );
+                }
+            }
+        }
     }
 
     /**
@@ -987,54 +984,55 @@ public class RnsTool {
         // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
         // Note: input_sk is allocated in input[base_B_size]
         long[] alphaSk = new long[coeffCount];
-        IntStream.range(0, coeffCount).parallel().forEach(
-                // It is not necessary for the negation to be reduced modulo the small prime
-                i -> alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
-                        tempIter.getCoeff(0, i) + (mSk.getValue() - input.getCoeff(baseBSize, i)),
-                        invProdBModMsk,
-                        mSk
-                )
-        );
+        for (int i = 0; i < coeffCount; i++) {
+            // It is not necessary for the negation to be reduced modulo the small prime
+            alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
+                    tempIter.getCoeff(0, i) + (mSk.getValue() - input.getCoeff(baseBSize, i)),
+                    invProdBModMsk,
+                    mSk
+            );
+        }
+
         // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
         // alpha_sk here is not a centered reduction, so we need to apply a correction below.
 
         long mSkDiv2 = mSk.getValue() >>> 1;
-        IntStream.range(0, baseQSize).parallel().forEach(
-                i -> {
-                    MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
-                    prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
+        for (int i = 0; i < baseQSize; i++) {
 
-                    MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
-                    negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
+            MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
+            prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
 
-                    IntStream.range(0, coeffCount).parallel().forEach(
-                            j -> {
-                                // Correcting alpha_sk since it represents a negative value
-                                if (alphaSk[j] > mSkDiv2) {
-                                    destination.setCoeff(
-                                            i,
-                                            j,
-                                            UintArithmeticSmallMod.multiplyAddUintMod(
-                                                    UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
-                                                    prodBModQElt,
-                                                    destination.getCoeff(i, j),
-                                                    baseQ.getBase(i)
-                                            )
-                                    );
-                                } else {
-                                    destination.setCoeff(
-                                            i,
-                                            j,
-                                            UintArithmeticSmallMod.multiplyAddUintMod(
-                                                    alphaSk[j],
-                                                    negProdBModQElt,
-                                                    destination.getCoeff(i, j),
-                                                    baseQ.getBase(i)
-                                            )
-                                    );
-                                }
-                            });
-                });
+            MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
+            negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
+
+            for (int j = 0; j < coeffCount; j++) {
+                // Correcting alpha_sk since it represents a negative value
+                if (alphaSk[j] > mSkDiv2) {
+                    destination.setCoeff(
+                            i,
+                            j,
+                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                    UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
+                                    prodBModQElt,
+                                    destination.getCoeff(i, j),
+                                    baseQ.getBase(i)
+                            )
+                    );
+                } else {
+                    destination.setCoeff(
+                            i,
+                            j,
+                            UintArithmeticSmallMod.multiplyAddUintMod(
+                                    alphaSk[j],
+                                    negProdBModQElt,
+                                    destination.getCoeff(i, j),
+                                    baseQ.getBase(i)
+                            )
+                    );
+                }
+
+            }
+        }
     }
 
 
@@ -1069,29 +1067,26 @@ public class RnsTool {
                 lastInputIndex,
                 polyIter);
 
+        for (int i = 0; i < baseQSize - 1; i++) {
+            long[] temp = new long[coeffCount];
 
-        IntStream.range(0, baseQSize - 1).parallel().forEach(
-                i -> {
-                    long[] temp = new long[coeffCount];
+            // (ct mod qk) mod qi
+            PolyArithmeticSmallMod.moduloPolyCoeffs(polyIter, lastInputIndex, coeffCount, baseQ.getBase(i), 0, temp);
 
-                    // (ct mod qk) mod qi
-                    PolyArithmeticSmallMod.moduloPolyCoeffs(polyIter, lastInputIndex, coeffCount, baseQ.getBase(i), 0, temp);
+            // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
+            long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
+            PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
 
-                    // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
-                    long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-                    PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
+            // (ct mod qi) - (ct mod qk) mod qi
+            // [i * N, (i+1) * N) is current ct
+            // 注意起点的计算
+            PolyArithmeticSmallMod.subPolyCoeffMod(polyIter, startIndex + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), startIndex + i * coeffCount, polyIter);
 
-                    // (ct mod qi) - (ct mod qk) mod qi
-                    // [i * N, (i+1) * N) is current ct
-                    // 注意起点的计算
-                    PolyArithmeticSmallMod.subPolyCoeffMod(polyIter, startIndex + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), startIndex + i * coeffCount, polyIter);
-
-                    // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-                    // [i * N, (i+1) * N) is current ct
-                    // 注意起点的计算
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(polyIter, startIndex + i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), startIndex + i * coeffCount, polyIter);
-                }
-        );
+            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
+            // [i * N, (i+1) * N) is current ct
+            // 注意起点的计算
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(polyIter, startIndex + i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), startIndex + i * coeffCount, polyIter);
+        }
     }
 
 
@@ -1111,27 +1106,25 @@ public class RnsTool {
         // 这里本质上是在处理 lastInput
         PolyArithmeticSmallMod.addPolyScalarCoeffMod(input.coeffIter, lastInputIndex, coeffCount, half, lastModulus, lastInputIndex, input.coeffIter);
 
+        for (int i = 0; i < baseQSize - 1; i++) {
+            long[] temp = new long[coeffCount];
 
-        IntStream.range(0, baseQSize - 1).parallel().forEach(
-                i -> {
-                    long[] temp = new long[coeffCount];
+            // (ct mod qk) mod qi
+            PolyArithmeticSmallMod.moduloPolyCoeffs(input.coeffIter, lastInputIndex, coeffCount, baseQ.getBase(i), 0, temp);
 
-                    // (ct mod qk) mod qi
-                    PolyArithmeticSmallMod.moduloPolyCoeffs(input.coeffIter, lastInputIndex, coeffCount, baseQ.getBase(i), 0, temp);
+            // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
+            long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
+            PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
 
-                    // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
-                    long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-                    PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
+            // (ct mod qi) - (ct mod qk) mod qi
+            // [i * N, (i+1) * N) is current ct
+            PolyArithmeticSmallMod.subPolyCoeffMod(input.coeffIter, i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), i * coeffCount, input.coeffIter);
 
-                    // (ct mod qi) - (ct mod qk) mod qi
-                    // [i * N, (i+1) * N) is current ct
-                    PolyArithmeticSmallMod.subPolyCoeffMod(input.coeffIter, i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), i * coeffCount, input.coeffIter);
+            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
+            // [i * N, (i+1) * N) is current ct
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), i * coeffCount, input.coeffIter);
+        }
 
-                    // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-                    // [i * N, (i+1) * N) is current ct
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), i * coeffCount, input.coeffIter);
-                }
-        );
     }
 
     /**
@@ -1167,72 +1160,68 @@ public class RnsTool {
         // 这里本质上是在处理 lastInput
         PolyArithmeticSmallMod.addPolyScalarCoeffMod(polyIter, lastInputIndex, coeffCount, half, lastModulus, lastInputIndex, polyIter);
 
+        for (int i = 0; i < baseQSize - 1; i++) {
+            long[] temp = new long[coeffCount];
 
-        IntStream.range(0, baseQSize - 1).parallel().forEach(
-                i -> {
-                    long[] temp = new long[coeffCount];
+            if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
+                PolyArithmeticSmallMod.moduloPolyCoeffs(
+                        polyIter,
+                        lastInputIndex,
+                        coeffCount,
+                        baseQ.getBase(i),
+                        0,
+                        temp
+                );
+            } else {
+                System.arraycopy(polyIter, lastInputIndex, temp, 0, coeffCount);
+            }
 
-                    if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                        PolyArithmeticSmallMod.moduloPolyCoeffs(
-                                polyIter,
-                                lastInputIndex,
-                                coeffCount,
-                                baseQ.getBase(i),
-                                0,
-                                temp
-                        );
-                    } else {
-                        System.arraycopy(polyIter, lastInputIndex, temp, 0, coeffCount);
-                    }
+            // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
+            long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
+            for (int j = 0; j < coeffCount; j++) {
+                temp[j] += negHalfMod;
+            }
+            long qiLazy;
+            if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
+                // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
+                // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
 
-                    // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
-                    long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-                    for (int j = 0; j < coeffCount; j++) {
-                        temp[j] += negHalfMod;
-                    }
-                    long qiLazy;
-                    if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
-                        // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
-                        // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
+                qiLazy = baseQ.getBase(i).getValue() << 2;
+                // temp 就是 单个 CoeffIter， 直接调用
+                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+            } else {
+                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
+                // from [0, 4*qi) to [0, 2*qi) after ntt.
+                qiLazy = baseQ.getBase(i).getValue() << 1;
+                // temp 就是 单个 CoeffIter， 直接调用
+                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
 
-                        qiLazy = baseQ.getBase(i).getValue() << 2;
-                        // temp 就是 单个 CoeffIter， 直接调用
-                        NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
-                    } else {
-                        // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
-                        // from [0, 4*qi) to [0, 2*qi) after ntt.
-                        qiLazy = baseQ.getBase(i).getValue() << 1;
-                        // temp 就是 单个 CoeffIter， 直接调用
-                        NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
-
-                        // 对 temp 做第一次 reduce
-                        for (int j = 0; j < coeffCount; j++) {
-                            // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
-                            // = 0 时, temp[j] 不变
-                            // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
-                            temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
-                        }
-                    }
-                    // Lazy subtraction again, results in [0, 2*qi_lazy),
-                    // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
-                    for (int j = 0; j < coeffCount; j++) {
-                        polyIter[startIndex + i * coeffCount + j] += (qiLazy - temp[j]);
-                    }
-
-                    // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-                    // 注意这里的函数签名
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            polyIter,
-                            startIndex + i * coeffCount,
-                            coeffCount,
-                            invQLastModQ[i],
-                            baseQ.getBase(i),
-                            startIndex + i * coeffCount,
-                            polyIter
-                    );
+                // 对 temp 做第一次 reduce
+                for (int j = 0; j < coeffCount; j++) {
+                    // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
+                    // = 0 时, temp[j] 不变
+                    // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
+                    temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
                 }
-        );
+            }
+            // Lazy subtraction again, results in [0, 2*qi_lazy),
+            // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
+            for (int j = 0; j < coeffCount; j++) {
+                polyIter[startIndex + i * coeffCount + j] += (qiLazy - temp[j]);
+            }
 
+            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
+            // 注意这里的函数签名
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                    polyIter,
+                    startIndex + i * coeffCount,
+                    coeffCount,
+                    invQLastModQ[i],
+                    baseQ.getBase(i),
+                    startIndex + i * coeffCount,
+                    polyIter
+            );
+        }
     }
 
     public void divideAndRoundQLastNttInplace(RnsIter input, NttTables[] rnsNttTables) {
@@ -1258,72 +1247,68 @@ public class RnsTool {
         // 这里本质上是在处理 lastInput
         PolyArithmeticSmallMod.addPolyScalarCoeffMod(input.coeffIter, lastInputIndex, coeffCount, half, lastModulus, lastInputIndex, input.coeffIter);
 
+        for (int i = 0; i < baseQSize - 1; i++) {
+            long[] temp = new long[coeffCount];
 
-        IntStream.range(0, baseQSize - 1).parallel().forEach(
-                i -> {
-                    long[] temp = new long[coeffCount];
+            if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
+                PolyArithmeticSmallMod.moduloPolyCoeffs(
+                        input.coeffIter,
+                        lastInputIndex,
+                        coeffCount,
+                        baseQ.getBase(i),
+                        0,
+                        temp
+                );
+            } else {
+                System.arraycopy(input.coeffIter, lastInputIndex, temp, 0, coeffCount);
+            }
 
-                    if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                        PolyArithmeticSmallMod.moduloPolyCoeffs(
-                                input.coeffIter,
-                                lastInputIndex,
-                                coeffCount,
-                                baseQ.getBase(i),
-                                0,
-                                temp
-                        );
-                    } else {
-                        System.arraycopy(input.coeffIter, lastInputIndex, temp, 0, coeffCount);
-                    }
+            // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
+            long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
+            for (int j = 0; j < coeffCount; j++) {
+                temp[j] += negHalfMod;
+            }
+            long qiLazy;
+            if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
+                // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
+                // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
 
-                    // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
-                    long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-                    for (int j = 0; j < coeffCount; j++) {
-                        temp[j] += negHalfMod;
-                    }
-                    long qiLazy;
-                    if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
-                        // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
-                        // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
+                qiLazy = baseQ.getBase(i).getValue() << 2;
+                // temp 就是 单个 CoeffIter， 直接调用
+                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+            } else {
+                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
+                // from [0, 4*qi) to [0, 2*qi) after ntt.
+                qiLazy = baseQ.getBase(i).getValue() << 1;
+                // temp 就是 单个 CoeffIter， 直接调用
+                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
 
-                        qiLazy = baseQ.getBase(i).getValue() << 2;
-                        // temp 就是 单个 CoeffIter， 直接调用
-                        NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
-                    } else {
-                        // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
-                        // from [0, 4*qi) to [0, 2*qi) after ntt.
-                        qiLazy = baseQ.getBase(i).getValue() << 1;
-                        // temp 就是 单个 CoeffIter， 直接调用
-                        NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
-
-                        // 对 temp 做第一次 reduce
-                        for (int j = 0; j < coeffCount; j++) {
-                            // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
-                            // = 0 时, temp[j] 不变
-                            // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
-                            temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
-                        }
-                    }
-                    // Lazy subtraction again, results in [0, 2*qi_lazy),
-                    // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
-                    for (int j = 0; j < coeffCount; j++) {
-                        input.coeffIter[i * coeffCount + j] += (qiLazy - temp[j]);
-                    }
-
-                    // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-                    // 注意这里的函数签名
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                            input.coeffIter,
-                            i * coeffCount,
-                            coeffCount,
-                            invQLastModQ[i],
-                            baseQ.getBase(i),
-                            i * coeffCount,
-                            input.coeffIter
-                    );
+                // 对 temp 做第一次 reduce
+                for (int j = 0; j < coeffCount; j++) {
+                    // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
+                    // = 0 时, temp[j] 不变
+                    // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
+                    temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
                 }
-        );
+            }
+            // Lazy subtraction again, results in [0, 2*qi_lazy),
+            // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
+            for (int j = 0; j < coeffCount; j++) {
+                input.coeffIter[i * coeffCount + j] += (qiLazy - temp[j]);
+            }
 
+            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
+            // 注意这里的函数签名
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                    input.coeffIter,
+                    i * coeffCount,
+                    coeffCount,
+                    invQLastModQ[i],
+                    baseQ.getBase(i),
+                    i * coeffCount,
+                    input.coeffIter
+            );
+        }
     }
 
 

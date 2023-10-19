@@ -81,9 +81,15 @@ public class NttTables {
         this.invRoot = temp[0];
 
         // Populate tables with powers of root in specific orders.
-        this.rootPowers = IntStream.range(0, coeffCount).parallel()
-                .mapToObj(i -> new MultiplyUintModOperand())
-                .toArray(MultiplyUintModOperand[]::new);
+//        this.rootPowers = IntStream.range(0, coeffCount).parallel()
+//                .mapToObj(i -> new MultiplyUintModOperand())
+//                .toArray(MultiplyUintModOperand[]::new);
+        this.rootPowers = new MultiplyUintModOperand[coeffCount];
+        for (int i = 0; i < coeffCount; i++) {
+            this.rootPowers[i] = new MultiplyUintModOperand();
+        }
+
+
         MultiplyUintModOperand rootTemp = new MultiplyUintModOperand();
         rootTemp.set(root, modulus);
         long power = root;
@@ -93,9 +99,15 @@ public class NttTables {
         }
         rootPowers[0].set(1, modulus);
 
-        this.invRootPowers = IntStream.range(0, coeffCount).parallel()
-                .mapToObj(i -> new MultiplyUintModOperand())
-                .toArray(MultiplyUintModOperand[]::new);
+//        this.invRootPowers = IntStream.range(0, coeffCount).parallel()
+//                .mapToObj(i -> new MultiplyUintModOperand())
+//                .toArray(MultiplyUintModOperand[]::new);
+        this.invRootPowers = new MultiplyUintModOperand[coeffCount];
+        for (int i = 0; i < coeffCount; i++) {
+            this.invRootPowers[i] = new MultiplyUintModOperand();
+        }
+
+
         rootTemp.set(invRoot, modulus);
         power = invRoot;
         for (int i = 1; i < coeffCount; i++) {

@@ -144,13 +144,6 @@ public class UintArithmeticMod {
     }
 
 
-
-
-
-
-
-
-
     /**
      * not that operand and modulus are base-2^64 number
      * @param operand

@@ -144,9 +144,9 @@ public class RnsBase implements Cloneable {
 //            UintCore.setUint(value, size, valueCopy);
             System.arraycopy(value, 0, valueCopy, 0, value.length);
 
-            IntStream.range(0, size)
-                    .parallel()
-                    .forEach(i -> value[i] = UintArithmeticSmallMod.moduloUint(valueCopy, size, this.base[i]));
+            for (int i = 0; i < size; i++) {
+                value[i] = UintArithmeticSmallMod.moduloUint(valueCopy, size, this.base[i]);
+            }
         }
         // todo: if size == 1, no need handle?
         // even if our modulus up to 61-bit, but when value is a long, may > 61-bit, this time we still need to mod.
@@ -288,14 +288,14 @@ public class RnsBase implements Cloneable {
 
 
             // 对每一列 compose, in-place
-            IntStream.range(0, count).parallel().forEach(
-                    i -> compose(decomposedValues[i])
-            );
+            for (int i = 0; i < count; i++) {
+                compose(decomposedValues[i]);
+            }
             // 再覆盖掉 values 中的值
             // 按 count 和 size 长度覆盖即可
-            IntStream.range(0, count).parallel().forEach(
-                    i -> System.arraycopy(decomposedValues[i], 0, values, i * size, size)
-            );
+            for (int i = 0; i < count; i++) {
+                System.arraycopy(decomposedValues[i], 0, values, i * size, size);
+            }
         }
     }
 
@@ -311,12 +311,18 @@ public class RnsBase implements Cloneable {
 
         baseProd = new long[size];
         puncturedProdArray = new long[size][size];
-        invPuncturedProdModBaseArray = IntStream.range(0, size).parallel().mapToObj(
-                i -> new MultiplyUintModOperand()
-        ).toArray(MultiplyUintModOperand[]::new);
+        invPuncturedProdModBaseArray = new MultiplyUintModOperand[size];
+        for (int i = 0; i < size; i++) {
+            invPuncturedProdModBaseArray[i] = new MultiplyUintModOperand();
+        }
 
         if (size > 1) {
-            long[] baseValues = IntStream.range(0, size).parallel().mapToLong(i -> base[i].getValue()).toArray();
+//            long[] baseValues = IntStream.range(0, size).parallel().mapToLong(i -> base[i].getValue()).toArray();
+            long[] baseValues = new long[size];
+            for (int i = 0; i < size; i++) {
+                baseValues[i] = base[i].getValue();
+            }
+
             boolean invertible = true;
             for (int i = 0; i < size; i++) {
                 // q_i* = Q/qi = \prod p_j, j \ne i.

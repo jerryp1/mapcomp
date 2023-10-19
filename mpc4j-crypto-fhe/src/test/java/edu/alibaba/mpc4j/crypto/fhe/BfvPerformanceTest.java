@@ -35,7 +35,7 @@ public class BfvPerformanceTest {
     /**
      * max loop num
      */
-    private static final int MAX_LOOP_NUM = 1;
+    private static final int MAX_LOOP_NUM = 1000;
 
     /**
      * time format
@@ -83,7 +83,7 @@ public class BfvPerformanceTest {
         context = new Context(parms);
 
         STOP_WATCH.stop();
-        time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
+        time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS);
         STOP_WATCH.reset();
 
         // output
@@ -94,9 +94,9 @@ public class BfvPerformanceTest {
         );
 
         // warm up
-        for (int i = 0; i < 10000; i++) {
-            KeyGenerator keygen = new KeyGenerator(context);
-        }
+//        for (int i = 0; i < 10; i++) {
+//            KeyGenerator keygen = new KeyGenerator(context);
+//        }
 
 
         STOP_WATCH.start();
@@ -160,12 +160,12 @@ public class BfvPerformanceTest {
         keygen.createRelinKeys(relinKeys);
 
         STOP_WATCH.start();
-        for (int i = 0; i < MAX_LOOP_NUM; i++) {
+        for (int i = 0; i < 10; i++) {
             GaloisKeys galoisKeys = new GaloisKeys();
             keygen.createGaloisKeys(galoisKeys);
         }
         STOP_WATCH.stop();
-        time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
+        time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / 10;
         STOP_WATCH.reset();
         // output
         LOGGER.info(
@@ -187,6 +187,7 @@ public class BfvPerformanceTest {
         long x = 6;
         Plaintext xPlain = new Plaintext(Utils.uint64ToHexString(x));
         Ciphertext xEncrypted = new Ciphertext();
+        Ciphertext destination = new Ciphertext();
 
 
         STOP_WATCH.start();
@@ -235,7 +236,7 @@ public class BfvPerformanceTest {
 
         STOP_WATCH.start();
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
-            evaluator.addInplace(xEncrypted, xEncrypted2);
+            evaluator.add(xEncrypted, xEncrypted2, destination);
         }
         STOP_WATCH.stop();
         time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
@@ -250,7 +251,7 @@ public class BfvPerformanceTest {
 
         STOP_WATCH.start();
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
-            evaluator.multiplyInplace(xEncrypted, xEncrypted2);
+            evaluator.multiply(xEncrypted, xEncrypted2, destination);
         }
         STOP_WATCH.stop();
         time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
@@ -266,9 +267,7 @@ public class BfvPerformanceTest {
 
         STOP_WATCH.start();
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
-
-
-            evaluator.reLinearizeInplace(xEncrypted, relinKeys);
+            evaluator.reLinearize(destination, relinKeys, destination);
         }
         STOP_WATCH.stop();
         time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
@@ -282,7 +281,7 @@ public class BfvPerformanceTest {
 
         STOP_WATCH.start();
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
-            evaluator.rotateRowsInplace(xEncrypted, 3, galoisKeys);
+            evaluator.rotateRows(xEncrypted, 3, galoisKeys, destination);
         }
         STOP_WATCH.stop();
         time = (double) STOP_WATCH.getTime(TimeUnit.MILLISECONDS) / MAX_LOOP_NUM;
@@ -293,13 +292,6 @@ public class BfvPerformanceTest {
                 StringUtils.leftPad("rotate", 20),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(time), 12)
         );
-
-
-
-
-
-
-
 
     }
 

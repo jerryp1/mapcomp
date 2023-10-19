@@ -3,9 +3,6 @@ package edu.alibaba.mpc4j.crypto.fhe.rq;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 /**
  * @author Qixian Zhou

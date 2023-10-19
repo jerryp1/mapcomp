@@ -23,10 +23,6 @@ public class GlobalVariables {
 
 
 
-
-
-
-
     public static final Map<Integer, Modulus[]> DEFAULT_COEFF_MUDULUS_128 = new HashMap<>();
 
     static {
