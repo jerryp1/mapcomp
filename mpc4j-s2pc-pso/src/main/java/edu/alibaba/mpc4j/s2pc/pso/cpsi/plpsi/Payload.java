@@ -1,0 +1,110 @@
+package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
+
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+
+/**
+ * circuit PSI payload output
+ *
+ * @author Feng Han
+ * @date 2023/10/20
+ */
+public class Payload {
+    /**
+     * environment type
+     */
+    private final EnvType envType;
+    /**
+     * parallel
+     */
+    private final boolean parallel;
+    /**
+     * the server received shared payload in binary share
+     */
+    private SquareZ2Vector[] z2Payload;
+    /**
+     * the server received shared payload in arithmetic share
+     */
+    private SquareZlVector zlPayload;
+
+    public Payload(EnvType envType, boolean parallel, SquareZ2Vector[] payload, boolean isBinaryShare){
+        this.envType = envType;
+        this.parallel = parallel;
+        if(isBinaryShare){
+            z2Payload = transZ2Share(envType, parallel, payload);
+        }else{
+            zlPayload = transZlShare(envType, payload);
+        }
+    }
+
+    public Payload(EnvType envType, boolean parallel, byte[][] payload, int bitLen, boolean isBinaryShare){
+        this.envType = envType;
+        this.parallel = parallel;
+        if(isBinaryShare){
+            z2Payload = transZ2Share(envType, parallel, payload, bitLen);
+        }else{
+            zlPayload = transZlShare(envType, payload, bitLen);
+        }
+    }
+
+    public int getBeta(){
+        return zlPayload == null ? z2Payload[0].bitNum() : zlPayload.getNum();
+    }
+
+    public SquareZ2Vector[] getZ2Payload() {
+        if(z2Payload == null){
+            z2Payload = typeConversion(envType, parallel, zlPayload);
+        }
+        return z2Payload;
+    }
+
+    public SquareZlVector getZlPayload(){
+        if(zlPayload == null){
+            zlPayload = typeConversion(envType, parallel, z2Payload);
+        }
+        return zlPayload;
+    }
+
+    static SquareZ2Vector[] transZ2Share(EnvType envType, boolean parallel, byte[][] payload, int bitLen){
+        BitVector[] columns = ZlDatabase.create(bitLen, payload).bitPartition(envType, parallel);
+        return Arrays.stream(columns).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+    }
+
+    static SquareZlVector transZlShare(EnvType envType, byte[][] payload, int bitLen){
+        BigInteger[] rows = Arrays.stream(payload).map(BigIntegerUtils::byteArrayToNonNegBigInteger).toArray(BigInteger[]::new);
+        return SquareZlVector.create(ZlFactory.createInstance(envType, bitLen), rows, false);
+    }
+
+    static SquareZ2Vector[] transZ2Share(EnvType envType, boolean parallel, SquareZ2Vector[] payload){
+        BitVector[] rows = Arrays.stream(payload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
+        BitVector[] columns = ZlDatabase.create(envType, parallel, rows).bitPartition(envType, parallel);
+        return Arrays.stream(columns).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+    }
+
+    static SquareZlVector transZlShare(EnvType envType, SquareZ2Vector[] payload){
+        BigInteger[] rows = Arrays.stream(payload).map(x -> x.getBitVector().getBigInteger()).toArray(BigInteger[]::new);
+        return SquareZlVector.create(ZlFactory.createInstance(envType, payload[0].bitNum()), rows, false);
+    }
+
+    static SquareZ2Vector[] typeConversion(EnvType envType, boolean parallel, SquareZlVector zlVector){
+        byte[][] data = BigIntegerUtils.nonNegBigIntegersToByteArrays(zlVector.getZlVector().getElements(), zlVector.getZl().getByteL());
+        BitVector[] transRes = ZlDatabase.create(zlVector.getZl().getL(), data).bitPartition(envType, parallel);
+        return Arrays.stream(transRes).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+    }
+
+    static SquareZlVector typeConversion(EnvType envType, boolean parallel, SquareZ2Vector[] z2Vector){
+        ZlDatabase database = ZlDatabase.create(envType, parallel, Arrays.stream(z2Vector)
+            .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        BitVector[] transRes = database.bitPartition(envType, parallel);
+        return SquareZlVector.create(ZlFactory.createInstance(envType, transRes[0].bitNum()),
+            Arrays.stream(transRes).map(BitVector::getBigInteger).toArray(BigInteger[]::new), false);
+    }
+}
