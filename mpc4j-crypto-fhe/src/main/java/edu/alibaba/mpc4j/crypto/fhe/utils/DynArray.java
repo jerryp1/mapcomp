@@ -8,6 +8,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
+ * A dynamic array for storing objects allocated from a Microsoft SEAL memory
+ * pool. The DynArray class is mainly intended for internal use and provides
+ * the underlying data structure for Plaintext and Ciphertext classes.
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/dynarray.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/31
  */
@@ -238,7 +246,6 @@ public class DynArray implements Cloneable, Serializable {
     }
 
     /**
-     *
      * @param startIndex
      * @param endIndex
      * @return data[startIndex, endIndex)
@@ -290,7 +297,6 @@ public class DynArray implements Cloneable, Serializable {
             throw new AssertionError();
         }
     }
-
 
 
     @Override

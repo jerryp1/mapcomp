@@ -1,6 +1,12 @@
 package edu.alibaba.mpc4j.crypto.fhe.modulus;
 
 /**
+ * This class contains static methods for creating a plaintext modulus easily.
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/modulus.h#L523
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/29
  */

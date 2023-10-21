@@ -10,6 +10,21 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
 import java.util.*;
 
 /**
+ * This class contains static methods for creating a coefficient modulus easily.
+ * Note that while these functions take a sec_level_type argument, all security
+ * guarantees are lost if the output is used with encryption parameters with
+ * a mismatching value for the poly_modulus_degree.
+ *
+ * The default value sec_level_type::tc128 provides a very high level of security
+ * and is the default security level enforced by Microsoft SEAL when constructing
+ * a SEALContext object. Normal users should not have to specify the security
+ * level explicitly anywhere.
+ *
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/modulus.h#L424
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/27
  */
@@ -48,7 +63,7 @@ public class CoeffModulus {
      * SecurityLevelType default is TC128
      *
      * @param polyModulusDegree N
-     * @return
+     * @return max bit-count of coeffModulus in given polyModulusDegree
      */
     public static int maxBitCount(int polyModulusDegree) {
 
@@ -122,7 +137,6 @@ public class CoeffModulus {
      * @param polyModulusDegree The value of the polyModulusDegree
      *                          encryption parameter
      * @param bitSizes          The bit-lengths of the primes to be generated
-     *
      * @return an array consisting of Modulus elements
      */
     public static Modulus[] create(int polyModulusDegree, int[] bitSizes) {

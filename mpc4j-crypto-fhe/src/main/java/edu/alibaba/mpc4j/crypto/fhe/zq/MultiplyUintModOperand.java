@@ -3,9 +3,12 @@ package edu.alibaba.mpc4j.crypto.fhe.zq;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 
 /**
- *  This struct contains a operand and a precomputed quotient: (operand << 64) / modulus, for a specific modulus.
- *  When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed. Operand must be less than modulus.
- *  In addition, this method is also called Shoup's Modular Multiplication.
+ * This struct contains an operand and a precomputed quotient: (operand << 64) / modulus, for a specific modulus.
+ * When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed. Operand must be less than modulus.
+ * In addition, this method is also called Shoup's Modular Multiplication.
+ * <p>
+ * The implementation is from https:https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithsmallmod.h#L255
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/10
@@ -23,7 +26,8 @@ public class MultiplyUintModOperand implements Cloneable {
 
     /**
      * re-compute the quotient by: 2^64 * operand / modulus.value
-     * @param modulus
+     *
+     * @param modulus a Modulus object
      */
     public void setQuotient(Modulus modulus) {
 
@@ -39,8 +43,9 @@ public class MultiplyUintModOperand implements Cloneable {
 
     /**
      * set operand and computation 2^64 * operand / modulus.value
-     * @param newOperand
-     * @param modulus
+     *
+     * @param newOperand a new operand, a 64-bit value
+     * @param modulus    a Modulus object
      */
     public void set(long newOperand, Modulus modulus) {
         assert newOperand < modulus.getValue();
@@ -60,9 +65,8 @@ public class MultiplyUintModOperand implements Cloneable {
     @Override
     public MultiplyUintModOperand clone() {
         try {
-            MultiplyUintModOperand clone = (MultiplyUintModOperand) super.clone();
             // TODO: copy mutable state here, so the clone can't change the internals of the original
-            return clone;
+            return (MultiplyUintModOperand) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }

@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import java.util.Arrays;
 
 /**
+ *
+ *
+ *
  * @author Qixian Zhou
  * @date 2023/8/4
  */
@@ -428,9 +431,10 @@ public class UintCore {
         int result = 0;
         int index = uint64Count - 1;
         // once result = 1, break loop
+        // 从高位往低位比，如果相等（result == 0）则比较下一位，否则就结束了，大小已经比较出来了
         for (; result == 0 && uint64Count-- > 0; index--) {
-//            result = (operand1[index] > operand2[index] ? 1 : 0) - ((operand1[index] < operand2[index] ? 1 : 0));
-            result = compareUint64(operand1[index], operand2[index]);
+//            result = compareUint64(operand1[index], operand2[index]);
+            result = Long.compareUnsigned(operand1[index], operand2[index]);
         }
         return result;
     }
@@ -444,28 +448,31 @@ public class UintCore {
      */
     public static int compareUint64(long a, long b) {
 
-        if (a == b) {
-            return 0;
-        }
-        // 0 < any  and a != b
-        if (a == 0) {
-            return -1;
-        }
-        // and a != b
-        if (b == 0) {
-            return 1;
-        }
-        if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
-            // a = -1 b = -2 , a > b , return 1
-            // a == b do not occur here
-            return a > b ? 1 : -1;
-        }
-        // a > 0 , b must be < 0, so a < b
-        if (a > 0) {
-            return -1;
-        }
-        // when reach here,only one possible: a < 0 && b > 0
-        return 1;
+
+        return Long.compareUnsigned(a, b);
+
+//        if (a == b) {
+//            return 0;
+//        }
+//        // 0 < any  and a != b
+//        if (a == 0) {
+//            return -1;
+//        }
+//        // and a != b
+//        if (b == 0) {
+//            return 1;
+//        }
+//        if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
+//            // a = -1 b = -2 , a > b , return 1
+//            // a == b do not occur here
+//            return a > b ? 1 : -1;
+//        }
+//        // a > 0 , b must be < 0, so a < b
+//        if (a > 0) {
+//            return -1;
+//        }
+//        // when reach here,only one possible: a < 0 && b > 0
+//        return 1;
     }
 
     /**
@@ -499,8 +506,8 @@ public class UintCore {
         }
 
         for (; result == 0 && minUint64Count-- > 0; operand1Index--, operand2Index--) {
-//            result = (operand1[operand1Index] > operand2[operand2Index] ? 1 : 0) - ((operand1[operand1Index] < operand2[operand2Index] ? 1 : 0));
-            result = compareUint64(operand1[operand1Index], operand2[operand2Index]);
+//            result = compareUint64(operand1[operand1Index], operand2[operand2Index]);
+            result = Long.compareUnsigned(operand1[operand1Index], operand2[operand2Index]);
         }
         return result;
     }

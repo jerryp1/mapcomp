@@ -12,6 +12,16 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 import java.util.stream.IntStream;
 
 /**
+ * This class implements the BEHZ RNS scheme. The scheme comes from:
+ * <p>
+ * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * <p/>
+ *
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/rns.h#L190
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/21
  */

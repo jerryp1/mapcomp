@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 /**
  * Comparing UintArithmeticSmallMod, the modulus is a long[], can represent larger modulus.
  * When reconstruct CRT, we need q = q1 * q2 * ... * qn, we need long[] to represent the q
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithmod.h
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/5
@@ -13,21 +16,26 @@ public class UintArithmeticMod {
 
 
     /**
+     * Compute (operand + 1) mod modulus and store it in result[0, uint64Count).
      *
-     * @param operand
-     * @param modulus
-     * @param uint64Count
-     * @param result (operand + 1) % modulus
+     * @param operand     a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand
+     * @param result      result[0, uint64Count) stores (operand + 1) % modulus
      */
     public static void incrementUintMod(long[] operand, long[] modulus, int uint64Count, long[] result) {
 
+        assert operand != null;
+        assert modulus != null;
         assert uint64Count > 0;
+        assert result != null;
         // operand < modulus
         assert UintCore.isLessThanUint(operand, modulus, uint64Count);
         // two different array
         assert modulus != result;
         // operand + 1
         long carry = UintArithmetic.incrementUint(operand, uint64Count, result);
+        // reduce
         if (carry > 0 || UintCore.isGreaterThanOrEqualUint(result, modulus, uint64Count)) {
             UintArithmetic.subUint(result, modulus, uint64Count, result);
         }
@@ -35,14 +43,18 @@ public class UintArithmeticMod {
     }
 
     /**
+     * Compute (operand - 1) mod modulus and store it in result[0, uint64Count).
      *
-     * @param operand
-     * @param modulus
-     * @param uint64Count
-     * @param result (operand - 1) % modulus
+     * @param operand     a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand
+     * @param result      result[0, uint64Count) stores (operand - 1) % modulus
      */
     public static void decrementUintMod(long[] operand, long[] modulus, int uint64Count, long[] result) {
 
+        assert operand != null;
+        assert modulus != null;
+        assert result != null;
         assert uint64Count > 0;
         // operand < modulus
         assert UintCore.isLessThanUint(operand, modulus, uint64Count);
@@ -56,14 +68,18 @@ public class UintArithmeticMod {
     }
 
     /**
+     * Compute (-operand mod modulus) and store it in result[0, uint64Count).
      *
-     * @param operand
-     * @param modulus
-     * @param uint64Count
-     * @param result (-operand) % modulus
+     * @param operand     a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand
+     * @param result      result[0, uint64Count) stores (-operand mod modulus)
      */
     public static void negateUintMod(long[] operand, long[] modulus, int uint64Count, long[] result) {
 
+        assert operand != null;
+        assert modulus != null;
+        assert result != null;
         assert uint64Count > 0;
         // operand < modulus
         assert UintCore.isLessThanUint(operand, modulus, uint64Count);
@@ -72,45 +88,56 @@ public class UintArithmeticMod {
         // operand - 1
         if (UintCore.isZeroUint(operand, uint64Count)) {
             UintCore.setZeroUint(uint64Count, result);
-        }else {
+        } else {
             // Otherwise, we know operand > 0 and < modulus so subtract modulus - operand.
             UintArithmetic.subUint(modulus, operand, uint64Count, result);
         }
     }
 
     /**
+     * Compute ( operand * inv(2) mod modulus) and store it in result[0, uint64Count).
      *
-     * @param operand
-     * @param modulus
-     * @param uint64Count
-     * @param result operand / 2 mod modulus
+     * @param operand     a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand
+     * @param result      result[0, uint64Count) stores (operand * inv(2) mod modulus)
      */
     public static void div2UintMod(long[] operand, long[] modulus, int uint64Count, long[] result) {
-        // Q mod 2n must be 1
+
+        assert operand != null;
+        assert modulus != null;
+        assert result != null;
+        assert uint64Count > 0;
+        // modulus 最低位为 必须是1
         assert UintCore.isBitSetUint(modulus, uint64Count, 0);
-        assert UintCore.isLessThanUint(operand, modulus, uint64Count);
         // operand < modulus, so we do not need to handle the mod operation
-        if ((operand[0] & 1) > 0) { // odd
+        assert UintCore.isLessThanUint(operand, modulus, uint64Count);
+
+        // odd
+        if ((operand[0] & 1) > 0) {
             long carry = UintArithmetic.addUint(operand, modulus, uint64Count, result);
             UintArithmetic.rightShiftUint(result, 1, uint64Count, result);
             if (carry > 0) {
                 UintCore.setBitUint(result, uint64Count, uint64Count * Constants.UINT64_BITS - 1);
-            }
-        }else {// even
+            }// even
+        } else {
             UintArithmetic.rightShiftUint(operand, 1, uint64Count, result);
         }
     }
 
     /**
+     * Compute (operand1 + operand1) mod modulus
      *
-     * @param operand1
-     * @param operand2
-     * @param modulus
-     * @param uint64Count
-     * @param result (a + b) mod modulus
+     * @param operand1    a base-2^64 value
+     * @param operand2    a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand1 and operand2
+     * @param result      result[0, uint64Count) stores (operand1 + operand1) mod modulus
      */
-    public static void addUintUintMod(long[] operand1, long[] operand2, long[] modulus, int uint64Count,  long[] result) {
-
+    public static void addUintUintMod(long[] operand1, long[] operand2, long[] modulus, int uint64Count, long[] result) {
+        assert operand1 != null;
+        assert operand2 != null;
+        assert modulus != null;
         assert uint64Count > 0;
         assert UintCore.isLessThanUint(operand1, modulus, uint64Count);
         assert UintCore.isLessThanUint(operand2, modulus, uint64Count);
@@ -123,15 +150,19 @@ public class UintArithmeticMod {
     }
 
     /**
+     * Compute (operand1 - operand1) mod modulus
      *
-     * @param operand1
-     * @param operand2
-     * @param modulus
-     * @param uint64Count
-     * @param result (a-b) mod modulus
+     * @param operand1    a base-2^64 value
+     * @param operand2    a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count number of uint64 used in operand1 and operand2
+     * @param result      result[0, uint64Count) stores (operand1 - operand1) mod modulus
      */
-    public static void subUintUintMod(long[] operand1, long[] operand2, long[] modulus, int uint64Count,  long[] result) {
+    public static void subUintUintMod(long[] operand1, long[] operand2, long[] modulus, int uint64Count, long[] result) {
 
+        assert operand1 != null;
+        assert operand2 != null;
+        assert modulus != null;
         assert uint64Count > 0;
         assert UintCore.isLessThanUint(operand1, modulus, uint64Count);
         assert UintCore.isLessThanUint(operand2, modulus, uint64Count);
@@ -145,15 +176,18 @@ public class UintArithmeticMod {
 
 
     /**
-     * not that operand and modulus are base-2^64 number
-     * @param operand
-     * @param modulus
-     * @param uint64Count
-     * @param result
+     * Computer (operand^{-1}) mod modulus and stores it in result[0, uint64Count)
+     *
+     * @param operand     a base-2^64 value
+     * @param modulus     a base-2^64 value, represents a large modulus
+     * @param uint64Count umber of uint64 used in operand1
+     * @param result      result[0, uint64Count) stores (operand^{-1}) mod modulus
      * @return if operand's invert exist, return true, otherwise return false
      */
     public static boolean tryInvertUintMod(long[] operand, long[] modulus, int uint64Count, long[] result) {
 
+        assert operand != null;
+        assert modulus != null;
         assert uint64Count > 0;
         // operand should < modulus
         assert UintCore.isLessThanUint(operand, modulus, uint64Count);
@@ -168,7 +202,7 @@ public class UintArithmeticMod {
             return true;
         }
 
-        long[] numerator =  new long[uint64Count];
+        long[] numerator = new long[uint64Count];
         UintCore.setUint(modulus, uint64Count, numerator);
 
         long[] denominator = new long[uint64Count];
@@ -188,7 +222,7 @@ public class UintArithmeticMod {
 
         long[] invertCurr = new long[uint64Count];
         UintCore.setUint(1, uint64Count, invertCurr);
-        boolean invertCurrPositive= true;
+        boolean invertCurrPositive = true;
 
         long[] invertNext = new long[uint64Count];
         boolean invertNextPositive = true;
@@ -249,7 +283,7 @@ public class UintArithmeticMod {
                 if (numeratorBits > 0) {
                     UintArithmetic.leftShiftUint(difference, numeratorShift, divisionUint64Count, numerator);
                     numeratorBits += numeratorShift;
-                }else { // if numeratorBits = 0, mean difference = 0, so numerator = 0
+                } else { // if numeratorBits = 0, mean difference = 0, so numerator = 0
                     UintCore.setZeroUint(divisionUint64Count, numerator);
                 }
                 // Adjust quotient and remaining shifts as a result of shifting numerator.
@@ -261,7 +295,9 @@ public class UintArithmeticMod {
             UintArithmetic.rightShiftUint(denominator, denominatorShift, divisionUint64Count, denominator);
             denominatorBits -= denominatorShift;
             // We are done if remainder (which is stored in numerator) is zero.
-            if (numeratorBits == 0) break;
+            if (numeratorBits == 0) {
+                break;
+            }
             // Correct for shifting of denominator.
             UintArithmetic.rightShiftUint(numerator, denominatorShift, divisionUint64Count, numerator);
             numeratorBits -= denominatorShift;
@@ -274,7 +310,7 @@ public class UintArithmeticMod {
                 // do not need to worry about overflow due to known limits
                 // on the coefficients proved in the euclidean algorithm.
                 UintArithmetic.addUint(invertPrior, invertNext, uint64Count, invertNext);
-            }else {
+            } else {
                 // If both sides of add have opposite sign, then subtract
                 // and check for overflow.
                 long borrow = UintArithmetic.subUint(invertPrior, invertNext, uint64Count, invertNext);
@@ -282,7 +318,7 @@ public class UintArithmeticMod {
                     // No borrow means |invert_prior| >= |invert_next|,
                     // so sign is same as invert_prior.
                     invertNextPositive = invertPriorPositive;
-                }else {
+                } else {
                     // Borrow means |invert prior| < |invert_next|,
                     // so sign is opposite of invert_prior.
                     invertNextPositive = !invertPriorPositive;
@@ -314,14 +350,20 @@ public class UintArithmeticMod {
         // Correct coefficient if negative by modulo.
         if (!invertCurrPositive && !UintCore.isZeroUint(invertCurr, uint64Count)) {
             UintArithmetic.subUint(modulus, invertCurr, uint64Count, invertCurr);
-            invertCurrPositive = true;
+//            invertCurrPositive = true;
         }
         // set result
-        UintCore.setUint(invertCurr, uint64Count, result);
+        System.arraycopy(invertCurr, 0, result, 0, uint64Count);
+//        UintCore.setUint(invertCurr, uint64Count, result);
         return true;
     }
 
-
+    /**
+     * swap as and bs.
+     *
+     * @param as an array
+     * @param bs an array
+     */
     private static void swapArray(long[] as, long[] bs) {
         assert as.length == bs.length;
         long[] tmp = new long[as.length];

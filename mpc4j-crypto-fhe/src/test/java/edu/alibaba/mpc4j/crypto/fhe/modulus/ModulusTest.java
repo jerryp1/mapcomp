@@ -30,8 +30,8 @@ public class ModulusTest {
 
         value = 2;
         mod.setValue(value);
-        System.out.printf("barrett quotient: %s, %s, %s%n", Long.toHexString(mod.getConstRatio()[0]), Long.toHexString(mod.getConstRatio()[1]), Long.toHexString(mod.getConstRatio()[2]));
-        System.out.printf("barrett remainder: %d%n", mod.getConstRatio()[2]);
+//        System.out.printf("barrett quotient: %s, %s, %s%n", Long.toHexString(mod.getConstRatio()[0]), Long.toHexString(mod.getConstRatio()[1]), Long.toHexString(mod.getConstRatio()[2]));
+//        System.out.printf("barrett remainder: %d%n", mod.getConstRatio()[2]);
 
 
         value = 0xF00000F00000FL;
@@ -101,10 +101,5 @@ public class ModulusTest {
         System.out.println(newModulus[0]);
         System.out.println(moduluses[0]); // origin modulus will be changed, so this is a shallow copy
     }
-
-
-
-
-
 
 }

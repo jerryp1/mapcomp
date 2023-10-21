@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.crypto.fhe.zq;
 import java.util.Arrays;
 
 /**
- * Unsigned int64 arithmetic.
+ * Unsigned int arithmetic, or base-2^64 arithmetic.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithmod.h,
  * modification here is to use long in java equivalent to uint64_t in C++ as the most basic data type.
@@ -553,27 +553,6 @@ public class UintArithmetic {
         result = left + (middle >>> 32) + (tmpSum >>> 32);
         return result;
     }
-
-//    /**
-//     * Compute \sum(operand1[i] * operand2[i]), i \in [0, count) and store it in accumulator[0, count)
-//     *
-//     * @param operand1    an array, each value is an unsigned value, note that this is not a base-2^64 value
-//     * @param operand2    an array, each value is an unsigned value, note that this is not a base-2^64 value
-//     * @param accumulator store \sum(operand1[i] * operand2[i]), i \in [0, count)
-//     * @param count       number of elements in operan1 and operand2, that need to participate in the multiply
-//     */
-//    public static void multiplyAccumulateUint64(long[] operand1, long[] operand2, long[] accumulator, int count) {
-//
-//        if (count == 0) {
-//            return;
-//        }
-//        long[] qWord = new long[2];
-//        multiplyUint64(operand1[0], operand2[0], qWord);
-//        long[] c1 = Arrays.copyOfRange(operand1, 1, count);
-//        long[] c2 = Arrays.copyOfRange(operand2, 1, count);
-//        multiplyAccumulateUint64(c1, c2, accumulator, count - 1);
-//        addUint128(qWord, accumulator, accumulator);
-//    }
 
     /**
      * Compute \sum(operand1[i] * operand2[i]), i \in [0, count) and store it in accumulator[0, count)

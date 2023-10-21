@@ -7,10 +7,17 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * RNS Base Class.
- * Represents a group of co-prime moduli(Modulus objects): [q1, q2, ..., qk], q or Q = \prod q_i
+ * RNS Base Class. Represents a group of co-prime moduli(Modulus objects): [q1, q2, ..., qk], q or Q = \prod q_i
  * providing decompose(convert x in Z_q to Z_{q_i} ) and compose (convert x_i \in Z_{q_i} to x \in Z_q)
- * functions.
+ * functions. The scheme comes from:
+ * <p>
+ * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * <p/>
+ *
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/util/rns.h#L22
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/17
@@ -34,7 +41,7 @@ public class RnsBase implements Cloneable {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append( "RnsBase{" +
+        sb.append("RnsBase{" +
                 "size=" + size +
                 ", base=" + Arrays.toString(base) +
                 ", baseProd=" + Arrays.toString(baseProd));

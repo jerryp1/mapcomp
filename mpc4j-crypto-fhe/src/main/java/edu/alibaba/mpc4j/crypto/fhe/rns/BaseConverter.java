@@ -9,8 +9,15 @@ import java.util.Arrays;
 
 /**
  * This class used for converting x value in  RNS-Base Q = [q1, q2, ..., qk]  into another RNS-Base M = [m1, m2, ..., mn].
- * Ref: Section 3.1, equation (2) in the following paper:
- * A Full RNS Variant of FV like Somewhat Homomorphic Encryption Schemes (BEHZ).
+ * The scheme comes from:
+ * <p>
+ * Section 3.1, equation (2) in the following paper:
+ * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * <p/>
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/util/rns.h#L129
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/19
@@ -19,7 +26,7 @@ public class BaseConverter {
 
 
     /**
-     *  input base, size of k: q1, q2, ..., qk, prod is q
+     * input base, size of k: q1, q2, ..., qk, prod is q
      */
     private RnsBase inBase;
 
@@ -35,8 +42,6 @@ public class BaseConverter {
     // the shape is: n * k
     // n is the size of outBase, k is the size of inBase
     private long[][] baseChangeMatrix;
-
-
 
 
     /**
@@ -159,10 +164,10 @@ public class BaseConverter {
 
             for (int j = 0; j < count; j++) {
                 out.setCoeff(i, j, UintArithmeticSmallMod.dotProductMod(
-                                temp[j],
-                                baseChangeMatrix[i],
-                                inBase.getSize(),
-                                outBase.getBase(i)));
+                        temp[j],
+                        baseChangeMatrix[i],
+                        inBase.getSize(),
+                        outBase.getBase(i)));
             }
 
         }
@@ -170,7 +175,7 @@ public class BaseConverter {
 
     /**
      * RnsIter = long[] + index + N + k
-     *
+     * <p>
      * out 这种表示 整个 long[] 就是一个完整的 RnsIter, 所以不需要其他辅助信息来确定
      *
      * @param in
@@ -188,7 +193,7 @@ public class BaseConverter {
             int outStartIndex,
             int outCoeffCount,
             int outCoeffModulusSize
-            ) {
+    ) {
 
         assert inCoeffModulusSize == inBase.getSize(); // k
         assert outCoeffModulusSize == outBase.getSize();
@@ -214,7 +219,7 @@ public class BaseConverter {
                             in[inStartIndex + i * inCoeffCount + j], inBase.getBase(i));
                 }
 
-            }else {
+            } else {
                 for (int j = 0; j < count; j++) {
                     temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
                             in[inStartIndex + i * inCoeffCount + j],
@@ -229,10 +234,10 @@ public class BaseConverter {
         for (int i = 0; i < outBase.getSize(); i++) {
             for (int j = 0; j < count; j++) {
                 out[outStartIndex + i * count + j] = UintArithmeticSmallMod.dotProductMod(
-                                temp[j],
-                                baseChangeMatrix[i],
-                                inBase.getSize(),
-                                outBase.getBase(i));
+                        temp[j],
+                        baseChangeMatrix[i],
+                        inBase.getSize(),
+                        outBase.getBase(i));
 
             }
         }
@@ -265,7 +270,7 @@ public class BaseConverter {
                 for (int j = 0; j < count; j++) {
                     temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i));
                 }
-            }else {
+            } else {
 
                 for (int j = 0; j < count; j++) {
                     temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
