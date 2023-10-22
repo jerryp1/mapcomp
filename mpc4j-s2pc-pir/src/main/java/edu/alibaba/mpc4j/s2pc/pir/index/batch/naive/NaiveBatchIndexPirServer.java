@@ -28,12 +28,12 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
     /**
      * single index PIR server
      */
-    private final SingleIndexPirServer singleIndexPirServer;
+    private final SingleIndexPirServer server;
 
     public NaiveBatchIndexPirServer(Rpc serverRpc, Party clientParty, NaiveBatchIndexPirConfig config) {
         super(getInstance(), serverRpc, clientParty, config);
-        singleIndexPirServer = SingleIndexPirFactory.createServer(serverRpc, clientParty, config.getSingleIndexPirConfig());
-        addSubPtos(singleIndexPirServer);
+        server = SingleIndexPirFactory.createServer(serverRpc, clientParty, config.getSingleIndexPirConfig());
+        addSubPtos(server);
     }
 
     @Override
@@ -43,11 +43,11 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
 
         stopWatch.start();
         // init single index PIR server
-        singleIndexPirServer.init(database);
+        server.init(database);
         stopWatch.stop();
-        long initIndexPirTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initIndexPirTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -63,7 +63,7 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
             otherParty().getPartyId(), rpc.ownParty().getPartyId()
         );
         List<byte[]> clientQueryPayload = rpc.receive(clientQueryHeader).getPayload();
-        int querySize = singleIndexPirServer.getQuerySize();
+        int querySize = server.getQuerySize();
         MpcAbortPreconditions.checkArgument(clientQueryPayload.size() % querySize == 0);
 
         // generate response
@@ -74,7 +74,7 @@ public class NaiveBatchIndexPirServer extends AbstractBatchIndexPirServer {
         List<byte[]> responsePayload = intStream
             .mapToObj(i -> {
                 try {
-                    return singleIndexPirServer.generateResponse(
+                    return server.generateResponse(
                         clientQueryPayload.subList(i * querySize, (i + 1) * querySize)
                     );
                 } catch (MpcAbortException e) {

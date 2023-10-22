@@ -1,6 +1,9 @@
 package edu.alibaba.mpc4j.s2pc.pso.main;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.pso.main.payablepsi.PayablePsiMain;
+import edu.alibaba.mpc4j.s2pc.pso.main.psi.PsiMain;
+import edu.alibaba.mpc4j.s2pc.pso.main.psica.PsiCaMain;
 import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuBlackIpMain;
 import edu.alibaba.mpc4j.s2pc.pso.main.psu.PsuMain;
 import org.slf4j.Logger;
@@ -38,6 +41,18 @@ public class PsoMain {
             case PsuMain.PTO_TYPE_NAME:
                 PsuMain psuMain = new PsuMain(properties);
                 psuMain.runNetty();
+                break;
+            case PsiMain.PTO_TYPE_NAME:
+                PsiMain psiMain = new PsiMain(properties);
+                psiMain.runNetty();
+                break;
+            case PayablePsiMain.PTO_TYPE_NAME:
+                PayablePsiMain payablePsiMain = new PayablePsiMain(properties);
+                payablePsiMain.runNetty();
+                break;
+            case PsiCaMain.PTO_TYPE_NAME:
+                PsiCaMain psiCaMain = new PsiCaMain(properties);
+                psiCaMain.runNetty();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid pto_type: " + ptoType);

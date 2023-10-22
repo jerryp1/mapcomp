@@ -92,15 +92,18 @@ jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_pdsm_Sj23PdsmUcps
     Plaintext mask(slot_count);
     mask.set_zero();
     vector<uint64_t> coeffs(slot_count);
-    uint64_t plain_modulus = parms.plain_modulus().value();
     auto random_factory = seal::UniformRandomGeneratorFactory::DefaultFactory();
     auto random = random_factory->create();
     for (uint32_t j = 0; j < slot_count; j++) {
-        mask[j] = random_nonzero_integer(random, plain_modulus / (1L << 32));
+        mask[j] = random_nonzero_integer(random, 1L << 32);
     }
     evaluator.multiply_plain_inplace(f_evaluated, mask);
     Plaintext r = deserialize_plaintext_from_coeff(env, r_coeffs, context);
     evaluator.add_plain_inplace(f_evaluated, r);
+    Ciphertext zero;
+    zero.resize(context, 2);
+    sample_poly_uniform(40, context.first_context_data()->parms(), zero.data(0));
+    evaluator.add_inplace(f_evaluated, zero);
     while (f_evaluated.parms_id() != context.last_parms_id()) {
         evaluator.mod_switch_to_next_inplace(f_evaluated);
     }

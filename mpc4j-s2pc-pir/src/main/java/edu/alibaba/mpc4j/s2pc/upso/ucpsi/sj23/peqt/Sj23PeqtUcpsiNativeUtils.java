@@ -23,9 +23,10 @@ public class Sj23PeqtUcpsiNativeUtils {
      *
      * @param polyModulusDegree poly modulus degree.
      * @param plainModulus      plain modulus.
+     * @param coeffModulusBits  coeff modulus bits.
      * @return encryption params.
      */
-    static native byte[] genEncryptionParameters(int polyModulusDegree, long plainModulus);
+    static native byte[] genEncryptionParameters(int polyModulusDegree, long plainModulus, int[] coeffModulusBits);
 
     /**
      * generate key pair.

@@ -65,6 +65,18 @@ public class Cmg21KwPirParams implements KwPirParams {
      * max retrieval size
      */
     private final int maxRetrievalSize;
+    /**
+     * encryption params
+     */
+    private final byte[] encryptionParams;
+    /**
+     * item per ciphertext
+     */
+    private final int itemPerCiphertext;
+    /**
+     * ciphertext num
+     */
+    private final int ciphertextNum;
 
     private Cmg21KwPirParams(CuckooHashBinType cuckooHashBinType, int binNum, int maxPartitionSizePerBin,
                              int itemEncodedSlotSize, int psLowDegree, int[] queryPowers,
@@ -81,6 +93,9 @@ public class Cmg21KwPirParams implements KwPirParams {
         this.coeffModulusBits = coeffModulusBits;
         this.expectServerSize = expectServerSize;
         this.maxRetrievalSize = maxRetrievalSize;
+        this.itemPerCiphertext = polyModulusDegree / itemEncodedSlotSize;
+        this.ciphertextNum = binNum / itemPerCiphertext;
+        this.encryptionParams = Cmg21KwPirNativeUtils.genEncryptionParameters(polyModulusDegree, plainModulus, coeffModulusBits);
     }
 
     /**
@@ -162,6 +177,29 @@ public class Cmg21KwPirParams implements KwPirParams {
         0, new int[]{1, 3, 8, 19, 33, 39, 92, 102},
         65537L, 8192, new int[]{56, 48, 48},
         1000000, 1
+    );
+
+    /**
+     * expect server size 100K, max client retrieval size 1
+     */
+    public static final Cmg21KwPirParams SERVER_100K_CLIENT_MAX_1 = Cmg21KwPirParams.uncheckCreate(
+        CuckooHashBinType.NO_STASH_ONE_HASH, 409, 42,
+        5,
+        0, new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+            27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42},
+        65537L, 2048, new int[]{48},
+        100000, 1
+    );
+
+    /**
+     * expect server size 16M, max client retrieval size 1
+     */
+    public static final Cmg21KwPirParams SERVER_16M_CLIENT_MAX_1 = Cmg21KwPirParams.uncheckCreate(
+        CuckooHashBinType.NO_STASH_ONE_HASH, 2048, 782,
+        4,
+        26, new int[]{1, 5, 8, 27, 135},
+        1785857L, 8192, new int[]{56, 56, 56, 50},
+        16000000, 1
     );
 
     /**
@@ -315,7 +353,7 @@ public class Cmg21KwPirParams implements KwPirParams {
             });
         }
         for (int i = 0; i < itemEncodedSlotSize; i++) {
-            assert (encodedArray[i] < plainModulus);
+            assert encodedArray[i] < plainModulus;
         }
         return encodedArray;
     }
@@ -344,5 +382,17 @@ public class Cmg21KwPirParams implements KwPirParams {
             }
         }
         return encodedArray;
+    }
+
+    public byte[] getEncryptionParams() {
+        return encryptionParams;
+    }
+
+    public int getItemPerCiphertext() {
+        return itemPerCiphertext;
+    }
+
+    public int getCiphertextNum() {
+        return ciphertextNum;
     }
 }

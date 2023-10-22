@@ -78,7 +78,7 @@ public class OkvsBopprfSender extends AbstractBopprfSender {
         stopWatch.stop();
         long oprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, oprfTime, "Sender runs OPRF");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, oprfTime, "Sender runs OPRF");
 
         stopWatch.start();
         // generate OKVS keys

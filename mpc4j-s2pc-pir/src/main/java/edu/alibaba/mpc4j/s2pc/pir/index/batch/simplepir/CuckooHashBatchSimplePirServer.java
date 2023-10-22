@@ -183,12 +183,7 @@ public class CuckooHashBatchSimplePirServer extends AbstractBatchIndexPirServer 
         int[] totalIndex = IntStream.range(0, num).toArray();
         IntHashBin intHashBin = new SimpleIntHashBin(envType, binNum, num, hashKeys);
         intHashBin.insertItems(totalIndex);
-        int maxBinSize = intHashBin.binSize(0);
-        for (int i = 1; i < binNum; i++) {
-            if (intHashBin.binSize(i) > maxBinSize) {
-                maxBinSize = intHashBin.binSize(i);
-            }
-        }
+        int maxBinSize = IntStream.range(0, binNum).map(intHashBin::binSize).max().orElse(0);
         byte[][][] paddingCompleteHashBin = new byte[binNum][maxBinSize][elementByteLength];
         byte[] paddingEntry = BytesUtils.randomByteArray(elementByteLength, elementBitLength, secureRandom);
         for (int i = 0; i < binNum; i++) {

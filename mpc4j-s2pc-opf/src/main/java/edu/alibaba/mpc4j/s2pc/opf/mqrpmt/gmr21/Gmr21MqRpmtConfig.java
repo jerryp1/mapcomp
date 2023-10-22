@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.opf.mqrpmt.gmr21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
 import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 import edu.alibaba.mpc4j.s2pc.opf.mqrpmt.MqRpmtConfig;
@@ -51,6 +53,13 @@ public class Gmr21MqRpmtConfig extends AbstractMultiPartyPtoConfig implements Mq
     @Override
     public MqRpmtFactory.MqRpmtType getPtoType() {
         return MqRpmtFactory.MqRpmtType.GMR21;
+    }
+
+    @Override
+    public int getVectorLength(int serverElementSize, int clientElementSize) {
+        MathPreconditions.checkGreater("server_element_size", serverElementSize, 1);
+        MathPreconditions.checkGreater("client_element_size", clientElementSize, 1);
+        return CuckooHashBinFactory.getBinNum(cuckooHashBinType, serverElementSize);
     }
 
     public OprfConfig getCuckooHashOprfConfig() {
