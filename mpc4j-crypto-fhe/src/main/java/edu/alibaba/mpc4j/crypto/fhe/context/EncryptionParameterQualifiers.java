@@ -3,6 +3,18 @@ package edu.alibaba.mpc4j.crypto.fhe.context;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 
 /**
+ * Stores a set of attributes (qualifiers) of a set of encryption parameters.
+ * These parameters are mainly used internally in various parts of the library,
+ * e.g., to determine which algorithmic optimizations the current support. The
+ * qualifiers are automatically created by the SEALContext class, silently passed
+ * on to classes such as Encryptor, Evaluator, and Decryptor, and the only way to
+ * change them is by changing the encryption parameters themselves. In other
+ * words, a user will never have to create their own instance of this class, and
+ * in most cases never have to worry about it at all.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/context.h#L28
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/11
  */
@@ -60,7 +72,7 @@ public class EncryptionParameterQualifiers {
      * element to NTT domain (Evaluator::transform_to_ntt) can be used when the
      * plaintext modulus is smaller than each prime in the coefficient modulus.
      * In this case the variable using_fast_plain_lift is set to true.
-     *
+     * <p>
      * 明文模比任意的 单个密文模都要小时，就是 true
      */
     boolean usingFastPlainLift;

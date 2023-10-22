@@ -21,8 +21,7 @@ import java.util.*;
  * level explicitly anywhere.
  *
  * <p>
- * The implementation is from:
- * https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/modulus.h#L424
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/modulus.h#L424
  * </p>
  *
  * @author Qixian Zhou

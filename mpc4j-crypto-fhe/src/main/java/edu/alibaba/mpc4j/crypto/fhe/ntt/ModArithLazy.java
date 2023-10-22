@@ -5,6 +5,10 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 
 /**
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/ntt.h#L21
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/27
  */
@@ -15,7 +19,10 @@ public class ModArithLazy {
     private long twoTimesModulus;
 
 
-    public ModArithLazy() {};
+    public ModArithLazy() {
+    }
+
+    ;
 
     public ModArithLazy(Modulus modulus) {
 
@@ -34,7 +41,7 @@ public class ModArithLazy {
     }
 
     public long add(long a, long b) {
-        return  a + b;
+        return a + b;
     }
 
     public long sub(long a, long b) {
@@ -58,7 +65,7 @@ public class ModArithLazy {
     }
 
     public long guard(long a) {
-        return a >= twoTimesModulus ? a - twoTimesModulus: a;
+        return a >= twoTimesModulus ? a - twoTimesModulus : a;
     }
 
 }

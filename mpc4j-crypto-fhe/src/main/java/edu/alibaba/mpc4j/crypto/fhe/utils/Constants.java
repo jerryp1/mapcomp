@@ -1,6 +1,11 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 /**
+ * This class provides global static constants.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/defines.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/3
  */

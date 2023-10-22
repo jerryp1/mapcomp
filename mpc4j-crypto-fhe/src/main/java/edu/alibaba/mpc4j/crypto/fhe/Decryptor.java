@@ -21,6 +21,14 @@ import org.checkerframework.checker.units.qual.C;
 import java.util.Arrays;
 
 /**
+ * Decrypts Ciphertext objects into Plaintext objects. Constructing a Decryptor
+ * requires a SEALContext with valid encryption parameters, and the secret key.
+ * The Decryptor is also used to compute the invariant noise budget in a given
+ * ciphertext.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/decryptor.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/26
  */
@@ -286,7 +294,7 @@ public class Decryptor {
                             encryptedCopy,
                             rnsIterStartIndex1 + j * coeffCount,
                             secretKeyArray,
-                            rnsIterStartIndex2+ j * coeffCount,
+                            rnsIterStartIndex2 + j * coeffCount,
                             coeffCount,
                             coeffModulus[j],
                             rnsIterStartIndex1 + j * coeffCount,
@@ -730,11 +738,10 @@ public class Decryptor {
     }
 
     /**
-     *
      * @param poly
      * @param polyStride
      * @param coeffCount
-     * @param modulus a base-2^64 value
+     * @param modulus    a base-2^64 value
      * @param result
      */
     private void polyInftyNormCoeffModStrideIter(
@@ -743,7 +750,7 @@ public class Decryptor {
             int coeffCount,
             long[] modulus,
             long[] result
-    ){
+    ) {
 
         int coeffUint64Count = polyStride;
         // Construct negative threshold: (modulus + 1) / 2
@@ -761,7 +768,7 @@ public class Decryptor {
 
             if (UintCore.isGreaterThanOrEqualUint(temp, modulusNegThreshold, coeffUint64Count)) {
                 UintArithmetic.subUint(modulus, temp, coeffUint64Count, coeffAbsValue);
-            }else {
+            } else {
                 // copy
                 System.arraycopy(temp, 0, coeffAbsValue, 0, coeffUint64Count);
             }
@@ -773,7 +780,6 @@ public class Decryptor {
         }
 
     }
-
 
 
 }

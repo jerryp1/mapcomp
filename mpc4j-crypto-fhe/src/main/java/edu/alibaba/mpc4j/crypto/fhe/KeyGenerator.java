@@ -18,6 +18,13 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * Generates matching secret key and public key. An existing KeyGenerator can
+ * also at any time be used to generate relinearization keys and Galois keys.
+ * Constructing a KeyGenerator requires only a SEALContext.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/keygenerator.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/14
  */
@@ -65,7 +72,6 @@ public class KeyGenerator {
     public SecretKey getSecretKey() {
         return secretKey;
     }
-
 
 
     private void generateSk(boolean isInitialized) {
@@ -434,7 +440,6 @@ public class KeyGenerator {
 //            );
 
 
-
             long factor = UintArithmeticSmallMod.barrettReduce64(
                     keyModulus[keyModulus.length - 1].getValue(),
                     keyModulus[i]);
@@ -725,8 +730,8 @@ public class KeyGenerator {
      */
     private void generateKeySwitchKeys(
             long[] newKeys,
-             int startIndex,
-             int newKeysCoeffCount,
+            int startIndex,
+            int newKeysCoeffCount,
             int newKeysModulusSize,
             int numKeys,
             KeySwitchKeys destination,

@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.crypto.fhe.utils;
 import java.io.*;
 
 /**
+ * This class provides serialization and deserialization methods.
+ *
  * @author Qixian Zhou
  * @date 2023/10/13
  */

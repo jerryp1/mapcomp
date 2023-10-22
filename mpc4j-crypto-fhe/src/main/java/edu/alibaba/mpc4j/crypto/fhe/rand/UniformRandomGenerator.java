@@ -6,6 +6,10 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import java.security.SecureRandom;
 
 /**
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/randomgen.h#L313
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/2
  */
@@ -55,7 +59,6 @@ public class UniformRandomGenerator {
         // copy
         System.arraycopy(temp, 0, destination, startIndex, temp.length);
     }
-
 
 
 }

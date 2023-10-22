@@ -9,7 +9,10 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * Number Theory class
+ * Number Theory methods.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/numth.h
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/9
@@ -127,7 +130,9 @@ public class Numth {
         // ensure degree is power of 2
         assert UintCore.getPowerOfTwo(degree) > 0;
 
-        if (root == 0) return false;
+        if (root == 0) {
+            return false;
+        }
 
         // We check if root is a degree-th root of unity in integers modulo modulus,
         // where degree is a power of two. It suffices to check that root^(degree/2)

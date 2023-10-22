@@ -13,6 +13,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
+ * Class to store a plaintext element. The data for the plaintext is a polynomial
+ * with coefficients modulo the plaintext modulus. The degree of the plaintext
+ * polynomial must be one less than the degree of the polynomial modulus. The
+ * backing array always allocates one 64-bit word per each coefficient of the
+ * polynomial.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/plaintext.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/2
  */
@@ -55,6 +64,7 @@ public class Plaintext implements Cloneable {
 
     /**
      * 对标 operator=
+     *
      * @param assign
      */
     public void copyFrom(Plaintext assign) {

@@ -5,6 +5,10 @@ import java.math.BigInteger;
 /**
  * This Class for some common arithmetic computation, just like safeArithmetic(safeAdd, safeMul..)
  *
+ *
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/common.h
+ * </p>
  * @author Qixian Zhou
  * @date 2023/8/9
  */

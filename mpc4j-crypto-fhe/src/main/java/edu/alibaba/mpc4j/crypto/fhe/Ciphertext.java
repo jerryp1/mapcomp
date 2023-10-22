@@ -13,6 +13,23 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
+ * Class to store a ciphertext element. The data for a ciphertext consists
+ * of two or more polynomials, which are in Microsoft SEAL stored in a CRT
+ * form with respect to the factors of the coefficient modulus. This data
+ * itself is not meant to be modified directly by the user, but is instead
+ * operated on by functions in the Evaluator class. The size of the backing
+ * array of a ciphertext depends on the encryption parameters and the size
+ * of the ciphertext (at least 2). If the size of the ciphertext is T,
+ * the poly_modulus_degree encryption parameter is N, and the number of
+ * primes in the coeff_modulus encryption parameter is K, then the
+ * ciphertext backing array requires precisely 8*N*K*T bytes of memory.
+ * A ciphertext also carries with it the parms_id of its associated
+ * encryption parameters, which is used to check the validity of the
+ * ciphertext for homomorphic operations and decryption.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/ciphertext.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/13
  */
@@ -221,7 +238,6 @@ public class Ciphertext implements Cloneable, Serializable {
     }
 
     /**
-     *
      * @param polyIndex
      * @return 第 polyIndex 在 数组中的起始位置
      */
@@ -379,9 +395,13 @@ public class Ciphertext implements Cloneable, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
+        if (this == o) {
+            return true;
+        }
 
-        if (!(o instanceof Ciphertext)) return false;
+        if (!(o instanceof Ciphertext)) {
+            return false;
+        }
 
         Ciphertext that = (Ciphertext) o;
 

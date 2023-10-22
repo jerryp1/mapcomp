@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
-import edu.alibaba.mpc4j.common.tool.crypto.kyber.utils.Poly;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.keys.SecretKey;
@@ -9,16 +8,22 @@ import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rns.RnsTool;
-import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.RingLwe;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ScalingVariant;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
-import org.checkerframework.checker.units.qual.C;
 
-import java.util.Arrays;
 
 /**
+ * Encrypts Plaintext objects into Ciphertext objects. Constructing an Encryptor
+ * requires a SEALContext with valid encryption parameters, the public key and/or
+ * the secret key. If an Encrytor is given a secret key, it supports symmetric-key
+ * encryption. If an Encryptor is given a public key, it supports asymmetric-key
+ * encryption.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/encryptor.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/25
  */
@@ -122,10 +127,9 @@ public class Encryptor {
     /**
      * Encrypts a zero plaintext with the public key and stores the result in
      * destination.
-     *
+     * <p>
      * The encryption parameters for the resulting ciphertext correspond to the
      * highest (data) level in the modulus switching chain.
-     *
      *
      * @param destination The ciphertext to overwrite with the encrypted plaintext
      */
@@ -318,7 +322,6 @@ public class Encryptor {
 //            System.out.println(Arrays.toString(destination.getData()));
 
 
-
         } else if (scheme == SchemeType.CKKS) {
             // todo: implement CKKS
             throw new IllegalArgumentException("now cannot support CKKS");
@@ -385,8 +388,6 @@ public class Encryptor {
 
 //                System.out.println("temp: ");
 //                System.out.println(Arrays.toString(temp.getData()));
-
-
 
 
                 for (int i = 0; i < temp.getSize(); i++) {

@@ -5,6 +5,21 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 import java.io.Serializable;
 
 /**
+ * Class to store Galois keys.
+ *
+ * Galois keys are certain types of public keys that are needed to perform encrypted
+ * vector rotation operations on batched ciphertexts. Batched ciphertexts encrypt
+ * a 2-by-(N/2) matrix of modular integers in the BFV scheme, or an N/2-dimensional
+ * vector of complex numbers in the CKKS scheme, where N denotes the degree of the
+ * polynomial modulus. In the BFV scheme Galois keys can enable both cyclic rotations
+ * of the encrypted matrix rows, as well as row swaps (column rotations). In the CKKS
+ * scheme Galois keys can enable cyclic vector rotations, as well as a complex
+ * conjugation operation.
+ *
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/galoiskeys.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/14
  */

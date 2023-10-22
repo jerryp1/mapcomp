@@ -3,6 +3,16 @@ package edu.alibaba.mpc4j.crypto.fhe.ntt;
 import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
 
 /**
+ * Provides an interface that performs the fast discrete weighted transform (DWT) and its inverse that are used to
+ * accelerate polynomial multiplications, batch multiple messages into a single plaintext polynomial. This class
+ * template is specialized with integer modular arithmetic for DWT over integer quotient rings, and is used in
+ * polynomial multiplications and BatchEncoder. It is also specialized with double-precision complex arithmetic for
+ * DWT over the complex field, which is used in CKKSEncoder.
+ *
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/dwthandler.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/27
  */

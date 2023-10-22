@@ -11,6 +11,9 @@ import java.util.stream.IntStream;
 
 /**
  * Represent multi(>=1)  degree-N poly under RNS representation.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/iterator.h#L1304
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/20

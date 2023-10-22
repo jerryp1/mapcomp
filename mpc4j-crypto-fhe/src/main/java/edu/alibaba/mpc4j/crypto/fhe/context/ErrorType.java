@@ -1,11 +1,15 @@
 package edu.alibaba.mpc4j.crypto.fhe.context;
 
 /**
+ * Identifies the reason why encryption parameters are not valid.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/context.h#L34
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/11
  */
 public enum ErrorType {
-
     /**
      * constructed but not yet validated
      */

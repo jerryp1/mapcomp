@@ -1,12 +1,10 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 import edu.alibaba.mpc4j.crypto.fhe.Ciphertext;
-import edu.alibaba.mpc4j.crypto.fhe.FileUtils;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.keys.SecretKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttHandler;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
@@ -17,13 +15,19 @@ import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
-import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
-import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticMod;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
-import org.bouncycastle.math.raw.Mod;
 
 import java.util.Arrays;
 
+/**
+ * This class provides some operations under Ring LWE.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/rlwe.h
+ * </p>
+ *
+ * @author Qixian Zhou
+ * @date 2023/8/29
+ */
 public class RingLwe {
 
     /**
@@ -538,7 +542,6 @@ public class RingLwe {
 //            }
 //            sb.append("}");
 //            System.out.println(sb);
-
 
 
             // 固定 c1

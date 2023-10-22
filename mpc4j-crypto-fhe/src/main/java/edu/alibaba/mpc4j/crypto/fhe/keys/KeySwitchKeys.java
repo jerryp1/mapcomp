@@ -8,6 +8,20 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
+ * Class to store keyswitching keys. It should never be necessary for normal
+ * users to create an instance of KSwitchKeys. This class is used strictly as
+ * a base class for RelinKeys and GaloisKeys classes.
+ *
+ * Concretely, keyswitching is used to change a ciphertext encrypted with one
+ * key to be encrypted with another key. It is a general technique and is used
+ * in relinearization and Galois rotations. A keyswitching key contains a sequence
+ * (vector) of keys. In RelinKeys, each key is an encryption of a power of the
+ * secret key. In GaloisKeys, each key corresponds to a type of rotation.
+ *
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/kswitchkeys.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/14
  */
@@ -36,7 +50,7 @@ public class KeySwitchKeys implements Cloneable, Serializable {
      * non-empty are counted.
      */
     public int size() {
-        return Arrays.stream(keys).mapToInt(key -> key.length > 0 ? 1: 0).sum();
+        return Arrays.stream(keys).mapToInt(key -> key.length > 0 ? 1 : 0).sum();
     }
 
 

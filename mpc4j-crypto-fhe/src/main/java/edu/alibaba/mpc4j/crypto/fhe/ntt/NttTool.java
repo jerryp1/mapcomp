@@ -8,6 +8,13 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * NTT tool class, used to perform NTT operations on polynomials.
+ * Note that there is no such class in SEAL.
+ * Here, the NTT related methods in SEAL under the util namespace are encapsulated into this class.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/ntt.h#L195
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/27
  */

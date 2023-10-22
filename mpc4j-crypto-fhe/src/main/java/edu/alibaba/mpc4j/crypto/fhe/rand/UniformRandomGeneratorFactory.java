@@ -5,6 +5,10 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import java.security.SecureRandom;
 
 /**
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/randomgen.h#L411
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/19
  */

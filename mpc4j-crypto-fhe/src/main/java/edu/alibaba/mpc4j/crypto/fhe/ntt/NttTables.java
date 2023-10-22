@@ -8,6 +8,10 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/ntt.h#L69
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/27
  */
@@ -51,7 +55,8 @@ public class NttTables {
                 '}';
     }
 
-    public NttTables() {}
+    public NttTables() {
+    }
 
 
     public NttTables(int coeffCountPower, Modulus modulus) {
@@ -75,7 +80,7 @@ public class NttTables {
         }
         this.root = temp[0];
 
-        if (!Numth.tryInvertUintMod(root, modulus.getValue(), temp)){
+        if (!Numth.tryInvertUintMod(root, modulus.getValue(), temp)) {
             throw new IllegalArgumentException("invalid modulus");
         }
         this.invRoot = temp[0];
@@ -129,7 +134,6 @@ public class NttTables {
     }
 
 
-
     public NttTables(NttTables copy) {
 
         this.root = copy.root;
@@ -145,10 +149,6 @@ public class NttTables {
         System.arraycopy(copy.rootPowers, 0, this.rootPowers, 0, coeffCount);
         System.arraycopy(copy.invRootPowers, 0, this.invRootPowers, 0, coeffCount);
     }
-
-
-
-
 
 
     public int getCoeffCount() {

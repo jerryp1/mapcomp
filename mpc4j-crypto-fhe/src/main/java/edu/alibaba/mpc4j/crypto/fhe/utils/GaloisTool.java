@@ -13,6 +13,11 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * Galois operation tool class
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/galois.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/11
  */
@@ -181,7 +186,7 @@ public class GaloisTool {
                         galoisElt,
                         modulus[i],
                         result,
-                        resultStartIndex +  i * coeffCount
+                        resultStartIndex + i * coeffCount
                 )
         );
 
@@ -219,7 +224,7 @@ public class GaloisTool {
         for (int i = 0; i <= coeffCountMinusOne; i++) {
 
             long index = indexRaw & coeffCountMinusOne;
-            long resultValue = operand[operandStartIndex +  operandIndex];
+            long resultValue = operand[operandStartIndex + operandIndex];
 
             if (((indexRaw >>> coeffCountPower) & 1) != 0) {
                 // Explicit inline
@@ -285,6 +290,7 @@ public class GaloisTool {
 
     /**
      * long[] + satrtIndex + N 表示一个 RnsIter
+     *
      * @param poly
      * @param polyStartIndex
      * @param polyN
@@ -320,7 +326,7 @@ public class GaloisTool {
         // 简单操作，直接 for 循环
         for (int j = 0; j < coeffModulusSize; j++) {
             for (int i = 0; i < coeffCount; i++) {
-                result[resultStartIndex + j * coeffCount + i] = poly[polyStartIndex + j * coeffCount +  table[i]];
+                result[resultStartIndex + j * coeffCount + i] = poly[polyStartIndex + j * coeffCount + table[i]];
             }
         }
     }
@@ -332,11 +338,11 @@ public class GaloisTool {
      * 输入是 RnsIter + 方法是 RnsIter
      * 输入是 PolyIter + startIndex = RnsIter, 方法是 RnsIter
      *
-     * @param rnsIter single poly in rns, length is k * N
+     * @param rnsIter           single poly in rns, length is k * N
      * @param rnsIterCoeffCount N
-     * @param coeffModulusSize k
+     * @param coeffModulusSize  k
      * @param galoisElt
-     * @param resultRnsIter single poly in rns
+     * @param resultRnsIter     single poly in rns
      */
     public void applyGaloisNttRnsIter(long[] rnsIter, int rnsIterCoeffCount, int coeffModulusSize, int galoisElt, long[] resultRnsIter, int resultRnsIterCoeffCount) {
 
@@ -363,11 +369,10 @@ public class GaloisTool {
             for (int i = 0; i < coeffCount; i++) { // 注意这里处理的是一个 CoeffIter
                 // 所以 rnsIter 也要先定位到一个 CoeffIter， 而不能直接用 rnsIter[table[i]]
                 // 旋转操作 报错，很大程度估计就是因为这里
-                resultRnsIter[j * coeffCount + i] = rnsIter[j * coeffCount +  table[i]];
+                resultRnsIter[j * coeffCount + i] = rnsIter[j * coeffCount + table[i]];
             }
         }
     }
-
 
 
     public static int getIndexFromElt(int galoisElt) {

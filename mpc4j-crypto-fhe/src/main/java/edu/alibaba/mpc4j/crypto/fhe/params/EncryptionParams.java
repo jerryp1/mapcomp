@@ -14,6 +14,23 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
+ * Represents user-customizable encryption scheme settings. The parameters (most
+ * importantly poly_modulus, coeff_modulus, plain_modulus) significantly affect
+ * the performance, capabilities, and security of the encryption scheme. Once
+ * an instance of EncryptionParameters is populated with appropriate parameters,
+ * it can be used to create an instance of the SEALContext class, which verifies
+ * the validity of the parameters, and performs necessary pre-computations.
+ *
+ * Picking appropriate encryption parameters is essential to enable a particular
+ * application while balancing performance and security. Some encryption settings
+ * will not allow some inputs (e.g. attempting to encrypt a polynomial with more
+ * coefficients than poly_modulus or larger coefficients than plain_modulus) or,
+ * support the desired computations (with noise growing too fast due to too large
+ * plain_modulus and too small coeff_modulus).
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/encryptionparams.h#L86
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/30
  */
@@ -202,8 +219,6 @@ public class EncryptionParams implements Cloneable {
     public ParmsIdType getParmsId() {
         return parmsId;
     }
-
-
 
 
     @Override

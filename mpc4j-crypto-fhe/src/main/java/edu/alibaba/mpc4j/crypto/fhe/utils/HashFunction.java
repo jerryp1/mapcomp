@@ -6,12 +6,20 @@ import org.bouncycastle.crypto.digests.Blake2bDigest;
 import java.util.Arrays;
 
 /**
+ * HashFunction used to calculate the id of the EncryptionParams object.
+ * <p>
+ * The implementation is from:
+ * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hash.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/30
  */
 public class HashFunction {
 
-    // 32-byte , 4 * 64-bit
+    /**
+     * 32-byte , 4 * 64-bit
+     */
     public final static int HASH_BLOCK_UINT64_COUNT = 4;
 
     public final static long[] HASH_ZERO_BLOCK;
@@ -19,7 +27,7 @@ public class HashFunction {
     private final static Blake2bDigest BLAKE_2B;
 
     static {
-        HASH_ZERO_BLOCK = new long[] {0, 0, 0, 0};
+        HASH_ZERO_BLOCK = new long[]{0, 0, 0, 0};
         BLAKE_2B = new Blake2bDigest(HASH_BLOCK_UINT64_COUNT * 64);
     }
 
@@ -40,7 +48,6 @@ public class HashFunction {
 
         System.arraycopy(temp, 0, destination, 0, HASH_BLOCK_UINT64_COUNT);
     }
-
 
 
 }

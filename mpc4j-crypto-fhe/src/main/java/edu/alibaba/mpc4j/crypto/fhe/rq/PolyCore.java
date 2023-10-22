@@ -5,6 +5,11 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
 
 
 /**
+ * This class provides some helper methods for polynomials.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/polycore.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/29
  */

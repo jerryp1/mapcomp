@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Given the security strength and polynomial modulus, this class provides the corresponding coeff modulus in Ciphertext.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/globals.cpp
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/29
  */

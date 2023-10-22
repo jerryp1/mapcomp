@@ -12,6 +12,11 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 import java.util.Arrays;
 
 /**
+ * This class provides some scaling methods.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/scalingvariant.cpp
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/26
  */

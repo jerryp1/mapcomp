@@ -11,7 +11,10 @@ import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 
 /**
- * ref: seal/valcheck.h
+ * This class provides some static methods to check whether Plaintext, Ciphertext, and EncryptionParams correspond to a given Context object.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/valcheck.h
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/9/19

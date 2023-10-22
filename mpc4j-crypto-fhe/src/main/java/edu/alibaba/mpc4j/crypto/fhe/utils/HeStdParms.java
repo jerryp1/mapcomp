@@ -1,9 +1,12 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 /**
- *  Largest allowed bit counts for coeff_modulus based on the security estimates from
- *  HomomorphicEncryption.org security standard. We refer Microsoft SEAL samples the secret key
- *  from a ternary {-1, 0, 1} distribution.
+ * Largest allowed bit counts for coeff_modulus based on the security estimates from
+ * HomomorphicEncryption.org security standard. We refer Microsoft SEAL samples the secret key
+ * from a ternary {-1, 0, 1} distribution.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hestdparms.h
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/29
@@ -15,7 +18,7 @@ public class HeStdParms {
 
 
     /**
-     *  Ternary secret; 128 bits classical security
+     * Ternary secret; 128 bits classical security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 128-bit security
@@ -41,7 +44,7 @@ public class HeStdParms {
     }
 
     /**
-     *  Ternary secret; 192 bits classical security
+     * Ternary secret; 192 bits classical security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 192-bit security
@@ -68,7 +71,7 @@ public class HeStdParms {
     }
 
     /**
-     *  Ternary secret; 256 bits classical security
+     * Ternary secret; 256 bits classical security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 256-bit security
@@ -96,7 +99,7 @@ public class HeStdParms {
 
 
     /**
-     *  Ternary secret; 128 bits quantum security
+     * Ternary secret; 128 bits quantum security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 128 bits quantum security
@@ -123,7 +126,7 @@ public class HeStdParms {
     }
 
     /**
-     *  Ternary secret; 192 bits quantum security
+     * Ternary secret; 192 bits quantum security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 192 bits quantum security
@@ -149,7 +152,7 @@ public class HeStdParms {
     }
 
     /**
-     *  Ternary secret; 256 bits quantum security
+     * Ternary secret; 256 bits quantum security
      *
      * @param polyModulusDegree N
      * @return Largest allowed bit counts for coeff_modulus under 256 bits quantum security

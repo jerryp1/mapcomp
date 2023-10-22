@@ -4,6 +4,11 @@ import edu.alibaba.mpc4j.crypto.fhe.Plaintext;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 
 /**
+ * Class to store a secret key.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/secretkey.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/14
  */

@@ -8,6 +8,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.io.Serializable;
 
 /**
+ * Class to store a public key.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/publickey.h
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/14
  */

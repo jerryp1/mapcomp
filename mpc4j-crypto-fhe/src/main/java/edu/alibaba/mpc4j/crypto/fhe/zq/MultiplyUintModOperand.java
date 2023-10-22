@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
  * When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed. Operand must be less than modulus.
  * In addition, this method is also called Shoup's Modular Multiplication.
  * <p>
- * The implementation is from https:https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithsmallmod.h#L255
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithsmallmod.h#L255
  * </p>
  *
  * @author Qixian Zhou

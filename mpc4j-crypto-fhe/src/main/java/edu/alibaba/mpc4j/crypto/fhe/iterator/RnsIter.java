@@ -16,6 +16,11 @@ import java.util.stream.IntStream;
  * <p>
  * But remember, most of the time, we use this matrix column by column,
  * which is what we often call this matrix: [c1 mod q1, c1 mod q2, ..., c1 mod qk]^T
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/iterator.h#L951
+ * </p>
+ * <p>
+ *  todo: Consider deleting this class. Currently, this class is not used in practice. Instead, array + startIndex + k + N is used directly to represent an RnsIter.
  *
  * @author Qixian Zhou
  * @date 2023/8/20
@@ -38,7 +43,8 @@ public class RnsIter implements Cloneable {
     // N
     public int polyModulusDegree;
 
-    public RnsIter() {}
+    public RnsIter() {
+    }
 
 
     public RnsIter(long[] coeffIter, int polyModulusDegree) {
@@ -83,7 +89,6 @@ public class RnsIter implements Cloneable {
                 .toArray(long[][]::new);
 
     }
-
 
 
     /**
@@ -133,11 +138,6 @@ public class RnsIter implements Cloneable {
 
         return new RnsIter(newCoeffIter, polyModulusDegree);
     }
-
-
-
-
-
 
 
     public int getCoeffModulusSize() {
@@ -239,7 +239,6 @@ public class RnsIter implements Cloneable {
 
         return coeffIter[index];
     }
-
 
 
     /**

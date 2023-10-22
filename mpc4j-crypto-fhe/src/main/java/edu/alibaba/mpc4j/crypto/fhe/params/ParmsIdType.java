@@ -9,13 +9,17 @@ import java.io.*;
 import java.util.Arrays;
 
 /**
+ * The data type to store unique identifiers of encryption parameters.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/encryptionparams.h#L43
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/30
  */
 public class ParmsIdType implements Cloneable, Serializable {
 
     public long[] value;
-
 
 
     /**

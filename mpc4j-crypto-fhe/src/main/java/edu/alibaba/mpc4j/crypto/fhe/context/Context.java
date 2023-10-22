@@ -19,6 +19,44 @@ import java.util.HashMap;
 import java.util.stream.IntStream;
 
 /**
+ * Performs sanity checks (validation) and pre-computations for a given set of encryption
+ * parameters. While the EncryptionParameters class is intended to be a light-weight class
+ * to store the encryption parameters, the SEALContext class is a heavy-weight class that
+ * is constructed from a given set of encryption parameters. It validates the parameters
+ * for correctness, evaluates their properties, and performs and stores the results of
+ * several costly pre-computations.
+ * <p>
+ * After the user has set at least the poly_modulus, coeff_modulus, and plain_modulus
+ * parameters in a given EncryptionParameters instance, the parameters can be validated
+ * for correctness and functionality by constructing an instance of SEALContext. The
+ * constructor of SEALContext does all of its work automatically, and concludes by
+ * constructing and storing an instance of the EncryptionParameterQualifiers class, with
+ * its flags set according to the properties of the given parameters. If the created
+ * instance of EncryptionParameterQualifiers has the parameters_set flag set to true, the
+ * given parameter set has been deemed valid and is ready to be used. If the parameters
+ * were for some reason not appropriately set, the parameters_set flag will be false,
+ * and a new SEALContext will have to be created after the parameters are corrected.
+ * <p>
+ * By default, SEALContext creates a chain of SEALContext::ContextData instances. The
+ * first one in the chain corresponds to special encryption parameters that are reserved
+ * to be used by the various key classes (SecretKey, PublicKey, etc.). These are the exact
+ * same encryption parameters that are created by the user and passed to th constructor of
+ * SEALContext. The functions key_context_data() and key_parms_id() return the ContextData
+ * and the parms_id corresponding to these special parameters. The rest of the ContextData
+ * instances in the chain correspond to encryption parameters that are derived from the
+ * first encryption parameters by always removing the last one of the moduli in the
+ * coeff_modulus, until the resulting parameters are no longer valid, e.g., there are no
+ * more primes left. These derived encryption parameters are used by ciphertexts and
+ * plaintexts and their respective ContextData can be accessed through the
+ * get_context_data(parms_id_type) function. The functions first_context_data() and
+ * last_context_data() return the ContextData corresponding to the first and the last
+ * set of parameters in the "data" part of the chain, i.e., the second and the last element
+ * in the full chain. The chain itself is a doubly linked list, and is referred to as the
+ * modulus switching chain.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/context.h#L250
+ * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/9/11
  */
@@ -61,7 +99,7 @@ public class Context {
         this(params, true, CoeffModulus.SecurityLevelType.TC128);
     }
 
-    public Context(EncryptionParams params,  boolean expandModChain) {
+    public Context(EncryptionParams params, boolean expandModChain) {
         this(params, expandModChain, CoeffModulus.SecurityLevelType.TC128);
     }
 
@@ -464,6 +502,10 @@ public class Context {
 
     /**
      * Class to hold pre-computation data for a given set of encryption parameters.
+     * <p>
+     * The implementation is from:
+     * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/context.h#L256
+     * </p>
      */
     public class ContextData {
 

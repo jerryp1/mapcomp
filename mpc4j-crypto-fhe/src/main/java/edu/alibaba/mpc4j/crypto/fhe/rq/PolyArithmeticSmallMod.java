@@ -9,9 +9,10 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- *
- *
- *
+ * This class provides modular arithmetic for polynomials.
+ * <p>
+ * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/polyarithsmallmod.h
+ * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/20
@@ -545,7 +546,6 @@ public class PolyArithmeticSmallMod {
         // 避免重复 new , 写在循环外面
         MultiplyUintModOperand scalarShoup = new MultiplyUintModOperand();
         // 遍历每一个多项式
-
         for (int i = 0; i < size; i++) {
             int rnsStartIndex = i * polyCoeffCount * polyCoeffModulusSize;
 
