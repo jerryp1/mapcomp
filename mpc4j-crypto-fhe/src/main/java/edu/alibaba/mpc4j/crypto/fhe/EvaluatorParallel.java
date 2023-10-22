@@ -14,70 +14,34 @@ import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rns.RnsTool;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
-import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ScalingVariant;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
- * Provides operations on ciphertexts. Due to the properties of the encryption scheme, the arithmetic operations pass
- * through the encryption layer to the underlying plaintext, changing it according to the type of the operation. Since
- * the plaintext elements are fundamentally polynomials in the polynomial quotient ring Z_T[x]/(X^N+1), where T is the
- * plaintext modulus and X^N+1 is the polynomial modulus, this is the ring where the arithmetic operations will take
- * place. BatchEncoder (batching) provider an alternative possibly more convenient view of the plaintext elements as
- * 2-by-(N2/2) matrices of integers modulo the plaintext modulus. In the batching view the arithmetic operations act on
- * the matrices element-wise. Some of the operations only apply in the batching view, such as matrix row and column
- * rotations. Other operations such as relinearization have no semantic meaning but are necessary for performance
- * reasons.
+ * Concurrently execute ciphertext operations.
+ *
  * <p>
- * The core operations are arithmetic operations, in particular multiplication and addition of ciphertexts. In addition
- * to these, we also provide negation, subtraction, squaring, exponentiation, and multiplication and addition of
- * several ciphertexts for convenience. in many cases some of the inputs to a computation are plaintext elements rather
- * than ciphertexts. For this we provide fast "plain" operations: plain addition, plain subtraction, and plain
- * multiplication.
- * <p>
- * One of the most important non-arithmetic operations is relinearization, which takes as input a ciphertext of size
- * K+1 and relinearization keys (at least K-1 keys are needed), and changes the size of the ciphertext down to 2
- * (minimum size). For most use-cases only one relinearization key suffices, in which case relinearization should be
- * performed after every multiplication. Homomorphic multiplication of ciphertexts of size K+1 and L+1 outputs a
- * ciphertext of size K+L+1, and the computational cost of multiplication is proportional to K*L. Plain multiplication
- * and addition operations of any type do not change the size. Relinearization requires relinearization keys to have
- * been generated.
- * <p>
- * When batching is enabled, we provide operations for rotating the plaintext matrix rows cyclically left or right, and
- * for rotating the columns (swapping the rows). Rotations require Galois keys to have been generated.
- * <p>
- * We also provide operations for transforming ciphertexts to NTT form and back, and for transforming plaintext
- * polynomials to NTT form. These can be used in a very fast plain multiplication variant, that assumes the inputs to
- * be in NTT form. Since the NTT has to be done in any case in plain multiplication, this function can be used when
- * e.g. one plaintext input is used in several plain multiplication, and transforming it several times would not make
- * sense.
- * <p>
- * When using the BFV/BGV scheme (scheme_type::bfv/bgv), all plaintexts and ciphertexts should remain by default in the
- * usual coefficient representation, i.e., not in NTT form. When using the CKKS scheme (scheme_type::ckks), all
- * plaintexts and ciphertexts should remain by default in NTT form. We call these scheme-specific NTT states the
- * "default NTT form". Some functions, such as add, work even if the inputs are not in the default state, but others,
- * such as multiply, will throw an exception. The output of all evaluation functions will be in the same state as the
- * input(s), with the exception of the transform_to_ntt and transform_from_ntt functions, which change the state.
- * Ideally, unless these two functions are called, all other functions should "just work".
- * <p>
- * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/evaluator.h
+ * The implementation  refers to https://github.com/ishtiyaque/Pantheon/blob/master/include/utils.hpp
  * </p>
+ *
+ * @author Qixian Zhou
+ * @date 2023/10/22
  */
-public class Evaluator {
+public class EvaluatorParallel {
 
 
     private final Context context;
 
 
-    public Evaluator(Context context) {
+    public EvaluatorParallel(Context context) {
         if (!context.isParametersSet()) {
             throw new IllegalArgumentException("encryption parameters are not set correctly");
         }
@@ -2722,20 +2686,24 @@ public class Evaluator {
             // prepare destination
             // todo: 一定需要 resize吗？ 如果 encrypted1Size = maxCount 是否就不需要 resize？
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
-            // AddCiphertexts
-            PolyArithmeticSmallMod.addPolyCoeffModPolyIter(
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize(),
-                    encrypted2.getData(),
-                    encrypted2.getPolyModulusDegree(),
-                    encrypted2.getCoeffModulusSize(),
-                    minCount, // 注意这个参数，按照 size 较小的密文对齐相加，其余部分直接拷贝
-                    coeffModulus,
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize()
+            // 并发的执行多项式加法，在最外层开并发
+            IntStream.range(0, minCount).parallel().forEach(
+                    i -> {
+                        for (int j = 0; j < coeffModulusSize; j++) {
+                            PolyArithmeticSmallMod.addPolyCoeffMod(
+                                    encrypted1.getData(),
+                                    encrypted1.indexAt(i) + j * coeffCount,
+                                    encrypted2.getData(),
+                                    encrypted2.indexAt(i) + j * coeffCount,
+                                    coeffCount,
+                                    coeffModulus[j],
+                                    encrypted1.indexAt(i) + j * coeffCount,
+                                    encrypted1.getData()
+                            );
+                        }
+                    }
             );
+
             // Copy the remaindering polys of the array with larger count into encrypted1
             if (encrypted1Size < encrypted2Size) {
                 // 暂时弃用掉PolyCore提供的方法，因为存在一些错误，直接数组拷贝
