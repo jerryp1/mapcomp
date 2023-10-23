@@ -11,8 +11,10 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
@@ -140,6 +142,21 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
             return new SquareZlVector[0];
         }
         int length = xiArray.length;
+        // do not need merge.
+        if (operator.equals(DyadicAcOperator.ADD)) {
+            SquareZlVector[] result = new SquareZlVector[length];
+            for (int i = 0; i < length; i++) {
+                result[i] = add(xiArray[i], yiArray[i]);
+            }
+            return result;
+        }
+        if (operator.equals(DyadicAcOperator.SUB)) {
+            SquareZlVector[] result = new SquareZlVector[length];
+            for (int i = 0; i < length; i++) {
+                result[i] = sub(xiArray[i], yiArray[i]);
+            }
+            return result;
+        }
         SquareZlVector[] xiSquareZlArray = Arrays.stream(xiArray)
             .map(vector -> (SquareZlVector) vector)
             .toArray(SquareZlVector[]::new);

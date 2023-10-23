@@ -6,7 +6,10 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import org.roaringbitmap.*;
+import org.roaringbitmap.BitmapContainer;
+import org.roaringbitmap.Container;
+import org.roaringbitmap.ContainerPointer;
+import org.roaringbitmap.RoaringBitmap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -48,6 +51,16 @@ public class RoaringBitmapUtils {
     }
 
     /**
+     * Check if the key of roaring bitmap is valid. A valid key must < 1 << 16.
+     *
+     * @return the maximal number of bits.
+     * @throws IllegalArgumentException if the number of bits is invalid.
+     */
+    public static void checkValidKeyIndex(int[] keys) {
+        Arrays.stream(keys).peek(key -> MathPreconditions.checkLess("key", key, 1 << 16));
+    }
+
+    /**
      * Returns the number of containers used for storing the number of bits. This method does not check if
      * {@code bitNum} is valid.
      *
@@ -79,7 +92,7 @@ public class RoaringBitmapUtils {
     public static void checkContainValidBits(int totalBitNum, RoaringBitmap bitmap) {
         if (!bitmap.isEmpty()) {
             MathPreconditions.checkNonNegative("first element", bitmap.first());
-            MathPreconditions.checkLess("last element", bitmap.last(), totalBitNum);
+            MathPreconditions.checkLessOrEqual("last element", bitmap.last(), totalBitNum);
         }
     }
 
@@ -100,7 +113,7 @@ public class RoaringBitmapUtils {
             // empty RoaringBitmap, create an all-zero BitVector.
             return BitVectorFactory.createZeros(totalBitNum);
         }
-        // expend the RoaringBitmap, fill BitmapContainer with all-zero values for the missing keys.
+        // expand the RoaringBitmap, fill BitmapContainer with all-zero values for the missing keys.
         ContainerPointer containerPointer = roaringBitmap.getContainerPointer();
         // create an BitmapContainer array that stores maximal number of bitmapContainers.
         // Note that we must use BitmapContainer, since other Containers.writeArray() would write compressed format.
@@ -278,6 +291,24 @@ public class RoaringBitmapUtils {
         }
         return bitVectors;
     }
+
+    /**
+     * Compress the bit vectors with roaring format to a RoaringBitmap.
+     *
+     * @param bitVectors bit vectors with roaring format.
+     * @return the resulting RoaringBitmap.
+     * @throws IllegalArgumentException if key num does not match the vector length, or the number of bits contained in
+     *                                  each bit vector is invalid.
+     */
+    public static RoaringBitmap toRoaringBitmap(int[] keys, BitVector[] bitVectors) {
+        checkValidKeyIndex(keys);
+        char[] keysChar = new char[keys.length];
+        for (int i = 0; i < keys.length; i++) {
+            keysChar[i] = (char) keys[i];
+        }
+        return toRoaringBitmap(keysChar, bitVectors);
+    }
+
 
     /**
      * Compress the bit vectors with roaring format to a RoaringBitmap.

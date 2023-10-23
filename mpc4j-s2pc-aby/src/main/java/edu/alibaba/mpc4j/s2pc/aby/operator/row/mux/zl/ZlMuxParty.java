@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
@@ -29,4 +30,14 @@ public interface ZlMuxParty extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZlVector mux(SquareZ2Vector xi, SquareZlVector yi) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param xiArray the binary share xiArray.
+     * @param yiArray the arithmetic share yiArray.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    SquareZlVector[] mux(SquareZ2Vector[] xiArray, SquareZlVector[] yiArray) throws MpcAbortException;
 }

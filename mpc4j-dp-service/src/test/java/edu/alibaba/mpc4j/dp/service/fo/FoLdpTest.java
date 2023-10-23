@@ -94,6 +94,8 @@ public class FoLdpTest {
         configurations.add(new Object[]{FoLdpType.DE_INDEX.name(), FoLdpType.DE_INDEX,});
         // Direct Encoding via String Encoding
         configurations.add(new Object[]{FoLdpType.DE_STRING.name(), FoLdpType.DE_STRING,});
+        // Utility-optimized randomized response
+        configurations.add(new Object[]{FoLdpType.RR_ULDP.name(), FoLdpType.RR_ULDP,});
 
         return configurations;
     }

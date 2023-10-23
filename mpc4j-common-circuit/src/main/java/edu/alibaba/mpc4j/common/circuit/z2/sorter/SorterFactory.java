@@ -44,7 +44,7 @@ public class SorterFactory {
             case RANDOMIZED_SHELL_SORTER:
                 return new RandomizedShellSorter(circuit);
             default:
-                throw new IllegalArgumentException("Invalid " + MultiplierFactory.MultiplierTypes.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + SorterFactory.SorterTypes.class.getSimpleName() + ": " + type.name());
         }
     }
 }
