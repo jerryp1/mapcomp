@@ -171,7 +171,7 @@ public class AbstractBopprfPlpsiServer<T> extends AbstractPlpsiServer<T> {
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, ptoStepNum, peqtTime);
 
-        if(serverPayloadBitL > 0){
+        if (serverPayloadBitL > 0) {
             stopWatch.start();
             // The parties invoke a batched OPPRF.
             // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]

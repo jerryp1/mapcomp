@@ -167,7 +167,7 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
         logStepInfo(PtoState.PTO_STEP, 3, ptoStepNum, peqtTime);
 
         PlpsiClientOutput<T> clientOutput;
-        if(serverPayloadBitL > 0){
+        if (serverPayloadBitL > 0) {
             stopWatch.start();
             // The parties invoke a batched OPPRF.
             // P2 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
@@ -178,7 +178,7 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
             long secondOpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             logStepInfo(PtoState.PTO_STEP, 4, ptoStepNum, secondOpprfTime);
-        }else{
+        } else {
             clientOutput = new PlpsiClientOutput<>(envType, parallel, table, z1, null, 0, false);
         }
 

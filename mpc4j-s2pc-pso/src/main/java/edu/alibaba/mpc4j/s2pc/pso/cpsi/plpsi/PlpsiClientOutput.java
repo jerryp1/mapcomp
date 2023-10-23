@@ -33,13 +33,13 @@ public class PlpsiClientOutput<T> {
         this.table = table;
         MathPreconditions.checkEqual("z1.bitNum", "β", z1.getNum(), table.size());
         this.z1 = z1;
-        if(payload != null){
+        if (payload != null) {
             MathPreconditions.checkPositive("bitLen", bitLen);
             MathPreconditions.checkEqual("payload.length", "β", payload.length, table.size());
             MathPreconditions.checkEqual("CommonUtils.getByteLength(bitLen)", "payload[0].length",
                 CommonUtils.getByteLength(bitLen), payload[0].length);
-            this.payload = new Payload(envType, parallel, payload, bitLen,  isBinaryShare);
-        }else{
+            this.payload = new Payload(envType, parallel, payload, bitLen, isBinaryShare);
+        } else {
             MathPreconditions.checkEqual("bitLen", "0", bitLen, 0);
             this.payload = null;
         }
@@ -62,18 +62,18 @@ public class PlpsiClientOutput<T> {
         return payload;
     }
 
-    public SquareZlVector getZlPayload(){
-        if(payload != null){
+    public SquareZlVector getZlPayload() {
+        if (payload != null) {
             return payload.getZlPayload();
-        }else{
+        } else {
             return null;
         }
     }
 
     public SquareZ2Vector[] getZ2Payload() {
-        if(payload != null){
+        if (payload != null) {
             return payload.getZ2Payload();
-        }else{
+        } else {
             return null;
         }
     }

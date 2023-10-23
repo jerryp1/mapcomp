@@ -22,7 +22,7 @@ public class PlpsiServerOutput {
     private final Payload payload;
 
     public PlpsiServerOutput(SquareZ2Vector z1, Payload payload) {
-        if(payload != null){
+        if (payload != null) {
             MathPreconditions.checkEqual("z1.bitNum", "payload.length", z1.getNum(), payload.getBeta());
         }
         this.z1 = z1;
@@ -41,18 +41,18 @@ public class PlpsiServerOutput {
         return payload;
     }
 
-    public SquareZlVector getZlPayload(){
-        if(payload != null){
+    public SquareZlVector getZlPayload() {
+        if (payload != null) {
             return payload.getZlPayload();
-        }else{
+        } else {
             return null;
         }
     }
 
     public SquareZ2Vector[] getZ2Payload() {
-        if(payload != null){
+        if (payload != null) {
             return payload.getZ2Payload();
-        }else{
+        } else {
             return null;
         }
     }

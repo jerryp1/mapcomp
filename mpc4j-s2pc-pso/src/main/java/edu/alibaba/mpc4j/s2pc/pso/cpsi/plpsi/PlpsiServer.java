@@ -17,7 +17,7 @@ public interface PlpsiServer<T> extends TwoPartyPto {
      *
      * @param maxServerElementSize max server element size.
      * @param maxClientElementSize max client element size.
-     * @param payloadBitL max bit length of server's payload.
+     * @param payloadBitL          max bit length of server's payload.
      * @throws MpcAbortException the protocol failure aborts.
      */
     void init(int maxServerElementSize, int maxClientElementSize, int payloadBitL) throws MpcAbortException;
@@ -25,7 +25,7 @@ public interface PlpsiServer<T> extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param serverElementList  server element list.
+     * @param serverElementList server element list.
      * @param serverPayloadList server payload list
      * @param clientElementSize client element size.
      * @return the server output.

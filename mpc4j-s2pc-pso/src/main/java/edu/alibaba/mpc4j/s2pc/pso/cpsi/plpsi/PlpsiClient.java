@@ -24,7 +24,7 @@ public interface PlpsiClient<T> extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param clientElementList  client element list.
+     * @param clientElementList client element list.
      * @param serverElementSize server element size.
      * @return the client output.
      * @throws MpcAbortException the protocol failure aborts.

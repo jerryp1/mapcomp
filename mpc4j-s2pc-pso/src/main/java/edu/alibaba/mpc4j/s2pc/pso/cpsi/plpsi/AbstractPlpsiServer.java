@@ -77,7 +77,7 @@ public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto impleme
         serverElementArrayList = new ArrayList<>(serverElementList);
         MathPreconditions.checkPositiveInRangeClosed("clientElementSize", clientElementSize, maxClientElementSize);
         this.clientElementSize = clientElementSize;
-        if(serverPayloadList != null){
+        if (serverPayloadList != null) {
             MathPreconditions.checkEqual("serverElementList.size()", "serverPayloadList.size()", serverElementList.size(), serverPayloadList.size());
             serverPayloadArrayList = new ArrayList<>(serverPayloadList);
             hashMap = new HashMap<>();
