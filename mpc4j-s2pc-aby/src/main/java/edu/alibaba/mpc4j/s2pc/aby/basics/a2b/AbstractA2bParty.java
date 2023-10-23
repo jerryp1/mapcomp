@@ -52,8 +52,6 @@ public abstract class AbstractA2bParty extends AbstractTwoPartyPto implements A2
 
     protected void setInitInput(int maxL, int maxNum) {
         MathPreconditions.checkPositive("maxL", maxL);
-        // not support for l >= 64 due to limitation of Zl64database.
-        MathPreconditions.checkPositiveInRangeClosed("maxL", maxL, Long.SIZE - 1);
         this.maxL = maxL;
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;

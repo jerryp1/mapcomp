@@ -21,7 +21,7 @@ public class Dsz15A2bPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "DSZ15_B2A";
+    private static final String PTO_NAME = "DSZ15_A2B";
 
     /**
      * protocol step

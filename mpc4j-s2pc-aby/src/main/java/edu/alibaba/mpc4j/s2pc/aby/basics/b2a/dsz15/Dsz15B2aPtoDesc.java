@@ -17,7 +17,7 @@ public class Dsz15B2aPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -3704115308334790390L);
+    private static final int PTO_ID = Math.abs((int) 1559089652641241496L);
     /**
      * protocol name
      */

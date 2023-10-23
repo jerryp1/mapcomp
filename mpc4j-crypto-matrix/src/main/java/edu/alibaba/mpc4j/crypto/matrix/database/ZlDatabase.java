@@ -61,6 +61,19 @@ public class ZlDatabase implements ModBitNumDatabase {
     }
 
     /**
+     * Creates a database.
+     *
+     * @param l    element bit length.
+     * @param data data.
+     * @return a database.
+     */
+    public static ZlDatabase create(int l, BigInteger[] data) {
+        MathPreconditions.checkPositive("rows", data.length);
+        int byteL = CommonUtils.getByteLength(l);
+        return create(l, Arrays.stream(data).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).toArray(byte[][]::new));
+    }
+
+    /**
      * Creates a random database.
      *
      * @param l            element bit length.

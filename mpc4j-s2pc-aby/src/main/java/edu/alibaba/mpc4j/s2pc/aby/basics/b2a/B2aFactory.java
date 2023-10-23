@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.b2a;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aSender;
@@ -65,6 +67,23 @@ public class B2aFactory {
                 return new Dsz15B2aReceiver(receiverRpc, senderParty, (Dsz15B2aConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + B2aTypes.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a default config.
+     *
+     * @param zl zl.
+     * @return a default config.
+     */
+    public static B2aConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
+        switch (securityModel) {
+            case IDEAL:
+            case TRUSTED_DEALER:
+            case SEMI_HONEST:
+                return new Dsz15B2aConfig.Builder(zl).build();
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }
     }
 }
