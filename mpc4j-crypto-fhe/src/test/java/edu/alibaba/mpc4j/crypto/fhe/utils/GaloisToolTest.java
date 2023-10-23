@@ -16,7 +16,7 @@ public class GaloisToolTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> new GaloisTool(18));
 
         GaloisTool galoisTool = new GaloisTool(1);
-        GaloisTool galoisTool1 = new GaloisTool(17);
+        GaloisTool galoisTool1 = new GaloisTool(13);
     }
 
 

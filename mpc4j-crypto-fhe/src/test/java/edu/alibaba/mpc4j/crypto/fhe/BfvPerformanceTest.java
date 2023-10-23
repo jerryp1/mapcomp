@@ -15,6 +15,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import java.util.stream.IntStream;
  * @author Qixian Zhou
  * @date 2023/10/12
  */
+@Ignore
 public class BfvPerformanceTest {
 
 

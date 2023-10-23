@@ -2,29 +2,28 @@ package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 /**
  * Largest allowed bit counts for coeff_modulus based on the security estimates from
- * HomomorphicEncryption.org security standard. We refer Microsoft SEAL samples the secret key
- * from a ternary {-1, 0, 1} distribution.
+ * HomomorphicEncryption.org security standard. We refer Microsoft SEAL samples the
+ * secret key from a ternary {-1, 0, 1} distribution. The implementation is from:
  * <p>
- * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hestdparms.h
+ * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hestdparms.h
  * </p>
  *
  * @author Qixian Zhou
  * @date 2023/8/29
  */
 public class HeStdParms {
-
-
+    /**
+     * Standard deviation for error distribution.
+     */
     public final static double HE_STD_PARMS_ERROR_STD_DEV = 3.2;
 
-
     /**
-     * Ternary secret; 128 bits classical security
+     * Ternary secret; 128 bits classical security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 128-bit security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 128-bit security.
      */
     public static int heStdParms128Tc(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 27;
@@ -44,13 +43,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 192 bits classical security
+     * Ternary secret; 192 bits classical security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 192-bit security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 192-bit security.
      */
     public static int heStdParms192Tc(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 19;
@@ -67,17 +65,15 @@ public class HeStdParms {
             default:
                 return 0;
         }
-
     }
 
     /**
-     * Ternary secret; 256 bits classical security
+     * Ternary secret; 256 bits classical security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 256-bit security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 256-bit security.
      */
     public static int heStdParms256Tc(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 14;
@@ -94,18 +90,15 @@ public class HeStdParms {
             default:
                 return 0;
         }
-
     }
 
-
     /**
-     * Ternary secret; 128 bits quantum security
+     * Ternary secret; 128 bits quantum security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 128 bits quantum security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 128 bits quantum security.
      */
     public static int heStdParms128Tq(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 25;
@@ -122,17 +115,15 @@ public class HeStdParms {
             default:
                 return 0;
         }
-
     }
 
     /**
-     * Ternary secret; 192 bits quantum security
+     * Ternary secret; 192 bits quantum security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 192 bits quantum security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 192 bits quantum security.
      */
     public static int heStdParms192Tq(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 17;
@@ -152,13 +143,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 256 bits quantum security
+     * Ternary secret; 256 bits quantum security.
      *
-     * @param polyModulusDegree N
-     * @return Largest allowed bit counts for coeff_modulus under 256 bits quantum security
+     * @param polyModulusDegree N.
+     * @return Largest allowed bit counts for coeff_modulus under 256 bits quantum security.
      */
     public static int heStdParms256Tq(int polyModulusDegree) {
-
         switch (polyModulusDegree) {
             case 1024:
                 return 13;
@@ -176,5 +166,4 @@ public class HeStdParms {
                 return 0;
         }
     }
-
 }

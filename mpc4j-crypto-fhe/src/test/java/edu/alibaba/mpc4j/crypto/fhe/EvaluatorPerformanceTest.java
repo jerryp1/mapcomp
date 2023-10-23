@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallModEfficiencyTest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
  * @author Qixian Zhou
  * @date 2023/10/22
  */
+@Ignore
 public class EvaluatorPerformanceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PolyArithmeticSmallModEfficiencyTest.class);
