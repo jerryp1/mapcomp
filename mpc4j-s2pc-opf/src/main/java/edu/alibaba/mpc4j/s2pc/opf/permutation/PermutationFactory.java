@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationSender;
 
 /**
  * Permutation factory.
@@ -28,22 +31,11 @@ public class PermutationFactory {
          * xxx+23.
          */
         XXX23,
+        /**
+         * xxx+23b.
+         */
+        XXX23B,
     }
-
-//    /**
-//     * Creates a sorter.
-//     *
-//     * @param type type of sorter.
-//     * @return a adder.
-//     */
-//    public static Sorter createSorter(PermutableSorterTypes type, Z2IntegerCircuit circuit) {
-//        switch (type) {
-//            case AHI22:
-//                return new BitonicSorter(circuit);
-//            default:
-//                throw new IllegalArgumentException("Invalid " + MultiplierFactory.MultiplierTypes.class.getSimpleName() + ": " + type.name());
-//        }
-//    }
 
     /**
      * Creates a sender.
@@ -59,6 +51,8 @@ public class PermutationFactory {
         switch (type) {
             case XXX23:
                 return new Xxx23PermutationSender(senderRpc, receiverParty, (Xxx23PermutationConfig) config);
+            case XXX23B:
+                return new Xxx23bPermutationSender(senderRpc, receiverParty, (Xxx23bPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PermutationTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -78,6 +72,8 @@ public class PermutationFactory {
         switch (type) {
             case XXX23:
                 return new Xxx23PermutationReceiver(receiverRpc, senderParty, (Xxx23PermutationConfig) config);
+            case XXX23B:
+                return new Xxx23bPermutationReceiver(receiverRpc, senderParty, (Xxx23bPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PermutationTypes.class.getSimpleName() + ": " + type.name());
         }

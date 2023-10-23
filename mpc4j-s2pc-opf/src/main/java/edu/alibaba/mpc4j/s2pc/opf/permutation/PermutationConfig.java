@@ -24,4 +24,11 @@ public interface PermutationConfig extends MultiPartyPtoConfig {
      * @return the zl.
      */
     Zl getZl();
+
+    /**
+     * Get the indicator of whether the permutation is reversed.
+     *
+     * @return the indicator of whether the permutation is reversed.
+     */
+    boolean isReverse();
 }

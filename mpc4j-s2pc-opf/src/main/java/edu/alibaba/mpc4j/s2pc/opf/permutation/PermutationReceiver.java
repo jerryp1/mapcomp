@@ -28,5 +28,5 @@ public interface PermutationReceiver extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZlVector permutate(SquareZlVector perm) throws MpcAbortException;
+    SquareZlVector permute(SquareZlVector perm) throws MpcAbortException;
 }
