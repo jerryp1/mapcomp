@@ -7,7 +7,8 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationSender;
 
 /**
- * Permutation Factory.
+ * Permutation factory.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */

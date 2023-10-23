@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
- * Bit2a receiver thread.
+ * Permutation receiver thread.
  *
  * @author Li Peng
  * @date 2023/10/12

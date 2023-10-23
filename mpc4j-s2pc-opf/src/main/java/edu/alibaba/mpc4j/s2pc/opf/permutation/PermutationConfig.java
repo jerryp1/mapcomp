@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationType
 
 /**
  * Permutation config.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */
@@ -18,7 +19,7 @@ public interface PermutationConfig extends MultiPartyPtoConfig {
     PermutationTypes getPtoType();
 
     /**
-     * Get the zl.
+     * Get the zl of plaintext.
      *
      * @return the zl.
      */

@@ -5,7 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
+ * Permutation receiver interface.
  * Permutation party.
+ *
  * @author Li Peng
  * @date 2023/10/11
  */

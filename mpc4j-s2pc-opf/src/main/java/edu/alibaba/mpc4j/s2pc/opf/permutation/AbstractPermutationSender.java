@@ -10,9 +10,9 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
-import java.util.Vector;
-
 /**
+ * Abstract permutation sender.
+ *
  * @author Li Peng
  * @date 2023/10/18
  */
@@ -48,6 +48,9 @@ public abstract class AbstractPermutationSender extends AbstractTwoPartyPto impl
 
     protected AbstractPermutationSender(PtoDesc ptoDesc, Rpc rpc, Party otherParty, PermutationConfig config) {
         super(ptoDesc, rpc, otherParty, config);
+        zl = config.getZl();
+        l = zl.getL();
+        byteL = zl.getByteL();
     }
 
 
@@ -61,9 +64,6 @@ public abstract class AbstractPermutationSender extends AbstractTwoPartyPto impl
 
     protected void setPtoInput(SquareZlVector perm, ZlVector x) {
         num = perm.getNum();
-        l = x.getZl().getL();
-        byteL = x.getZl().getByteL();
-        zl = perm.getZl();
         MathPreconditions.checkEqual("permutation.length", "input.length", perm.getNum(), x.getNum());
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);

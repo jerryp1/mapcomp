@@ -2,17 +2,11 @@ package edu.alibaba.mpc4j.s2pc.opf.permutation;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetwork;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory.Bit2aTypes;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationConfig;
@@ -30,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
+
 /**
  * Permutation test.
  *
@@ -42,32 +38,32 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 10;
+    private static final int DEFAULT_NUM = 100;
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
-    /**
-     * small Zl
-     */
-    private static final Zl SMALL_ZL = ZlFactory.createInstance(EnvType.STANDARD, 1);
+    private static final int LARGE_NUM = 1 << 12;
     /**
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+    /**
+     * default Zl
+     */
+    private static final Zl LARGE_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // KVH+21 small zl
-//        configurations.add(new Object[]{
-//            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(SMALL_ZL).build()
-//        });
-
-        // KVH+21 default zl
+        // Xxx23 default zl
         configurations.add(new Object[]{
             PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(DEFAULT_ZL).build()
+        });
+
+        // Xxx23 large zl
+        configurations.add(new Object[]{
+            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL).build()
         });
 
         return configurations;
@@ -81,11 +77,6 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
     public PermutationTest(String name, PermutationConfig config) {
         super(name);
         this.config = config;
-    }
-
-    @Test
-    public void test1Num() {
-        testPto(1, false);
     }
 
     @Test
@@ -148,11 +139,6 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
 
         ZlVector x = ZlVector.create(config.getZl(), IntStream.range(0, num).mapToObj(i -> new BigInteger(config.getZl().getL(), SECURE_RANDOM)).toArray(BigInteger[]::new));
 
-//
-//        BitVector x0 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        SquareZ2Vector shareX0 = SquareZ2Vector.create(x0, false);
-//        SquareZ2Vector shareX1 = SquareZ2Vector.create(x1, false);
         // init the protocol
         PermutationSender sender = PermutationFactory.createSender(firstRpc, secondRpc.ownParty(), config);
         PermutationReceiver receiver = PermutationFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
@@ -186,32 +172,14 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
         new Thread(receiver::destroy).start();
     }
 
-//    private void assertOutput(BitVector x0, BitVector x1, SquareZlVector z0, SquareZlVector z1) {
-//        int num = x0.bitNum();
-//        Assert.assertEquals(num, z0.getNum());
-//        Assert.assertEquals(num, z1.getNum());
-//        BitVector x = x0.xor(x1);
-//        BigInteger[] z = z0.getZlVector().add(z1.getZlVector()).getElements();
-//        for (int i = 0; i < num; i++) {
-//            boolean xi = x.get(i);
-//            if (xi) {
-//                Assert.assertEquals(z[i], BigInteger.ONE);
-//            } else {
-//                Assert.assertEquals(z[i], BigInteger.ZERO);
-//            }
-//        }
-//    }
-
     private void assertOutput(ZlVector perm0, ZlVector perm1, ZlVector x, ZlVector x0, ZlVector x1) {
         int num = perm0.getNum();
-//        Zl zl = perm0.getZl();
         Assert.assertEquals(num, perm1.getNum());
         Assert.assertEquals(num, x.getNum());
         Assert.assertEquals(num, x0.getNum());
         Assert.assertEquals(num, x1.getNum());
         int[] perm = Arrays.stream(perm0.add(perm1).getElements())
             .mapToInt(BigInteger::intValue).toArray();
-
         ZlVector result = applyPermutation(x, perm);
         ZlVector ture = x0.add(x1);
         for (int i = 0; i < num; i++) {

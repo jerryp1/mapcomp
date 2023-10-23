@@ -3,12 +3,11 @@ package edu.alibaba.mpc4j.s2pc.opf.permutation;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
-import java.util.Vector;
-
 /**
+ * Permutation sender interface.
+ *
  * @author Li Peng
  * @date 2023/10/18
  */
@@ -26,19 +25,9 @@ public interface PermutationSender extends TwoPartyPto {
      * Executes the protocol.
      *
      * @param perm the share of permutation.
-     * @param x the input of sender.
+     * @param x    the input of sender.
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZlVector permute(SquareZlVector perm, ZlVector x) throws MpcAbortException;
-
-//    /**
-//     * Executes the protocol.
-//     *
-//     * @param perm the share of permutation.
-//     * @param x the input of sender.
-//     * @return the party's output.
-//     * @throws MpcAbortException the protocol failure aborts.
-//     */
-//    SquareZlVector permute(SquareZlVector[] perm, SquareZ2Vector[] x) throws MpcAbortException;
 }

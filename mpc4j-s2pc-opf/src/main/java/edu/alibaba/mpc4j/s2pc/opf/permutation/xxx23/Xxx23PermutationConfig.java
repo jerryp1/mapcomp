@@ -3,6 +3,10 @@ package edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
@@ -13,7 +17,7 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
 
 /**
- * Xxx+23 permutation Config.
+ * Xxx+23 permutation config.
  *
  * @author Li Peng
  * @date 2023/5/22
@@ -32,16 +36,27 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
      */
     private final Z2cConfig z2cConfig;
     /**
-     * Zl.
+     * A2b config.
+     */
+    private final A2bConfig a2bConfig;
+    /**
+     * B2a config.
+     */
+    private final B2aConfig b2aConfig;
+    /**
+     * Zl instance.
      */
     private final Zl zl;
 
     private Xxx23PermutationConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlcConfig, builder.z2cConfig);
+        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlcConfig, builder.z2cConfig,
+            builder.a2bConfig, builder.b2aConfig);
         this.osnConfig = builder.osnConfig;
         this.zl = builder.zl;
         this.zlcConfig = builder.zlcConfig;
         this.z2cConfig = builder.z2cConfig;
+        this.a2bConfig = builder.a2bConfig;
+        this.b2aConfig = builder.b2aConfig;
     }
 
     @Override
@@ -66,6 +81,14 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
         return z2cConfig;
     }
 
+    public A2bConfig getA2bConfig() {
+        return a2bConfig;
+    }
+
+    public B2aConfig getB2aConfig() {
+        return b2aConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PermutationConfig> {
         /**
          * Osn config.
@@ -80,7 +103,15 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
          */
         private final Z2cConfig z2cConfig;
         /**
-         * zl
+         * A2b config.
+         */
+        private final A2bConfig a2bConfig;
+        /**
+         * B2a config.
+         */
+        private final B2aConfig b2aConfig;
+        /**
+         * Zl instance of plaintext.
          */
         private final Zl zl;
 
@@ -89,6 +120,8 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
         }
 
         @Override
