@@ -36,7 +36,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default payload bit length
      */
-    private static final int PAYLOAD_BIT_LEN = 99;
+    private static final int PAYLOAD_BIT_LEN = 55;
     /**
      * default size
      */
@@ -203,10 +203,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
 
     private void assertOutput(List<ByteBuffer> serverElementList, List<ByteBuffer> clientElementList, List<ByteBuffer> payload,
                               PlpsiServerOutput serverOutput, PlpsiClientOutput<ByteBuffer> clientOutput, boolean isBinaryShare) {
-        int byteL = CommonUtils.getByteLength(PAYLOAD_BIT_LEN);
-        HashMap<ByteBuffer, ByteBuffer> hashMap = new HashMap<>();
-        IntStream.range(0, serverElementList.size()).forEach(i -> hashMap.put(serverElementList.get(i), payload.get(i)));
-
+        int byteL = PAYLOAD_BIT_LEN > 0 ? CommonUtils.getByteLength(PAYLOAD_BIT_LEN) : 0;
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementList);
         expectIntersectionSet.retainAll(clientElementList);
         ArrayList<ByteBuffer> table = clientOutput.getTable();
@@ -214,13 +211,17 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
         List<byte[]> serverPayloadShare = null, clientPayloadShare = null;
         Zl zl = null;
         BigInteger[] serverShareA = null, clientShareA = null;
-        if (isBinaryShare) {
-            serverPayloadShare = trans(serverOutput.getPayload().getZ2Payload());
-            clientPayloadShare = trans(clientOutput.getPayload().getZ2Payload());
-        } else {
-            serverShareA = serverOutput.getPayload().getZlPayload().getZlVector().getElements();
-            clientShareA = clientOutput.getPayload().getZlPayload().getZlVector().getElements();
-            zl = serverOutput.getPayload().getZlPayload().getZl();
+        HashMap<ByteBuffer, ByteBuffer> hashMap = new HashMap<>();
+        if(PAYLOAD_BIT_LEN > 0){
+            IntStream.range(0, serverElementList.size()).forEach(i -> hashMap.put(serverElementList.get(i), payload.get(i)));
+            if (isBinaryShare) {
+                serverPayloadShare = trans(serverOutput.getZ2Payload());
+                clientPayloadShare = trans(clientOutput.getZ2Payload());
+            } else {
+                serverShareA = serverOutput.getZlPayload().getZlVector().getElements();
+                clientShareA = clientOutput.getZlPayload().getZlVector().getElements();
+                zl = serverOutput.getZlPayload().getZl();
+            }
         }
         int beta = clientOutput.getBeta();
         for (int i = 0; i < beta; i++) {
@@ -228,12 +229,14 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
                 Assert.assertFalse(z.get(i));
             } else if (expectIntersectionSet.contains(table.get(i))) {
                 Assert.assertTrue(z.get(i));
-                if (isBinaryShare) {
-                    Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
-                        BytesUtils.xor(serverPayloadShare.get(i), clientPayloadShare.get(i)));
-                } else {
-                    Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
-                        BytesUtils.paddingByteArray(BigIntegerUtils.bigIntegerToByteArray(zl.add(serverShareA[i], clientShareA[i])), byteL));
+                if(PAYLOAD_BIT_LEN > 0){
+                    if (isBinaryShare) {
+                        Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
+                            BytesUtils.xor(serverPayloadShare.get(i), clientPayloadShare.get(i)));
+                    } else {
+                        Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
+                            BytesUtils.paddingByteArray(BigIntegerUtils.bigIntegerToByteArray(zl.add(serverShareA[i], clientShareA[i])), byteL));
+                    }
                 }
             } else {
                 Assert.assertFalse(z.get(i));
@@ -248,6 +251,9 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     }
 
     private List<ByteBuffer> generatePayload(int serverSetSize) {
+        if(PAYLOAD_BIT_LEN == 0){
+            return null;
+        }
         int payloadByteL = CommonUtils.getByteLength(PAYLOAD_BIT_LEN);
         SecureRandom secureRandom = new SecureRandom();
         return IntStream.range(0, serverSetSize).mapToObj(i ->

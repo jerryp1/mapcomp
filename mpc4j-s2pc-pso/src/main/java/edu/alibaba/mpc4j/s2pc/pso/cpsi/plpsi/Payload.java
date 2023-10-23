@@ -1,9 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -46,6 +48,9 @@ public class Payload {
     }
 
     public Payload(EnvType envType, boolean parallel, byte[][] payload, int bitLen, boolean isBinaryShare){
+        assert payload != null;
+        MathPreconditions.checkEqual("CommonUtils.getByteLength(bitLen)", "payload[0].length",
+            CommonUtils.getByteLength(bitLen), payload[0].length);
         this.envType = envType;
         this.parallel = parallel;
         if(isBinaryShare){

@@ -2,7 +2,9 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 import java.util.ArrayList;
 
@@ -31,8 +33,17 @@ public class PlpsiClientOutput<T> {
         this.table = table;
         MathPreconditions.checkEqual("z1.bitNum", "β", z1.getNum(), table.size());
         this.z1 = z1;
-        MathPreconditions.checkEqual("payload.length", "β", payload.length, table.size());
-        this.payload = new Payload(envType, parallel, payload, bitLen,  isBinaryShare);
+        if(payload != null){
+            MathPreconditions.checkPositive("bitLen", bitLen);
+            MathPreconditions.checkEqual("payload.length", "β", payload.length, table.size());
+            MathPreconditions.checkEqual("CommonUtils.getByteLength(bitLen)", "payload[0].length",
+                CommonUtils.getByteLength(bitLen), payload[0].length);
+            this.payload = new Payload(envType, parallel, payload, bitLen,  isBinaryShare);
+        }else{
+            MathPreconditions.checkEqual("bitLen", "0", bitLen, 0);
+            this.payload = null;
+        }
+
     }
 
     public int getBeta() {
@@ -49,5 +60,21 @@ public class PlpsiClientOutput<T> {
 
     public Payload getPayload() {
         return payload;
+    }
+
+    public SquareZlVector getZlPayload(){
+        if(payload != null){
+            return payload.getZlPayload();
+        }else{
+            return null;
+        }
+    }
+
+    public SquareZ2Vector[] getZ2Payload() {
+        if(payload != null){
+            return payload.getZ2Payload();
+        }else{
+            return null;
+        }
     }
 }

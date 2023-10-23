@@ -65,24 +65,26 @@ public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto impleme
         this.maxServerElementSize = maxServerElementSize;
         MathPreconditions.checkPositive("maxClientElementSize", maxClientElementSize);
         this.maxClientElementSize = maxClientElementSize;
-        MathPreconditions.checkPositive("serverPayloadBitL", serverPayloadBitL);
+        MathPreconditions.checkGreaterOrEqual("serverPayloadBitL", serverPayloadBitL, 0);
         this.serverPayloadBitL = serverPayloadBitL;
         initState();
     }
 
     protected void setPtoInput(List<T> serverElementList, List<T> serverPayloadList, int clientElementSize) {
         checkInitialized();
-        MathPreconditions.checkEqual("serverElementList.size()", "serverPayloadList.size()", serverElementList.size(), serverPayloadList.size());
         MathPreconditions.checkPositiveInRangeClosed("serverElementSize", serverElementList.size(), maxServerElementSize);
         serverElementSize = serverElementList.size();
         serverElementArrayList = new ArrayList<>(serverElementList);
-        serverPayloadArrayList = new ArrayList<>(serverPayloadList);
         MathPreconditions.checkPositiveInRangeClosed("clientElementSize", clientElementSize, maxClientElementSize);
         this.clientElementSize = clientElementSize;
-        hashMap = new HashMap<>();
-        int byteL = CommonUtils.getByteLength(serverPayloadBitL);
-        IntStream.range(0, serverElementSize).forEach(i ->
-            hashMap.put(serverElementList.get(i), BytesUtils.paddingByteArray(ObjectUtils.objectToByteArray(serverPayloadList.get(i)), byteL)));
+        if(serverPayloadList != null){
+            MathPreconditions.checkEqual("serverElementList.size()", "serverPayloadList.size()", serverElementList.size(), serverPayloadList.size());
+            serverPayloadArrayList = new ArrayList<>(serverPayloadList);
+            hashMap = new HashMap<>();
+            int byteL = CommonUtils.getByteLength(serverPayloadBitL);
+            IntStream.range(0, serverElementSize).forEach(i ->
+                hashMap.put(serverElementList.get(i), BytesUtils.paddingByteArray(ObjectUtils.objectToByteArray(serverPayloadList.get(i)), byteL)));
+        }
         extraInfo++;
     }
 }

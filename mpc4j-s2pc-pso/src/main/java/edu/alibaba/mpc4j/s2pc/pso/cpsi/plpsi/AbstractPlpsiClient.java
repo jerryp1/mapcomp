@@ -55,7 +55,7 @@ public abstract class AbstractPlpsiClient<T> extends AbstractTwoPartyPto impleme
         this.maxClientElementSize = maxClientElementSize;
         MathPreconditions.checkPositive("maxServerElementSize", maxServerElementSize);
         this.maxServerElementSize = maxServerElementSize;
-        MathPreconditions.checkPositive("serverPayloadBitL", serverPayloadBitL);
+        MathPreconditions.checkGreaterOrEqual("serverPayloadBitL", serverPayloadBitL, 0);
         this.serverPayloadBitL = serverPayloadBitL;
         initState();
     }

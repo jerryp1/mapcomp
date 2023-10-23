@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
 
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
  * circuit PSI server output, where server encodes payload into circuit
@@ -21,14 +21,10 @@ public class PlpsiServerOutput {
      */
     private final Payload payload;
 
-    public PlpsiServerOutput(EnvType envType, boolean parallel, SquareZ2Vector z1, SquareZ2Vector[] payload, boolean isBinaryShare) {
-        MathPreconditions.checkEqual("z1.bitNum", "payload.length", z1.getNum(), payload.length);
-        this.z1 = z1;
-        this.payload = new Payload(envType, parallel, payload, isBinaryShare);
-    }
-
     public PlpsiServerOutput(SquareZ2Vector z1, Payload payload) {
-        MathPreconditions.checkEqual("z1.bitNum", "payload.length", z1.getNum(), payload.getBeta());
+        if(payload != null){
+            MathPreconditions.checkEqual("z1.bitNum", "payload.length", z1.getNum(), payload.getBeta());
+        }
         this.z1 = z1;
         this.payload = payload;
     }
@@ -43,6 +39,22 @@ public class PlpsiServerOutput {
 
     public Payload getPayload() {
         return payload;
+    }
+
+    public SquareZlVector getZlPayload(){
+        if(payload != null){
+            return payload.getZlPayload();
+        }else{
+            return null;
+        }
+    }
+
+    public SquareZ2Vector[] getZ2Payload() {
+        if(payload != null){
+            return payload.getZ2Payload();
+        }else{
+            return null;
+        }
     }
 
 }
