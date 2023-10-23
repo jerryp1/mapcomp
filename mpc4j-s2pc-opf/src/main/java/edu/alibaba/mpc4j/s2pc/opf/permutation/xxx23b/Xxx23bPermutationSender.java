@@ -52,10 +52,6 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
      */
     private final ZlcParty zlcSender;
     /**
-     * Z2 circuit sender.
-     */
-    private final Z2cParty z2cSender;
-    /**
      * Z2 circuit receiver.
      */
     private final Z2cParty z2cReceiver;
@@ -73,7 +69,6 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(senderRpc, receiverParty, config.getOsnConfig());
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
-        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
         z2cReceiver = Z2cFactory.createReceiver(senderRpc, receiverParty, config.getZ2cConfig());
         a2bSender = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
@@ -88,7 +83,6 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
         osnSender.init(maxNum);
         osnReceiver.init(maxNum);
         zlcSender.init(maxNum);
-        z2cSender.init(maxNum * maxL);
         z2cReceiver.init(maxNum * maxL);
         a2bSender.init(maxL, maxNum);
         b2aSender.init(maxL, maxNum);

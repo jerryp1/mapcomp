@@ -54,10 +54,6 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
      */
     private final Z2cParty z2cSender;
     /**
-     * Z2 circuit receiver.
-     */
-    private final Z2cParty z2cReceiver;
-    /**
      * A2b Receiver.
      */
     private final A2bParty a2bReceiver;
@@ -72,7 +68,6 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         z2cSender = Z2cFactory.createSender(receiverRpc, senderParty, config.getZ2cConfig());
-        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
         secureRandom = new SecureRandom();
@@ -87,7 +82,6 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         osnReceiver.init(maxNum);
         osnSender.init(maxNum);
         zlcReceiver.init(maxNum);
-        z2cReceiver.init(maxNum * maxL);
         z2cSender.init(maxNum * maxL);
         a2bReceiver.init(maxL, maxNum);
         b2aReceiver.init(maxL, maxNum);
