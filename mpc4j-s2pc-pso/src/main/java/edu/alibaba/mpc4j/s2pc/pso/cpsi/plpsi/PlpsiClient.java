@@ -19,7 +19,7 @@ public interface PlpsiClient<T> extends TwoPartyPto {
      * @param maxServerElementSize max server element size.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxClientElementSize, int maxServerElementSize, int serverPayloadBitL) throws MpcAbortException;
+    void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException;
 
     /**
      * Executes the protocol.
@@ -30,4 +30,14 @@ public interface PlpsiClient<T> extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     PlpsiClientOutput<T> psi(List<T> clientElementList, int serverElementSize) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param payloadBitL the bit length of server payload
+     * @param isBinaryShare whether binary sharing or not
+     * @return the shared output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    Payload intersectPayload(int payloadBitL, boolean isBinaryShare) throws MpcAbortException;
 }

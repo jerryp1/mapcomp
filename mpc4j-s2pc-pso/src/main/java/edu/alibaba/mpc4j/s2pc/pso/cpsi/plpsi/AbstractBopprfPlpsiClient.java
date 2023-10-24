@@ -58,6 +58,10 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
      */
     private CuckooHashBin<T> cuckooHashBin;
 
+    private byte[][] inputArray;
+
+    private PlpsiClientOutput<T> clientOutput;
+
     public AbstractBopprfPlpsiClient(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, BopprfPlpsiConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
         bopprfReceiver = BopprfFactory.createReceiver(serverRpc, clientParty, config.getBopprfConfig());
@@ -69,8 +73,8 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
     }
 
     @Override
-    public void init(int maxClientElementSize, int maxServerElementSize, int serverPayloadBitL) throws MpcAbortException {
-        setInitInput(maxClientElementSize, maxServerElementSize, serverPayloadBitL);
+    public void init(int maxClientElementSize, int maxServerElementSize) throws MpcAbortException {
+        setInitInput(maxClientElementSize, maxServerElementSize);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -92,7 +96,6 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
     @Override
     public PlpsiClientOutput<T> psi(List<T> clientElementList, int serverElementSize) throws MpcAbortException {
         setPtoInput(clientElementList, serverElementSize);
-        int ptoStepNum = serverPayloadBitL == 0 ? 3 : 4;
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -117,12 +120,12 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
         stopWatch.stop();
         long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, ptoStepNum, binTime, "Server inserts cuckoo hash");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Server inserts cuckoo hash");
 
         stopWatch.start();
         // The parties invoke a batched OPPRF.
         // P2 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
-        byte[][] inputArray = IntStream.range(0, beta)
+        inputArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> {
                 HashBinEntry<T> item = cuckooHashBin.getHashBinEntry(batchIndex);
                 byte[] itemBytes = cuckooHashBin.getHashBinEntry(batchIndex).getItemByteArray();
@@ -136,7 +139,7 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
         stopWatch.stop();
         long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, ptoStepNum, opprfTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
 
         stopWatch.start();
         // The parties invoke a private equality test
@@ -161,29 +164,31 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
                 }
             })
             .collect(Collectors.toCollection(ArrayList::new));
+        clientOutput = new PlpsiClientOutput<>(envType, parallel, table, z1);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, ptoStepNum, peqtTime);
-
-        PlpsiClientOutput<T> clientOutput;
-        if (serverPayloadBitL > 0) {
-            stopWatch.start();
-            // The parties invoke a batched OPPRF.
-            // P2 inputs Table_1[1], . . . , Table_1[β] and receives y_1^*, ..., y_β^*
-            byte[][] payloadTargetArray = bopprfReceiver.opprf(serverPayloadBitL, inputArray, pointNum);
-            clientOutput = new PlpsiClientOutput<>(envType, parallel, table, z1, payloadTargetArray, serverPayloadBitL, isBinaryShare);
-            cuckooHashBin = null;
-            stopWatch.stop();
-            long secondOpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 4, ptoStepNum, secondOpprfTime);
-        } else {
-            clientOutput = new PlpsiClientOutput<>(envType, parallel, table, z1, null, 0, false);
-        }
+        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return clientOutput;
+    }
+    @Override
+    public Payload intersectPayload(int payloadBitL, boolean isBinaryShare) throws MpcAbortException{
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        byte[][] payloadTargetArray = bopprfReceiver.opprf(payloadBitL, inputArray, hashNum * serverElementSize);
+        Payload payload = new Payload(envType, parallel, payloadTargetArray, payloadBitL, isBinaryShare);
+        if(clientOutput != null){
+            clientOutput.addPayload(payload);
+        }
+        stopWatch.stop();
+        long secondOpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 1, secondOpprfTime);
+        logPhaseInfo(PtoState.PTO_END);
+        return payload;
     }
 
     private List<byte[]> generateCuckooHashKeyPayload() {
@@ -194,4 +199,5 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
         cuckooHashBin.insertPaddingItems(secureRandom);
         return Arrays.stream(cuckooHashBin.getHashKeys()).collect(Collectors.toList());
     }
+
 }

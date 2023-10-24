@@ -36,7 +36,8 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default payload bit length
      */
-    private static final int PAYLOAD_BIT_LEN = 55;
+    private static final int[] PAYLOAD_BIT_LENS = new int[]{55, 41, 47};
+    private static final boolean[] IS_BINARY = new boolean[]{true, false, true};
     /**
      * default size
      */
@@ -73,30 +74,14 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
                 PlpsiType.RS21.name() + " (direct, " + type.name() + ")" + "binary",
                 new Rs21PlpsiConfig.Builder(false).setCuckooHashBinType(type).build(),
             });
-            configurations.add(new Object[]{
-                PlpsiType.RS21.name() + " (silent, " + type.name() + ")" + "arithmetic",
-                new Rs21PlpsiConfig.Builder(true).setShareType(false).setCuckooHashBinType(type).build(),
-            });
-            configurations.add(new Object[]{
-                PlpsiType.RS21.name() + " (direct, " + type.name() + ")" + "arithmetic",
-                new Rs21PlpsiConfig.Builder(false).setShareType(false).setCuckooHashBinType(type).build(),
-            });
             // PSTY19
             configurations.add(new Object[]{
-                PlpsiType.PSTY19.name() + " (silent, " + type.name() + ")" + "binary",
+                PlpsiType.PSTY19.name() + " (silent, " + type.name() + ")",
                 new Psty19PlpsiConfig.Builder(true).setCuckooHashBinType(type).build(),
             });
             configurations.add(new Object[]{
-                PlpsiType.PSTY19.name() + " (direct, " + type.name() + ")" + "binary",
+                PlpsiType.PSTY19.name() + " (direct, " + type.name() + ")",
                 new Psty19PlpsiConfig.Builder(false).setCuckooHashBinType(type).build(),
-            });
-            configurations.add(new Object[]{
-                PlpsiType.PSTY19.name() + " (silent, " + type.name() + ")" + "arithmetic",
-                new Psty19PlpsiConfig.Builder(true).setShareType(false).setCuckooHashBinType(type).build(),
-            });
-            configurations.add(new Object[]{
-                PlpsiType.PSTY19.name() + " (direct, " + type.name() + ")" + "arithmetic",
-                new Psty19PlpsiConfig.Builder(false).setShareType(false).setCuckooHashBinType(type).build(),
             });
         }
 
@@ -172,11 +157,11 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
             );
             // generate the inputs
             ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
-            List<ByteBuffer> payload = generatePayload(serverSetSize);
+            List<List<ByteBuffer>> payloads = generatePayload(serverSetSize);
             List<ByteBuffer> serverElementList = sets.get(0).stream().toList();
             List<ByteBuffer> clientElementList = sets.get(1).stream().toList();
-            PlpsiServerThread serverThread = new PlpsiServerThread(server, serverElementList, payload, clientSetSize, PAYLOAD_BIT_LEN);
-            PlpsiClientThread clientThread = new PlpsiClientThread(client, clientElementList, serverSetSize, PAYLOAD_BIT_LEN);
+            PlpsiServerThread serverThread = new PlpsiServerThread(server, serverElementList, clientSetSize, payloads, PAYLOAD_BIT_LENS, IS_BINARY);
+            PlpsiClientThread clientThread = new PlpsiClientThread(client, clientElementList, serverSetSize, PAYLOAD_BIT_LENS, IS_BINARY);
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -189,9 +174,9 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            PlpsiServerOutput serverOutput = serverThread.getServerOutput();
+            PlpsiShareOutput serverOutput = serverThread.getServerOutput();
             PlpsiClientOutput<ByteBuffer> clientOutput = clientThread.getClientOutput();
-            assertOutput(serverElementList, clientElementList, payload, serverOutput, clientOutput, config.isBinaryShare());
+            assertOutput(serverElementList, clientElementList, payloads, serverOutput, clientOutput);
             printAndResetRpc(time);
             // destroy
             new Thread(server::destroy).start();
@@ -201,45 +186,51 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
         }
     }
 
-    private void assertOutput(List<ByteBuffer> serverElementList, List<ByteBuffer> clientElementList, List<ByteBuffer> payload,
-                              PlpsiServerOutput serverOutput, PlpsiClientOutput<ByteBuffer> clientOutput, boolean isBinaryShare) {
-        int byteL = PAYLOAD_BIT_LEN > 0 ? CommonUtils.getByteLength(PAYLOAD_BIT_LEN) : 0;
+    private void assertOutput(List<ByteBuffer> serverElementList, List<ByteBuffer> clientElementList, List<List<ByteBuffer>> payloads,
+                              PlpsiShareOutput serverOutput, PlpsiClientOutput<ByteBuffer> clientOutput) {
         Set<ByteBuffer> expectIntersectionSet = new HashSet<>(serverElementList);
         expectIntersectionSet.retainAll(clientElementList);
         ArrayList<ByteBuffer> table = clientOutput.getTable();
         BitVector z = serverOutput.getZ1().getBitVector().xor(clientOutput.getZ1().getBitVector());
-        List<byte[]> serverPayloadShare = null, clientPayloadShare = null;
-        Zl zl = null;
-        BigInteger[] serverShareA = null, clientShareA = null;
-        HashMap<ByteBuffer, ByteBuffer> hashMap = new HashMap<>();
-        if(PAYLOAD_BIT_LEN > 0){
-            IntStream.range(0, serverElementList.size()).forEach(i -> hashMap.put(serverElementList.get(i), payload.get(i)));
-            if (isBinaryShare) {
-                serverPayloadShare = trans(serverOutput.getZ2Payload());
-                clientPayloadShare = trans(clientOutput.getZ2Payload());
-            } else {
-                serverShareA = serverOutput.getZlPayload().getZlVector().getElements();
-                clientShareA = clientOutput.getZlPayload().getZlVector().getElements();
-                zl = serverOutput.getZlPayload().getZl();
-            }
-        }
         int beta = clientOutput.getBeta();
         for (int i = 0; i < beta; i++) {
             if (table.get(i) == null) {
                 Assert.assertFalse(z.get(i));
             } else if (expectIntersectionSet.contains(table.get(i))) {
                 Assert.assertTrue(z.get(i));
-                if(PAYLOAD_BIT_LEN > 0){
-                    if (isBinaryShare) {
-                        Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
-                            BytesUtils.xor(serverPayloadShare.get(i), clientPayloadShare.get(i)));
-                    } else {
-                        Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
-                            BytesUtils.paddingByteArray(BigIntegerUtils.bigIntegerToByteArray(zl.add(serverShareA[i], clientShareA[i])), byteL));
-                    }
-                }
             } else {
                 Assert.assertFalse(z.get(i));
+            }
+        }
+        if(payloads != null){
+            for(int payloadIndex = 0; payloadIndex < payloads.size(); payloadIndex++){
+                List<ByteBuffer> plainPayload = payloads.get(payloadIndex);
+                HashMap<ByteBuffer, ByteBuffer> hashMap = new HashMap<>();
+                IntStream.range(0, serverElementList.size()).forEach(i -> hashMap.put(serverElementList.get(i), plainPayload.get(i)));
+                SquareZ2Vector[] serverPayloadShare = null, clientPayloadShare = null;
+                Zl zl = null;
+                BigInteger[] serverShareA = null, clientShareA = null;
+                if (IS_BINARY[payloadIndex]) {
+                    serverPayloadShare = serverOutput.getZ2RowPayload(payloadIndex);
+                    clientPayloadShare = clientOutput.getZ2RowPayload(payloadIndex);
+                } else {
+                    serverShareA = serverOutput.getZlPayload(payloadIndex).getZlVector().getElements();
+                    clientShareA = clientOutput.getZlPayload(payloadIndex).getZlVector().getElements();
+                    zl = serverOutput.getZlPayload(payloadIndex).getZl();
+                }
+                int byteL = CommonUtils.getByteLength(PAYLOAD_BIT_LENS[payloadIndex]);
+                for (int i = 0; i < beta; i++) {
+                    if (expectIntersectionSet.contains(table.get(i))) {
+                        Assert.assertTrue(z.get(i));
+                        if (IS_BINARY[payloadIndex]) {
+                            Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
+                                BytesUtils.xor(serverPayloadShare[i].getBitVector().getBytes(), clientPayloadShare[i].getBitVector().getBytes()));
+                        } else {
+                            Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
+                                BytesUtils.paddingByteArray(BigIntegerUtils.bigIntegerToByteArray(zl.add(serverShareA[i], clientShareA[i])), byteL));
+                        }
+                    }
+                }
             }
         }
     }
@@ -250,14 +241,16 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
         return Arrays.stream(tmpRes).map(x -> x.getBitVector().getBytes()).collect(Collectors.toList());
     }
 
-    private List<ByteBuffer> generatePayload(int serverSetSize) {
-        if(PAYLOAD_BIT_LEN == 0){
+    private List<List<ByteBuffer>> generatePayload(int serverSetSize) {
+        if(PAYLOAD_BIT_LENS == null){
             return null;
         }
-        int payloadByteL = CommonUtils.getByteLength(PAYLOAD_BIT_LEN);
         SecureRandom secureRandom = new SecureRandom();
-        return IntStream.range(0, serverSetSize).mapToObj(i ->
-            ByteBuffer.wrap(BytesUtils.randomByteArray(payloadByteL, PAYLOAD_BIT_LEN, secureRandom))
-        ).collect(Collectors.toList());
+        return Arrays.stream(PAYLOAD_BIT_LENS).mapToObj(payloadBitLen -> {
+            int payloadByteL = CommonUtils.getByteLength(payloadBitLen);
+            return IntStream.range(0, serverSetSize).mapToObj(i ->
+                ByteBuffer.wrap(BytesUtils.randomByteArray(payloadByteL, payloadBitLen, secureRandom))
+            ).collect(Collectors.toList());
+        }).collect(Collectors.toList());
     }
 }

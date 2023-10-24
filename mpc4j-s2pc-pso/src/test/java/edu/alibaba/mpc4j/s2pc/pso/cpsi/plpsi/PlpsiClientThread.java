@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -27,18 +28,24 @@ public class PlpsiClientThread extends Thread {
     /**
      * server payload bit length
      */
-    private final int serverPayloadBitL;
+    private final int[] serverPayloadBitLs;
 
+    private final boolean[] isBinaryShares;
     /**
      * client output
      */
     private PlpsiClientOutput<ByteBuffer> clientOutput;
 
-    PlpsiClientThread(PlpsiClient<ByteBuffer> client, List<ByteBuffer> clientElementList, int serverElementSize, int serverPayloadBitL) {
+    PlpsiClientThread(PlpsiClient<ByteBuffer> client, List<ByteBuffer> clientElementList, int serverElementSize,
+                      int[] serverPayloadBitLs, boolean[] isBinaryShares) {
         this.client = client;
         this.clientElementList = clientElementList;
         this.serverElementSize = serverElementSize;
-        this.serverPayloadBitL = serverPayloadBitL;
+        if(serverPayloadBitLs != null){
+            MathPreconditions.checkEqual("serverPayloadBitLs.length", "isBinaryShares.length", serverPayloadBitLs.length, isBinaryShares.length);
+        }
+        this.serverPayloadBitLs = serverPayloadBitLs;
+        this.isBinaryShares = isBinaryShares;
     }
 
     PlpsiClientOutput<ByteBuffer> getClientOutput() {
@@ -48,8 +55,13 @@ public class PlpsiClientThread extends Thread {
     @Override
     public void run() {
         try {
-            client.init(clientElementList.size(), serverElementSize, serverPayloadBitL);
+            client.init(clientElementList.size(), serverElementSize);
             clientOutput = client.psi(clientElementList, serverElementSize);
+            if(serverPayloadBitLs != null){
+                for(int i = 0; i < serverPayloadBitLs.length; i++){
+                    client.intersectPayload(serverPayloadBitLs[i], isBinaryShares[i]);
+                }
+            }
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

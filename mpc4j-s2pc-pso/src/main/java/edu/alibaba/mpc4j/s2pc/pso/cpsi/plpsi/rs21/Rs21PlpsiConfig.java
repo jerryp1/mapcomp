@@ -21,10 +21,6 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.BopprfPlpsiConfig;
  */
 public class Rs21PlpsiConfig extends AbstractMultiPartyPtoConfig implements BopprfPlpsiConfig {
     /**
-     * whether the payload should be shared in binary form
-     */
-    private final boolean isBinaryShare;
-    /**
      * Batch OPPRF config
      */
     private final BopprfConfig bopprfConfig;
@@ -42,7 +38,6 @@ public class Rs21PlpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
         bopprfConfig = builder.bopprfConfig;
         peqtConfig = builder.peqtConfig;
         cuckooHashBinType = builder.cuckooHashBinType;
-        isBinaryShare = builder.isBinaryShare;
     }
 
     @Override
@@ -53,11 +48,6 @@ public class Rs21PlpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
     @Override
     public int getOutputBitNum(int serverElementSize, int clientElementSize) {
         return CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
-    }
-
-    @Override
-    public boolean isBinaryShare() {
-        return isBinaryShare;
     }
 
     @Override
@@ -77,10 +67,6 @@ public class Rs21PlpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Rs21PlpsiConfig> {
         /**
-         * whether the payload should be shared in binary form
-         */
-        private boolean isBinaryShare;
-        /**
          * Batch OPPRF config
          */
         private BopprfConfig bopprfConfig;
@@ -99,16 +85,10 @@ public class Rs21PlpsiConfig extends AbstractMultiPartyPtoConfig implements Bopp
                 .build();
             peqtConfig = PeqtFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             cuckooHashBinType = CuckooHashBinType.NO_STASH_PSZ18_3_HASH;
-            isBinaryShare = true;
         }
 
         public Builder setPeqtConfig(PeqtConfig peqtConfig) {
             this.peqtConfig = peqtConfig;
-            return this;
-        }
-
-        public Builder setShareType(boolean isBinaryShare) {
-            this.isBinaryShare = isBinaryShare;
             return this;
         }
 

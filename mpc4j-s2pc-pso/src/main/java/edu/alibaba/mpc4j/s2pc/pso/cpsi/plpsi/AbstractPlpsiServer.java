@@ -10,8 +10,10 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -22,10 +24,6 @@ import java.util.stream.IntStream;
  */
 public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto implements PlpsiServer<T> {
     /**
-     * whether the sharing type of payload is binary
-     */
-    protected final boolean isBinaryShare;
-    /**
      * max server element size
      */
     private int maxServerElementSize;
@@ -34,17 +32,13 @@ public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto impleme
      */
     private int maxClientElementSize;
     /**
-     * max server payload bit length
-     */
-    protected int serverPayloadBitL;
-    /**
      * server element array list
      */
     protected ArrayList<T> serverElementArrayList;
     /**
      * server payload array list
      */
-    protected ArrayList<T> serverPayloadArrayList;
+    protected byte[][][] serverPayloadArrays;
     /**
      * server element size
      */
@@ -53,38 +47,39 @@ public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto impleme
      * client element size
      */
     protected int clientElementSize;
-    protected HashMap<T, byte[]> hashMap;
+    protected HashMap<T, Integer> hashMap;
 
     protected AbstractPlpsiServer(PtoDesc ptoDesc, Rpc serverRpc, Party clientParty, PlpsiConfig config) {
         super(ptoDesc, serverRpc, clientParty, config);
-        isBinaryShare = config.isBinaryShare();
     }
 
-    protected void setInitInput(int maxServerElementSize, int maxClientElementSize, int serverPayloadBitL) {
+    protected void setInitInput(int maxServerElementSize, int maxClientElementSize) {
         MathPreconditions.checkPositive("maxServerElementSize", maxServerElementSize);
         this.maxServerElementSize = maxServerElementSize;
         MathPreconditions.checkPositive("maxClientElementSize", maxClientElementSize);
         this.maxClientElementSize = maxClientElementSize;
-        MathPreconditions.checkGreaterOrEqual("serverPayloadBitL", serverPayloadBitL, 0);
-        this.serverPayloadBitL = serverPayloadBitL;
         initState();
     }
 
-    protected void setPtoInput(List<T> serverElementList, List<T> serverPayloadList, int clientElementSize) {
+
+    protected void setPtoInput(List<T> serverElementList, int clientElementSize) {
         checkInitialized();
         MathPreconditions.checkPositiveInRangeClosed("serverElementSize", serverElementList.size(), maxServerElementSize);
         serverElementSize = serverElementList.size();
         serverElementArrayList = new ArrayList<>(serverElementList);
         MathPreconditions.checkPositiveInRangeClosed("clientElementSize", clientElementSize, maxClientElementSize);
         this.clientElementSize = clientElementSize;
-        if (serverPayloadList != null) {
-            MathPreconditions.checkEqual("serverElementList.size()", "serverPayloadList.size()", serverElementList.size(), serverPayloadList.size());
-            serverPayloadArrayList = new ArrayList<>(serverPayloadList);
-            hashMap = new HashMap<>();
-            int byteL = CommonUtils.getByteLength(serverPayloadBitL);
-            IntStream.range(0, serverElementSize).forEach(i ->
-                hashMap.put(serverElementList.get(i), BytesUtils.paddingByteArray(ObjectUtils.objectToByteArray(serverPayloadList.get(i)), byteL)));
-        }
+        hashMap = new HashMap<>();
+        IntStream.range(0, serverElementSize).forEach(i -> hashMap.put(serverElementList.get(i), i));
+//        if (serverPayloadLists != null) {
+//            MathPreconditions.checkEqual("serverPayloadLists.length", "serverPayloadBitLs.length", serverPayloadLists.length, serverPayloadBitLs.length);
+//            serverPayloadArrays = IntStream.range(0, serverPayloadBitLs.length).mapToObj(i -> {
+//                MathPreconditions.checkEqual("serverElementList.size()", "serverPayloadList.size()", serverElementList.size(), serverPayloadLists[i].size());
+//                int byteL = CommonUtils.getByteLength(serverPayloadBitLs[i]);
+//                return serverPayloadLists[i].stream().map(x -> BytesUtils.paddingByteArray(ObjectUtils.objectToByteArray(x), byteL)).toArray(byte[][]::new);
+//            }).toArray(byte[][][]::new);
+//        }
         extraInfo++;
     }
+
 }

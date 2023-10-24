@@ -24,11 +24,4 @@ public interface PlpsiConfig extends MultiPartyPtoConfig {
      * @return number of shared bits.
      */
     int getOutputBitNum(int serverElementSize, int clientElementSize);
-
-    /**
-     * Gets the share type of payload.
-     *
-     * @return true if the payload is binary shared, false if the payload is arithmetic shared
-     */
-    boolean isBinaryShare();
 }

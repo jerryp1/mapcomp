@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,10 +18,6 @@ import java.util.List;
  */
 public abstract class AbstractPlpsiClient<T> extends AbstractTwoPartyPto implements PlpsiClient<T> {
     /**
-     * whether the sharing type of payload is binary
-     */
-    protected final boolean isBinaryShare;
-    /**
      * max client element size
      */
     private int maxClientElementSize;
@@ -28,10 +25,6 @@ public abstract class AbstractPlpsiClient<T> extends AbstractTwoPartyPto impleme
      * max server element size
      */
     private int maxServerElementSize;
-    /**
-     * max server payload bit length
-     */
-    protected int serverPayloadBitL;
     /**
      * client element array list
      */
@@ -47,16 +40,13 @@ public abstract class AbstractPlpsiClient<T> extends AbstractTwoPartyPto impleme
 
     protected AbstractPlpsiClient(PtoDesc ptoDesc, Rpc clientRpc, Party serverParty, PlpsiConfig config) {
         super(ptoDesc, clientRpc, serverParty, config);
-        isBinaryShare = config.isBinaryShare();
     }
 
-    protected void setInitInput(int maxClientElementSize, int maxServerElementSize, int serverPayloadBitL) {
+    protected void setInitInput(int maxClientElementSize, int maxServerElementSize) {
         MathPreconditions.checkPositive("maxClientElementSize", maxClientElementSize);
         this.maxClientElementSize = maxClientElementSize;
         MathPreconditions.checkPositive("maxServerElementSize", maxServerElementSize);
         this.maxServerElementSize = maxServerElementSize;
-        MathPreconditions.checkGreaterOrEqual("serverPayloadBitL", serverPayloadBitL, 0);
-        this.serverPayloadBitL = serverPayloadBitL;
         initState();
     }
 
