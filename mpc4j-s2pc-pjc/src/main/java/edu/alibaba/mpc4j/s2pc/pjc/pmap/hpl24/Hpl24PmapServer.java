@@ -6,9 +6,12 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterParty;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
@@ -31,7 +34,6 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
     private PlpsiClient<T> plpsiClient;
     private OsnReceiver osnReceiver;
     private PermutableSorterParty permutableSorterSender;
-
 
 
     private int[] osnMap;
@@ -79,11 +81,12 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         // 1. 先进行第一次 plpsi
         stopWatch.start();
         PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(serverElementList, clientElementSize);
+        plpsiClient.intersectPayload(1 + bitLen, true);
         logStepInfo(PtoState.INIT_STEP, 1, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
 
         // 2. 再进行第二次plpsi
         stopWatch.start();
-        PlpsiShareOutput plpsiServerOutput = plpsiServer.psi(serverElementList, null, clientElementSize);
+        PlpsiShareOutput plpsiServerOutput = plpsiServer.psi(serverElementList, clientElementSize);
         logStepInfo(PtoState.INIT_STEP, 2, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
 
         // 3. 基于server的信息进行osn
@@ -92,39 +95,44 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         int osnByteL = CommonUtils.getByteLength(osnBitLen);
         getOsnMap(plpsiClientOutput);
         OsnPartyOutput osnRes = osnReceiver.osn(osnMap, osnByteL);
-        // todo 和结果进行xor
-//        IntStream.range(0, osnBitLen).forEach(i -> selfShareSwitch[i].getBitVector().xori(osnRes.getShare()));
-        logStepInfo(PtoState.INIT_STEP, 2, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
+        BitVector[] shareRes = getShareSwitchRes(osnRes, plpsiClientOutput);
+        logStepInfo(PtoState.INIT_STEP, 3, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
+
+        // 4. 计算得到置换 sigma_0
+        stopWatch.start();
+        SquareZlVector sigma0 = permutableSorterSender.sort(new SquareZ2Vector[]{SquareZ2Vector.create(shareRes[0], false)});
+        logStepInfo(PtoState.INIT_STEP, 4, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
 
         return null;
     }
 
-    private void getOsnMap(PlpsiClientOutput<T> plpsiClientOutput){
+    private void getOsnMap(PlpsiClientOutput<T> plpsiClientOutput) {
         List<Integer> nullPos = new LinkedList<>();
         List<T> allElements = plpsiClientOutput.getTable();
         osnMap = new int[allElements.size()];
-        for(int i = 0; i < allElements.size(); i++){
+        for (int i = 0; i < allElements.size(); i++) {
             T element = allElements.get(i);
-            if(element == null){
+            if (element == null) {
                 nullPos.add(i);
-            }else{
+            } else {
                 int pos = serverElementArrayList.indexOf(element);
                 osnMap[pos] = i;
             }
         }
         assert nullPos.size() == allElements.size() - serverElementSize;
         Collections.shuffle(nullPos, secureRandom);
-        for(int i = 0, j = serverElementSize; i < nullPos.size(); i++, j++){
+        for (int i = 0, j = serverElementSize; i < nullPos.size(); i++, j++) {
             osnMap[j] = nullPos.get(i);
         }
     }
 
-    private BitVector[] getShareSwitchRes(OsnPartyOutput osnRes, PlpsiClientOutput<T> plpsiClientOutput){
-        BitVector[] tmp = new BitVector[1 + bitLen];
-        tmp[0] = plpsiClientOutput.getZ1().getBitVector();
-        SquareZ2Vector[] tmpPayload = plpsiClientOutput.getZ2Payload();
-        IntStream.range(0, bitLen).forEach(i -> tmp[i + 1] = tmpPayload[i].getBitVector());
-
+    private BitVector[] getShareSwitchRes(OsnPartyOutput osnRes, PlpsiClientOutput<T> plpsiClientOutput) {
+        SquareZ2Vector[] selfPayloadPayload = plpsiClientOutput.getZ2RowPayload(0);
+        byte[][] tmp = IntStream.range(0, serverElementSize)
+            .mapToObj(i -> BytesUtils.xor(osnRes.getShare(i), selfPayloadPayload[osnMap[i]].getBitVector().getBytes()))
+            .toArray(byte[][]::new);
+        // todo 因为osn只输入了byte length，所以这里的bit length不一定完全对得上，需要check
+        return ZlDatabase.create(selfPayloadPayload[0].bitNum(), tmp).bitPartition(envType, parallel);
     }
 
 }
