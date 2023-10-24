@@ -56,9 +56,8 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int plPsiBitLen = LongUtils.ceilLog2(maxServerElementSize);
-        plpsiClient.init(maxClientElementSize, maxServerElementSize, plPsiBitLen);
-        plpsiServer.init(maxServerElementSize, maxClientElementSize, 0);
+        plpsiClient.init(maxClientElementSize, maxServerElementSize);
+        plpsiServer.init(maxServerElementSize, maxClientElementSize);
 
         osnReceiver.init(maxServerElementSize);
         MathPreconditions.checkGreaterOrEqual("bitLen", bitLen, LongUtils.ceilLog2(maxServerElementSize));
