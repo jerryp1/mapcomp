@@ -60,12 +60,12 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(DEFAULT_ZL).build()
+            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(DEFAULT_ZL, true).build()
         });
 
         // Xxx23 large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(LARGE_ZL).build()
+            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(LARGE_ZL, true).build()
         });
 
         return configurations;

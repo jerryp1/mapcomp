@@ -1,18 +1,17 @@
-package edu.alibaba.mpc4j.s2pc.opf.shuffle;
+package edu.alibaba.mpc4j.s2pc.opf.spermutation;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 
-import java.util.List;
 import java.util.Vector;
 
 /**
- * Shuffle party interface.
+ * Shared permutation party interface.
  *
  * @author Li Peng
- * @date 2023/10/18
+ * @date 2023/10/25
  */
-public interface ShuffleParty extends TwoPartyPto {
+public interface SharedPermutationParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
@@ -25,9 +24,10 @@ public interface ShuffleParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param x the input of party.
+     * @param perms the shared permutation of party.
+     * @param x     the shared inputs party.
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x) throws MpcAbortException;
+    Vector<byte[]> permute(Vector<byte[]> perms, Vector<byte[]> x) throws MpcAbortException;
 }

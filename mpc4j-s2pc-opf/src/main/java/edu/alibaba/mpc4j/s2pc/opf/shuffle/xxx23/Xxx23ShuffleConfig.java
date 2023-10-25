@@ -54,9 +54,9 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
          */
         private final Zl zl;
 
-        public Builder(Zl zl) {
+        public Builder(Zl zl, boolean silent) {
             this.zl = zl;
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         @Override
