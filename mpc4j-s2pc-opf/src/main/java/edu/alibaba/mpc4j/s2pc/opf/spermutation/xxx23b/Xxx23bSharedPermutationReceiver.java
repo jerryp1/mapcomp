@@ -29,14 +29,6 @@ import java.util.stream.IntStream;
  * @date 2023/5/25
  */
 public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationParty {
-//    /**
-//     * Osn sender.
-//     */
-//    private final OsnSender osnSender;
-//    /**
-//     * Osn receiver.
-//     */
-//    private final OsnReceiver osnReceiver;
     /**
      * Shuffle receiver.
      */
@@ -44,8 +36,6 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
 
     public Xxx23bSharedPermutationReceiver(Rpc receiverRpc, Party senderParty, Xxx23bSharedPermutationConfig config) {
         super(Xxx23bSharedPermutationPtoDesc.getInstance(), receiverRpc, senderParty, config);
-//        osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
-//        osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         shuffleReceiver = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
         secureRandom = new SecureRandom();
     }
@@ -56,8 +46,6 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-//        osnReceiver.init(maxNum);
-//        osnSender.init(maxNum);
         shuffleReceiver.init(maxL, maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
