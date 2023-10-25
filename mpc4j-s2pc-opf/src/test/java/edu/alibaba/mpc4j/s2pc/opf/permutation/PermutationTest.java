@@ -62,7 +62,7 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 large zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL).build()
+            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL).build()
         });
 
         // Xxx23b default zl
