@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -54,6 +55,16 @@ public class SharedPermutationTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
+        // Xxx23 default zl
+        configurations.add(new Object[]{
+            PermutationTypes.XXX23.name(), new Xxx23SharedPermutationConfig.Builder(DEFAULT_ZL, true).build()
+        });
+
+        // Xxx23 large zl
+        configurations.add(new Object[]{
+            PermutationTypes.XXX23.name(), new Xxx23SharedPermutationConfig.Builder(LARGE_ZL, true).build()
+        });
 
         // Xxx23b default zl
         configurations.add(new Object[]{
@@ -205,6 +216,12 @@ public class SharedPermutationTest extends AbstractTwoPartyPtoTest {
         return result;
     }
 
+    /**
+     * Generate random permutations.
+     *
+     * @param num the number of elements to be permuted.
+     * @return random permutations.
+     */
     private int[] generateRandomPerm(int num) {
         List<Integer> randomPermList = IntStream.range(0, num)
             .boxed()

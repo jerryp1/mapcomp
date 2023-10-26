@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b;
+package edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -11,15 +11,15 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Li Peng
  * @date 2023/5/25
  */
-public class Xxx23bSharedPermutationPtoDesc implements PtoDesc {
+public class Xxx23SharedPermutationPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -4644370308367920585L);
+    private static final int PTO_ID = Math.abs((int) 7002270011863181869L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23B_SHARED_PERMUTATION";
+    private static final String PTO_NAME = "XXX23_SHARED_PERMUTATION";
 
     /**
      * protocol step
@@ -33,12 +33,12 @@ public class Xxx23bSharedPermutationPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Xxx23bSharedPermutationPtoDesc INSTANCE = new Xxx23bSharedPermutationPtoDesc();
+    private static final Xxx23SharedPermutationPtoDesc INSTANCE = new Xxx23SharedPermutationPtoDesc();
 
     /**
      * private constructor.
      */
-    private Xxx23bSharedPermutationPtoDesc() {
+    private Xxx23SharedPermutationPtoDesc() {
         // empty
     }
 

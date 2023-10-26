@@ -4,8 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationSender;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationSender;
@@ -32,6 +33,10 @@ public class SharedPermutationFactory {
          * xxx+23.
          */
         XXX23,
+        /**
+         * xxx+23b.
+         */
+        XXX23B,
     }
 
     /**
@@ -44,9 +49,10 @@ public class SharedPermutationFactory {
      */
     public static SharedPermutationParty createSender(Rpc senderRpc, Party receiverParty, SharedPermutationConfig config) {
         SharedPermutationTypes type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case XXX23:
+                return new Xxx23SharedPermutationSender(senderRpc, receiverParty, (Xxx23SharedPermutationConfig) config);
+            case XXX23B:
                 return new Xxx23bSharedPermutationSender(senderRpc, receiverParty, (Xxx23bSharedPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SharedPermutationTypes.class.getSimpleName() + ": " + type.name());
@@ -63,9 +69,10 @@ public class SharedPermutationFactory {
      */
     public static SharedPermutationParty createReceiver(Rpc receiverRpc, Party senderParty, SharedPermutationConfig config) {
         SharedPermutationTypes type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case XXX23:
+                return new Xxx23SharedPermutationReceiver(receiverRpc, senderParty, (Xxx23SharedPermutationConfig) config);
+            case XXX23B:
                 return new Xxx23bSharedPermutationReceiver(receiverRpc, senderParty, (Xxx23bSharedPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SharedPermutationTypes.class.getSimpleName() + ": " + type.name());
@@ -84,6 +91,25 @@ public class SharedPermutationFactory {
             case IDEAL:
             case SEMI_HONEST:
                 return new Xxx23bSharedPermutationConfig.Builder(zl, silent).build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
+        }
+    }
+
+    /**
+     * Creates a default reverse permutation config.
+     *
+     * @param securityModel the security model.
+     * @param silent        if using a silent config.
+     * @return a default config.
+     */
+    public static SharedPermutationConfig createDefaultReverseConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new Xxx23SharedPermutationConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:

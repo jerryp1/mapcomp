@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b;
+package edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -16,7 +16,7 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory.SharedPe
  * @author Li Peng
  * @date 2023/5/25
  */
-public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig implements SharedPermutationConfig {
+public class Xxx23SharedPermutationConfig extends AbstractMultiPartyPtoConfig implements SharedPermutationConfig {
     /**
      * Osn config.
      */
@@ -26,20 +26,25 @@ public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig i
      */
     private final ShuffleConfig shuffleConfig;
     /**
+     * Un-shuffle config.
+     */
+    private final ShuffleConfig unShuffleConfig;
+    /**
      * Zl instance.
      */
     private final Zl zl;
 
-    private Xxx23bSharedPermutationConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.shuffleConfig);
+    private Xxx23SharedPermutationConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.shuffleConfig, builder.unShuffleConfig);
         this.shuffleConfig = builder.shuffleConfig;
+        this.unShuffleConfig = builder.unShuffleConfig;
         this.osnConfig = builder.osnConfig;
         this.zl = builder.zl;
     }
 
     @Override
     public SharedPermutationTypes getPtoType() {
-        return SharedPermutationTypes.XXX23B;
+        return SharedPermutationTypes.XXX23;
     }
 
     @Override
@@ -49,7 +54,7 @@ public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig i
 
     @Override
     public boolean isReverse() {
-        return true;
+        return false;
     }
 
     public OsnConfig getOsnConfig() {
@@ -60,7 +65,11 @@ public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig i
         return shuffleConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23bSharedPermutationConfig> {
+    public ShuffleConfig getUnShuffleConfig() {
+        return unShuffleConfig;
+    }
+
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23SharedPermutationConfig> {
         /**
          * Osn config.
          */
@@ -70,6 +79,10 @@ public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig i
          */
         private final ShuffleConfig shuffleConfig;
         /**
+         * Un-shuffle config.
+         */
+        private final ShuffleConfig unShuffleConfig;
+        /**
          * Zl instance of plaintext.
          */
         private final Zl zl;
@@ -78,11 +91,12 @@ public class Xxx23bSharedPermutationConfig extends AbstractMultiPartyPtoConfig i
             this.zl = zl;
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             shuffleConfig = ShuffleFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            unShuffleConfig = ShuffleFactory.createDefaultUnShuffleConfig(SecurityModel.SEMI_HONEST, zl, silent);
         }
 
         @Override
-        public Xxx23bSharedPermutationConfig build() {
-            return new Xxx23bSharedPermutationConfig(this);
+        public Xxx23SharedPermutationConfig build() {
+            return new Xxx23SharedPermutationConfig(this);
         }
     }
 }
