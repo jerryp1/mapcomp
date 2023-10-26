@@ -108,4 +108,18 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
         }
         return result;
     }
+
+    /**
+     * Reverse the permutation.
+     *
+     * @param perm permutation.
+     * @return reversed permutation.
+     */
+    protected int[] reversePermutation(int[] perm) {
+        int[] result = new int[perm.length];
+        for (int i = 0; i < perm.length; i++) {
+            result[perm[i]] = i;
+        }
+        return result;
+    }
 }

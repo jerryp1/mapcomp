@@ -24,4 +24,11 @@ public interface ShuffleConfig extends MultiPartyPtoConfig {
      * @return the zl.
      */
     Zl getZl();
+
+    /**
+     * Whether the shuffle is reversed (un-shuffle).
+     *
+     * @return whether the shuffle is reversed (un-shuffle)
+     */
+    boolean isReverse();
 }

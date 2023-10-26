@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b.Xxx23bShuffleConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -69,6 +70,15 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
             ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(LARGE_ZL, true).build()
         });
 
+        // Xxx23b default zl
+        configurations.add(new Object[]{
+            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(DEFAULT_ZL, true).build()
+        });
+
+        // Xxx23b large zl
+        configurations.add(new Object[]{
+            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(LARGE_ZL, true).build()
+        });
         return configurations;
     }
 
@@ -169,7 +179,7 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
             // verify
             List<Vector<byte[]>> shareZ0 = senderThread.getZ0();
             List<Vector<byte[]>> shareZ1 = receiverThread.getZ1();
-            assertOutput(composePerms(randomPerms1, randomPerms0), inputs, shareZ0, shareZ1);
+            assertOutput(randomPerms0, randomPerms1, inputs, shareZ0, shareZ1, config.isReverse());
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
@@ -180,15 +190,23 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
         new Thread(receiver::destroy).start();
     }
 
-    private void assertOutput(int[] perms, List<int[]> xs, List<Vector<byte[]>> z0, List<Vector<byte[]>> z1) {
+    private void assertOutput(int[] perms0, int[] perms1, List<int[]> xs, List<Vector<byte[]>> z0,
+                              List<Vector<byte[]>> z1, boolean isReverse) {
         int length = xs.size();
+        // true composition
+        int[] perms = composePerms(perms1, perms0);
+        // whether current pto is doing un-shuffling
+        if (isReverse) {
+            perms = reversePermutation(perms);
+        }
         for (int i = 0; i < length; i++) {
             Vector<byte[]> z0i = z0.get(i);
             Vector<byte[]> z1i = z1.get(i);
             int num = z0i.size();
             int[] z = IntStream.range(0, num).mapToObj(j -> BytesUtils.xor(z0i.get(j), z1i.get(j)))
                 .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
-            int[] x = BenesNetworkUtils.permutation(perms, Arrays.stream(xs.get(i)).boxed().collect(Collectors.toCollection(Vector::new)))
+            int[] x = BenesNetworkUtils.permutation(perms, Arrays.stream(xs.get(i))
+                .boxed().collect(Collectors.toCollection(Vector::new)))
                 .stream().mapToInt(j -> j).toArray();
             IntStream.range(0, num).forEach(j -> Assert.assertEquals(z[j], x[j]));
         }
@@ -221,5 +239,19 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
             resultPerms[i] = perms0[perms1[i]];
         }
         return resultPerms;
+    }
+
+    /**
+     * Reverse the permutation.
+     *
+     * @param perm permutation.
+     * @return reversed permutation.
+     */
+    protected int[] reversePermutation(int[] perm) {
+        int[] result = new int[perm.length];
+        for (int i = 0; i < perm.length; i++) {
+            result[perm[i]] = i;
+        }
+        return result;
     }
 }

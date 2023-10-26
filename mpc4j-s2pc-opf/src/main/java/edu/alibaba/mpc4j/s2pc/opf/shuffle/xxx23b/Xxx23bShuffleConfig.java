@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -9,12 +9,12 @@ import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 
 /**
- * Xxx+23 shuffle config.
+ * Xxx+23b un-shuffle config.
  *
  * @author Li Peng
- * @date 2023/5/22
+ * @date 2023/5/26
  */
-public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements ShuffleConfig {
+public class Xxx23bShuffleConfig extends AbstractMultiPartyPtoConfig implements ShuffleConfig {
     /**
      * Osn config.
      */
@@ -24,7 +24,7 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
      */
     private final Zl zl;
 
-    private Xxx23ShuffleConfig(Builder builder) {
+    private Xxx23bShuffleConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig);
         this.osnConfig = builder.osnConfig;
         this.zl = builder.zl;
@@ -32,7 +32,7 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
 
     @Override
     public ShuffleTypes getPtoType() {
-        return ShuffleTypes.XXX23;
+        return ShuffleTypes.XXX23b;
     }
 
     @Override
@@ -42,14 +42,14 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
 
     @Override
     public boolean isReverse() {
-        return false;
+        return true;
     }
 
     public OsnConfig getOsnConfig() {
         return osnConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23ShuffleConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23bShuffleConfig> {
         /**
          * Osn config.
          */
@@ -65,8 +65,8 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
         }
 
         @Override
-        public Xxx23ShuffleConfig build() {
-            return new Xxx23ShuffleConfig(this);
+        public Xxx23bShuffleConfig build() {
+            return new Xxx23bShuffleConfig(this);
         }
     }
 }
