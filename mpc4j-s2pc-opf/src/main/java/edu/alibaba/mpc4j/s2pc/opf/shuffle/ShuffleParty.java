@@ -25,9 +25,10 @@ public interface ShuffleParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param x the input of party.
+     * @param x          the input of party.
+     * @param randomPerm the random permutation.
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x) throws MpcAbortException;
+    List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x, int[] randomPerm) throws MpcAbortException;
 }

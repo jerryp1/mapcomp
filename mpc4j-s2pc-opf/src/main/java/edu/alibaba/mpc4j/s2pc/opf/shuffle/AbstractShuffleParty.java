@@ -9,11 +9,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Abstract shuffle sender.
@@ -68,21 +65,6 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
     }
 
     /**
-     * Generates random permutation.
-     *
-     * @param num the number of inputs.
-     * @return a random permutation of num.
-     */
-    protected int[] genRandomPerm(int num) {
-        // generate random permutation
-        List<Integer> randomPermList = IntStream.range(0, num)
-            .boxed()
-            .collect(Collectors.toList());
-        Collections.shuffle(randomPermList, secureRandom);
-        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
-    }
-
-    /**
      * Merge list of vectors into single vector.
      *
      * @param x input vectors.
@@ -93,8 +75,8 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
         for (int i = 0; i < num; i++) {
             byte[] allByteArrays = new byte[x.size() * byteL];
             ByteBuffer buff = ByteBuffer.wrap(allByteArrays);
-            for (int j = 0; j < x.size(); j++) {
-                buff.put(x.get(j).elementAt(i));
+            for (Vector<byte[]> bytes : x) {
+                buff.put(bytes.elementAt(i));
             }
             result.add(buff.array());
         }

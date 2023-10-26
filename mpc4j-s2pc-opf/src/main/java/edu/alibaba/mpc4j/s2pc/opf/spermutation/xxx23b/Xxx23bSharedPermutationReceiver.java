@@ -61,7 +61,8 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
         logPhaseInfo(PtoState.PTO_BEGIN);
         // shuffle
         stopWatch.start();
-        List<Vector<byte[]>> shuffledInputs = shuffleReceiver.shuffle(Arrays.asList(perms, x));
+        int[] randomPerms = genRandomPerm(num);
+        List<Vector<byte[]>> shuffledInputs = shuffleReceiver.shuffle(Arrays.asList(perms, x), randomPerms);
         Vector<byte[]> shuffledPerms = shuffledInputs.get(0);
         Vector<byte[]> shuffledX = shuffledInputs.get(1);
         stopWatch.stop();

@@ -60,14 +60,13 @@ public class Xxx23ShuffleReceiver extends AbstractShuffleParty {
     }
 
     @Override
-    public List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x) throws MpcAbortException {
+    public List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x, int[] randomPerm) throws MpcAbortException {
         setPtoInput(x);
         logPhaseInfo(PtoState.PTO_BEGIN);
         // merge
         Vector<byte[]> input = x.size() <= 1 ? x.get(0) : merge(x);
         // osn1
         stopWatch.start();
-        int[] randomPerm = genRandomPerm(num);
         OsnPartyOutput osnOutput = osnReceiver.osn(randomPerm, byteL);
         Vector<byte[]> osnOutputBytes = IntStream.range(0, num)
             .mapToObj(osnOutput::getShare).collect(Collectors.toCollection(Vector::new));

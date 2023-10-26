@@ -21,6 +21,10 @@ class ShuffleReceiverThread extends Thread {
      */
     private final List<Vector<byte[]>> x1;
     /**
+     * random local permutation
+     */
+    private final int[] randomPerms;
+    /**
      * the num
      */
     private final int num;
@@ -33,11 +37,12 @@ class ShuffleReceiverThread extends Thread {
      */
     private List<Vector<byte[]>> z1;
 
-    ShuffleReceiverThread(ShuffleParty receiver, List<Vector<byte[]>> x1, int l) {
+    ShuffleReceiverThread(ShuffleParty receiver, List<Vector<byte[]>> x1, int[] randomPerms, int l) {
         this.receiver = receiver;
         this.x1 = x1;
         this.num = x1.get(0).size();
         this.l = l;
+        this.randomPerms = randomPerms;
     }
 
     List<Vector<byte[]>> getZ1() {
@@ -48,7 +53,7 @@ class ShuffleReceiverThread extends Thread {
     public void run() {
         try {
             receiver.init(l, num);
-            z1 = receiver.shuffle(x1);
+            z1 = receiver.shuffle(x1, randomPerms);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

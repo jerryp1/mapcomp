@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.opf.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
@@ -132,6 +133,8 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
         List<int[]> inputs = new ArrayList<>();
         List<Vector<byte[]>> shareX0 = new ArrayList<>();
         List<Vector<byte[]>> shareX1 = new ArrayList<>();
+        int[] randomPerms0 = generateRandomPerm(num);
+        int[] randomPerms1 = generateRandomPerm(num);
         for (int i = 0; i < DEFAULT_LENGTH; i++) {
             int[] input = generateRandomPerm(num);
             Vector<byte[]> share0 = IntStream.range(0, num).mapToObj(j -> zl.createRandom(SECURE_RANDOM))
@@ -151,8 +154,8 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            ShuffleSenderThread senderThread = new ShuffleSenderThread(sender, shareX0, zl.getL());
-            ShuffleReceiverThread receiverThread = new ShuffleReceiverThread(receiver, shareX1, zl.getL());
+            ShuffleSenderThread senderThread = new ShuffleSenderThread(sender, shareX0, randomPerms0, zl.getL());
+            ShuffleReceiverThread receiverThread = new ShuffleReceiverThread(receiver, shareX1, randomPerms1, zl.getL());
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -166,7 +169,7 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
             // verify
             List<Vector<byte[]>> shareZ0 = senderThread.getZ0();
             List<Vector<byte[]>> shareZ1 = receiverThread.getZ1();
-            assertOutput(inputs, shareZ0, shareZ1);
+            assertOutput(composePerms(randomPerms1, randomPerms0), inputs, shareZ0, shareZ1);
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
@@ -177,25 +180,46 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
         new Thread(receiver::destroy).start();
     }
 
-    private void assertOutput(List<int[]> x, List<Vector<byte[]>> z0, List<Vector<byte[]>> z1) {
-        int length = x.size();
+    private void assertOutput(int[] perms, List<int[]> xs, List<Vector<byte[]>> z0, List<Vector<byte[]>> z1) {
+        int length = xs.size();
         for (int i = 0; i < length; i++) {
             Vector<byte[]> z0i = z0.get(i);
             Vector<byte[]> z1i = z1.get(i);
             int num = z0i.size();
             int[] z = IntStream.range(0, num).mapToObj(j -> BytesUtils.xor(z0i.get(j), z1i.get(j)))
                 .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
-            Set<Integer> trueZ = Arrays.stream(x.get(i)).boxed().collect(Collectors.toSet());
-            Set<Integer> resultZ = Arrays.stream(z).boxed().collect(Collectors.toSet());
-            Assert.assertEquals(trueZ, resultZ);
+            int[] x = BenesNetworkUtils.permutation(perms, Arrays.stream(xs.get(i)).boxed().collect(Collectors.toCollection(Vector::new)))
+                .stream().mapToInt(j -> j).toArray();
+            IntStream.range(0, num).forEach(j -> Assert.assertEquals(z[j], x[j]));
         }
     }
 
+    /**
+     * Generate random permutations.
+     *
+     * @param num the number of elements to be permuted.
+     * @return random permutations.
+     */
     private int[] generateRandomPerm(int num) {
         List<Integer> randomPermList = IntStream.range(0, num)
             .boxed()
             .collect(Collectors.toList());
         Collections.shuffle(randomPermList, SECURE_RANDOM);
         return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
+    }
+
+    /**
+     * Compose two permutation.
+     *
+     * @param perms0 the permutation to be applied first.
+     * @param perms1 the permutation to be applied subsequently.
+     * @return composed permutation.
+     */
+    private int[] composePerms(int[] perms0, int[] perms1) {
+        int[] resultPerms = new int[perms0.length];
+        for (int i = 0; i < perms0.length; i++) {
+            resultPerms[i] = perms0[perms1[i]];
+        }
+        return resultPerms;
     }
 }
