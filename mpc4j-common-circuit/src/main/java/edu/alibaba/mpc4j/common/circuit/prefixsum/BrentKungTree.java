@@ -1,13 +1,12 @@
-package edu.alibaba.mpc4j.common.circuit.z2.adder;
+package edu.alibaba.mpc4j.common.circuit.prefixsum;
 
-import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.math.BigInteger;
 
 /**
- * Parallel prefix adder using Brent-Kung structure. The structure comes from the following paper:
+ * Parallel prefix tree of Brent-Kung structure. The structure comes from the following paper:
  *
  * <p>
  * Brent, and Kung. "A regular layout for parallel adders." IEEE transactions on Computers 100.3 (1982): 260-264.
@@ -16,15 +15,15 @@ import java.math.BigInteger;
  * @author Li Peng
  * @date 2023/6/1
  */
-public class BrentKungAdder extends AbstractParallelPrefixAdder {
+public class BrentKungTree extends AbstractPrefixSumTree {
 
-    public BrentKungAdder(Z2IntegerCircuit circuit) {
-        super(circuit.getParty());
+    public BrentKungTree(PrefixSumOp prefixSumOp) {
+        super(prefixSumOp);
     }
 
     @Override
-    protected void addPrefix() throws MpcAbortException {
-        int ceilL = 1 << (BigInteger.valueOf(tuples.length - 1).bitLength());
+    public void addPrefix(int l) throws MpcAbortException {
+        int ceilL = 1 << (BigInteger.valueOf(l - 1).bitLength());
         // offset denotes the distance of index in a perfect binary tree (with ceilL leaves) and index in the ture tree (with l nodes).
         int offset = ceilL - l;
         int logL = LongUtils.ceilLog2(ceilL);
@@ -46,7 +45,7 @@ public class BrentKungAdder extends AbstractParallelPrefixAdder {
                     }
                 }
             }
-            updateCurrentLevel(inputIndexes, outputIndexes);
+            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
         }
@@ -66,7 +65,7 @@ public class BrentKungAdder extends AbstractParallelPrefixAdder {
                     }
                 }
             }
-            updateCurrentLevel(inputIndexes, outputIndexes);
+            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum <<= 1;
             blockSize >>= 1;
         }
