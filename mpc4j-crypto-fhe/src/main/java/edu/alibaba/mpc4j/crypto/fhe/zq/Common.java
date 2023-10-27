@@ -3,73 +3,75 @@ package edu.alibaba.mpc4j.crypto.fhe.zq;
 import java.math.BigInteger;
 
 /**
- * This Class for some common arithmetic computation, just like safeArithmetic(safeAdd, safeMul..)
- *
- *
+ * This Class for some common arithmetic computation.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/common.h
  * </p>
+ *
  * @author Qixian Zhou
  * @date 2023/8/9
  */
 public class Common {
-
-    public static final int BYTES_PER_UINT64 = 8;
-
-    // a hex value is 4-bit
+    /**
+     * a long (uint64) value is 8-byte
+     */
+    public static final int BYTES_PER_UINT64 = Long.BYTES;
+    /**
+     * a hex value is 4-bit
+     */
     public static final int BITS_PER_NIBBLE = 4;
-
-    public static final int BITS_PER_BYTE = 8;
-
-    public static final int BITS_PER_UINT64 = BYTES_PER_UINT64 * BITS_PER_BYTE;
-    // 一个 byte 可以表示 2个 Nibble, 一个 Nibble 占据 4-bit，1个byte有8-bit
+    /**
+     * a long (uint64) value is 64-bit
+     */
+    public static final int BITS_PER_UINT64 = Long.SIZE;
+    /**
+     * a byte value is 2-hex
+     */
     public static final int NIBBLES_PER_BYTE = 2;
-
+    /**
+     * a long (uint64) value is 16-hex
+     */
     public static final int NIBBLES_PER_UINT64 = BYTES_PER_UINT64 * NIBBLES_PER_BYTE;
 
-
-
+    /**
+     * Coverts a hex to a char (upper hex).
+     *
+     * @param nibble a hex.
+     * @return a char (upper hex).
+     */
     public static char nibbleToUpperHex(int nibble) {
-
-        assert !(nibble < 0 || nibble > 15);
-
-
+        // nibble can only be [0, 16)
+        assert (nibble >= 0 && nibble < 16);
         if (nibble < 10) {
             return (char) ((char) nibble + '0');
         }
-
         return (char) ((char) nibble + 'A' - 10);
-
     }
 
-
     /**
-     * determine whether the given character is a hex char
+     * Determines whether the given character is a hex char.
      *
      * @param hex a char
-     * @return whether the given char is a hex char
+     * @return whether the given char is a hex char.
      */
     public static boolean isHexChar(char hex) {
+        // hex can be {'0',...,'9','A',...,'F','a',...,'f'
         if (hex >= '0' && hex <= '9') {
             return true;
         }
         if (hex >= 'A' && hex <= 'F') {
             return true;
         }
-        if (hex >= 'a' && hex <= 'f') {
-            return true;
-        }
-        return false;
+        return hex >= 'a' && hex <= 'f';
     }
 
     /**
-     * convert a hex char to corresponding decimal value
+     * Converts a hex char to corresponding decimal value.
      *
-     * @param hex a hex char
-     * @return decimal corresponding to the hex char
+     * @param hex a hex char.
+     * @return decimal corresponding to the hex char.
      */
     public static int hexToNibble(char hex) {
-
         if (hex >= '0' && hex <= '9') {
             return hex - '0';
         }
@@ -79,25 +81,32 @@ public class Common {
         if (hex >= 'a' && hex <= 'f') {
             return hex - 'a' + 10;
         }
-
         assert isHexChar(hex);
 
         return -1;
     }
 
-
+    /**
+     * Gets bit_count of the hex string.
+     *
+     * @param hexString the hex string.
+     * @param charCount the number of chars.
+     * @return bit_count of the hex string.
+     */
     public static int getHexStringBitCount(String hexString, int charCount) {
-
+        // when hexString is null, we allow charCount <= 0
         assert !(hexString == null && charCount > 0);
+        // when hexString is not null, we need charCount >= 0
         assert charCount >= 0;
 
         for (int i = 0; i < charCount; i++) {
             char hex = hexString.charAt(i);
             int nibble = hexToNibble(hex);
-            // 找到第一个 不等于0 的 hex char即可,因为 hexString 左边是高位，右边是低位，例如：
-            // 0x0F ---> 4-bit   0x1F ---> 5-bit
+            // find the first non-zero hex char
             if (nibble != 0) {
-                int nibbleBits = UintCore.getSignificantBitCount((long) nibble);
+                // bit_count for the first non-zero hex char
+                int nibbleBits = UintCore.getSignificantBitCount(nibble);
+                // bit_count for the remaining nibbles
                 int remainingNibbles = (charCount - i - 1) * BITS_PER_NIBBLE;
 
                 return nibbleBits + remainingNibbles;
@@ -106,18 +115,28 @@ public class Common {
         return 0;
     }
 
+    /**
+     * Gets bit_count of the hex string.
+     *
+     * @param hexString  the hex string.
+     * @param startIndex the start index.
+     * @param charCount  the number of chars.
+     * @return bit_count of the hex string.
+     */
     public static int getHexStringBitCount(String hexString, int startIndex, int charCount) {
-
+        // when hexString is null, we allow charCount <= 0
         assert !(hexString == null && charCount > 0);
+        // when hexString is not null, we need charCount >= 0
         assert charCount >= 0;
 
         for (int i = 0; i < charCount; i++) {
             char hex = hexString.charAt(i + startIndex);
             int nibble = hexToNibble(hex);
-            // 找到第一个 不等于0 的 hex char即可,因为 hexString 左边是高位，右边是低位，例如：
-            // 0x0F ---> 4-bit   0x1F ---> 5-bit
+            // find the first non-zero hex char
             if (nibble != 0) {
-                int nibbleBits = UintCore.getSignificantBitCount((long) nibble);
+                // bit_count for the first non-zero hex char
+                int nibbleBits = UintCore.getSignificantBitCount(nibble);
+                // bit_count for the remaining nibbles
                 int remainingNibbles = (charCount - i - 1) * BITS_PER_NIBBLE;
 
                 return nibbleBits + remainingNibbles;
@@ -126,42 +145,73 @@ public class Common {
         return 0;
     }
 
-
-
-
-
+    /**
+     * Gets the hamming weight of the byte value.
+     *
+     * @param value the byte value.
+     * @return the hamming weight of the byte value.
+     */
     public static int hammingWeight(byte value) {
-
-        int t = (int) value;
+        int t = value;
         t -= (t >> 1) & 0x55;
         t = (t & 0x33) + ((t >> 2) & 0x33);
         return (t + (t >> 4)) & 0x0F;
-
     }
 
-
+    /**
+     * Returns if the two double values are close in floating-point view, i.e., |v1 - v2| < max(v1, v2) * Math.ulp(1.0).
+     *
+     * @param v1 the double value v1.
+     * @param v2 the double value v2.
+     * @return true if the two double values are close.
+     */
     public static boolean areClose(double v1, double v2) {
-
         double scaleFactor = Math.max(Math.max(Math.abs(v1), Math.abs(v2)), 1.0);
-
         return Math.abs(v1 - v2) < scaleFactor * Math.ulp(1.0);
     }
 
-
+    /**
+     * Returns if (uint64) in1 > (uint64) in2.
+     *
+     * @param in1 in1.
+     * @param in2 in2.
+     * @return true if (uint64) in1 > (uint64) in2.
+     */
     public static boolean unsignedGt(long in1, long in2) {
         return Long.compareUnsigned(in1, in2) > 0;
     }
 
-    public static boolean unsignedGt(int in1, int in2) {
-        return Integer.compareUnsigned( in1, in2) > 0;
-    }
-
-    public static boolean unsignedGeq(int in1, int in2) {
-        return Integer.compareUnsigned( in1, in2) >= 0;
-    }
-
+    /**
+     * Returns if (uint64) in1 >= (uint64) in2.
+     *
+     * @param in1 in1.
+     * @param in2 in2.
+     * @return true if (uint64) in1 >= (uint64) in2.
+     */
     public static boolean unsignedGeq(long in1, long in2) {
         return Long.compareUnsigned(in1, in2) >= 0;
+    }
+
+    /**
+     * Returns if (uint32) in1 > (uint32) in2.
+     *
+     * @param in1 in1.
+     * @param in2 in2.
+     * @return true if (uint32) in1 > (uint32) in2.
+     */
+    public static boolean unsignedGt(int in1, int in2) {
+        return Integer.compareUnsigned(in1, in2) > 0;
+    }
+
+    /**
+     * Returns if (uint32) in1 >= (uint32) in2.
+     *
+     * @param in1 in1.
+     * @param in2 in2.
+     * @return true if (uint32) in1 >= (uint32) in2.
+     */
+    public static boolean unsignedGeq(int in1, int in2) {
+        return Integer.compareUnsigned(in1, in2) >= 0;
     }
 
 
@@ -187,43 +237,39 @@ public class Common {
         return reverseBits(operand) >>> (32 - bitCount);
     }
 
-
     /**
-     * treat int as uint32
+     * Returns the value obtained by reversing the order of the bits in the two's complement binary representation of
+     * the specified int value.
      *
-     * @param operand
-     * @return
+     * @param operand the value to be reversed.
+     * @return the value obtained by reversing order of the bits in the specified int value.
      */
     public static int reverseBits(int operand) {
-        // 0b10101010101010101010101010101010      0b1010101010101010101010101010101
-        operand = ((operand & 0xaaaaaaaa) >>> 1) | ((operand & 0x55555555) << 1);
-        operand = ((operand & 0xcccccccc) >>> 2) | ((operand & 0x33333333) << 2);
-        operand = ((operand & 0xf0f0f0f0) >>> 4) | ((operand & 0x0f0f0f0f) << 4);
-        operand = ((operand & 0xff00ff00) >>> 8) | ((operand & 0x00ff00ff) << 8);
-
-        return (operand >>> 16) | (operand << 16);
+        return Integer.reverse(operand);
     }
-
-    public static long reverseBits(long operand) {
-        // (int) operand equals (int) (operand & 0xFFFFFFFF)
-        int a = reverseBits((int) (operand >>> 32));
-        // avoid negate lead error, just like when a = -65536 = 0x0000FFFF, cast to long, we expect is 0x 0000 0000 0000 FFFF
-        // if we directly long b = (long) a; we will get 0x FFFF FFFF FFFF 0000 , this is error
-        long au = Long.parseUnsignedLong(Integer.toHexString(a), 16);
-        int b = reverseBits((int) (operand));
-        long bu = Long.parseUnsignedLong(Integer.toHexString(b), 16);
-        return au | bu << 32;
-    }
-
 
     /**
-     * @param value
-     * @return the msb bit index of value, such as 1->0, 2->1
+     * Returns the value obtained by reversing the order of the bits in the two's complement binary representation of
+     * the specified long value.
+     *
+     * @param operand the value to be reversed.
+     * @return the value obtained by reversing order of the bits in the specified long value.
+     */
+    public static long reverseBits(long operand) {
+        return Long.reverse(operand);
+    }
+
+    /**
+     * Gets the most significant bit (msb) index of the value. For example:
+     * <li>the msb of 1 is the 0-th bit.</li>
+     * <li>the msb of 2 is the 1-th bit.</li>
+     *
+     * @param value the value.
+     * @return the most significant bit (msb) index of the value.
      */
     public static int getMsbIndex(long value) {
         return 63 - Long.numberOfLeadingZeros(value);
     }
-
 
     /**
      * @param a
@@ -370,7 +416,7 @@ public class Common {
             // 只要有一个等于1, 肯定是不会溢出的
             if (a > 1 && b > 1) {
                 // a 最小也是2, (2^64 - 1) / 2 可以用 long 放下
-                long tmp = new BigInteger("FFFFFFFFFFFFFFFF", 16).divide(BigInteger.valueOf(a)).longValue();
+                long tmp = Long.divideUnsigned(0xFFFFFFFFFFFFFFFFL, a);
                 if (b > tmp) {
                     throw new ArithmeticException("unsigned overflow");
                 }
