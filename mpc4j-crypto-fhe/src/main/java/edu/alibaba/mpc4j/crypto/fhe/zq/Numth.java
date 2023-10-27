@@ -19,6 +19,13 @@ import java.util.Random;
  */
 public class Numth {
     /**
+     * private constructor.
+     */
+    private Numth() {
+        // empty
+    }
+
+    /**
      * Converts the value to its non-adjacent form (NAF).
      * <p>
      * The NAF of a number is a unique signed-digit representation, in which non-zero values cannot be adjacent.
@@ -83,21 +90,20 @@ public class Numth {
     }
 
     /**
-     * Try to find the smallest (as integer) primitive degree-th root of
-     * unity modulo small prime modulus, where degree must be a power of two.
+     * Tries to find the smallest primitive n-th root of unity in Zp, where n must be a power of two.
      *
-     * @param degree
-     * @param modulus
-     * @param result
-     * @return
+     * @param degree  degree n, must be a power of 2.
+     * @param modulus modulus p.
+     * @param result  result[0] stores the smallest primitive n-th root of unity in Zp.
+     * @return true if success.
      */
     public static boolean tryMinimalPrimitiveRoot(long degree, Modulus modulus, long[] result) {
         assert result.length == 1;
-
-
+        // try to find a primitive 2n-root of unity ψ
         if (!tryPrimitiveRoot(degree, modulus, result)) {
             return false;
         }
+        // set ω = ψ^2, computes ω, ω^2, ..., ω^n, and find the smallest one
         long generatorSq = UintArithmeticSmallMod.multiplyUintMod(result[0], result[0], modulus);
         long currentGenerator = result[0];
         // destination is going to always contain the smallest generator found
@@ -107,45 +113,41 @@ public class Numth {
             }
             currentGenerator = UintArithmeticSmallMod.multiplyUintMod(currentGenerator, generatorSq, modulus);
         }
-
         return true;
     }
 
-
     /**
-     * @param degree  power of 2
-     * @param modulus modulus
-     * @param result  x^degree = 1 mod modulus, solve x, just the root is degree-th root of unity in integers modulo modulus
-     * @return
+     * Tries to find a primitive root for the given modulus and the degree.
+     *
+     * @param degree  degree, must be a power of 2.
+     * @param modulus modulus.
+     * @param result  x^degree = 1 mod modulus, solve x, just the root is degree-th root of unity in integers modulo modulus.
+     * @return true if success.
      */
     public static boolean tryPrimitiveRoot(long degree, Modulus modulus, long[] result) {
-
         assert UintCore.getPowerOfTwo(degree) > 0;
         assert result.length == 1;
-        // |Z_p^*| = p - 1
-        // implies that modulus is a prime number ？
-        // We need to divide modulus-1 by degree to get the size of the quotient group
+        // We need to divide modulus - 1 by degree to get the size of the quotient group
+        // Note that modulus may not be a prime, since here we consider group instead of field.
         long sizeEntireGroup = modulus.getValue() - 1;
-
-        // Compute size of quotient group
-        // (p-1) / n
+        // Compute size of quotient group, (p - 1) / n, note that p = 1 (mod n)
         long sizeQuotientGroup = sizeEntireGroup / degree;
         // size_entire_group must be divisible by degree, or otherwise the primitive root does not
-        // exist in integers modulo modulus, (p-1) - (p-1/n) * n must be 0
+        // exist in integers modulo modulus, (p - 1) - ((p - 1) / n) * n must be 0
+        // this indeed requires that p = 1 (mod n)
         if (sizeEntireGroup - sizeQuotientGroup * degree != 0) {
             return false;
         }
-
         Random random = new Random();
         int attemptCounter = 0;
         int attemptCounterMax = 100;
-        // 随机生成 g, 并计算 g^{p-1/n} ，并验证 g^{p-1/n} 是否为 模 p 下的 n 次单位根
+        // random generate g, compute g^{(p - 1) / n}, verify if g^{(p - 1) / n} is the n-th primitive root mod q
         do {
             attemptCounter++;
-            // Set destination to be a random number modulo modulus， random g
+            // Set destination to be a random number modulo modulus
             result[0] = UintArithmeticSmallMod.barrettReduce64(random.nextLong(), modulus);
             // Raise the random number to power the size of the quotient
-            // to get rid of irrelevant part, g^{p-1/n}
+            // to get rid of irrelevant part, g^{(p - 1) / n}
             result[0] = UintArithmeticSmallMod.exponentUintMod(result[0], sizeQuotientGroup, modulus);
         } while (!isPrimitiveRoot(result[0], degree, modulus) && (attemptCounter < attemptCounterMax));
 
@@ -153,17 +155,16 @@ public class Numth {
     }
 
     /**
-     * if root is degree-th root of unity, then root^n = 1 mod p, then (root^{n/2}) = -1 mod p
+     * Checks if root is n-th root of unity under the modulus.
      *
-     * @param root
-     * @param degree
-     * @param modulus
-     * @return Whether the root is degree-th root of unity in integers modulo modulus
+     * @param root    the root.
+     * @param degree  the degree.
+     * @param modulus the modulus.
+     * @return true if root is degree-th root of unity under the modulus.
      */
     public static boolean isPrimitiveRoot(long root, long degree, Modulus modulus) {
-
+        assert modulus.getBitCount() >= 2;
         assert root < modulus.getValue();
-        // ensure degree is power of 2
         assert UintCore.getPowerOfTwo(degree) > 0;
 
         if (root == 0) {
@@ -178,59 +179,49 @@ public class Numth {
 
 
     /**
-     * Generate a vector of primes with "bit_size" bits that are congruent to 1 modulo "factor"
+     * Generate one prime with "bit_size" bits that are congruent to 1 modulo "factor" (p = 1 mod factor).
      *
-     * @param factor
-     * @param bitSize bit-size of prime value
-     * @return A Modulus object with prime value
+     * @param factor  the factor.
+     * @param bitSize the bit-size of prime value.
+     * @return a modulus with prime value.
      */
     public static Modulus getPrime(long factor, int bitSize) {
-//        return getPrimes(factor, bitSize, 1)[0];
-
-        // [2, 61]
+        // bit_size must be in range [2, 61]
         assert bitSize <= Constants.MOD_BIT_COUNT_MAX && bitSize >= Constants.MOD_BIT_COUNT_MIN;
-
-        // Start with (2^bit_size - 1) / (factor * factor)  +  1
+        // Start with (2^bit_size - 1) / factor * factor + 1
         long value = ((1L << bitSize) - 1) / factor * factor + 1;
         // min value of bitSize-bit integer
         long lowerBound = 1L << (bitSize - 1);
-        int i = 0;
         while (value > lowerBound) {
-            Modulus mod = new Modulus(value);
-            if (mod.isPrime()) {
-                return mod;
+            if (LongMath.isPrime(value)) {
+                return new Modulus(value);
             }
             value -= factor;
         }
-
         throw new IllegalArgumentException("failed to find enough qualifying primes, please check factor and bitSize");
     }
 
-
     /**
-     * Generate a vector of primes with "bit_size" bits that are congruent to 1 modulo "factor"
+     * Generate a vector of primes with "bit_size" bits that are congruent to 1 modulo "factor" (p = 1 mod factor).
      *
-     * @param factor  factor
-     * @param bitSize bit-size of prime value
-     * @param count   number of Modulus
-     * @return Modulus[] with length count, and every modulus's value is a prime number, and are congruent to 1 modulo "factor"
+     * @param factor  the factor.
+     * @param bitSize the bit-size of prime value.
+     * @param count   number of modulus.
+     * @return a modulus array. Every modulus's value is a prime number, and are congruent to 1 modulo "factor".
      */
     public static Modulus[] getPrimes(long factor, int bitSize, int count) {
-
         assert count > 0;
-        // [2, 61]
+        // bit_size must be in range [2, 61]
         assert bitSize <= Constants.MOD_BIT_COUNT_MAX && bitSize >= Constants.MOD_BIT_COUNT_MIN;
-
-        // Start with (2^bit_size - 1) / (factor * factor)  +  1
+        // Start with (2^bit_size - 1) / factor * factor + 1
         long value = ((1L << bitSize) - 1) / factor * factor + 1;
         // min value of bitSize-bit integer
         long lowerBound = 1L << (bitSize - 1);
         int i = 0;
         Modulus[] modArray = new Modulus[count];
         while (count > 0 && value > lowerBound) {
-            Modulus mod = new Modulus(value);
-            if (mod.isPrime()) {
-                modArray[i] = mod;
+            if (LongMath.isPrime(value)) {
+                modArray[i] = new Modulus(value);
                 i++;
                 count--;
             }
@@ -242,19 +233,18 @@ public class Numth {
         return modArray;
     }
 
-
     /**
-     * @param x a number
-     * @param y a number
-     * @return gcd(x, y)
+     * Computes the greatest common division (GCD) of x and y.
+     *
+     * @param x x.
+     * @param y y.
+     * @return gcd(x, y).
      */
     public static long gcd(long x, long y) {
         assert x != 0;
-//        assert y != 0;
+        assert y != 0;
         if (x < y) {
             return gcd(y, x);
-        } else if (y == 0) {
-            return x;
         } else {
             long f = x % y;
             if (f == 0) {
@@ -266,23 +256,25 @@ public class Numth {
     }
 
     /**
-     * @param x a value
-     * @param y a value
-     * @return if gcd(x, y) = 1, return true, else return false
+     * Returns if x and y are co-prime.
+     *
+     * @param x x.
+     * @param y y.
+     * @return true if x and y are co-prime.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean areCoPrime(long x, long y) {
         return !(gcd(x, y) > 1);
     }
 
     /**
-     * Extended GCD
+     * Returns (gcd, x, y) where gcd is the greatest common divisor of a and b. The numbers a, b are such that gcd = ax + by.
      *
-     * @param x
-     * @param y
-     * @return (gcd ( x, y), a, b), satisfying gcd(x, y) = ax + by
+     * @param x x.
+     * @param y y.
+     * @return (gcd, a, b), satisfying gcd(x, y) = ax + by
      */
     public static long[] xgcd(long x, long y) {
-
         assert x != 0;
         assert y != 0;
 
@@ -293,7 +285,6 @@ public class Numth {
         long b = 1;
 
         while (y != 0) {
-            // need safe_cast?
             long q = x / y;
             long temp = x % y;
             x = y;
@@ -310,25 +301,22 @@ public class Numth {
     }
 
     /**
-     * Compute a^{-1} mod b using Extended Gcd, basic idea is that
-     * gdc(a, b) = ax + by, if gcd(a, b) = 1, then 1 = ax + by ,  both sides mod b:
-     * 1 mod b = ax mod b  , so a^{-1} mod b = x mod b
+     * Compute a^{-1} mod b using Extended Gcd, basic idea is that gdc(a, b) = ax + by, if gcd(a, b) = 1, then
+     * 1 = ax + by, both sides mod b: 1 mod b = ax mod b, so a^{-1} mod b = x mod b.
      *
-     * @param value   input
-     * @param modulus modulus
-     * @param result  Array length is 1, store the value's inverse
+     * @param value   value a.
+     * @param modulus modulus b.
+     * @param result  array length is 1, store the value's inverse.
      * @return value * value^{-1} = 1 mod modulus
      */
     public static boolean tryInvertUintMod(long value, long modulus, long[] result) {
-
         assert modulus > 1;
         assert result.length == 1;
 
         if (value == 0) {
             return false;
         }
-        // 1 = ax + by , y is the modulus , both sides mod y
-        // so 1 = ax , x^{-1} = a
+        // 1 = ax + by, y is the modulus, both sides mod y. So, 1 = ax, x^{-1} = a.
         long[] gcdTuple = xgcd(value, modulus);
         if (gcdTuple[0] != 1) {
             return false;
@@ -339,7 +327,5 @@ public class Numth {
             result[0] = gcdTuple[1];
             return true;
         }
-
     }
-
 }

@@ -127,7 +127,7 @@ public class RnsBaseTest {
         Assert.assertEquals(base2.getBase(1), base3.getBase(1));
         Assert.assertEquals(new Modulus(7), base3.getBase(2));
 
-        Assert.assertThrows(IllegalArgumentException.class, () -> base3.extend(0));
+        Assert.assertThrows(AssertionError.class, () -> base3.extend(0));
         Assert.assertThrows(IllegalArgumentException.class, () -> base3.extend(14));
 
         RnsBase base4 = new RnsBase(new long[]{3, 4, 5});
