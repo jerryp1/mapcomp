@@ -193,7 +193,21 @@ public class ParallelPrefixAdder extends AbstractAdder implements PrefixSumOp {
         Tuple[] inputs2 = Arrays.stream(inputIndexes).mapToObj(inputIndex -> tuples[inputIndex]).toArray(Tuple[]::new);
 
         Tuple[] outputs = vectorOp(inputs1, inputs2);
-
+        // update nodes.
         IntStream.range(0, inputIndexes.length).forEach(i -> tuples[outputIndexes[i]] = outputs[i]);
+    }
+
+    @Override
+    public PrefixSumNode[] getPrefixSumNodes() {
+        return tuples;
+    }
+
+    @Override
+    public void operateAndUpdate(PrefixSumNode[] x, PrefixSumNode[] y, int[] outputIndexes) throws MpcAbortException {
+        Tuple[] xTuples = Arrays.stream(x).map(v -> (Tuple) v).toArray(Tuple[]::new);
+        Tuple[] yTuples = Arrays.stream(y).map(v -> (Tuple) v).toArray(Tuple[]::new);
+        Tuple[] result = vectorOp(xTuples, yTuples);
+        // update nodes.
+        IntStream.range(0, x.length).forEach(i -> tuples[outputIndexes[i]] = result[i]);
     }
 }
