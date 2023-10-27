@@ -20,6 +20,7 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ScalingVariant;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
+import gnu.trove.list.array.TIntArrayList;
 import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
@@ -186,8 +187,7 @@ public class Evaluator {
             );
         } else {
             // Convert the steps to NAF: guarantees using smallest HW
-            // todo: 更轻量级的数据结构
-            ArrayList<Integer> nafSteps = Numth.naf(steps);
+            TIntArrayList nafSteps = Numth.naf(steps);
 
 //            System.out.println("nafsteps:"
 //                            + Arrays.toString(
@@ -203,7 +203,8 @@ public class Evaluator {
                 throw new IllegalArgumentException("Galois key not present");
             }
 
-            for (Integer step : nafSteps) {
+            for (int i = 0; i < nafSteps.size(); i++) {
+                int step = nafSteps.get(i);
                 if (Math.abs(step) != (coeffCount >> 1)) {
                     // We might have a NAF-term of size coeff_count / 2; this corresponds
                     // to no rotation so we skip it. Otherwise call rotate_internal.

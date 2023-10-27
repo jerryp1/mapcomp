@@ -1,11 +1,11 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import com.google.common.math.LongMath;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
+import gnu.trove.list.array.TIntArrayList;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -18,32 +18,68 @@ import java.util.Random;
  * @date 2023/8/9
  */
 public class Numth {
-
-
-    public static ArrayList<Integer> naf(int value) {
-
-        // 这里无法确定长度，所以只能先用 vector
-        ArrayList<Integer> res = new ArrayList<Integer>();
-
+    /**
+     * Converts the value to its non-adjacent form (NAF).
+     * <p>
+     * The NAF of a number is a unique signed-digit representation, in which non-zero values cannot be adjacent.
+     * For example:
+     * <ul>
+     * <li>( 0  1  1  1)_2 =     4 + 2 + 1 = 7</li>
+     * <li>( 1  0 -1  1)_2 = 8     - 2 + 1 = 7</li>
+     * <li>( 1 −1  1  1)_2 = 8 − 4 + 2 + 1 = 7</li>
+     * <li>( 1  0  0 −1)_2 = 8         − 1 = 7</li>
+     * </ul>
+     * All are valid signed-digit representations of 7, but only the final representation, ( 1  0  0 −1)_2,
+     * is in non-adjacent form.
+     * <p>
+     * The main benefit of NAF is that the Hamming weight of the value will be minimal. For regular binary
+     * representations of values, 1/2 bits will be non-zero, on average, but with NAF this drops to only 1/3.
+     * </p>
+     * The properties of NAF make it useful in various algorithms, especially some in cryptography; e.g., for reducing
+     * the number of multiplications needed for performing an exponentiation.
+     *
+     * @param value the value.
+     * @return the NAF form of the value.
+     */
+    public static TIntArrayList naf(int value) {
+        /*
+         * There are several algorithms for obtaining the NAF representation of a value given in binary. One such is the
+         * following method using repeated division; it works by choosing non-zero coefficients such that the resulting
+         * quotient is divisible by 2 and hence the next coefficient a zero.
+         * For more details, see https://en.wikipedia.org/wiki/Non-adjacent_form, Converting to NAF.
+         */
+        TIntArrayList res = new TIntArrayList();
         boolean sign = value < 0;
         value = Math.abs(value);
+        // i ← 0, while E > 0 do
         for (int i = 0; value != 0; i++) {
-
-            int zi = (value & 0x1) != 0 ? 2 - (value & 0x3) : 0;
+            // if E is odd, then z_i ← 2 − (E mod 4); else, z_i = 0
+            int zi = (value & 0x01) != 0 ? 2 - (value & 0x03) : 0;
+            // E ← E - z_i; E ← E/2
             value = (value - zi) >>> 1;
             if (zi != 0) {
+                // we only add non-zero NAF form with its base (1 << i)
                 res.add((sign ? -zi : zi) * (1 << i));
             }
+            // i ← i + 1
         }
         return res;
     }
 
-
-    public static boolean isPrime(long a) {
-        if (a == 2) {
-            return true;
-        }
-        return BigInteger.valueOf(a).isProbablePrime(CommonConstants.STATS_BIT_LENGTH);
+    /**
+     * Returns {@code true} if {@code n} is a prime number: an integer greater than one that cannot be factored into a
+     * product of smaller positive integers.
+     * <p>
+     * Returns {@code false} if {@code n} is zero, one, or a composite number (one which can be factored into smaller
+     * positive integers).
+     *
+     * <p>To test larger numbers, use {@link BigInteger#isProbablePrime}.
+     *
+     * @param n the value n.
+     * @return true if n is a prime number.
+     */
+    public static boolean isPrime(long n) {
+        return LongMath.isPrime(n);
     }
 
     /**

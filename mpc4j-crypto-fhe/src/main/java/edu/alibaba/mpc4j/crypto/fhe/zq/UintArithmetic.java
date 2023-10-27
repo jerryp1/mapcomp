@@ -3,101 +3,88 @@ package edu.alibaba.mpc4j.crypto.fhe.zq;
 import java.util.Arrays;
 
 /**
- * Unsigned int arithmetic, or base-2^64 arithmetic.
+ * Unsigned int arithmetic, or base-2^64 arithmetic. The implementation is from:
  * <p>
- * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithmod.h,
- * modification here is to use long in java equivalent to uint64_t in C++ as the most basic data type.
+ * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/uintarithmod.h,
  * </p>
+ * Modification here is to use long in java equivalent to uint64_t in C++ as the most basic data type.
  *
  * @author Qixian Zhou
  * @date 2023/8/5
  */
 public class UintArithmetic {
-
     /**
      * bit-count of an uint64 value or a long value
      */
     public static final int UINT64_BITS = 64;
 
-
     /**
-     * compute (as & bs) and the result value is stored in result[0, uint64Count).
+     * Computes (operand1 and operand2) and the result value is stored in result[0, uint64Count).
      *
-     * @param as          a base-2^64 value, length is uint64Count
-     * @param bs          a base-2^64 value, length is uint64Count
-     * @param uint64Count number of uint64 used in as and bs
-     * @param result      result[0, uint64Count) store (as & bs)
+     * @param operand1    operand1.
+     * @param operand2    operand2.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
-    public static void andUint(long[] as, long[] bs, int uint64Count, long[] result) {
-
+    public static void andUint(long[] operand1, long[] operand2, int uint64Count, long[] result) {
         assert uint64Count > 0;
-
         while (--uint64Count >= 0) {
-            result[uint64Count] = as[uint64Count] & bs[uint64Count];
+            result[uint64Count] = operand1[uint64Count] & operand2[uint64Count];
         }
     }
 
     /**
-     * compute (as | bs) and the result value is stored in result[0, uint64Count).
+     * Computes (operand1 or operand2) and the result value is stored in result[0, uint64Count).
      *
-     * @param as          a base-2^64 value, length is uint64Count
-     * @param bs          a base-2^64 value, length is uint64Count
-     * @param uint64Count number of uint64 used in as and bs
-     * @param result      result[0, uint64Count) store (as | bs)
+     * @param operand1    operand1.
+     * @param operand2    operand2.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
-    public static void orUint(long[] as, long[] bs, int uint64Count, long[] result) {
-
+    public static void orUint(long[] operand1, long[] operand2, int uint64Count, long[] result) {
         assert uint64Count > 0;
-
         while (--uint64Count >= 0) {
-            result[uint64Count] = as[uint64Count] | bs[uint64Count];
+            result[uint64Count] = operand1[uint64Count] | operand2[uint64Count];
         }
     }
 
     /**
-     * compute (as xor bs) and the result value is stored in result[0, uint64Count).
+     * Computes (operand1 xor operand2) and the result value is stored in result[0, uint64Count).
      *
-     * @param as          a base-2^64 value, length is uint64Count
-     * @param bs          a base-2^64 value, length is uint64Count
-     * @param uint64Count number of uint64 used in as and bs
-     * @param result      result[0, uint64Count) store (as | bs)
+     * @param operand1    operand1.
+     * @param operand2    operand2.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
-    public static void xorUint(long[] as, long[] bs, int uint64Count, long[] result) {
-
+    public static void xorUint(long[] operand1, long[] operand2, int uint64Count, long[] result) {
         assert uint64Count > 0;
-
         while (--uint64Count >= 0) {
-            result[uint64Count] = as[uint64Count] ^ bs[uint64Count];
+            result[uint64Count] = operand1[uint64Count] ^ operand2[uint64Count];
         }
     }
 
     /**
-     * compute (~operand) and the result value is stored in result[0, uint64Count)
+     * Computes (~operand) and the result value is stored in result[0, uint64Count)
      *
-     * @param operand     a base-2^64 value, length is uint64Count
-     * @param uint64Count number of uint64 used in operand
-     * @param result      result[0, uint64Count) store the (~operand)
+     * @param operand     operand.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
     public static void notUint(long[] operand, int uint64Count, long[] result) {
-
         assert uint64Count > 0;
-//        assert operand.length >= uint64Count && result.length >= uint64Count;
-
         while (--uint64Count >= 0) {
             result[uint64Count] = ~operand[uint64Count];
         }
     }
 
-
     /**
-     * compute (operand + 1) / 2 and store it in result[0, uint64Count)
+     * Computes (operand + 1) / 2 and store it in result[0, uint64Count)
      *
-     * @param operand     a base-2^64 value
-     * @param uint64Count number of uint64 used in operand
-     * @param result      result[0, uint64Count) = (operand + 1) / 2
+     * @param operand     operand.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
     public static void halfRoundUpUint(long[] operand, int uint64Count, long[] result) {
-
         if (uint64Count == 0) {
             return;
         }
@@ -110,37 +97,29 @@ public class UintArithmetic {
             result[i] = (operand[i] >>> 1) | (operand[i + 1] << (UINT64_BITS - 1));
         }
         result[uint64Count - 1] = operand[uint64Count - 1] >>> 1;
-        // 我们预期计算的是 (operand/2) + 0.5
-        // 左边最低位如果是 0， 则 0/2 + 0.5 ---> 0
-        // 左边如果最低位是 1 ，则 1/2 + 0.5 ---> 1
+        // we expect the result is (operand / 2) + 0.5.
+        // if lowBitSet = 0, then 0/2 + 0.5 ---> 0; if lowBitSet = 1, then 1/2 + 0.5 ---> 1.
         if (lowBitSet > 0) {
             incrementUint(result, uint64Count, result);
         }
     }
 
-
     /**
-     * compute (operand >> shiftAmount) and store it in result[0, uint64Count)
+     * Computes (operand >> shiftAmount) and store it in result[0, uint64Count).
      *
-     * @param operand     a base-2^64 value
-     * @param shiftAmount bit-count of right shift
-     * @param uint64Count number of uint64 used in operand
-     * @param result      result[0, uint64Count) store the (operand >> shiftAmount)
+     * @param operand     operand.
+     * @param shiftAmount bit-count of right shift.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
     public static void rightShiftUint(long[] operand, int shiftAmount, int uint64Count, long[] result) {
-
         assert uint64Count > 0;
         assert shiftAmount >= 0 && shiftAmount <= uint64Count * UINT64_BITS;
-
         // How many words to shift, one words is 64 bits
         int uint64ShiftAmount = shiftAmount / UINT64_BITS;
         // shift words
-        for (int i = 0; i < uint64Count - uint64ShiftAmount; i++) {
-            result[i] = operand[i + uint64ShiftAmount];
-        }
-        for (int i = uint64Count - uint64ShiftAmount; i < uint64Count; i++) {
-            result[i] = 0;
-        }
+        System.arraycopy(operand, uint64ShiftAmount, result, 0, uint64Count - uint64ShiftAmount);
+        Arrays.fill(result, uint64Count - uint64ShiftAmount, uint64Count, 0L);
         // shift bits
         int bitShiftAmount = shiftAmount - (uint64ShiftAmount * UINT64_BITS);
         if (bitShiftAmount > 0) {
@@ -150,23 +129,19 @@ public class UintArithmetic {
             }
             result[uint64Count - 1] = result[uint64Count - 1] >>> bitShiftAmount;
         }
-
     }
 
-
     /**
-     * compute (operand << shiftAmount) and store it in result[0, uint64Count)
+     * Computes (operand << shiftAmount) and store it in result[0, uint64Count).
      *
-     * @param operand     a base-2^64 value
-     * @param shiftAmount bit count of left shift
-     * @param uint64Count number of uint64 used in operand
-     * @param result      result[0, uint64Count) store the (operand << shiftAmount)
+     * @param operand     operand.
+     * @param shiftAmount bit-count of left shift.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
     public static void leftShiftUint(long[] operand, int shiftAmount, int uint64Count, long[] result) {
-
         assert uint64Count > 0;
         assert shiftAmount >= 0 && shiftAmount <= uint64Count * UINT64_BITS;
-
         // How many words to shift, one words is 64 bits
         int uint64ShiftAmount = shiftAmount / UINT64_BITS;
         // shift words
@@ -185,35 +160,31 @@ public class UintArithmetic {
             }
             result[0] = result[0] << bitShiftAmount;
         }
-
     }
 
     /**
-     * compute -as and store it in result[0, uint64Count), note that as + (-as) mod 2^64 = 0,
-     * -as is still a base-2^64 value.
-     * For example: as = 1, then -as = 2^64 - 1, such that as + (-as) mod 2^64 = 0.
+     * Computes -operand and store it in result[0, uint64Count).
+     * Note that operand + (-operand) mod 2^64 = 0, and -operand is still a base-2^64 value.
+     * For example: operand = 1, then -operand = 2^64 - 1.
      *
-     * @param as          a base-2^64 value
-     * @param uint64Count number of uint64 used in as
-     * @param result      result[0, uint64Count) store the -as
+     * @param operand     operand.
+     * @param uint64Count number of operated uint64.
+     * @param result      store in result[0, uint64Count).
      */
-    public static void negateUint(long[] as, int uint64Count, long[] result) {
-
+    public static void negateUint(long[] operand, int uint64Count, long[] result) {
         assert uint64Count > 0;
-
         long[] tmp = new long[1];
         long carry;
         // Negation is equivalent to inverting bits and adding 1.
-        carry = addUint64(~as[0], 1, tmp);
+        carry = addUint64(~operand[0], 1, tmp);
         result[0] = tmp[0];
         int i = 1;
         while (--uint64Count > 0) {
-            carry = addUint64(~as[i], 0, carry, tmp);
+            carry = addUint64(~operand[i], 0, carry, tmp);
             result[i] = tmp[0];
             i++;
         }
     }
-
 
     /**
      * compute (as - 1) ---> (diff, borrow), diff is stored in result[0, uint64Count) and borrow is returned.
@@ -565,12 +536,12 @@ public class UintArithmetic {
      * @param count       number of elements in operan1 and operand2, that need to participate in the multiply
      */
     public static void multiplyAccumulateUint64(
-            long[] operand1,
-            int startIndex1,
-            long[] operand2,
-            int startIndex2,
-            long[] accumulator,
-            int count) {
+        long[] operand1,
+        int startIndex1,
+        long[] operand2,
+        int startIndex2,
+        long[] accumulator,
+        int count) {
 
         if (count == 0) {
             return;
@@ -1140,10 +1111,10 @@ public class UintArithmetic {
         long[] tmp = new long[1];
         for (int i = 0; i < uint64Count; i++) {
             borrow = subUint64(
-                    i < asUint64Count ? as[i] : 0,
-                    i < bsUint64Count ? bs[i] : 0,
-                    borrow,
-                    tmp
+                i < asUint64Count ? as[i] : 0,
+                i < bsUint64Count ? bs[i] : 0,
+                borrow,
+                tmp
             );
             result[i] = tmp[0];
         }
@@ -1264,10 +1235,10 @@ public class UintArithmetic {
         long[] tmp = new long[1];
         for (int i = 0; i < uint64Count; i++) {
             carry = addUint64(
-                    i < asUint64Count ? as[i] : 0,
-                    i < bsUint64Count ? bs[i] : 0,
-                    carry,
-                    tmp
+                i < asUint64Count ? as[i] : 0,
+                i < bsUint64Count ? bs[i] : 0,
+                carry,
+                tmp
             );
             result[i] = tmp[0];
         }
