@@ -117,6 +117,14 @@ public class SquareZ2Vector implements MpcZ2Vector {
         return squareShareBitVector;
     }
 
+    public static SquareZ2Vector createZeros(int bitNum, boolean isPlain) {
+        SquareZ2Vector squareShareBitVector = new SquareZ2Vector();
+        squareShareBitVector.bitVector = BitVectorFactory.createZeros(bitNum);
+        squareShareBitVector.plain = isPlain;
+
+        return squareShareBitVector;
+    }
+
     /**
      * Create an empty share bit vector.
      *

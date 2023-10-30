@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 import java.util.stream.IntStream;
@@ -49,4 +50,16 @@ public interface MpcZ2Vector extends MpcVector {
 
     MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen);
     MpcZ2Vector[] getBitsWithSkip(int totalCompareNum, int skipLen);
+
+    /**
+     * set the values of specific continuous positions.
+     *
+     * @param startByteIndex set the values of bytes[startByteIndex, startByteIndex + data.length].
+     * @param data src data
+     */
+    default void setValues(int startByteIndex, byte[] data){
+        assert startByteIndex >= 0 && data != null;
+        MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
+        getBitVector().setValues(startByteIndex, data);
+    }
 }

@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * Plain Boolean Circuit Party.
@@ -17,11 +18,17 @@ public class PlainZ2cParty implements MpcZ2cParty {
 
     @Override
     public boolean getParallel() {
-        return false;
+        return true;
     }
 
     @Override
     public MpcZ2Vector create(BitVector bitVector) {
+        return PlainZ2Vector.create(bitVector);
+    }
+
+    @Override
+    public MpcZ2Vector create(BitVector bitVector, boolean isPlain) {
+        assert isPlain;
         return PlainZ2Vector.create(bitVector);
     }
 
@@ -32,6 +39,12 @@ public class PlainZ2cParty implements MpcZ2cParty {
 
     @Override
     public PlainZ2Vector createZeros(int bitNum) {
+        return PlainZ2Vector.createZeros(bitNum);
+    }
+
+    @Override
+    public PlainZ2Vector createZeros(int bitNum, boolean isPlain) {
+        assert isPlain;
         return PlainZ2Vector.createZeros(bitNum);
     }
 
@@ -118,15 +131,27 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         // merge xi and yi
-        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
+        PlainZ2Vector mergeXiArray = (PlainZ2Vector) mergeWithPadding(xiArray);
+        PlainZ2Vector mergeYiArray = (PlainZ2Vector) mergeWithPadding(yiArray);
         // and operation
         PlainZ2Vector mergeZiArray = and(mergeXiArray, mergeYiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-        return Arrays.stream(split(mergeZiArray, bitNums))
+        return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
+
+
+//        // merge xi and yi
+//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
+//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
+//        // and operation
+//        PlainZ2Vector mergeZiArray = and(mergeXiArray, mergeYiArray);
+//        // split
+//        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
+//        return Arrays.stream(split(mergeZiArray, bitNums))
+//            .map(vector -> (PlainZ2Vector) vector)
+//            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -143,16 +168,17 @@ public class PlainZ2cParty implements MpcZ2cParty {
         if (xiArray.length == 0) {
             return new PlainZ2Vector[0];
         }
-        // merge xi and yi
-        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
-        // xor operation
-        PlainZ2Vector mergeZiArray = xor(mergeXiArray, mergeYiArray);
-        // split
-        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-        return Arrays.stream(split(mergeZiArray, bitNums))
-            .map(vector -> (PlainZ2Vector) vector)
-            .toArray(PlainZ2Vector[]::new);
+        return IntStream.range(0, xiArray.length).mapToObj(i -> xor(xiArray[i], yiArray[i])).toArray(PlainZ2Vector[]::new);
+//        // merge xi and yi
+//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
+//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
+//        // xor operation
+//        PlainZ2Vector mergeZiArray = xor(mergeXiArray, mergeYiArray);
+//        // split
+//        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
+//        return Arrays.stream(split(mergeZiArray, bitNums))
+//            .map(vector -> (PlainZ2Vector) vector)
+//            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override

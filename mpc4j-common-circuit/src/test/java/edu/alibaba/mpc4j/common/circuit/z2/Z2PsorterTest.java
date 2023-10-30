@@ -47,7 +47,7 @@ public class Z2PsorterTest {
     /**
      * large num of elements to be sorted
      */
-    private static final int LARGE_SORTED_NUM = 1<<14;
+    private static final int LARGE_SORTED_NUM = 1<<18;
     /**
      * default l
      */

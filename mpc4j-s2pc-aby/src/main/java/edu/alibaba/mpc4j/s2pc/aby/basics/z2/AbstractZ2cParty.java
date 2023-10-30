@@ -82,6 +82,11 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
     }
 
     @Override
+    public SquareZ2Vector create(BitVector bitVector, boolean isPlain) {
+        return SquareZ2Vector.create(bitVector, isPlain);
+    }
+
+    @Override
     public SquareZ2Vector createOnes(int bitNum) {
         return SquareZ2Vector.createOnes(bitNum);
     }
@@ -89,6 +94,11 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
     @Override
     public SquareZ2Vector createZeros(int bitNum) {
         return SquareZ2Vector.createZeros(bitNum);
+    }
+
+    @Override
+    public SquareZ2Vector createZeros(int bitNum, boolean isPlain) {
+        return SquareZ2Vector.createZeros(bitNum, isPlain);
     }
 
     @Override
