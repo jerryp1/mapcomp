@@ -20,6 +20,11 @@ public class PermutableSorterFactory {
         // empty
     }
 
+    public enum PartyTypes{
+        SENDER,
+        RECEIVER
+    }
+
     /**
      * Permutable Sorter type enums.
      */

@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.Multiplier;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.MultiplierFactory;
+import edu.alibaba.mpc4j.common.circuit.z2.psorter.Psorter;
+import edu.alibaba.mpc4j.common.circuit.z2.psorter.PsorterFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.sorter.Sorter;
 import edu.alibaba.mpc4j.common.circuit.z2.sorter.SorterFactory;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -31,6 +33,10 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
      * sorter.
      */
     private final Sorter sorter;
+    /**
+     * psorter.
+     */
+    private final Psorter pSorter;
 
     public Z2IntegerCircuit(MpcZ2cParty party) {
         this(party, new Z2CircuitConfig.Builder().build());
@@ -42,6 +48,7 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         this.adder = AdderFactory.createAdder(config.getAdderType(), this);
         this.multiplier = MultiplierFactory.createMultiplier(config.getMultiplierType(), this);
         this.sorter = SorterFactory.createSorter(config.getSorterType(), this);
+        this.pSorter = PsorterFactory.createPsorter(config.getPsorterType(), this);
     }
 
     /**
@@ -156,6 +163,14 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public void sort(MpcZ2Vector[][] xiArray) throws MpcAbortException {
         Arrays.stream(xiArray).forEach(this::checkInputs);
         sorter.sort(xiArray);
+    }
+
+    public MpcZ2Vector[] psort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation) throws MpcAbortException {
+        Arrays.stream(xiArrays).forEach(this::checkInputs);
+        if(payloadArrays != null){
+            Arrays.stream(xiArrays).forEach(this::checkInputs);
+        }
+        return pSorter.sort(xiArrays, payloadArrays, dir, needPermutation);
     }
 
     public Adder getAdder() {

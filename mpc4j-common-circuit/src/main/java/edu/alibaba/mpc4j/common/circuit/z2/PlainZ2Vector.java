@@ -1,10 +1,17 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.util.Arrays;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Plain Z2 Vector.
@@ -142,5 +149,104 @@ public class PlainZ2Vector implements MpcZ2Vector {
     public void merge(MpcVector other) {
         PlainZ2Vector that = (PlainZ2Vector) other;
         bitVector.merge(that.getBitVector());
+    }
+
+    @Override
+    public MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen) {
+        MathPreconditions.checkEqual("skipLen", "2^k", 1 << LongUtils.ceilLog2(skipLen), skipLen);
+        int destByteNum = CommonUtils.getByteLength(destBitLen);
+        byte[] destByte = new byte[destByteNum];
+        int notFullNum = destBitLen % (skipLen << 1) - skipLen > 0 ? 1 : 0;
+        int groupNum = destBitLen / (skipLen << 1) + notFullNum;
+        // 如果第一个的length和其他的不一致，则先处理第一个
+        if (notFullNum > 0) {
+            // 如果第一个组是未满的，则之前的比较一定是从第一个开始取数比较的
+            int destOffset = (destByteNum << 3) - destBitLen;
+            int firstLen = destBitLen % skipLen;
+            for (int i = 0; i < firstLen; i++, destOffset++) {
+                if (this.getBitVector().get(i)) {
+                    BinaryUtils.setBoolean(destByte, destOffset, true);
+                    BinaryUtils.setBoolean(destByte, destOffset + skipLen, true);
+                }
+            }
+        }
+        // 处理后续满skipLen的数据
+        byte[] srcByte = this.getBitVector().getBytes();
+        if (skipLen >= 8) {
+            int eachByteNum = skipLen >> 3, eachPartNum = eachByteNum << 1;
+            int srcEndIndex = srcByte.length, destEndIndex = destByteNum;
+            for (int i = groupNum - 1; i >= notFullNum; i--, destEndIndex -= eachPartNum, srcEndIndex -= eachByteNum) {
+                System.arraycopy(srcByte, srcEndIndex - eachByteNum, destByte, destEndIndex - eachByteNum, eachByteNum);
+                System.arraycopy(srcByte, srcEndIndex - eachByteNum, destByte, destEndIndex - eachPartNum, eachByteNum);
+            }
+        } else {
+            // todo 先用最简单的方法处理
+            int eachPartBit = skipLen << 1;
+            int currentDestIndex = (destByteNum << 3) - eachPartBit, currentSrcIndex = (srcByte.length << 3) - skipLen;
+            for (int i = groupNum - 1; i >= notFullNum; i--) {
+                for (int j = 0; j < skipLen; j++) {
+                    if (BinaryUtils.getBoolean(srcByte, currentSrcIndex + j)) {
+                        BinaryUtils.setBoolean(destByte, currentDestIndex + j, true);
+                        BinaryUtils.setBoolean(destByte, currentDestIndex + j + skipLen, true);
+                    }
+                }
+                currentSrcIndex -= skipLen;
+                currentDestIndex -= eachPartBit;
+            }
+        }
+        return PlainZ2Vector.create(destBitLen, destByte);
+    }
+
+    @Override
+    public MpcZ2Vector[] getBitsWithSkip(int totalCompareNum, int skipLen) {
+        MathPreconditions.checkEqual("skipLen", "2^k", 1 << LongUtils.ceilLog2(skipLen), skipLen);
+        byte[] src = this.getBitVector().getBytes();
+        int destByteNum = CommonUtils.getByteLength(totalCompareNum);
+        byte[][] res = new byte[2][destByteNum];
+        int groupNum = totalCompareNum / skipLen + (totalCompareNum % skipLen > 0 ? 1 : 0);
+
+        // 如果第一个的length和其他的不一致，则先处理第一个
+        if (totalCompareNum % skipLen > 0) {
+            int destOffset = (destByteNum << 3) - totalCompareNum;
+            int firstLen = totalCompareNum % skipLen;
+            for (int i = 0; i < firstLen; i++, destOffset++) {
+                if (this.getBitVector().get(i)) {
+                    BinaryUtils.setBoolean(res[0], destOffset, true);
+                }
+                if (this.getBitVector().get(i + skipLen)) {
+                    BinaryUtils.setBoolean(res[1], destOffset, true);
+                }
+            }
+        }
+        // 处理后续满skipLen的数据
+        int notFullNum = totalCompareNum % skipLen > 0 ? 1 : 0;
+        if (skipLen >= 8) {
+            int eachByteNum = skipLen >> 3, eachPartNum = eachByteNum << 1;
+            int srcEndIndex = src.length, destEndIndex = destByteNum;
+            for (int i = groupNum - 1; i >= notFullNum; i--, destEndIndex -= eachByteNum, srcEndIndex -= eachPartNum) {
+                System.arraycopy(src, srcEndIndex - eachByteNum, res[1], destEndIndex - eachByteNum, eachByteNum);
+                System.arraycopy(src, srcEndIndex - eachPartNum, res[0], destEndIndex - eachByteNum, eachByteNum);
+            }
+        } else {
+            int andNum = (1 << skipLen) - 1;
+            // todo 先用最简单的方法处理
+            int currentDestIndex = (destByteNum << 3) - skipLen, currentSrcIndex = (src.length << 3) - skipLen;
+            for (int i = groupNum - 1; i >= notFullNum; i--) {
+                for (int j = 0; j < skipLen; j++) {
+                    if (BinaryUtils.getBoolean(src, currentSrcIndex + j)) {
+                        BinaryUtils.setBoolean(res[1], currentDestIndex + j, true);
+                    }
+                }
+                currentSrcIndex -= skipLen;
+                for (int j = 0; j < skipLen; j++) {
+                    if (BinaryUtils.getBoolean(src, currentSrcIndex + j)) {
+                        BinaryUtils.setBoolean(res[0], currentDestIndex + j, true);
+                    }
+                }
+                currentSrcIndex -= skipLen;
+                currentDestIndex -= skipLen;
+            }
+        }
+        return Arrays.stream(res).map(x -> PlainZ2Vector.create(totalCompareNum, x)).toArray(PlainZ2Vector[]::new);
     }
 }

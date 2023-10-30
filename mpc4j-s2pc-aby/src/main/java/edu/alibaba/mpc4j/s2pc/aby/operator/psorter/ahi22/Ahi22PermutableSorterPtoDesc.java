@@ -21,7 +21,7 @@ public class Ahi22PermutableSorterPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "AHI+22_P_SORTER";
+    private static final String PTO_NAME = "AHI22_P_SORTER";
 
     /**
      * protocol step

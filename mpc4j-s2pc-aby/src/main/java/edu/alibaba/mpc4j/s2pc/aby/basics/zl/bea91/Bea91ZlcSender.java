@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.circuit.zl.MpcZlVector;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
@@ -312,5 +313,19 @@ public class Bea91ZlcSender extends AbstractZlcParty {
             logPhaseInfo(PtoState.PTO_END, "mul");
             return z0SquareVector;
         }
+    }
+
+    @Override
+    public SquareZlVector rowAdderWithPrefix(SquareZlVector x, SquareZlVector prefix){
+        assert !x.isPlain();
+        MathPreconditions.checkEqual("data of prefixValue", "1", prefix.getNum(), 1);
+        Zl zl = x.getZl();
+        BigInteger[] xValues = x.getZlVector().getElements();
+        BigInteger[] res = new BigInteger[xValues.length];
+        res[0] = zl.add(xValues[0], prefix.getZlVector().getElement(0));
+        for(int i = 1; i < xValues.length; i++){
+            res[i] = zl.add(res[i - 1], xValues[i]);
+        }
+        return SquareZlVector.create(zl, res, x.isPlain());
     }
 }

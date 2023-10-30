@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -13,6 +14,11 @@ import java.util.Arrays;
  * @date 2023/4/21
  */
 public class PlainZ2cParty implements MpcZ2cParty {
+
+    @Override
+    public boolean getParallel() {
+        return false;
+    }
 
     @Override
     public MpcZ2Vector create(BitVector bitVector) {
@@ -194,5 +200,15 @@ public class PlainZ2cParty implements MpcZ2cParty {
         return Arrays.stream(split(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
+    }
+
+    @Override
+    public PlainZ2Vector[] setPublicValues(BitVector[] data){
+        assert data != null && data.length > 0;
+        int bitNum = data[0].bitNum();
+        return Arrays.stream(data).map(x -> {
+            MathPreconditions.checkEqual("data[i].bitNum()", "data[0].bitNum()", x.bitNum(), bitNum);
+            return PlainZ2Vector.create(x);
+        }).toArray(PlainZ2Vector[]::new);
     }
 }

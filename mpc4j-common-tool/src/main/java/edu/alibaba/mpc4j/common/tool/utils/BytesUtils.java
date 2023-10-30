@@ -170,6 +170,18 @@ public class BytesUtils {
         }
     }
 
+    public static byte[] keepLastBits(byte[] byteArray, final int bitLength){
+        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
+            : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
+        int resBitNum = bitLength & 7;
+        int byteNum = CommonUtils.getByteLength(bitLength);
+        byte[] res = Arrays.copyOfRange(byteArray, byteArray.length - byteNum, byteArray.length);
+        if (resBitNum != 0) {
+            res[0] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
+        }
+        return res;
+    }
+
     /**
      * Verify that the given {@code byte[]} contains at most {@code bitLength} valid bits.
      * The bits are represented in Big-endian format.

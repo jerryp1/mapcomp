@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -123,58 +124,65 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int num, boolean parallel) {
-        // specified for the 1 bit case.
+        // specified for the l <= 3 bit case.
         // create inputs
-        BitVector x0 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-        SquareZ2Vector[] x0Share = new SquareZ2Vector[]{SquareZ2Vector.create(x0, false)};
-        SquareZ2Vector[] x1Share = new SquareZ2Vector[]{SquareZ2Vector.create(x1, false)};
-
-        // init the protocol
-        PermutableSorterParty sender = PermutableSorterFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        PermutableSorterParty receiver = PermutableSorterFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
-        sender.setParallel(parallel);
-        receiver.setParallel(parallel);
-        try {
-            LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            PermutableSorterSenderThread senderThread = new PermutableSorterSenderThread(sender, x0Share, config.getZl().getL());
-            PermutableSorterReceiverThread receiverThread = new PermutableSorterReceiverThread(receiver, x1Share, config.getZl().getL());
-            StopWatch stopWatch = new StopWatch();
-            // execute the protocol
-            stopWatch.start();
-            senderThread.start();
-            receiverThread.start();
-            senderThread.join();
-            receiverThread.join();
-            stopWatch.stop();
-            long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            // verify
-            SquareZlVector shareZ0 = senderThread.getZ0();
-            SquareZlVector shareZ1 = receiverThread.getZ1();
-            assertOutput(x0, x1, shareZ0, shareZ1);
-            printAndResetRpc(time);
-            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int bitNum = 1; bitNum <= 3; bitNum++) {
+            SquareZ2Vector[] x0Share = IntStream.range(0, bitNum).mapToObj(i ->
+                    SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false))
+                .toArray(SquareZ2Vector[]::new);
+            SquareZ2Vector[] x1Share = IntStream.range(0, bitNum).mapToObj(i ->
+                    SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false))
+                .toArray(SquareZ2Vector[]::new);
+            // init the protocol
+            PermutableSorterParty sender = PermutableSorterFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+            PermutableSorterParty receiver = PermutableSorterFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+            sender.setParallel(parallel);
+            receiver.setParallel(parallel);
+            try {
+                LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
+                PermutableSorterSenderThread senderThread = new PermutableSorterSenderThread(sender, x0Share, config.getZl().getL(), bitNum);
+                PermutableSorterReceiverThread receiverThread = new PermutableSorterReceiverThread(receiver, x1Share, config.getZl().getL(), bitNum);
+                StopWatch stopWatch = new StopWatch();
+                // execute the protocol
+                stopWatch.start();
+                senderThread.start();
+                receiverThread.start();
+                senderThread.join();
+                receiverThread.join();
+                stopWatch.stop();
+                long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+                stopWatch.reset();
+                // verify
+                LOGGER.info("-----verifying start for bitNum:{}-----", bitNum);
+                SquareZlVector shareZ0 = senderThread.getZ0();
+                SquareZlVector shareZ1 = receiverThread.getZ1();
+                BitVector[] x0 = Arrays.stream(x0Share).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
+                BitVector[] x1 = Arrays.stream(x1Share).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
+                assertOutput(x0, x1, shareZ0, shareZ1);
+                printAndResetRpc(time);
+                LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // destroy
+            new Thread(sender::destroy).start();
+            new Thread(receiver::destroy).start();
         }
-        // destroy
-        new Thread(sender::destroy).start();
-        new Thread(receiver::destroy).start();
     }
 
-    private void assertOutput(BitVector x0, BitVector x1, SquareZlVector z0, SquareZlVector z1) {
-        int num = x0.bitNum();
+    private void assertOutput(BitVector[] x0, BitVector[] x1, SquareZlVector z0, SquareZlVector z1) {
+        int num = x0[0].bitNum();
         Assert.assertEquals(num, z0.getNum());
         Assert.assertEquals(num, z1.getNum());
 
-        BitVector x = x0.xor(x1);
+        byte[][] x = IntStream.range(0, x0.length).mapToObj(i -> x0[i].xor(x1[i]).getBytes()).toArray(byte[][]::new);
         BigInteger[] elements0 = z0.getZlVector().getElements();
         BigInteger[] elements1 = z1.getZlVector().getElements();
         BigInteger[] resultOrder = IntStream.range(0, num).mapToObj(i -> config.getZl().add(elements0[i], (elements1[i]))).toArray(BigInteger[]::new);
 
         // obtain ture order
-        BigInteger[] tureValue = IntStream.range(0, num).mapToObj(j -> x.get(j) ? BigInteger.ONE : BigInteger.ZERO).toArray(BigInteger[]::new);
+        BitVector[] transRes = ZlDatabase.create(num, x).bitPartition(EnvType.STANDARD, true);
+        BigInteger[] tureValue = IntStream.range(0, num).mapToObj(j -> transRes[j].getBigInteger()).toArray(BigInteger[]::new);
         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(tureValue[j], BigInteger.valueOf(j))).toArray(Tuple[]::new);
         Arrays.sort(tuples);
         BigInteger[] tureOrder = IntStream.range(0, num).mapToObj(j -> tuples[j].getValue()).toArray(BigInteger[]::new);

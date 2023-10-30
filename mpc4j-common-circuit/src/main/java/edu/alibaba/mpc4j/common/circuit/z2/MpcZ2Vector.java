@@ -46,4 +46,7 @@ public interface MpcZ2Vector extends MpcVector {
         IntStream.range(0, inputs.length).forEach(i -> result[i] = inputs[inputs.length - i - 1]);
         return result;
     }
+
+    MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen);
+    MpcZ2Vector[] getBitsWithSkip(int totalCompareNum, int skipLen);
 }

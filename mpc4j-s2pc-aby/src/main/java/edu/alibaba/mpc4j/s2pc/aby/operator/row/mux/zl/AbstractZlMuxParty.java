@@ -11,10 +11,11 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/4/10
  */
 public abstract class AbstractZlMuxParty extends AbstractTwoPartyPto implements ZlMuxParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractZlMuxParty.class);
     /**
      * max num
      */
@@ -93,9 +95,9 @@ public abstract class AbstractZlMuxParty extends AbstractTwoPartyPto implements 
 
         stopWatch.stop();
         long mux3 = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        System.out.println("### mux1: " + mux1 + " ms.");
-        System.out.println("### mux2: " + mux2 + " ms.");
-        System.out.println("### mux3: " + mux3 + " ms.");
+        LOGGER.info("### mux1: " + mux1 + " ms.");
+        LOGGER.info("### mux2: " + mux2 + " ms.");
+        LOGGER.info("### mux3: " + mux3 + " ms.");
 
         return result;
     }

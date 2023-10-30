@@ -10,7 +10,12 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  * @date 2023/4/20
  */
 public interface MpcZ2cParty {
-
+    /**
+     * get parallel setting
+     *
+     * @return status
+     */
+    boolean getParallel();
     /**
      * Creates a (plain) vector with assigned value.
      *
@@ -293,4 +298,6 @@ public interface MpcZ2cParty {
     default MpcZ2Vector[] eq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         return not(xor(xiArray, yiArray));
     }
+
+    MpcZ2Vector[] setPublicValues(BitVector[] data);
 }

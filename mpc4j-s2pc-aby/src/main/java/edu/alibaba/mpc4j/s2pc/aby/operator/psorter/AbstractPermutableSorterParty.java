@@ -24,6 +24,10 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
      */
     protected int maxNum;
     /**
+     * max bit number
+     */
+    protected int maxBitNum;
+    /**
      * num of elements in single vector.
      */
     protected int num;
@@ -48,11 +52,13 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
         super(ptoDesc, rpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int maxNum) {
+    protected void setInitInput(int maxL, int maxNum, int maxBitNum) {
         MathPreconditions.checkPositive("maxL", maxL);
         this.maxL = maxL;
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
+        MathPreconditions.checkPositive("maxBitNum", maxBitNum);
+        this.maxBitNum = maxBitNum;
         initState();
     }
 
@@ -60,6 +66,7 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
         num = xiArray[0].getNum();
         l = xiArray.length;
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        MathPreconditions.checkPositiveInRangeClosed("maxBitNum", xiArray.length, maxBitNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }
 }
