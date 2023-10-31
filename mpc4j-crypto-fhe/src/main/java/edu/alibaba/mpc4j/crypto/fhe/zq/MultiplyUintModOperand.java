@@ -4,7 +4,7 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * This struct contains an operand and a precomputed quotient: (operand << 64) / modulus, for a specific modulus.
+ * This struct contains an operand and a precomputed quotient: (2^64 * operand) / modulus, for a specific modulus.
  * When passed to multiply_uint_mod, a faster variant of Barrett reduction will be performed.
  * <p>
  * Operand must be less than modulus.

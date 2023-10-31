@@ -90,20 +90,21 @@ public class Numth {
     }
 
     /**
-     * Tries to find the smallest primitive n-th root of unity in Zp, where n must be a power of two.
+     * Tries to find the smallest primitive n-th root of unity for the given modulus, where n must be a power of two.
      *
      * @param degree  degree n, must be a power of 2.
-     * @param modulus modulus p.
-     * @param result  result[0] stores the smallest primitive n-th root of unity in Zp.
+     * @param modulus modulus.
+     * @param result  result[0] stores the smallest primitive n-th root of unity for the given modulus.
      * @return true if success.
      */
     public static boolean tryMinimalPrimitiveRoot(long degree, Modulus modulus, long[] result) {
         assert result.length == 1;
-        // try to find a primitive 2n-root of unity ψ
+        // try to find a primitive n-root of unity ψ
         if (!tryPrimitiveRoot(degree, modulus, result)) {
             return false;
         }
-        // set ω = ψ^2, computes ω, ω^2, ..., ω^n, and find the smallest one
+        // enumerate ψ, ψ^3, ψ^5, ..., ψ^(n - 1), and find the smallest one.
+        // we do not need to enumerate all, because ψ^(j + n / 2) = -ψ^j
         long generatorSq = UintArithmeticSmallMod.multiplyUintMod(result[0], result[0], modulus);
         long currentGenerator = result[0];
         // destination is going to always contain the smallest generator found
@@ -119,15 +120,15 @@ public class Numth {
     /**
      * Tries to find a primitive root for the given modulus and the degree.
      *
-     * @param degree  degree, must be a power of 2.
-     * @param modulus modulus.
-     * @param result  x^degree = 1 mod modulus, solve x, just the root is degree-th root of unity in integers modulo modulus.
+     * @param degree  degree n, must be a power of 2.
+     * @param modulus modulus p.
+     * @param result  x^n = 1 mod p, solve x, just the root is n-th root of unity modulo p.
      * @return true if success.
      */
     public static boolean tryPrimitiveRoot(long degree, Modulus modulus, long[] result) {
         assert UintCore.getPowerOfTwo(degree) > 0;
         assert result.length == 1;
-        // We need to divide modulus - 1 by degree to get the size of the quotient group
+        // We need to divide p - 1 by degree to get the size of the quotient group
         // Note that modulus may not be a prime, since here we consider group instead of field.
         long sizeEntireGroup = modulus.getValue() - 1;
         // Compute size of quotient group, (p - 1) / n, note that p = 1 (mod n)
@@ -141,7 +142,8 @@ public class Numth {
         Random random = new Random();
         int attemptCounter = 0;
         int attemptCounterMax = 100;
-        // random generate g, compute g^{(p - 1) / n}, verify if g^{(p - 1) / n} is the n-th primitive root mod q
+        // random generate g, compute g^{(p - 1) / n} (so that g^{(p - 1) / n} must be in the quotient group),
+        // verify if g^{(p - 1) / n} is the n-th root of unity mod p
         do {
             attemptCounter++;
             // Set destination to be a random number modulo modulus
@@ -157,10 +159,10 @@ public class Numth {
     /**
      * Checks if root is n-th root of unity under the modulus.
      *
-     * @param root    the root.
-     * @param degree  the degree.
-     * @param modulus the modulus.
-     * @return true if root is degree-th root of unity under the modulus.
+     * @param root    root.
+     * @param degree  degree n, must be a power of 2.
+     * @param modulus modulus p.
+     * @return true if root is n-th root of unity modulo p.
      */
     public static boolean isPrimitiveRoot(long root, long degree, Modulus modulus) {
         assert modulus.getBitCount() >= 2;
@@ -170,8 +172,7 @@ public class Numth {
         if (root == 0) {
             return false;
         }
-
-        // We check if root is a degree-th root of unity in integers modulo modulus,
+        // We check if root is an n-th root of unity in integers modulo modulus,
         // where degree is a power of two. It suffices to check that root^(degree/2)
         // is -1 modulo modulus.
         return UintArithmeticSmallMod.exponentUintMod(root, degree >>> 1, modulus) == modulus.getValue() - 1;
