@@ -7,14 +7,13 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * The DynArray class is mainly intended for internal use and provides
- * the underlying data structure for Plaintext and Ciphertext classes.
- * The implementation is from:
+ * The DynArray class is mainly intended for internal use and provides the underlying data structure for Plaintext and
+ * Ciphertext classes.
  * <p>
- * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/dynarray.h
+ * The implementation is from: https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/dynarray.h
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/31
  */
 public class DynArray implements Cloneable, Serializable {
