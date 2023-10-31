@@ -1,17 +1,22 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
-import java.math.BigInteger;
-
 /**
  * This Class for some common arithmetic computation.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/common.h
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/9
  */
 public class Common {
+    /**
+     * private constructor.
+     */
+    private Common() {
+        // empty
+    }
+
     /**
      * a long (uint64) value is 8-byte
      */
@@ -214,7 +219,13 @@ public class Common {
         return Integer.compareUnsigned(in1, in2) >= 0;
     }
 
-
+    /**
+     * Reverses bits in operand.
+     *
+     * @param operand  operand.
+     * @param bitCount number of remaining reversed bits.
+     * @return reversed bits.
+     */
     public static long reverseBits(long operand, int bitCount) {
         assert bitCount >= 0;
         assert bitCount <= 64;
@@ -226,6 +237,24 @@ public class Common {
         return reverseBits(operand) >>> (64 - bitCount);
     }
 
+    /**
+     * Returns the value obtained by reversing the order of the bits in the two's complement binary representation of
+     * the specified long value.
+     *
+     * @param operand the value to be reversed.
+     * @return the value obtained by reversing order of the bits in the specified long value.
+     */
+    public static long reverseBits(long operand) {
+        return Long.reverse(operand);
+    }
+
+    /**
+     * Reverses bits in operand.
+     *
+     * @param operand  operand.
+     * @param bitCount number of remaining reversed bits.
+     * @return reversed bits.
+     */
     public static int reverseBits(int operand, int bitCount) {
         assert bitCount >= 0;
         assert bitCount <= 32;
@@ -249,17 +278,6 @@ public class Common {
     }
 
     /**
-     * Returns the value obtained by reversing the order of the bits in the two's complement binary representation of
-     * the specified long value.
-     *
-     * @param operand the value to be reversed.
-     * @return the value obtained by reversing order of the bits in the specified long value.
-     */
-    public static long reverseBits(long operand) {
-        return Long.reverse(operand);
-    }
-
-    /**
      * Gets the most significant bit (msb) index of the value. For example:
      * <li>the msb of 1 is the 0-th bit.</li>
      * <li>the msb of 2 is the 1-th bit.</li>
@@ -272,14 +290,78 @@ public class Common {
     }
 
     /**
-     * @param a
-     * @param b
-     * @param unsigned
-     * @param numbers
-     * @return
+     * Computes a * b * Π_{i = 0}^{n - 1} number[i] safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  other numbers to multiply.
+     * @return a * b * Π_{i = 0}^{n - 1} number[i].
+     * @throws ArithmeticException if overflow occurs.
+     */
+    public static long mulSafe(long a, long b, boolean unsigned, long... numbers) {
+        long prod = mulSafe(a, b, unsigned);
+        for (long n : numbers) {
+            prod = mulSafe(prod, n, unsigned);
+        }
+        return prod;
+    }
+
+    /**
+     * Computes a * b safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a * b.
+     * @throws ArithmeticException if overflow occurs.
+     */
+    public static long mulSafe(long a, long b, boolean unsigned) {
+        if (unsigned) {
+            // neg (64-bit) * neg (64-bit), must overflow since 64-bit * 64-bit > 64-bit
+            if (a < 0 && b < 0) {
+                throw new ArithmeticException("unsigned overflow");
+            }
+            // neg (64-bit) * pos, must overflow when pos > 1, since 64-bit * pos (> 1) > 64-bit
+            if ((a < 0 && b > 1) || (a > 1 && b < 0)) {
+                throw new ArithmeticException("unsigned overflow");
+            }
+            // pos * pos, if (2^64 / a) > b, then there is no overflow.
+            if (a > 1 && b > 1) {
+                long tmp = Long.divideUnsigned(0xFFFFFFFFFFFFFFFFL, a);
+                if (b > tmp) {
+                    throw new ArithmeticException("unsigned overflow");
+                }
+            }
+        } else {
+            if ((a > 0) && (b > 0) && (b > Long.MAX_VALUE / a)) {
+                // a * b > 0, overflow when b > Long.MAX_VALUE / a
+                throw new ArithmeticException("signed overflow");
+            } else if ((a < 0) && (b < 0) && ((-b) > Long.MAX_VALUE / (-a))) {
+                // a * b > 0, overflow when b > Long.MAX_VALUE / a
+                throw new ArithmeticException("signed overflow");
+            } else if ((a < 0) && (b > 0) && (b > Long.MAX_VALUE / (-a))) {
+                // a * b < 0, overflow when b > Long.MAX_VALUE / (-a)
+                throw new ArithmeticException("unsigned overflow");
+            } else if ((a > 0) && (b < 0) && (b < (Long.MIN_VALUE / a))) {
+                // a * b < 0, overflow when b > Long.MAX_VALUE / (-a)
+                throw new ArithmeticException("unsigned overflow");
+            }
+        }
+        return a * b;
+    }
+
+    /**
+     * Computes a * b * Π_{i = 0}^{n - 1} number[i] safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  other numbers to multiply.
+     * @return a * b * Π_{i = 0}^{n - 1} number[i].
+     * @throws ArithmeticException if overflow occurs.
      */
     public static int mulSafe(int a, int b, boolean unsigned, int... numbers) {
-
         int prod = mulSafe(a, b, unsigned);
         for (int n : numbers) {
             prod = mulSafe(prod, n, unsigned);
@@ -288,175 +370,115 @@ public class Common {
     }
 
     /**
-     * @param a
-     * @param b
-     * @param unsigned
-     * @param numbers
-     * @return
-     */
-    public static long mulSafe(long a, long b, boolean unsigned, long... numbers) {
-
-        long prod = mulSafe(a, b, unsigned);
-        for (long n : numbers) {
-            prod = mulSafe(prod, n, unsigned);
-        }
-        return prod;
-    }
-
-//    public static boolean productFitsIn(boolean unsigned, int in1, int... numbers) {
-//
-//        try{
-//            mulSafe(in1, 1, unsigned, numbers);
-//        }catch (Exception e) {
-//            return false;
-//        }
-//        return true;
-//    }
-
-    public static boolean productFitsIn(boolean unsigned, int... numbers) {
-
-        try {
-            mulSafe(1, 1, unsigned, numbers);
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
-//    public static boolean productFitsIn(boolean unsigned, long in1, long... numbers) {
-//
-//        try{
-//            mulSafe(in1, 1, unsigned, numbers);
-//        }catch (Exception e) {
-//            return false;
-//        }
-//        return true;
-//    }
-
-    public static boolean productFitsIn(boolean unsigned, long... numbers) {
-
-        try {
-            mulSafe(1, 1, unsigned, numbers);
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
-
-    /**
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return a*b
+     * Computes a * b safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a * b.
+     * @throws ArithmeticException if overflow occurs.
      */
     public static int mulSafe(int a, int b, boolean unsigned) {
-
-        // 把 long 视为 uint64
         if (unsigned) {
-            // 分类讨论，以下情况一定会溢出
-            // neg * neg, 64-bit * 64-bit > 64bits
+            // neg (32-bit) * neg (32-bit), must overflow since 32-bit * 32-bit > 32-bit
             if (a < 0 && b < 0) {
                 throw new ArithmeticException("unsigned overflow");
             }
-            // neg * pos, pos > 1 时一定溢出，最小的neg 是 2^63, * 2 一定溢出了
+            // neg (32-bit) * pos, must overflow when pos > 1, since 32-bit * pos (> 1) > 32-bit
             if ((a < 0 && b > 1) || (a > 1 && b < 0)) {
                 throw new ArithmeticException("unsigned overflow");
             }
-            // pos * pos , 情况就很复杂了，假设 a * b = c , a.bit_length() + b.bit_length() >= c
-            // 暂时没有想到很好的判断方法，所以引入 BigInteger 来帮助，只在这一个点使用，对性能的影响还算能接收
-            // 后面思考出了更好的方法，再替换
-            // 只要有一个等于1, 肯定是不会溢出的
+            // pos * pos, if (2^32 / a) > b, then there is no overflow.
             if (a > 1 && b > 1) {
-                // a 最小也是2, (2^32 - 1) / 2 可以用 int 放下
-                long tmp = new BigInteger("FFFFFFFF", 16).divide(BigInteger.valueOf(a)).longValue();
+                int tmp = Integer.divideUnsigned(0xFFFFFFFF, a);
                 if (b > tmp) {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        } else { // 按 int64 来判断，简单多了
-            // a * b > 0 的时候，溢出指的是结果 大于 2^63 - 1
+        } else {
             if ((a > 0) && (b > 0) && (b > Integer.MAX_VALUE / a)) {
+                // a * b > 0, overflow when b > Integer.MAX_VALUE / a
                 throw new ArithmeticException("signed overflow");
             } else if ((a < 0) && (b < 0) && ((-b) > Integer.MAX_VALUE / (-a))) {
+                // a * b > 0, overflow when b > Integer.MAX_VALUE / a
                 throw new ArithmeticException("signed overflow");
             } else if ((a < 0) && (b > 0) && (b > Integer.MAX_VALUE / (-a))) {
-                // a * b < 0 的时候，溢出指的是 结果 小于 -2^63
+                // a * b < 0, overflow when b > Integer.MAX_VALUE / (-a)
                 throw new ArithmeticException("unsigned overflow");
             } else if ((a > 0) && (b < 0) && (b < (Integer.MIN_VALUE / a))) {
+                // a * b < 0, overflow when b > Integer.MAX_VALUE / (-a)
                 throw new ArithmeticException("unsigned overflow");
             }
         }
         return a * b;
     }
 
-
     /**
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return a*b
-     */
-    public static long mulSafe(long a, long b, boolean unsigned) {
-
-        // 把 long 视为 uint64
-        if (unsigned) {
-            // 分类讨论，以下情况一定会溢出
-            // neg * neg, 64-bit * 64-bit > 64bits
-            if (a < 0 && b < 0) {
-                throw new ArithmeticException("unsigned overflow");
-            }
-            // neg * pos, pos > 1 时一定溢出，最小的neg 是 2^63, * 2 一定溢出了
-            if ((a < 0 && b > 1) || (a > 1 && b < 0)) {
-                throw new ArithmeticException("unsigned overflow");
-            }
-            // pos * pos , 情况就很复杂了，假设 a * b = c , a.bit_length() + b.bit_length() >= c
-            // 暂时没有想到很好的判断方法，所以引入 BigInteger 来帮助，只在这一个点使用，对性能的影响还算能接收
-            // 后面思考出了更好的方法，再替换
-            // 只要有一个等于1, 肯定是不会溢出的
-            if (a > 1 && b > 1) {
-                // a 最小也是2, (2^64 - 1) / 2 可以用 long 放下
-                long tmp = Long.divideUnsigned(0xFFFFFFFFFFFFFFFFL, a);
-                if (b > tmp) {
-                    throw new ArithmeticException("unsigned overflow");
-                }
-            }
-        } else { // 按 int64 来判断，简单多了
-            // a * b > 0 的时候，溢出指的是结果 大于 2^63 - 1
-            if ((a > 0) && (b > 0) && (b > Long.MAX_VALUE / a)) {
-                throw new ArithmeticException("signed overflow");
-            } else if ((a < 0) && (b < 0) && ((-b) > Long.MAX_VALUE / (-a))) {
-                throw new ArithmeticException("signed overflow");
-            } else if ((a < 0) && (b > 0) && (b > Long.MAX_VALUE / (-a))) {
-                // a * b < 0 的时候，溢出指的是 结果 小于 -2^63
-                throw new ArithmeticException("unsigned overflow");
-            } else if ((a > 0) && (b < 0) && (b < (Long.MIN_VALUE / a))) {
-                throw new ArithmeticException("unsigned overflow");
-            }
-        }
-        return a * b;
-    }
-
-
-    /**
-     * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
-     * otherwise, treat long as int64
+     * Checks if no overflow occurs when putting the result of Π_{i = 0}^{n - 1} number[i] in int.
      *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  numbers to multiply.
+     * @return true if no overflow occurs when putting the result of Π_{i = 0}^{n - 1} number[i] in int.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean productFitsIn(boolean unsigned, int... numbers) {
+        try {
+            mulSafe(1, 1, unsigned, numbers);
+        } catch (ArithmeticException e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks if no overflow occurs when putting the result of in1 * Π_{i = 0}^{n - 1} number[i] in long.
+     *
+     * @param unsigned if treating the values as unsigned.
+     * @param in1      an input.
+     * @param numbers  other numbers to multiply.
+     * @return true if no overflow occurs when putting the result of in1 * Π_{i = 0}^{n - 1} number[i] in long.
+     */
+    public static boolean productFitsIn(boolean unsigned, long in1, long... numbers) {
+        try {
+            mulSafe(in1, 1L, unsigned, numbers);
+        } catch (ArithmeticException e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks if no overflow occurs when putting the result of Π_{i = 0}^{n - 1} number[i] in long.
+     *
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  numbers to multiply.
+     * @return true if no overflow occurs when putting the result of Π_{i = 0}^{n - 1} number[i] in long.
+     */
+    public static boolean productFitsIn(boolean unsigned, long... numbers) {
+        try {
+            mulSafe(1L, 1L, unsigned, numbers);
+        } catch (ArithmeticException e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Computes a - b safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a - b.
+     * @throws ArithmeticException if overflow occurs.
      */
     public static int subSafe(int a, int b, boolean unsigned) {
-
         if (unsigned) {
-            // the core is judge (in1 + in2)'s bit string  larger than 0xFFFFFFFF...
-            // the logic here is same as the borrow  computation in subUint64
-            // 0 is the smallest, borrow = 1
+            // the core is judge (a + b)'s bit string  larger than 0xFFFFFFFF...
+            // the logic here is same as the borrow computation in subUint64, 0 is the smallest, borrow = 1
             if (a == 0 && b != 0) {
                 throw new ArithmeticException("unsigned underflow");
             }
-
             if (a > 0 && b > 0 && a < b) {
                 throw new ArithmeticException("unsigned underflow");
             }
@@ -479,24 +501,21 @@ public class Common {
     }
 
     /**
-     * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
-     * otherwise, treat long as int64
+     * Computes a - b safely (checking overflow).
      *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a - b.
+     * @throws ArithmeticException if overflow occurs.
      */
     public static long subSafe(long a, long b, boolean unsigned) {
-
         if (unsigned) {
-            // the core is judge (in1 + in2)'s bit string  larger than 0xFFFFFFFF...
-            // the logic here is same as the borrow  computation in subUint64
-            // 0 is the smallest, borrow = 1
+            // the core is judge (a + b)'s bit string  larger than 0xFFFFFFFF...
+            // the logic here is same as the borrow  computation in subUint64, 0 is the smallest, borrow = 1
             if (a == 0 && b != 0) {
                 throw new ArithmeticException("unsigned underflow");
             }
-
             if (a > 0 && b > 0 && a < b) {
                 throw new ArithmeticException("unsigned underflow");
             }
@@ -518,49 +537,15 @@ public class Common {
         return a - b;
     }
 
-
     /**
-     * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
-     * otherwise, treat long as int64
+     * Computes a + b + Σ_{i = 0}^{n - 1} number[i] safely (checking overflow).
      *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return in1 + in2
-     */
-    public static long addSafe(long a, long b, boolean unsigned) {
-        // treat a and b as uint64_t
-        if (unsigned) {
-            // the core is judge (in1 + in2)'s bit string  larger than 0xFFFFFFFF...
-            // the logic here is same as the carry's computation in addUint64
-            if (a < 0 && b < 0) {
-                throw new ArithmeticException("unsigned overflow");
-            }
-            if ((a < 0 && b > 0) || (a > 0 && b < 0)) {
-                if (a + b >= 0) {
-                    throw new ArithmeticException("unsigned overflow");
-                }
-            }
-        } else { // treat a and b as int64
-
-            if (a > 0 && (b > Long.MAX_VALUE - a)) {
-                throw new ArithmeticException("signed overflow");
-            } else if (a < 0 && (b < Long.MIN_VALUE - a)) {
-                throw new ArithmeticException("signed underflow");
-            }
-        }
-        // do not overflow, can be added
-        return a + b;
-    }
-
-    /**
-     * add safe with variable numbers parameters
-     *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @param numbers
-     * @return
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  other numbers to multiply.
+     * @return a + b + Σ_{i = 0}^{n - 1} number[i].
+     * @throws ArithmeticException if overflow occurs.
      */
     public static long addSafe(long a, long b, boolean unsigned, long... numbers) {
         long sum = addSafe(a, b, unsigned);
@@ -570,20 +555,18 @@ public class Common {
         return sum;
     }
 
-
     /**
-     * unsigned decides the max and min of long. if unsigned is true, we treat long as uint64
-     * otherwise, treat long as int64
+     * Computes a + b safely (checking overflow).
      *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @return in1 + in2
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a + b.
+     * @throws ArithmeticException if overflow occurs.
      */
-    public static int addSafe(int a, int b, boolean unsigned) {
-        // treat a and b as uint64_t
+    public static long addSafe(long a, long b, boolean unsigned) {
         if (unsigned) {
-            // the core is judge (in1 + in2)'s bit string  larger than 0xFFFFFFFF...
+            // the core is judge (a + b)'s bit string larger than 0xFFFFFFFF...
             // the logic here is same as the carry's computation in addUint64
             if (a < 0 && b < 0) {
                 throw new ArithmeticException("unsigned overflow");
@@ -593,26 +576,25 @@ public class Common {
                     throw new ArithmeticException("unsigned overflow");
                 }
             }
-        } else { // treat a and b as int64
-
-            if (a > 0 && (b > Integer.MAX_VALUE - a)) {
+        } else {
+            if (a > 0 && (b > Long.MAX_VALUE - a)) {
                 throw new ArithmeticException("signed overflow");
-            } else if (a < 0 && (b < Integer.MIN_VALUE - a)) {
+            } else if (a < 0 && (b < Long.MIN_VALUE - a)) {
                 throw new ArithmeticException("signed underflow");
             }
         }
-        // do not overflow, can be added
         return a + b;
     }
 
     /**
-     * add safe with variable numbers parameters
+     * Computes a + b + Σ_{i = 0}^{n - 1} number[i] safely (checking overflow).
      *
-     * @param a
-     * @param b
-     * @param unsigned
-     * @param numbers
-     * @return
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @param numbers  other numbers to multiply.
+     * @return a + b + Σ_{i = 0}^{n - 1} number[i].
+     * @throws ArithmeticException if overflow occurs.
      */
     public static int addSafe(int a, int b, boolean unsigned, int... numbers) {
         int sum = addSafe(a, b, unsigned);
@@ -622,4 +604,34 @@ public class Common {
         return sum;
     }
 
+    /**
+     * Computes a + b safely (checking overflow).
+     *
+     * @param a        a.
+     * @param b        b.
+     * @param unsigned if treating the values as unsigned.
+     * @return a + b.
+     * @throws ArithmeticException if overflow occurs.
+     */
+    public static int addSafe(int a, int b, boolean unsigned) {
+        if (unsigned) {
+            // the core is judge (in1 + in2)'s bit string larger than 0xFFFFFFFF...
+            // the logic here is same as the carry's computation in addUint64
+            if (a < 0 && b < 0) {
+                throw new ArithmeticException("unsigned overflow");
+            }
+            if ((a < 0 && b > 0) || (a > 0 && b < 0)) {
+                if (a + b >= 0) {
+                    throw new ArithmeticException("unsigned overflow");
+                }
+            }
+        } else {
+            if (a > 0 && (b > Integer.MAX_VALUE - a)) {
+                throw new ArithmeticException("signed overflow");
+            } else if (a < 0 && (b < Integer.MIN_VALUE - a)) {
+                throw new ArithmeticException("signed underflow");
+            }
+        }
+        return a + b;
+    }
 }

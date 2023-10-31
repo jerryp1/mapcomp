@@ -14,7 +14,7 @@ import java.util.Random;
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/numth.h
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/9
  */
 public class Numth {
