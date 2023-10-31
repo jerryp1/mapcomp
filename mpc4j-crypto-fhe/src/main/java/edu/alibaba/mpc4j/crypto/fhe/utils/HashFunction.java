@@ -1,13 +1,12 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import org.bouncycastle.crypto.digests.Blake2bDigest;
 
 /**
  * HashFunction used to calculate the id of the EncryptionParams object.
- * The implementation is from:
  * <p>
- * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hash.h
+ * The implementation is from: https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hash.h
  * </p>
  *
  * @author Qixian Zhou
@@ -36,12 +35,12 @@ public class HashFunction {
      */
     public static void hash(long[] input, int uint64Count, long[] destination) {
         // convert input to bytes and hash
-        byte[] inputBytes = LongUtils.longArrayToByteArray(input, (uint64Count * 64) / 8);
+        byte[] inputBytes = Common.uint64ArrayToByteArray(input, uint64Count);
         BLAKE_2B.update(inputBytes, 0, inputBytes.length);
         byte[] hash = new byte[BLAKE_2B.getDigestSize()];
         BLAKE_2B.doFinal(hash, 0);
         // convert back to long
-        long[] temp = LongUtils.byteArrayToLongArray(hash);
+        long[] temp = Common.byteArrayToUint64Array(hash, hash.length);
         System.arraycopy(temp, 0, destination, 0, HASH_BLOCK_UINT64_COUNT);
     }
 }

@@ -1,5 +1,8 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+
 /**
  * This Class for some common arithmetic computation.
  * <p>
@@ -37,6 +40,38 @@ public class Common {
      * a long (uint64) value is 16-hex
      */
     public static final int NIBBLES_PER_UINT64 = BYTES_PER_UINT64 * NIBBLES_PER_BYTE;
+
+    /**
+     * Converts an uint64 array to a byte array, each uint64 will extend to 8 bytes.
+     *
+     * @param uint64Array an uint64 array.
+     * @param uint64Count number of uint64 in the uint64 array.
+     * @return a byte array.
+     */
+    public static byte[] uint64ArrayToByteArray(long[] uint64Array, int uint64Count) {
+        // See https://stackoverflow.com/questions/61844613/java-native-method-to-convert-long-array-to-byte-array for the solution.
+        ByteBuffer byteBuffer = ByteBuffer.allocate(uint64Count * Common.BYTES_PER_UINT64);
+        byteBuffer.asLongBuffer().put(uint64Array, 0, uint64Count);
+        return byteBuffer.array();
+    }
+
+    /**
+     * Converts a byte array to an uint64 array, each 8 bytes will compress in an uint64.
+     *
+     * @param byteArray the byte array.
+     * @param byteCount number of bytes in the byte array.
+     * @return an uint64 array.
+     */
+    public static long[] byteArrayToUint64Array(byte[] byteArray, int byteCount) {
+        assert byteCount % Common.BYTES_PER_UINT64 == 0;
+        // we cannot write ByteBuffer.warp(byteArray).asLongBuffer().array(), since here LongBuffer is readOnly
+        // See https://stackoverflow.com/questions/19003231/how-to-convert-a-bytebuffer-to-long-in-java for the solution.
+        ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray, 0, byteCount);
+        LongBuffer longBuffer = byteBuffer.asLongBuffer();
+        long[] uint64Array = new long[longBuffer.capacity()];
+        longBuffer.get(uint64Array);
+        return uint64Array;
+    }
 
     /**
      * Coverts a hex to a char (upper hex).

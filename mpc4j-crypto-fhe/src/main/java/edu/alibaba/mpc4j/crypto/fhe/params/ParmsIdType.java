@@ -1,9 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.params;
 
-import edu.alibaba.mpc4j.common.tool.crypto.hash.Hash;
 import edu.alibaba.mpc4j.crypto.fhe.utils.HashFunction;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.*;
 import java.util.Arrays;

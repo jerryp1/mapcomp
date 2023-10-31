@@ -1,9 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.rand;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
-
-import java.security.SecureRandom;
-
 /**
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/clipnormal.h

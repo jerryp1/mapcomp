@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
-import edu.alibaba.mpc4j.common.tool.utils.DoubleUtils;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.GaloisKeys;
 import edu.alibaba.mpc4j.crypto.fhe.keys.KeySwitchKeys;
@@ -14,14 +13,12 @@ import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rns.RnsTool;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
-import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ScalingVariant;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 import gnu.trove.list.array.TIntArrayList;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -181,9 +178,9 @@ public class Evaluator {
 
             // Perform rotation and key switching
             applyGaloisInplace(
-                    encrypted,
-                    galoisTool.getEltFromStep(steps),
-                    galoisKeys
+                encrypted,
+                galoisTool.getEltFromStep(steps),
+                galoisKeys
             );
         } else {
             // Convert the steps to NAF: guarantees using smallest HW
@@ -230,8 +227,8 @@ public class Evaluator {
     public void applyGaloisInplace(Ciphertext encrypted, int galoisElt, GaloisKeys galoisKeys) {
 
         if (
-                !ValueChecker.isMetaDataValidFor(encrypted, context) ||
-                        !ValueChecker.isBufferValid(encrypted)
+            !ValueChecker.isMetaDataValidFor(encrypted, context) ||
+                !ValueChecker.isBufferValid(encrypted)
         ) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
@@ -284,35 +281,35 @@ public class Evaluator {
 
             // First transform encrypted.data(0)
             galoisTool.applyGaloisRnsIter(
-                    encrypted.getData(),
-                    0, // 第0 个 RnsIter
-                    encrypted.getPolyModulusDegree(),
-                    coeffModulusSize,
-                    galoisElt,
-                    coeffModulus,
-                    temp,
-                    0,
-                    coeffCount
+                encrypted.getData(),
+                0, // 第0 个 RnsIter
+                encrypted.getPolyModulusDegree(),
+                coeffModulusSize,
+                galoisElt,
+                coeffModulus,
+                temp,
+                0,
+                coeffCount
             );
             // Copy result to encrypted.data(0)
             System.arraycopy(
-                    temp,
-                    0,
-                    encrypted.getData(),
-                    0,
-                    coeffCount * coeffModulusSize
+                temp,
+                0,
+                encrypted.getData(),
+                0,
+                coeffCount * coeffModulusSize
             );
             // Next transform encrypted.data(1)
             galoisTool.applyGaloisRnsIter(
-                    encrypted.getData(),
-                    coeffCount * coeffModulusSize, // 第 1 个 RnsIter
-                    coeffCount,
-                    coeffModulusSize,
-                    galoisElt,
-                    coeffModulus,
-                    temp,
-                    0,
-                    coeffCount
+                encrypted.getData(),
+                coeffCount * coeffModulusSize, // 第 1 个 RnsIter
+                coeffCount,
+                coeffModulusSize,
+                galoisElt,
+                coeffModulus,
+                temp,
+                0,
+                coeffCount
             );
         } else if (parms.getScheme() == SchemeType.CKKS) {
             throw new IllegalArgumentException("scheme not implemented");
@@ -323,22 +320,22 @@ public class Evaluator {
         // Wipe encrypted.data(1)
         // 将 密文1 置0, 注意 toIndex 最好只写成下面的形式， 因为密文底层的 DynArray 的 capacity 可能会很大
         Arrays.fill(encrypted.getData(),
-                coeffCount * coeffModulusSize,
-                2 * coeffCount * coeffModulusSize,
-                0);
+            coeffCount * coeffModulusSize,
+            2 * coeffCount * coeffModulusSize,
+            0);
 
         // END: Apply Galois for each ciphertext
         // REORDERING IS SAFE NOW
 
         // Calculate (temp * galois_key[0], temp * galois_key[1]) + (ct[0], 0)
         switchKeyInplace(
-                encrypted,
-                temp,
-                0,
-                coeffCount,
-                coeffModulusSize,
-                galoisKeys,
-                GaloisKeys.getIndex(galoisElt)
+            encrypted,
+            temp,
+            0,
+            coeffCount,
+            coeffModulusSize,
+            galoisKeys,
+            GaloisKeys.getIndex(galoisElt)
         );
 
         if (encrypted.isTransparent()) {
@@ -514,8 +511,8 @@ public class Evaluator {
 
 
     public void modSwitchToNext(
-            Ciphertext encrypted,
-            Ciphertext destination
+        Ciphertext encrypted,
+        Ciphertext destination
     ) {
         if (!ValueChecker.isMetaDataValidFor(encrypted, context) || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
@@ -547,8 +544,8 @@ public class Evaluator {
 
 
     private void modSwitchScaleToNext(
-            Ciphertext encrypted,
-            Ciphertext destination
+        Ciphertext encrypted,
+        Ciphertext destination
     ) {
 
         Context.ContextData contextData = context.getContextData(encrypted.getParmsId());
@@ -582,10 +579,10 @@ public class Evaluator {
                 for (int i = 0; i < encryptedSize; i++) {
                     // 注意起点指向每一个 RnsIter
                     rnsTool.divideAndRoundQLastInplace(
-                            encryptedCopy.getData(),
-                            encryptedCopy.getPolyModulusDegree(),
-                            encryptedCopy.getCoeffModulusSize(),
-                            i * encryptedCopy.getPolyModulusDegree() * encryptedCopy.getCoeffModulusSize()
+                        encryptedCopy.getData(),
+                        encryptedCopy.getPolyModulusDegree(),
+                        encryptedCopy.getCoeffModulusSize(),
+                        i * encryptedCopy.getPolyModulusDegree() * encryptedCopy.getCoeffModulusSize()
                     );
                 }
                 break;
@@ -603,11 +600,11 @@ public class Evaluator {
         // 因为两个 密文的 k 不一样
         for (int i = 0; i < encryptedSize; i++) {
             System.arraycopy(
-                    encryptedCopy.getData(),
-                    i * coeffCount * encryptedCopy.getCoeffModulusSize(), // k 是不同的
-                    destination.getData(),
-                    i * coeffCount * destination.getCoeffModulusSize(),
-                    coeffCount * nextCoeffModulusSize
+                encryptedCopy.getData(),
+                i * coeffCount * encryptedCopy.getCoeffModulusSize(), // k 是不同的
+                destination.getData(),
+                i * coeffCount * destination.getCoeffModulusSize(),
+                coeffCount * nextCoeffModulusSize
             );
         }
 
@@ -664,17 +661,17 @@ public class Evaluator {
         // Iterator pointing to the last component of encrypted
         // 起点，指向这样一个 RnsIter, 也就是密文里的最后一个多项式
         int encryptedIter = (encryptedSize - 1) * encrypted.getPolyModulusDegree()
-                * encrypted.getCoeffModulusSize();
+            * encrypted.getCoeffModulusSize();
 
         for (int i = 0; i < reLinsNeeded; i++) {
             switchKeyInplace(
-                    encrypted,
-                    encrypted.getData(),
-                    encryptedIter,
-                    encrypted.getPolyModulusDegree(),
-                    encrypted.getCoeffModulusSize(),
-                    (KeySwitchKeys) relinKeys,
-                    RelinKeys.getIndex(encryptedSize - 1 - i)
+                encrypted,
+                encrypted.getData(),
+                encryptedIter,
+                encrypted.getPolyModulusDegree(),
+                encrypted.getCoeffModulusSize(),
+                (KeySwitchKeys) relinKeys,
+                RelinKeys.getIndex(encryptedSize - 1 - i)
             );
         }
 
@@ -702,13 +699,13 @@ public class Evaluator {
      * @param keySwitchKyesIndex
      */
     private void switchKeyInplace(
-            Ciphertext encrypted,
-            long[] targetIter,
-            int targetIterStartIndex,
-            int targertIterN,
-            int targetIterK,
-            KeySwitchKeys keySwitchKeys,
-            int keySwitchKyesIndex
+        Ciphertext encrypted,
+        long[] targetIter,
+        int targetIterStartIndex,
+        int targertIterN,
+        int targetIterK,
+        KeySwitchKeys keySwitchKeys,
+        int keySwitchKyesIndex
     ) {
 
         ParmsIdType parmsId = encrypted.getParmsId();
@@ -720,7 +717,7 @@ public class Evaluator {
 
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context) ||
-                !ValueChecker.isBufferValid(encrypted)
+            !ValueChecker.isBufferValid(encrypted)
         ) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
@@ -775,7 +772,7 @@ public class Evaluator {
         for (PublicKey eachKey : keyVector) {
 
             if (!ValueChecker.isMetaDataValidFor(eachKey, context) ||
-                    !ValueChecker.isBufferValid(eachKey)
+                !ValueChecker.isBufferValid(eachKey)
             ) {
                 throw new IllegalArgumentException("kswitch_keys is not valid for encryption parameters");
             }
@@ -784,20 +781,20 @@ public class Evaluator {
         // Create a copy of target_iter
         long[] tTarget = new long[coeffCount * decompModulusSize];
         System.arraycopy(
-                targetIter,
-                targetIterStartIndex,
-                tTarget,
-                0,
-                decompModulusSize * coeffCount
+            targetIter,
+            targetIterStartIndex,
+            tTarget,
+            0,
+            decompModulusSize * coeffCount
         );
 
         // In CKKS t_target is in NTT form; switch back to normal form
         if (scheme == SchemeType.CKKS) {
             NttTool.inverseNttNegAcyclicHarveyRnsIter(
-                    tTarget,
-                    coeffCount,
-                    decompModulusSize,
-                    keyNttTables
+                tTarget,
+                coeffCount,
+                decompModulusSize,
+                keyNttTables
             );
         }
         // Temporary result
@@ -834,20 +831,20 @@ public class Evaluator {
                     if (keyModulus[j].getValue() <= keyModulus[keyIndex].getValue()) {
                         // 直接复制, 注意起点
                         System.arraycopy(
-                                tTarget,
-                                j * coeffCount,
-                                tNtt,
-                                0,
-                                coeffCount);
+                            tTarget,
+                            j * coeffCount,
+                            tNtt,
+                            0,
+                            coeffCount);
                     } else {  // Perform RNS conversion (modular reduction)
                         // 处理一个 CoeffIter
                         PolyArithmeticSmallMod.moduloPolyCoeffs(
-                                tTarget,
-                                j * coeffCount,
-                                coeffCount,
-                                keyModulus[keyIndex],
-                                0,
-                                tNtt
+                            tTarget,
+                            j * coeffCount,
+                            coeffCount,
+                            keyModulus[keyIndex],
+                            0,
+                            tNtt
                         );
                     }
                     // NTT conversion lazy outputs in [0, 4q)
@@ -871,20 +868,20 @@ public class Evaluator {
                         for (int l = 0; l < coeffCount; l++) {
                             long[] qWord = new long[2];
                             UintArithmetic.multiplyUint64(
-                                    tOperand[l],
-                                    keyVectorJ.getData()[keyVectorJ_K + keyIndex * keyVectorJ.getPolyModulusDegree() + l],
-                                    qWord
+                                tOperand[l],
+                                keyVectorJ.getData()[keyVectorJ_K + keyIndex * keyVectorJ.getPolyModulusDegree() + l],
+                                qWord
                             );
                             // Accumulate product of t_operand and t_key_acc to t_poly_lazy and reduce
                             long[] uint128Temp = new long[]{
-                                    tPolyLazy[tPolyLazyK + l * 2],
-                                    tPolyLazy[tPolyLazyK + l * 2 + 1],
+                                tPolyLazy[tPolyLazyK + l * 2],
+                                tPolyLazy[tPolyLazyK + l * 2 + 1],
                             };
 
                             UintArithmetic.addUint128(
-                                    qWord,
-                                    uint128Temp,
-                                    qWord
+                                qWord,
+                                uint128Temp,
+                                qWord
                             );
                             // 覆盖回 tPolyLazy
                             tPolyLazy[tPolyLazyK + l * 2] = UintArithmeticSmallMod.barrettReduce128(qWord, keyModulus[keyIndex]);
@@ -896,20 +893,20 @@ public class Evaluator {
                         for (int l = 0; l < coeffCount; l++) {
                             long[] qWord = new long[2];
                             UintArithmetic.multiplyUint64(
-                                    tOperand[l],
-                                    keyVectorJ.getData()[keyVectorJ_K + keyIndex * keyVectorJ.getPolyModulusDegree() + l],
-                                    qWord
+                                tOperand[l],
+                                keyVectorJ.getData()[keyVectorJ_K + keyIndex * keyVectorJ.getPolyModulusDegree() + l],
+                                qWord
                             );
                             // Accumulate product of t_operand and t_key_acc to t_poly_lazy and reduce
                             long[] uint128Temp = new long[]{
-                                    tPolyLazy[tPolyLazyK + l * 2],
-                                    tPolyLazy[tPolyLazyK + l * 2 + 1],
+                                tPolyLazy[tPolyLazyK + l * 2],
+                                tPolyLazy[tPolyLazyK + l * 2 + 1],
                             };
 
                             UintArithmetic.addUint128(
-                                    qWord,
-                                    uint128Temp,
-                                    qWord
+                                qWord,
+                                uint128Temp,
+                                qWord
                             );
                             // 覆盖回 tPolyLazy
                             tPolyLazy[tPolyLazyK + l * 2] = qWord[0];
@@ -934,7 +931,7 @@ public class Evaluator {
 
                     for (int l = 0; l < coeffCount; l++) {
                         tPolyProd[tPolyProdIter + k * coeffCount * rnsModulusSize + l] =
-                                tPolyLazy[k * coeffCount * 2 + 2 * l];
+                            tPolyLazy[k * coeffCount * 2 + 2 * l];
                     }
                 } else {
 
@@ -943,9 +940,9 @@ public class Evaluator {
                         uint128Temp[0] = tPolyLazy[k * coeffCount * 2 + 2 * l];
                         uint128Temp[1] = tPolyLazy[k * coeffCount * 2 + 2 * l + 1];
                         tPolyProd[tPolyProdIter + k * coeffCount * rnsModulusSize + l] =
-                                UintArithmeticSmallMod.barrettReduce128(
-                                        uint128Temp,
-                                        keyModulus[keyIndex]);
+                            UintArithmeticSmallMod.barrettReduce128(
+                                uint128Temp,
+                                keyModulus[keyIndex]);
                     }
                 }
             }// K end
@@ -963,9 +960,9 @@ public class Evaluator {
                 // 定位到 t_poly_prod 的 第 i 个 RnsIter 中的 第 decomp_modulus_size 个 CoeffIter
                 int tLastIndex = i * coeffCount * rnsModulusSize + decompModulusSize * coeffCount;
                 NttTool.inverseNttNegAcyclicHarveyLazy(
-                        tPolyProd,
-                        tLastIndex,
-                        keyNttTables[keyModulusSize - 1]
+                    tPolyProd,
+                    tLastIndex,
+                    keyNttTables[keyModulusSize - 1]
                 );
                 // Add (p-1)/2 to change from flooring to rounding.
                 long qk = keyModulus[keyModulusSize - 1].getValue();
@@ -974,8 +971,8 @@ public class Evaluator {
                 // 处理 tLast
                 for (int j = 0; j < coeffCount; j++) {
                     tPolyProd[tLastIndex + j] = UintArithmeticSmallMod.barrettReduce64(
-                            tPolyProd[tLastIndex + j] + qkHalf,
-                            keyModulus[keyModulusSize - 1]
+                        tPolyProd[tLastIndex + j] + qkHalf,
+                        keyModulus[keyModulusSize - 1]
                     );
                 }
 
@@ -986,21 +983,21 @@ public class Evaluator {
                     if (qk > qi) {
                         // This cannot be spared. NTT only tolerates input that is less than 4*modulus (i.e. qk <=4*qi).
                         PolyArithmeticSmallMod.moduloPolyCoeffs(
-                                tPolyProd,
-                                tLastIndex,
-                                coeffCount,
-                                keyModulus[j],
-                                0,
-                                tNtt
+                            tPolyProd,
+                            tLastIndex,
+                            coeffCount,
+                            keyModulus[j],
+                            0,
+                            tNtt
                         );
                     } else {
                         // 直接 copy
                         System.arraycopy(
-                                tPolyProd,
-                                tLastIndex,
-                                tNtt,
-                                0,
-                                coeffCount
+                            tPolyProd,
+                            tLastIndex,
+                            tNtt,
+                            0,
+                            coeffCount
                         );
                     }
                     // Lazy substraction, results in [0, 2*qi), since fix is in [0, qi].
@@ -1015,9 +1012,9 @@ public class Evaluator {
                         throw new IllegalArgumentException("unsupported CKKS");
                     } else if (scheme == SchemeType.BFV) {
                         NttTool.inverseNttNegAcyclicHarveyLazy(
-                                tPolyProd,
-                                zeroOneJ,
-                                keyNttTables[j]
+                            tPolyProd,
+                            zeroOneJ,
+                            keyNttTables[j]
                         );
                     }
                     // ((ct mod qi) - (ct mod qk)) mod qi with output in [0, 2 * qi_lazy)
@@ -1027,25 +1024,25 @@ public class Evaluator {
 
                     // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
                     PolyArithmeticSmallMod.multiplyPolyScalarCoeffModCoeffIter(
-                            tPolyProd,
-                            zeroOneJ,
-                            coeffCount,
-                            modSwitchFactors[j],
-                            keyModulus[j],
-                            zeroOneJ,
-                            tPolyProd
+                        tPolyProd,
+                        zeroOneJ,
+                        coeffCount,
+                        modSwitchFactors[j],
+                        keyModulus[j],
+                        zeroOneJ,
+                        tPolyProd
                     );
                     //todo: 修改更容易理解的变量名
                     int zeroZeroJ = i * encrypted.getPolyModulusDegree() * encrypted.getCoeffModulusSize() + j * encrypted.getPolyModulusDegree();
                     PolyArithmeticSmallMod.addPolyCoeffMod(
-                            tPolyProd,
-                            zeroOneJ,
-                            encrypted.getData(),
-                            zeroZeroJ,
-                            coeffCount,
-                            keyModulus[j],
-                            zeroZeroJ,
-                            encrypted.getData()
+                        tPolyProd,
+                        zeroOneJ,
+                        encrypted.getData(),
+                        zeroZeroJ,
+                        coeffCount,
+                        keyModulus[j],
+                        zeroZeroJ,
+                        encrypted.getData()
                     );
                 }
             }
@@ -1062,7 +1059,7 @@ public class Evaluator {
     public void squareInplace(Ciphertext encrypted) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)
+            || !ValueChecker.isBufferValid(encrypted)
         ) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
@@ -1157,11 +1154,11 @@ public class Evaluator {
 
             // 先完成当前RnsIter拷贝，注意起点的计算是不一样的，对标 set_poly(get<0>(I), coeff_count, base_q_size, get<1>(I));
             System.arraycopy(
-                    encrypted.getData(),
-                    i * coeffCount * encrypted.getCoeffModulusSize(),
-                    encryptedQ,
-                    i * coeffCount * baseQSize,
-                    coeffCount * baseQSize
+                encrypted.getData(),
+                i * coeffCount * encrypted.getCoeffModulusSize(),
+                encryptedQ,
+                i * coeffCount * baseQSize,
+                coeffCount * baseQSize
             );
 
 //            System.out.println("set poly, encrypted1Q:\n " +
@@ -1172,10 +1169,10 @@ public class Evaluator {
 
             //
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encryptedQ,
-                    i * coeffCount * baseQSize,
-                    baseQSize,
-                    baseQNttTables
+                encryptedQ,
+                i * coeffCount * baseQSize,
+                baseQSize,
+                baseQNttTables
             );
 //            System.out.println("ntt lazy, encrypted1Q: \n" +
 //                    Arrays.toString(
@@ -1189,36 +1186,36 @@ public class Evaluator {
 
             // 1) Convert from base q to base Bsk U {m_tilde}
             rnsTool.fastBConvMTildeRnsIter(
-                    encrypted.getData(),
-                    i * coeffCount * encrypted.getCoeffModulusSize(),
-                    coeffCount,
-                    encrypted.getCoeffModulusSize(),
-                    temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize
+                encrypted.getData(),
+                i * coeffCount * encrypted.getCoeffModulusSize(),
+                coeffCount,
+                encrypted.getCoeffModulusSize(),
+                temp,
+                0,
+                coeffCount,
+                baseBskMTildeSize
             );
 
             // (2) Reduce q-overflows in with Montgomery reduction, switching base to Bsk
 //            rns_tool->sm_mrq(temp, get<2>(I), pool);
             rnsTool.smMrqRnsIter(
-                    temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize,
-                    encryptedBsk, // 对应 get<2>(I)
-                    i * coeffCount * baseBskSize, // 注意起点
-                    coeffCount,
-                    baseBskSize
+                temp,
+                0,
+                coeffCount,
+                baseBskMTildeSize,
+                encryptedBsk, // 对应 get<2>(I)
+                i * coeffCount * baseBskSize, // 注意起点
+                coeffCount,
+                baseBskSize
             );
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encryptedBsk,
-                    i * coeffCount * baseBskSize,
-                    baseBskSize,
-                    baseBskNttTables
+                encryptedBsk,
+                i * coeffCount * baseBskSize,
+                baseBskSize,
+                baseBskNttTables
             );
         }
 
@@ -1235,112 +1232,112 @@ public class Evaluator {
         {
             // compute c0^2
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedQ,
-                    0, // 注意起点固定为 0
-                    encryptedQ,
-                    0,
-                    baseQSize,
-                    coeffCount,
-                    baseQ,
-                    0,
-                    tempDestinationQ
+                encryptedQ,
+                0, // 注意起点固定为 0
+                encryptedQ,
+                0,
+                baseQSize,
+                coeffCount,
+                baseQ,
+                0,
+                tempDestinationQ
             );
             // compute 2* c0 * c1
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedQ,
-                    0, // 注意起点固定为 0
-                    encryptedQ,
-                    coeffCount * baseQSize, // 这里起点固定为 1
-                    baseQSize,
-                    coeffCount,
-                    baseQ,
-                    coeffCount * baseQSize,
-                    tempDestinationQ
+                encryptedQ,
+                0, // 注意起点固定为 0
+                encryptedQ,
+                coeffCount * baseQSize, // 这里起点固定为 1
+                baseQSize,
+                coeffCount,
+                baseQ,
+                coeffCount * baseQSize,
+                tempDestinationQ
             );
             PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
-                    tempDestinationQ,
-                    coeffCount * baseQSize, // 起点
-                    coeffCount,
-                    baseQSize,
-                    tempDestinationQ,
-                    coeffCount * baseQSize, // 起点
-                    coeffCount,
-                    baseQSize,
-                    baseQSize,
-                    baseQ,
-                    tempDestinationQ,
-                    coeffCount * baseQSize, // 起点
-                    coeffCount,
-                    baseQSize
+                tempDestinationQ,
+                coeffCount * baseQSize, // 起点
+                coeffCount,
+                baseQSize,
+                tempDestinationQ,
+                coeffCount * baseQSize, // 起点
+                coeffCount,
+                baseQSize,
+                baseQSize,
+                baseQ,
+                tempDestinationQ,
+                coeffCount * baseQSize, // 起点
+                coeffCount,
+                baseQSize
             );
 
             // Compute c1^2
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedQ,
-                    coeffCount * baseQSize, // 注意起点固定为 1
-                    encryptedQ,
-                    coeffCount * baseQSize,
-                    baseQSize,
-                    coeffCount,
-                    baseQ,
-                    2 * coeffCount * baseQSize, // 这里的起点就是 2 了
-                    tempDestinationQ
+                encryptedQ,
+                coeffCount * baseQSize, // 注意起点固定为 1
+                encryptedQ,
+                coeffCount * baseQSize,
+                baseQSize,
+                coeffCount,
+                baseQ,
+                2 * coeffCount * baseQSize, // 这里的起点就是 2 了
+                tempDestinationQ
             );
         }
         // behz_ciphertext_square(encrypted_Bsk, base_Bsk, base_Bsk_size, temp_dest_Bsk);
         {
             // compute c0^2
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedBsk,
-                    0, // 注意起点固定为 0
-                    encryptedBsk,
-                    0,
-                    baseBskSize,
-                    coeffCount,
-                    baseBsk,
-                    0,
-                    tempDestinationBsk
+                encryptedBsk,
+                0, // 注意起点固定为 0
+                encryptedBsk,
+                0,
+                baseBskSize,
+                coeffCount,
+                baseBsk,
+                0,
+                tempDestinationBsk
             );
             // compute 2* c0 * c1
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedBsk,
-                    0, // 注意起点固定为 0
-                    encryptedBsk,
-                    coeffCount * baseBskSize, // 这里起点固定为 1
-                    baseBskSize,
-                    coeffCount,
-                    baseBsk,
-                    coeffCount * baseBskSize,
-                    tempDestinationBsk
+                encryptedBsk,
+                0, // 注意起点固定为 0
+                encryptedBsk,
+                coeffCount * baseBskSize, // 这里起点固定为 1
+                baseBskSize,
+                coeffCount,
+                baseBsk,
+                coeffCount * baseBskSize,
+                tempDestinationBsk
             );
             PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
-                    tempDestinationBsk,
-                    coeffCount * baseBskSize, // 起点
-                    coeffCount,
-                    baseBskSize,
-                    tempDestinationBsk,
-                    coeffCount * baseBskSize, // 起点
-                    coeffCount,
-                    baseBskSize,
-                    baseBskSize,
-                    baseBsk,
-                    tempDestinationBsk,
-                    coeffCount * baseBskSize, // 起点
-                    coeffCount,
-                    baseBskSize
+                tempDestinationBsk,
+                coeffCount * baseBskSize, // 起点
+                coeffCount,
+                baseBskSize,
+                tempDestinationBsk,
+                coeffCount * baseBskSize, // 起点
+                coeffCount,
+                baseBskSize,
+                baseBskSize,
+                baseBsk,
+                tempDestinationBsk,
+                coeffCount * baseBskSize, // 起点
+                coeffCount,
+                baseBskSize
             );
 
             // Compute c1^2
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedBsk,
-                    coeffCount * baseBskSize, // 注意起点固定为 1
-                    encryptedBsk,
-                    coeffCount * baseBskSize,
-                    baseBskSize,
-                    coeffCount,
-                    baseBsk,
-                    2 * coeffCount * baseBskSize, // 这里的起点就是 2 了
-                    tempDestinationBsk
+                encryptedBsk,
+                coeffCount * baseBskSize, // 注意起点固定为 1
+                encryptedBsk,
+                coeffCount * baseBskSize,
+                baseBskSize,
+                coeffCount,
+                baseBsk,
+                2 * coeffCount * baseBskSize, // 这里的起点就是 2 了
+                tempDestinationBsk
             );
         }
 
@@ -1354,19 +1351,19 @@ public class Evaluator {
         // Lazy reduction here. The following multiply_poly_scalar_coeffmod will correct the value back to [0, p)
         // 处理整个 polyIter
         NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-                tempDestinationQ,
-                coeffCount,
-                baseQSize,
-                destinationSize,
-                baseQNttTables
+            tempDestinationQ,
+            coeffCount,
+            baseQSize,
+            destinationSize,
+            baseQNttTables
         );
 
         NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-                tempDestinationBsk,
-                coeffCount,
-                baseBskSize,
-                destinationSize,
-                baseBskNttTables
+            tempDestinationBsk,
+            coeffCount,
+            baseBskSize,
+            destinationSize,
+            baseBskNttTables
         );
 
 //        System.out.println("step(4) tempDestinationQ after inverse ntt \n" + Arrays.toString(tempDestinationQ));
@@ -1381,27 +1378,27 @@ public class Evaluator {
 
             // Step (6): multiply base q components by t (plain_modulus)
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
-                    tempDestinationQ,
-                    i * coeffCount * baseQSize, // 注意这里的 k
-                    coeffCount,
-                    baseQSize,
-                    plainModulus,
-                    baseQ,
-                    tempQBsk,
-                    0,
-                    coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                tempDestinationQ,
+                i * coeffCount * baseQSize, // 注意这里的 k
+                coeffCount,
+                baseQSize,
+                plainModulus,
+                baseQ,
+                tempQBsk,
+                0,
+                coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
             );
 
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
-                    tempDestinationBsk,
-                    i * coeffCount * baseBskSize, // 注意这里的 k
-                    coeffCount,
-                    baseBskSize,
-                    plainModulus,
-                    baseBsk,
-                    tempQBsk,
-                    baseQSize * coeffCount, // 注意起点
-                    coeffCount
+                tempDestinationBsk,
+                i * coeffCount * baseBskSize, // 注意这里的 k
+                coeffCount,
+                baseBskSize,
+                plainModulus,
+                baseBsk,
+                tempQBsk,
+                baseQSize * coeffCount, // 注意起点
+                coeffCount
             );
 
             // Allocate yet another temporary for fast divide-and-floor result in base Bsk
@@ -1410,26 +1407,26 @@ public class Evaluator {
 
             // Step (7): divide by q and floor, producing a result in base Bsk
             rnsTool.fastFloorRnsIter(
-                    tempQBsk,
-                    0,
-                    coeffCount,
-                    baseQSize + baseBskSize,
-                    tempBsk,
-                    0,
-                    coeffCount,
-                    baseBskSize
+                tempQBsk,
+                0,
+                coeffCount,
+                baseQSize + baseBskSize,
+                tempBsk,
+                0,
+                coeffCount,
+                baseBskSize
             );
 
             // Step (8): use Shenoy-Kumaresan method to convert the result to base q and write to encrypted1
             rnsTool.fastBConvSkRnsIter(
-                    tempBsk,
-                    0,
-                    coeffCount,
-                    baseBskSize,
-                    encrypted.getData(),
-                    i * coeffCount * encrypted.getCoeffModulusSize(),// 注意起点
-                    encrypted.getPolyModulusDegree(),
-                    encrypted.getCoeffModulusSize()
+                tempBsk,
+                0,
+                coeffCount,
+                baseBskSize,
+                encrypted.getData(),
+                i * coeffCount * encrypted.getCoeffModulusSize(),// 注意起点
+                encrypted.getPolyModulusDegree(),
+                encrypted.getCoeffModulusSize()
             );
 
         }
@@ -1459,13 +1456,13 @@ public class Evaluator {
     public void multiplyInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted1, context)
-                || !ValueChecker.isBufferValid(encrypted1)
+            || !ValueChecker.isBufferValid(encrypted1)
         ) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(encrypted2, context)
-                || !ValueChecker.isBufferValid(encrypted2)
+            || !ValueChecker.isBufferValid(encrypted2)
         ) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
@@ -1577,11 +1574,11 @@ public class Evaluator {
 
             // 先完成当前RnsIter拷贝，注意起点的计算是不一样的，对标 set_poly(get<0>(I), coeff_count, base_q_size, get<1>(I));
             System.arraycopy(
-                    encrypted1.getData(),
-                    i * coeffCount * encrypted1.getCoeffModulusSize(),
-                    encrypted1Q,
-                    i * coeffCount * baseQSize,
-                    coeffCount * baseQSize
+                encrypted1.getData(),
+                i * coeffCount * encrypted1.getCoeffModulusSize(),
+                encrypted1Q,
+                i * coeffCount * baseQSize,
+                coeffCount * baseQSize
             );
 
 //            System.out.println("set poly, encrypted1Q:\n " +
@@ -1592,10 +1589,10 @@ public class Evaluator {
 
             //
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encrypted1Q,
-                    i * coeffCount * baseQSize,
-                    baseQSize,
-                    baseQNttTables
+                encrypted1Q,
+                i * coeffCount * baseQSize,
+                baseQSize,
+                baseQNttTables
             );
 //            System.out.println("ntt lazy, encrypted1Q: \n" +
 //                    Arrays.toString(
@@ -1609,36 +1606,36 @@ public class Evaluator {
 
             // 1) Convert from base q to base Bsk U {m_tilde}
             rnsTool.fastBConvMTildeRnsIter(
-                    encrypted1.getData(),
-                    i * coeffCount * encrypted1.getCoeffModulusSize(),
-                    coeffCount,
-                    encrypted1.getCoeffModulusSize(),
-                    temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize
+                encrypted1.getData(),
+                i * coeffCount * encrypted1.getCoeffModulusSize(),
+                coeffCount,
+                encrypted1.getCoeffModulusSize(),
+                temp,
+                0,
+                coeffCount,
+                baseBskMTildeSize
             );
 
             // (2) Reduce q-overflows in with Montgomery reduction, switching base to Bsk
 //            rns_tool->sm_mrq(temp, get<2>(I), pool);
             rnsTool.smMrqRnsIter(
-                    temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize,
-                    encrypted1Bsk, // 对应 get<2>(I)
-                    i * coeffCount * baseBskSize, // 注意起点
-                    coeffCount,
-                    baseBskSize
+                temp,
+                0,
+                coeffCount,
+                baseBskMTildeSize,
+                encrypted1Bsk, // 对应 get<2>(I)
+                i * coeffCount * baseBskSize, // 注意起点
+                coeffCount,
+                baseBskSize
             );
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encrypted1Bsk,
-                    i * coeffCount * baseBskSize,
-                    baseBskSize,
-                    baseBskNttTables
+                encrypted1Bsk,
+                i * coeffCount * baseBskSize,
+                baseBskSize,
+                baseBskNttTables
             );
         }
 
@@ -1656,18 +1653,18 @@ public class Evaluator {
 
             // 先完成当前RnsIter拷贝，注意起点的计算是不一样的，对标 set_poly(get<0>(I), coeff_count, base_q_size, get<1>(I));
             System.arraycopy(
-                    encrypted2.getData(),
-                    i * coeffCount * encrypted2.getCoeffModulusSize(),
-                    encrypted2Q,
-                    i * coeffCount * baseQSize,
-                    coeffCount * baseQSize
+                encrypted2.getData(),
+                i * coeffCount * encrypted2.getCoeffModulusSize(),
+                encrypted2Q,
+                i * coeffCount * baseQSize,
+                coeffCount * baseQSize
             );
             //
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encrypted2Q,
-                    i * coeffCount * baseQSize,
-                    baseQSize,
-                    baseQNttTables
+                encrypted2Q,
+                i * coeffCount * baseQSize,
+                baseQSize,
+                baseQNttTables
             );
             // Allocate temporary space for a polynomial in the Bsk U {m_tilde} base
             // 这是一个 RnsIter
@@ -1675,35 +1672,35 @@ public class Evaluator {
 
             // 1) Convert from base q to base Bsk U {m_tilde}
             rnsTool.fastBConvMTildeRnsIter(
-                    encrypted2.getData(),
-                    i * coeffCount * encrypted2.getCoeffModulusSize(),
-                    coeffCount,
-                    encrypted2.getCoeffModulusSize(),
-                    temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize
+                encrypted2.getData(),
+                i * coeffCount * encrypted2.getCoeffModulusSize(),
+                coeffCount,
+                encrypted2.getCoeffModulusSize(),
+                temp,
+                0,
+                coeffCount,
+                baseBskMTildeSize
             );
 
             // (2) Reduce q-overflows in with Montgomery reduction, switching base to Bsk
 //            rns_tool->sm_mrq(temp, get<2>(I), pool);
             rnsTool.smMrqRnsIter(temp,
-                    0,
-                    coeffCount,
-                    baseBskMTildeSize,
-                    encrypted2Bsk, // 对应 get<2>(I)
-                    i * coeffCount * baseBskSize, // 注意起点
-                    coeffCount,
-                    baseBskSize
+                0,
+                coeffCount,
+                baseBskMTildeSize,
+                encrypted2Bsk, // 对应 get<2>(I)
+                i * coeffCount * baseBskSize, // 注意起点
+                coeffCount,
+                baseBskSize
             );
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
             NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                    encrypted2Bsk,
-                    i * coeffCount * baseBskSize,
-                    baseBskSize,
-                    baseBskNttTables
+                encrypted2Bsk,
+                i * coeffCount * baseBskSize,
+                baseBskSize,
+                baseBskNttTables
             );
         }
 
@@ -1751,26 +1748,26 @@ public class Evaluator {
                         long[] temp = new long[coeffCount];
 
                         PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                                encrypted1Q,
-                                shiftedIn1Iter + j * coeffCount * baseQSize + k * coeffCount,
-                                encrypted2Q,
-                                (shiftedReversedIn2Iter - j * coeffCount * baseQSize) + k * coeffCount,// 注意这里的 index 是减
-                                coeffCount,
-                                baseQ[k],
-                                0,
-                                temp
+                            encrypted1Q,
+                            shiftedIn1Iter + j * coeffCount * baseQSize + k * coeffCount,
+                            encrypted2Q,
+                            (shiftedReversedIn2Iter - j * coeffCount * baseQSize) + k * coeffCount,// 注意这里的 index 是减
+                            coeffCount,
+                            baseQ[k],
+                            0,
+                            temp
                         );
                         // 也只处理一个 CoeffIter
                         // 注意 shiftedOutIter 是按 k 迭代的, 迭代步长为
                         PolyArithmeticSmallMod.addPolyCoeffMod(
-                                temp,
-                                0,
-                                tempDestinationQ,
-                                shiftedOutIter + k * coeffCount,
-                                coeffCount,
-                                baseQ[k],
-                                shiftedOutIter + k * coeffCount,
-                                tempDestinationQ
+                            temp,
+                            0,
+                            tempDestinationQ,
+                            shiftedOutIter + k * coeffCount,
+                            coeffCount,
+                            baseQ[k],
+                            shiftedOutIter + k * coeffCount,
+                            tempDestinationQ
                         );
                     }
                 }
@@ -1795,25 +1792,25 @@ public class Evaluator {
                         long[] temp = new long[coeffCount];
 
                         PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                                encrypted1Bsk,
-                                shiftedIn1Iter + j * coeffCount * baseBskSize + k * coeffCount,
-                                encrypted2Bsk,
-                                (shiftedReversedIn2Iter - j * coeffCount * baseBskSize) + k * coeffCount,// 注意这里的 index 是减
-                                coeffCount,
-                                baseBsk[k],
-                                0,
-                                temp
+                            encrypted1Bsk,
+                            shiftedIn1Iter + j * coeffCount * baseBskSize + k * coeffCount,
+                            encrypted2Bsk,
+                            (shiftedReversedIn2Iter - j * coeffCount * baseBskSize) + k * coeffCount,// 注意这里的 index 是减
+                            coeffCount,
+                            baseBsk[k],
+                            0,
+                            temp
                         );
                         // 也只处理一个 CoeffIter
                         PolyArithmeticSmallMod.addPolyCoeffMod(
-                                temp,
-                                0,
-                                tempDestinationBsk,
-                                shiftedOutIter + k * coeffCount,
-                                coeffCount,
-                                baseBsk[k],
-                                shiftedOutIter + k * coeffCount,
-                                tempDestinationBsk
+                            temp,
+                            0,
+                            tempDestinationBsk,
+                            shiftedOutIter + k * coeffCount,
+                            coeffCount,
+                            baseBsk[k],
+                            shiftedOutIter + k * coeffCount,
+                            tempDestinationBsk
                         );
                     }
                 }
@@ -1829,19 +1826,19 @@ public class Evaluator {
         // Lazy reduction here. The following multiply_poly_scalar_coeffmod will correct the value back to [0, p)
         // 处理整个 polyIter
         NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-                tempDestinationQ,
-                coeffCount,
-                baseQSize,
-                destinationSize,
-                baseQNttTables
+            tempDestinationQ,
+            coeffCount,
+            baseQSize,
+            destinationSize,
+            baseQNttTables
         );
 
         NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-                tempDestinationBsk,
-                coeffCount,
-                baseBskSize,
-                destinationSize,
-                baseBskNttTables
+            tempDestinationBsk,
+            coeffCount,
+            baseBskSize,
+            destinationSize,
+            baseBskNttTables
         );
 
 //        System.out.println("step(4) tempDestinationQ after inverse ntt \n" + Arrays.toString(tempDestinationQ));
@@ -1856,27 +1853,27 @@ public class Evaluator {
 
             // Step (6): multiply base q components by t (plain_modulus)
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
-                    tempDestinationQ,
-                    i * coeffCount * baseQSize, // 注意这里的 k
-                    coeffCount,
-                    baseQSize,
-                    plainModulus,
-                    baseQ,
-                    tempQBsk,
-                    0,
-                    coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                tempDestinationQ,
+                i * coeffCount * baseQSize, // 注意这里的 k
+                coeffCount,
+                baseQSize,
+                plainModulus,
+                baseQ,
+                tempQBsk,
+                0,
+                coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
             );
 
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
-                    tempDestinationBsk,
-                    i * coeffCount * baseBskSize, // 注意这里的 k
-                    coeffCount,
-                    baseBskSize,
-                    plainModulus,
-                    baseBsk,
-                    tempQBsk,
-                    baseQSize * coeffCount, // 注意起点
-                    coeffCount
+                tempDestinationBsk,
+                i * coeffCount * baseBskSize, // 注意这里的 k
+                coeffCount,
+                baseBskSize,
+                plainModulus,
+                baseBsk,
+                tempQBsk,
+                baseQSize * coeffCount, // 注意起点
+                coeffCount
             );
 
             // Allocate yet another temporary for fast divide-and-floor result in base Bsk
@@ -1885,26 +1882,26 @@ public class Evaluator {
 
             // Step (7): divide by q and floor, producing a result in base Bsk
             rnsTool.fastFloorRnsIter(
-                    tempQBsk,
-                    0,
-                    coeffCount,
-                    baseQSize + baseBskSize,
-                    tempBsk,
-                    0,
-                    coeffCount,
-                    baseBskSize
+                tempQBsk,
+                0,
+                coeffCount,
+                baseQSize + baseBskSize,
+                tempBsk,
+                0,
+                coeffCount,
+                baseBskSize
             );
 
             // Step (8): use Shenoy-Kumaresan method to convert the result to base q and write to encrypted1
             rnsTool.fastBConvSkRnsIter(
-                    tempBsk,
-                    0,
-                    coeffCount,
-                    baseBskSize,
-                    encrypted1.getData(),
-                    i * coeffCount * encrypted1.getCoeffModulusSize(),// 注意起点
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize()
+                tempBsk,
+                0,
+                coeffCount,
+                baseBskSize,
+                encrypted1.getData(),
+                i * coeffCount * encrypted1.getCoeffModulusSize(),// 注意起点
+                encrypted1.getPolyModulusDegree(),
+                encrypted1.getCoeffModulusSize()
             );
 
         }
@@ -1981,10 +1978,10 @@ public class Evaluator {
                 if (plainValue >= plainUpperHalfThreshold) {
                     long[] addTemp = new long[coeffModulusSize];
                     UintArithmetic.addUint(
-                            plainUpperHalfIncrement,
-                            coeffModulusSize,
-                            plainValue,
-                            addTemp
+                        plainUpperHalfIncrement,
+                        coeffModulusSize,
+                        plainValue,
+                        addTemp
                     );
                     // 拷贝回 temp, 注意 temp 的起点
                     System.arraycopy(addTemp, 0, temp, i * coeffModulusSize, coeffModulusSize);
@@ -1997,11 +1994,11 @@ public class Evaluator {
 
             // Copy data back to plain
             System.arraycopy(
-                    temp,
-                    0,
-                    plain.getData(),
-                    0,
-                    coeffCount * coeffModulusSize
+                temp,
+                0,
+                plain.getData(),
+                0,
+                coeffCount * coeffModulusSize
             );
 
         } else {
@@ -2024,9 +2021,9 @@ public class Evaluator {
                     // todo: 高度注意这里的索引，容易出错
                     // plain.getData()[j] 是想等价 *plain_iter 的遍历
                     plain.getData()[startIndex + j] =
-                            plain.getData()[j] >= plainUpperHalfThreshold
-                                    ? plain.getData()[j] + plainUpperHalfIncrement[i]
-                                    : plain.getData()[j];
+                        plain.getData()[j] >= plainUpperHalfThreshold
+                            ? plain.getData()[j] + plainUpperHalfIncrement[i]
+                            : plain.getData()[j];
 
                 }
             }
@@ -2034,10 +2031,10 @@ public class Evaluator {
 
         // 处理 RnsIter
         NttTool.nttNegAcyclicHarveyRnsIter(
-                plain.getData(),
-                coeffCount, // 注意这个 coeffCount 是 密文的 N, 也是目前 plain 作为 RnsIter 的 N, 注意到这个值一定不能是 plain.getCoeffCount 完全两码事
-                coeffModulusSize,
-                nttTables
+            plain.getData(),
+            coeffCount, // 注意这个 coeffCount 是 密文的 N, 也是目前 plain 作为 RnsIter 的 N, 注意到这个值一定不能是 plain.getCoeffCount 完全两码事
+            coeffModulusSize,
+            nttTables
         );
         plain.setParmsId(parmsId);
     }
@@ -2050,7 +2047,7 @@ public class Evaluator {
      */
     public void transformToNttInplace(Ciphertext encrypted) {
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)
+            || !ValueChecker.isBufferValid(encrypted)
         ) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
@@ -2077,11 +2074,11 @@ public class Evaluator {
         }
         // Transform each polynomial to NTT domain
         NttTool.nttNegAcyclicHarveyPolyIter(
-                encrypted.getData(),
-                coeffCount,
-                coeffModulusSize,
-                encryptedSize,
-                nttTables
+            encrypted.getData(),
+            coeffCount,
+            coeffModulusSize,
+            encryptedSize,
+            nttTables
         );
         // Finally change the is_ntt_transformed flag
         encrypted.setIsNttForm(true);
@@ -2098,7 +2095,7 @@ public class Evaluator {
      */
     public void transformFromNttInplace(Ciphertext encryptedNtt) {
         if (!ValueChecker.isMetaDataValidFor(encryptedNtt, context)
-                || !ValueChecker.isBufferValid(encryptedNtt)
+            || !ValueChecker.isBufferValid(encryptedNtt)
         ) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
@@ -2125,11 +2122,11 @@ public class Evaluator {
         }
         // Transform each polynomial to NTT domain
         NttTool.inverseNttNegAcyclicHarveyPolyIter(
-                encryptedNtt.getData(),
-                coeffCount,
-                coeffModulusSize,
-                encryptedSize,
-                nttTables
+            encryptedNtt.getData(),
+            coeffCount,
+            coeffModulusSize,
+            encryptedSize,
+            nttTables
         );
         // Finally change the is_ntt_transformed flag
         encryptedNtt.setIsNttForm(false);
@@ -2149,12 +2146,12 @@ public class Evaluator {
     public void multiplyPlainInplace(Ciphertext encrypted, Plaintext plain) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)) {
+            || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(plain, context)
-                || !ValueChecker.isBufferValid(plain)) {
+            || !ValueChecker.isBufferValid(plain)) {
             throw new IllegalArgumentException("plain is not valid for encryption parameters");
         }
 
@@ -2223,40 +2220,22 @@ public class Evaluator {
                     contextData.getRnsTool().getBaseQ().decompose(temp);
                     // 注意函数签名中的 第5个参数，现在是一个数组, 下面的两次调用都是单个数
                     PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
-                            encrypted.getData(),
-                            encrypted.getPolyModulusDegree(),
-                            encrypted.getCoeffModulusSize(),
-                            encryptedSize,
-                            temp,
-                            monoExponent,
-                            coeffModulus,
-                            encrypted.getData(),
-                            encrypted.getPolyModulusDegree(),
-                            encrypted.getCoeffModulusSize()
+                        encrypted.getData(),
+                        encrypted.getPolyModulusDegree(),
+                        encrypted.getCoeffModulusSize(),
+                        encryptedSize,
+                        temp,
+                        monoExponent,
+                        coeffModulus,
+                        encrypted.getData(),
+                        encrypted.getPolyModulusDegree(),
+                        encrypted.getCoeffModulusSize()
                     );
                 } else {
                     // Every coeff_modulus prime is larger than plain_modulus, so there is no need to adjust the
                     // monomial. Instead, just do an RNS multiplication.
                     // todo：理解这里的逻辑，这里和下面处理的不是完全一样吗
                     PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
-                            encrypted.getData(),
-                            encrypted.getPolyModulusDegree(),
-                            encrypted.getCoeffModulusSize(),
-                            encryptedSize,
-                            plain.at(monoExponent),
-                            monoExponent,
-                            coeffModulus,
-                            encrypted.getData(),
-                            encrypted.getPolyModulusDegree(),
-                            encrypted.getCoeffModulusSize()
-                    );
-                }
-            } else {
-                // The monomial represents a positive number, so no RNS multiplication is needed.
-                // todo: 为什么 positive number 就不需要 RNS 乘法了？
-                //
-                // 注意这个函数签名
-                PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
                         encrypted.getData(),
                         encrypted.getPolyModulusDegree(),
                         encrypted.getCoeffModulusSize(),
@@ -2267,6 +2246,24 @@ public class Evaluator {
                         encrypted.getData(),
                         encrypted.getPolyModulusDegree(),
                         encrypted.getCoeffModulusSize()
+                    );
+                }
+            } else {
+                // The monomial represents a positive number, so no RNS multiplication is needed.
+                // todo: 为什么 positive number 就不需要 RNS 乘法了？
+                //
+                // 注意这个函数签名
+                PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
+                    encrypted.getData(),
+                    encrypted.getPolyModulusDegree(),
+                    encrypted.getCoeffModulusSize(),
+                    encryptedSize,
+                    plain.at(monoExponent),
+                    monoExponent,
+                    coeffModulus,
+                    encrypted.getData(),
+                    encrypted.getPolyModulusDegree(),
+                    encrypted.getCoeffModulusSize()
                 );
             }
 
@@ -2288,10 +2285,10 @@ public class Evaluator {
                 if (plainValue >= plainUpperHalfThreshold) {
                     long[] addTemp = new long[coeffModulusSize];
                     UintArithmetic.addUint(
-                            plainUpperHalfIncrement,
-                            coeffModulusSize,
-                            plainValue,
-                            addTemp
+                        plainUpperHalfIncrement,
+                        coeffModulusSize,
+                        plainValue,
+                        addTemp
                     );
                     // 拷贝回 temp, 注意 temp 的起点
                     // todo: temp 起点正确性待验证， 总感觉这样的起点不正确
@@ -2312,7 +2309,7 @@ public class Evaluator {
                 for (int j = 0; j < plainCoeffCount; j++) {
                     // 注意每一个数组的索引
                     temp[i * coeffCount + j] = plain.at(j) >= plainUpperHalfThreshold ?
-                            plain.at(j) + plainUpperHalfIncrement[i] : plain.at(j);
+                        plain.at(j) + plainUpperHalfIncrement[i] : plain.at(j);
 
                 }
             }
@@ -2321,10 +2318,10 @@ public class Evaluator {
         // Need to multiply each component in encrypted with temp; first step is to transform to NTT form
         // 把 temp 视为 RnsIter, 整体进行处理
         NttTool.nttNegAcyclicHarveyRnsIter(
-                temp,
-                coeffCount,
-                coeffModulusSize,
-                nttTables
+            temp,
+            coeffCount,
+            coeffModulusSize,
+            nttTables
         );
 
         for (int i = 0; i < encryptedSize; i++) {
@@ -2333,25 +2330,25 @@ public class Evaluator {
             for (int j = 0; j < coeffModulusSize; j++) {
                 // Lazy Reduction, 处理 单个 CoeffIter
                 NttTool.nttNegAcyclicHarveyLazy(
-                        encrypted.getData(),
-                        rnsStartIndex + j * coeffCount,
-                        nttTables[j]
+                    encrypted.getData(),
+                    rnsStartIndex + j * coeffCount,
+                    nttTables[j]
                 );
                 PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                        encrypted.getData(),
-                        rnsStartIndex + j * coeffCount,
-                        temp,
-                        j * coeffCount,
-                        coeffCount,
-                        coeffModulus[j],
-                        rnsStartIndex + j * coeffCount,
-                        encrypted.getData()
+                    encrypted.getData(),
+                    rnsStartIndex + j * coeffCount,
+                    temp,
+                    j * coeffCount,
+                    coeffCount,
+                    coeffModulus[j],
+                    rnsStartIndex + j * coeffCount,
+                    encrypted.getData()
                 );
 
                 NttTool.inverseNttNegAcyclicHarvey(
-                        encrypted.getData(),
-                        rnsStartIndex + j * coeffCount,
-                        nttTables[j]
+                    encrypted.getData(),
+                    rnsStartIndex + j * coeffCount,
+                    nttTables[j]
                 );
             }
         }
@@ -2395,15 +2392,15 @@ public class Evaluator {
         for (int i = 0; i < encryptedNttSize; i++) {
             // 都是 Ntt 形式，直接调用这个函数做 多项式乘法
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    encryptedNtt.getData(),
-                    encryptedNtt.indexAt(i),
-                    plainNtt.getData(),
-                    0, // plain 是 single RnsIter 所以它的起点为 0
-                    coeffModulusSize,
-                    coeffCount,
-                    coeffModulus,
-                    encryptedNtt.indexAt(i),
-                    encryptedNtt.getData()
+                encryptedNtt.getData(),
+                encryptedNtt.indexAt(i),
+                plainNtt.getData(),
+                0, // plain 是 single RnsIter 所以它的起点为 0
+                coeffModulusSize,
+                coeffCount,
+                coeffModulus,
+                encryptedNtt.indexAt(i),
+                encryptedNtt.getData()
             );
         }
 
@@ -2423,12 +2420,12 @@ public class Evaluator {
     public void subPlainInplace(Ciphertext encrypted, Plaintext plain) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)) {
+            || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(plain, context)
-                || !ValueChecker.isBufferValid(plain)) {
+            || !ValueChecker.isBufferValid(plain)) {
             throw new IllegalArgumentException("plain is not valid for encryption parameters");
         }
 
@@ -2472,11 +2469,11 @@ public class Evaluator {
                 // c0 - plain
                 // 和 addPlainInplace 唯一的区别就是这里调用的不一样
                 ScalingVariant.multiplySubPlainWithScalingVariant(
-                        plain,
-                        contextData,
-                        encrypted.getData(),
-                        coeffCount,
-                        encrypted.indexAt(0)
+                    plain,
+                    contextData,
+                    encrypted.getData(),
+                    coeffCount,
+                    encrypted.indexAt(0)
                 );
                 break;
             case CKKS:
@@ -2501,12 +2498,12 @@ public class Evaluator {
     public void addPlainInplace(Ciphertext encrypted, Plaintext plain) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)) {
+            || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(plain, context)
-                || !ValueChecker.isBufferValid(plain)) {
+            || !ValueChecker.isBufferValid(plain)) {
             throw new IllegalArgumentException("plain is not valid for encryption parameters");
         }
 
@@ -2549,11 +2546,11 @@ public class Evaluator {
             case BFV:
                 // c0 + plain
                 ScalingVariant.multiplyAddPlainWithScalingVariant(
-                        plain,
-                        contextData,
-                        encrypted.getData(),
-                        coeffCount,
-                        encrypted.indexAt(0)
+                    plain,
+                    contextData,
+                    encrypted.getData(),
+                    coeffCount,
+                    encrypted.indexAt(0)
                 );
                 break;
             case CKKS:
@@ -2579,7 +2576,7 @@ public class Evaluator {
     public void negateInplace(Ciphertext encrypted) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
-                || !ValueChecker.isBufferValid(encrypted)) {
+            || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
         // Extract encryption parameters.
@@ -2590,14 +2587,14 @@ public class Evaluator {
 
         // 对密文中的每一个多项式取反， 这里就是在处理一个完整的PolyIter
         PolyArithmeticSmallMod.negatePolyCoeffModPolyIter(
-                encrypted.getData(),
-                encrypted.getPolyModulusDegree(),
-                encrypted.getCoeffModulusSize(),
-                encryptedSize,
-                coeffModulus,
-                encrypted.getData(),
-                encrypted.getPolyModulusDegree(),
-                encrypted.getCoeffModulusSize()
+            encrypted.getData(),
+            encrypted.getPolyModulusDegree(),
+            encrypted.getCoeffModulusSize(),
+            encryptedSize,
+            coeffModulus,
+            encrypted.getData(),
+            encrypted.getPolyModulusDegree(),
+            encrypted.getCoeffModulusSize()
         );
     }
 
@@ -2646,13 +2643,13 @@ public class Evaluator {
     public void addInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted1, context) ||
-                !ValueChecker.isBufferValid(encrypted1)
+            !ValueChecker.isBufferValid(encrypted1)
         ) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(encrypted2, context) ||
-                !ValueChecker.isBufferValid(encrypted2)
+            !ValueChecker.isBufferValid(encrypted2)
         ) {
             throw new IllegalArgumentException("encrypted2 is not valid for encryption parameters");
         }
@@ -2690,29 +2687,29 @@ public class Evaluator {
             // (f, e1, e2)
             long[] factors = balanceCorrectionFactors(encrypted1.getCorrectionFactor(), encrypted2.getCorrectionFactor(), plainModulus);
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
-                    encrypted1.getData(),
-                    coeffCount,
-                    coeffModulusSize,
-                    encrypted1.getSize(),
-                    factors[1],
-                    coeffModulus,
-                    encrypted1.getData(),
-                    coeffCount,
-                    coeffModulusSize
+                encrypted1.getData(),
+                coeffCount,
+                coeffModulusSize,
+                encrypted1.getSize(),
+                factors[1],
+                coeffModulus,
+                encrypted1.getData(),
+                coeffCount,
+                coeffModulusSize
             );
 
             Ciphertext encrypted2Copy = new Ciphertext();
             encrypted2Copy.copyFrom(encrypted2);
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
-                    encrypted2.getData(),
-                    coeffCount,
-                    coeffModulusSize,
-                    encrypted2.getSize(),
-                    factors[2],
-                    coeffModulus,
-                    encrypted2Copy.getData(),
-                    coeffCount,
-                    coeffModulusSize
+                encrypted2.getData(),
+                coeffCount,
+                coeffModulusSize,
+                encrypted2.getSize(),
+                factors[2],
+                coeffModulus,
+                encrypted2Copy.getData(),
+                coeffCount,
+                coeffModulusSize
             );
             // Set new correction factor
             encrypted1.setCorrectionFactor(factors[0]);
@@ -2725,27 +2722,27 @@ public class Evaluator {
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
             // AddCiphertexts
             PolyArithmeticSmallMod.addPolyCoeffModPolyIter(
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize(),
-                    encrypted2.getData(),
-                    encrypted2.getPolyModulusDegree(),
-                    encrypted2.getCoeffModulusSize(),
-                    minCount, // 注意这个参数，按照 size 较小的密文对齐相加，其余部分直接拷贝
-                    coeffModulus,
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize()
+                encrypted1.getData(),
+                encrypted1.getPolyModulusDegree(),
+                encrypted1.getCoeffModulusSize(),
+                encrypted2.getData(),
+                encrypted2.getPolyModulusDegree(),
+                encrypted2.getCoeffModulusSize(),
+                minCount, // 注意这个参数，按照 size 较小的密文对齐相加，其余部分直接拷贝
+                coeffModulus,
+                encrypted1.getData(),
+                encrypted1.getPolyModulusDegree(),
+                encrypted1.getCoeffModulusSize()
             );
             // Copy the remaindering polys of the array with larger count into encrypted1
             if (encrypted1Size < encrypted2Size) {
                 // 暂时弃用掉PolyCore提供的方法，因为存在一些错误，直接数组拷贝
                 System.arraycopy(
-                        encrypted2.getData(),
-                        encrypted2.indexAt(minCount),
-                        encrypted1.getData(),
-                        encrypted1.indexAt(encrypted1Size),
-                        (encrypted2Size - encrypted1Size) * coeffCount * coeffModulusSize
+                    encrypted2.getData(),
+                    encrypted2.indexAt(minCount),
+                    encrypted1.getData(),
+                    encrypted1.indexAt(encrypted1Size),
+                    (encrypted2Size - encrypted1Size) * coeffCount * coeffModulusSize
                 );
             }
         }
@@ -2774,13 +2771,13 @@ public class Evaluator {
     public void subInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
 
         if (!ValueChecker.isMetaDataValidFor(encrypted1, context) ||
-                !ValueChecker.isBufferValid(encrypted1)
+            !ValueChecker.isBufferValid(encrypted1)
         ) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
 
         if (!ValueChecker.isMetaDataValidFor(encrypted2, context) ||
-                !ValueChecker.isBufferValid(encrypted2)
+            !ValueChecker.isBufferValid(encrypted2)
         ) {
             throw new IllegalArgumentException("encrypted2 is not valid for encryption parameters");
         }
@@ -2818,30 +2815,30 @@ public class Evaluator {
             // (f, e1, e2)
             long[] factors = balanceCorrectionFactors(encrypted1.getCorrectionFactor(), encrypted2.getCorrectionFactor(), plainModulus);
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
-                    encrypted1.getData(),
-                    coeffCount,
-                    coeffModulusSize,
-                    encrypted1.getSize(),
-                    factors[1],
-                    coeffModulus,
-                    encrypted1.getData(),
-                    coeffCount,
-                    coeffModulusSize
+                encrypted1.getData(),
+                coeffCount,
+                coeffModulusSize,
+                encrypted1.getSize(),
+                factors[1],
+                coeffModulus,
+                encrypted1.getData(),
+                coeffCount,
+                coeffModulusSize
             );
 
             Ciphertext encrypted2Copy = new Ciphertext();
             encrypted2Copy.copyFrom(encrypted2);
 
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
-                    encrypted2.getData(),
-                    coeffCount,
-                    coeffModulusSize,
-                    encrypted2.getSize(),
-                    factors[2],
-                    coeffModulus,
-                    encrypted2Copy.getData(),
-                    coeffCount,
-                    coeffModulusSize
+                encrypted2.getData(),
+                coeffCount,
+                coeffModulusSize,
+                encrypted2.getSize(),
+                factors[2],
+                coeffModulus,
+                encrypted2Copy.getData(),
+                coeffCount,
+                coeffModulusSize
             );
             // Set new correction factor
             encrypted1.setCorrectionFactor(factors[0]);
@@ -2854,17 +2851,17 @@ public class Evaluator {
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
             // AddCiphertexts
             PolyArithmeticSmallMod.subPolyCoeffModPolyIter(
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize(),
-                    encrypted2.getData(),
-                    encrypted2.getPolyModulusDegree(),
-                    encrypted2.getCoeffModulusSize(),
-                    minCount, // 注意这个参数，按照 size 较小的密文对齐相加，其余部分直接拷贝
-                    coeffModulus,
-                    encrypted1.getData(),
-                    encrypted1.getPolyModulusDegree(),
-                    encrypted1.getCoeffModulusSize()
+                encrypted1.getData(),
+                encrypted1.getPolyModulusDegree(),
+                encrypted1.getCoeffModulusSize(),
+                encrypted2.getData(),
+                encrypted2.getPolyModulusDegree(),
+                encrypted2.getCoeffModulusSize(),
+                minCount, // 注意这个参数，按照 size 较小的密文对齐相加，其余部分直接拷贝
+                coeffModulus,
+                encrypted1.getData(),
+                encrypted1.getPolyModulusDegree(),
+                encrypted1.getCoeffModulusSize()
             );
             // Copy the remaindering polys of the array with larger count into encrypted1
             if (encrypted1Size < encrypted2Size) {
@@ -2877,14 +2874,14 @@ public class Evaluator {
                 // 个 RnsIter
                 for (int i = minCount; i < encrypted2Size; i++) {
                     PolyArithmeticSmallMod.negatePolyCoeffModRnsIter(
-                            encrypted2.getData(),
-                            encrypted2.indexAt(i),
-                            encrypted2.getPolyModulusDegree(),
-                            coeffModulusSize,
-                            coeffModulus,
-                            encrypted1.getData(),
-                            encrypted1.getPolyModulusDegree(),
-                            encrypted1.indexAt(i)
+                        encrypted2.getData(),
+                        encrypted2.indexAt(i),
+                        encrypted2.getPolyModulusDegree(),
+                        coeffModulusSize,
+                        coeffModulus,
+                        encrypted1.getData(),
+                        encrypted1.getPolyModulusDegree(),
+                        encrypted1.indexAt(i)
                     );
                 }
             }
@@ -2994,7 +2991,7 @@ public class Evaluator {
                 // Unsupported scheme; check will fail
                 scaleBitCountBound = -1;
         }
-        return !(scale <= 0 || (int) DoubleUtils.log2(scale) >= scaleBitCountBound);
+        return !(scale <= 0 || (int) (Math.log(scale) / Math.log(2)) >= scaleBitCountBound);
     }
 
 

@@ -1,9 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.rq;
 
-import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.galoisfield.BytesField;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2e;
-import edu.alibaba.mpc4j.common.tool.galoisfield.gf2e.Gf2eFactory;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;

@@ -3,10 +3,7 @@ package edu.alibaba.mpc4j.crypto.fhe.params;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
-import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
-import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
-import org.apache.commons.math3.distribution.UniformIntegerDistribution;
 import org.junit.Assert;
 import org.junit.Test;
 

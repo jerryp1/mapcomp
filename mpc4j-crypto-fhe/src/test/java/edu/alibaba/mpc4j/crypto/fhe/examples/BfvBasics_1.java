@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.examples;
 
 
-import edu.alibaba.mpc4j.common.tool.crypto.ecc.Ecc;
 import edu.alibaba.mpc4j.crypto.fhe.*;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;

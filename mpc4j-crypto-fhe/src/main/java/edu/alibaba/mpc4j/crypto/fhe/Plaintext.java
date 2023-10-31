@@ -5,9 +5,7 @@ import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.DynArray;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.math3.exception.OutOfRangeException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -511,9 +509,13 @@ public class Plaintext implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
+        if (this == o) {
+            return true;
+        }
 
-        if (!(o instanceof Plaintext)) return false;
+        if (!(o instanceof Plaintext)) {
+            return false;
+        }
 
         Plaintext that = (Plaintext) o;
 

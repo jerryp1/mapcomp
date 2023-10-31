@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.rand;
 
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
+import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 
 import java.security.SecureRandom;
 
@@ -42,7 +42,7 @@ public class UniformRandomGenerator {
         byte[] bytes = new byte[byteCount];
         generate(byteCount, bytes);
         // convert bytes to longArray
-        long[] temp = LongUtils.byteArrayToLongArray(bytes);
+        long[] temp = Common.byteArrayToUint64Array(bytes, byteCount);
 //        assert temp.length == destination.length;
         // copy
         System.arraycopy(temp, 0, destination, 0, temp.length);
@@ -54,7 +54,7 @@ public class UniformRandomGenerator {
         byte[] bytes = new byte[byteCount];
         generate(byteCount, bytes);
         // convert bytes to longArray
-        long[] temp = LongUtils.byteArrayToLongArray(bytes);
+        long[] temp = Common.byteArrayToUint64Array(bytes, byteCount);
 //        assert temp.length == destination.length;
         // copy
         System.arraycopy(temp, 0, destination, startIndex, temp.length);
