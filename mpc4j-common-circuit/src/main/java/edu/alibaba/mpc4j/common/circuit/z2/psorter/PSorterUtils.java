@@ -1,16 +1,29 @@
 package edu.alibaba.mpc4j.common.circuit.z2.psorter;
 
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.*;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+/**
+ * Utilities of sorter
+ *
+ * @author Feng Han
+ * @date 2023/10/30
+ */
 public class PSorterUtils {
-
+    public static long[] transport(MpcZ2Vector[] data) {
+        BitVector[] permutationVec = Arrays.stream(data).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
+        BigInteger[] permutationVecTrans = ZlDatabase.create(EnvType.STANDARD, false, permutationVec).getBigIntegerData();
+        return Arrays.stream(permutationVecTrans).mapToLong(BigInteger::longValue).toArray();
+    }
     /**
      * 得到1<<(log2-1)长度的mask的值
      */
@@ -131,49 +144,6 @@ public class PSorterUtils {
                 }
             }
         }
-//        else {
-//            // todo 先用最简单的方法处理
-//            int eachPartBit = skipLen << 1;
-//            int currentDestIndex = (destByteNum << 3) - eachPartBit, currentSrcIndex = (srcByte.length << 3) - skipLen;
-//            for (int i = groupNum - 1; i >= notFullNum; i--) {
-//                for (int j = 0; j < skipLen; j++) {
-//                    if (BinaryUtils.getBoolean(srcByte, currentSrcIndex + j)) {
-//                        BinaryUtils.setBoolean(destByte, currentDestIndex + j, true);
-//                        BinaryUtils.setBoolean(destByte, currentDestIndex + j + skipLen, true);
-//                    }
-//                }
-//                currentSrcIndex -= skipLen;
-//                currentDestIndex -= eachPartBit;
-//            }
-//        }
-//
-//        byte[] baselineByte = new byte[destByteNum];
-//        if (notFullNum > 0) {
-//            // 如果第一个组是未满的，则之前的比较一定是从第一个开始取数比较的
-//            int destOffset = (destByteNum << 3) - destBitLen;
-//            int firstLen = destBitLen % skipLen;
-//            for (int i = 0; i < firstLen; i++, destOffset++) {
-//                if (data.getBitVector().get(i)) {
-//                    BinaryUtils.setBoolean(baselineByte, destOffset, true);
-//                    BinaryUtils.setBoolean(baselineByte, destOffset + skipLen, true);
-//                }
-//            }
-//        }
-//        int eachPartBit = skipLen << 1;
-//        int currentDestIndex = (destByteNum << 3) - eachPartBit, currentSrcIndex = (srcByte.length << 3) - skipLen;
-//        for (int i = groupNum - 1; i >= notFullNum; i--) {
-//            for (int j = 0; j < skipLen; j++) {
-//                if (BinaryUtils.getBoolean(srcByte, currentSrcIndex + j)) {
-//                    BinaryUtils.setBoolean(baselineByte, currentDestIndex + j, true);
-//                    BinaryUtils.setBoolean(baselineByte, currentDestIndex + j + skipLen, true);
-//                }
-//            }
-//            currentSrcIndex -= skipLen;
-//            currentDestIndex -= eachPartBit;
-//        }
-//        if(!Arrays.equals(baselineByte, destByte)){
-//            int a = 0;
-//        }
         return destByte;
     }
 
@@ -253,45 +223,6 @@ public class PSorterUtils {
                 destByte[1][currentDestByteIndex] ^= (byte) record1;
             }
         }
-
-//        byte[][] baselineByte = new byte[2][destByteNum];
-//        // 如果第一个的length和其他的不一致，则先处理第一个
-//        if (totalBitNum % skipLen > 0) {
-//            int destOffset = (destByteNum << 3) - totalBitNum;
-//            int firstLen = totalBitNum % skipLen;
-//            for (int i = 0; i < firstLen; i++, destOffset++) {
-//                if (data.getBitVector().get(i)) {
-//                    BinaryUtils.setBoolean(baselineByte[0], destOffset, true);
-//                }
-//                if (data.getBitVector().get(i + skipLen)) {
-//                    BinaryUtils.setBoolean(baselineByte[1], destOffset, true);
-//                }
-//            }
-//        }
-//        int currentDestIndex = (destByteNum << 3) - skipLen, currentSrcIndex = (srcByte.length << 3) - skipLen;
-//        for (int i = groupNum - 1; i >= notFullNum; i--) {
-//            for (int j = 0; j < skipLen; j++) {
-//                if (BinaryUtils.getBoolean(srcByte, currentSrcIndex + j)) {
-//                    BinaryUtils.setBoolean(baselineByte[1], currentDestIndex + j, true);
-//                }
-//            }
-//            currentSrcIndex -= skipLen;
-//            for (int j = 0; j < skipLen; j++) {
-//                if (BinaryUtils.getBoolean(srcByte, currentSrcIndex + j)) {
-//                    BinaryUtils.setBoolean(baselineByte[0], currentDestIndex + j, true);
-//                }
-//            }
-//            currentSrcIndex -= skipLen;
-//            currentDestIndex -= skipLen;
-//        }
-//        if(!Arrays.equals(baselineByte[0], destByte[0])){
-//            int a = 0;
-//        }
-//        if(!Arrays.equals(baselineByte[1], destByte[1])){
-//            int b = 0;
-//        }
-
-
         return destByte;
     }
 

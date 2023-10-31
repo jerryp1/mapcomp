@@ -3,6 +3,12 @@ package edu.alibaba.mpc4j.common.circuit.z2.psorter;
 import edu.alibaba.mpc4j.common.circuit.z2.AbstractZ2Circuit;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 
+/**
+ * Abstract Sorter for permutation generation
+ *
+ * @author Feng Han
+ * @date 2023/10/30
+ */
 public abstract class AbstractPermutationSorter extends AbstractZ2Circuit implements Psorter {
     /**
      * bit length of xiArrays.

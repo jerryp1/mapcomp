@@ -210,6 +210,15 @@ public interface MpcZ2cParty {
     MpcZ2Vector xor(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
     /**
+     * XOR operation. the result stored in xi
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    void xori(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
+
+    /**
      * Vector XOR operation.
      *
      * @param xiArray xi array.
@@ -247,6 +256,15 @@ public interface MpcZ2cParty {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector not(MpcZ2Vector xi) throws MpcAbortException;
+
+    /**
+     * NOT operation.
+     *
+     * @param xi xi.
+     * @return zi, such that z = !x.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    void noti(MpcZ2Vector xi) throws MpcAbortException;
 
     /**
      * Vector NOT operation.

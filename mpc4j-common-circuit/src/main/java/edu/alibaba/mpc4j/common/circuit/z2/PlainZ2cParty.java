@@ -162,6 +162,12 @@ public class PlainZ2cParty implements MpcZ2cParty {
     }
 
     @Override
+    public void xori(MpcZ2Vector xi, MpcZ2Vector yi) {
+        xi.getBitVector().xori(yi.getBitVector());
+    }
+
+
+    @Override
     public PlainZ2Vector[] xor(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) {
         assert xiArray.length == yiArray.length
             : String.format("xiArray.length (%s) must be equal to yiArray.length (%s)", xiArray.length, yiArray.length);
@@ -210,6 +216,11 @@ public class PlainZ2cParty implements MpcZ2cParty {
     @Override
     public PlainZ2Vector not(MpcZ2Vector xi) {
         return xor(xi, PlainZ2Vector.createOnes(xi.bitNum()));
+    }
+
+    @Override
+    public void noti(MpcZ2Vector xi) {
+        xi.getBitVector().noti();
     }
 
     @Override

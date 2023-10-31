@@ -4,19 +4,16 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.PlainZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,16 +21,47 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * Bitonic Sorter for permutation generation
+ * Only support dim=1 input currently.
+ * Bitonic Sorter. Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
+ * since its control flow is independent of the input.
+ * <p>
+ * The scheme comes from the following paper:
+ *
+ * <p>
+ * Kenneth E. Batcher. 1968. Sorting Networks and Their Applications. In American Federation of Information Processing
+ * Societies: AFIPS, Vol. 32. Thomson Book Company, Washington D.C., 307–314.
+ * </p>
+ *
+ * @author Feng Han
+ * @date 2023/10/30
+ */
 public class PermutableBitonicSorter extends AbstractPermutationSorter {
     private static final Logger LOGGER = LoggerFactory.getLogger(PermutableBitonicSorter.class);
-
+    /**
+     * input of sorter
+     */
     private MpcZ2Vector[] xiArray;
+    /**
+     * associated payload
+     */
     private MpcZ2Vector[] payloadArrays;
+    /**
+     * true for ascending order, false for descending order
+     */
     private MpcZ2Vector dir;
-
+    /**
+     * compare mask, representing the default order that → ← → ← ...
+     */
     private byte[][] compareMask;
-
+    /**
+     * timer
+     */
     private StopWatch stopWatch;
+    /**
+     * time for bit cut and compare
+     */
     private long getBitTime, compareTime;
 
 
@@ -133,7 +161,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         for (int i = 0; i <= level; i++) {
             dealOneIter(level, i);
         }
-//        long[] data = transport(this.xiArray);
+//        long[] data = PSorterUtils.transport(this.xiArray);
 //        LOGGER.info("level - {}, res:{}", level, Arrays.toString(data));
     }
 
@@ -171,7 +199,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
 
         // 先比较得到是否需要交换顺序的flag，如果=0，则不用换顺序，如果=1，则换顺序
         stopWatch.start();
-        MpcZ2Vector compFlag = party.xor(party.not(circuit.leq(upperX, belowX)), compareMaskVec);
+        MpcZ2Vector compFlag = party.xor(party.not(circuit.leqParallel(upperX, belowX)), compareMaskVec);
         stopWatch.stop();
         compareTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -179,9 +207,9 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         MpcZ2Vector[] flags = IntStream.range(0, xiArray.length).mapToObj(i -> compFlag).toArray(MpcZ2Vector[]::new);
         MpcZ2Vector[] switchX = party.and(flags, party.xor(upperX, belowX));
 
-//        LOGGER.info("before skipLen - {}, res:{}", skipLen, Arrays.toString(transport(xiArray)));
-//        LOGGER.info("upperX:{}", Arrays.toString(transport(upperX)));
-//        LOGGER.info("belowX:{}", Arrays.toString(transport(belowX)));
+//        LOGGER.info("before skipLen - {}, res:{}", skipLen, Arrays.toString(PSorterUtils.transport(xiArray)));
+//        LOGGER.info("upperX:{}", Arrays.toString(PSorterUtils.transport(upperX)));
+//        LOGGER.info("belowX:{}", Arrays.toString(PSorterUtils.transport(belowX)));
 //        LOGGER.info("compareMaskVec:{}", compareMaskVec.getBitVector().toString());
 //        LOGGER.info("compFlag:{}", compFlag.getBitVector().toString());
 
@@ -221,11 +249,5 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
 
             payloadArrays = party.xor(extendSwitchPayload, payloadArrays);
         }
-    }
-
-    public static long[] transport(MpcZ2Vector[] data) {
-        BitVector[] permutationVec = Arrays.stream(data).map(MpcZ2Vector::getBitVector).toArray(BitVector[]::new);
-        BigInteger[] permutationVecTrans = ZlDatabase.create(EnvType.STANDARD, false, permutationVec).getBigIntegerData();
-        return Arrays.stream(permutationVecTrans).mapToLong(BigInteger::longValue).toArray();
     }
 }

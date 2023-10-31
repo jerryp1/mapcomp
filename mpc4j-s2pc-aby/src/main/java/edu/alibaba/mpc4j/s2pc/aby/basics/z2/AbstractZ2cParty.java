@@ -112,6 +112,11 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
     }
 
     @Override
+    public void noti(MpcZ2Vector xi) throws MpcAbortException {
+        xori(xi, createOnes(xi.getNum()));
+    }
+
+    @Override
     public SquareZ2Vector[] and(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         return operate(DyadicBcOperator.AND, xiArray, yiArray);
     }

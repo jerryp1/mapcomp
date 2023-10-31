@@ -202,6 +202,15 @@ public class Rrg21Z2cSender extends AbstractZ2cParty {
     }
 
     @Override
+    public void xori(MpcZ2Vector x0, MpcZ2Vector y0) {
+        SquareZ2Vector x0SquareVector = (SquareZ2Vector) x0;
+        SquareZ2Vector y0SquareVector = (SquareZ2Vector) y0;
+        assert (!x0.isPlain()) || y0.isPlain();
+        setDyadicOperatorInput(x0SquareVector, y0SquareVector);
+        x0.getBitVector().xori(y0.getBitVector());
+    }
+
+    @Override
     public SquareZ2Vector and(MpcZ2Vector x0, MpcZ2Vector y0) throws MpcAbortException {
         SquareZ2Vector x0SquareVector = (SquareZ2Vector) x0;
         SquareZ2Vector y0SquareVector = (SquareZ2Vector) y0;

@@ -186,11 +186,17 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         checkInputs(xiArray, yiArray);
         int rowLength = xiArray.length;
         // 两个数先计算 x^(x&Y)，得到每一位的 x<y
-        MpcZ2Vector[] andResult = party.and(xiArray, yiArray);
-        MpcZ2Vector[] bitResult = party.xor(yiArray, andResult);
+        MpcZ2Vector[] bitResult = party.and(xiArray, yiArray);
+//        bitResult = party.xor(bitResult, yiArray);
+        for(int i = 0; i < bitResult.length; i++){
+            party.xori(bitResult[i], yiArray[i]);
+        }
         // 还要记录下两个bit是否相同，即 !(x^y)
         MpcZ2Vector[] xorResult = party.xor(xiArray, yiArray);
-        xorResult = party.not(xorResult);
+//        xorResult = party.not(xorResult);
+        for(int i = 0; i < bitResult.length; i++){
+            party.noti(xorResult[i]);
+        }
 
         int[][] number = parallelNumberGen(rowLength);
         // 进行 log(K) 轮的乘法, 乘法数量为 2n
@@ -215,7 +221,8 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
             }
             MpcZ2Vector[] tmpAnd = party.and(leftInput, rightInput);
             for (int i = 0; i < halfLen; i++) {
-                bitResult[oneInt[2 * i + start]] = party.xor(tmpAnd[i], bitResult[oneInt[2 * i + start]]);
+//                bitResult[oneInt[2 * i + start]] = party.xor(bitResult[oneInt[2 * i + start]], tmpAnd[i]);
+                party.xori(bitResult[oneInt[2 * i + start]], tmpAnd[i]);
                 if (i < halfLen - 1) {
                     xorResult[oneInt[2 * i + start]] = tmpAnd[i + halfLen];
                 }

@@ -204,6 +204,19 @@ public class Rrg21Z2cReceiver extends AbstractZ2cParty {
     }
 
     @Override
+    public void xori(MpcZ2Vector x1, MpcZ2Vector y1) {
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
+        // when y1 is secret, x1 cannot be plain
+        assert (!x1.isPlain()) || y1.isPlain();
+        setDyadicOperatorInput(x1SquareVector, y1SquareVector);
+        // if not the case that x is secret while y is plain, xor two values
+        if(x1.isPlain() || (!y1.isPlain())){
+            x1.getBitVector().xori(y1.getBitVector());
+        }
+    }
+
+    @Override
     public SquareZ2Vector and(MpcZ2Vector x1, MpcZ2Vector y1) throws MpcAbortException {
         SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
         SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
