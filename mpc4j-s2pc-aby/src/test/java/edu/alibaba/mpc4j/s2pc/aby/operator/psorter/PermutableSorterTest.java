@@ -188,7 +188,7 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
         BigInteger[] tureOrder = IntStream.range(0, num).mapToObj(j -> tuples[j].getValue()).toArray(BigInteger[]::new);
         BigInteger[] reverseTureOrder = new BigInteger[num];
         for (int j = 0; j < num; j++) {
-            reverseTureOrder[tureOrder[j].intValue()] = BigInteger.valueOf(j).add(BigInteger.ONE);
+            reverseTureOrder[tureOrder[j].intValue()] = BigInteger.valueOf(j);
         }
         // verify
         for (int j = 0; j < num; j++) {

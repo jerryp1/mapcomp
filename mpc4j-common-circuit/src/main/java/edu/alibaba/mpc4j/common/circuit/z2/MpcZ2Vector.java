@@ -48,8 +48,30 @@ public interface MpcZ2Vector extends MpcVector {
         return result;
     }
 
+    /**
+     * extend the bits of specific positions with fixed skip length from the end to the front.
+     * if destBitLen % skipLen > 0, then there are 0s in the first group.
+     * For example, given data = abc, skipLen = 2 and destBitLen = 5
+     * the return vectors are [abcbc]
+     * given data = abcde, skipLen = 4 and totalBitNum = 13
+     * the return vectors are [a000a,bcdebcde]
+     *
+     * @param destBitLen the bit length of target value
+     * @param skipLen the skip length in extending
+     */
     MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen);
-    MpcZ2Vector[] getBitsWithSkip(int totalCompareNum, int skipLen);
+
+    /**
+     * get the bits of specific positions with fixed skip length from the end to the front.
+     * For example, given data = abcdefg, skipLen = 2 and totalBitNum = 3
+     * the return vectors are [ade, cfg]
+     * given data = a,bcdefghi, skipLen = 1 and totalBitNum = 4
+     * the return vectors are [bdfh, cegi]
+     *
+     * @param totalBitNum how many bits need to take out
+     * @param skipLen the fixed skip length
+     */
+    MpcZ2Vector[] getBitsWithSkip(int totalBitNum, int skipLen);
 
     /**
      * set the values of specific continuous positions.

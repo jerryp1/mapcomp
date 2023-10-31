@@ -127,6 +127,8 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         stopWatch.start();
         SquareZlVector[] indexes = computeIndex(signs);
         SquareZlVector res = zlcParty.add(indexes[0], zlMuxParty.mux(xi, zlcParty.sub(indexes[1], indexes[0])));
+        SquareZlVector plainOne = SquareZlVector.createOnes(zl, res.getNum());
+        res = zlcParty.sub(res, plainOne);
         stopWatch.stop();
         long perTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -219,6 +221,7 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         for (int i = 1; i < mulRes.length; i++) {
             mulRes[0] = zlcParty.add(mulRes[0], mulRes[i]);
         }
-        return mulRes[0];
+        SquareZlVector plainOne = SquareZlVector.createOnes(zl, a[0].getNum());
+        return zlcParty.sub(mulRes[0], plainOne);
     }
 }

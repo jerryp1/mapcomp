@@ -34,7 +34,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
     private byte[][] compareMask;
 
     private StopWatch stopWatch;
-    private long getBitTime, compareTime, andTime, xorTime;
+    private long getBitTime, compareTime;
 
 
     public PermutableBitonicSorter(Z2IntegerCircuit circuit) {
@@ -55,8 +55,6 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
     public MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation) throws MpcAbortException {
         getBitTime = 0;
         compareTime = 0;
-        andTime = 0;
-        xorTime = 0;
         stopWatch = new StopWatch();
 
         assert xiArrays != null;
@@ -74,29 +72,21 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         yls = payloadArrays == null ? null : Arrays.stream(payloadArrays).mapToInt(payloadArray -> payloadArray.length).toArray();
         this.needPermutation = needPermutation;
         this.dir = dir;
-        // 得到了compare mask，是每个大level的mask，但大level中每个小循环中实际参与比较的数量可能不一致，所以后续执行的过程中要根据实际比较的数量进行截断
-        // 此外，如果发现比较的组数为奇数的时候，说明
         initMask();
 
         MathPreconditions.checkEqual("xiArrays.length", "1", xiArrays.length, 1);
         assert dir.getBitVector().get(0);
         this.xiArray = xiArrays[0];
-//        getInputInOrder(xiArrays);
         getPayload(payloadArrays);
 
-//        compare2kPlanList = new ArrayList<>();
-//        IntStream.range(0, LongUtils.ceilLog2(sortedNum, 1)).forEach(i -> compare2kPlanList.add(new LinkedList<>()));
-//        mergeComparePlanList = new LinkedList<>();
         StopWatch s = new StopWatch();
         s.start();
         bitonicSort();
         s.stop();
 
-
-//        recoverInput(xiArrays);
         xiArrays[0] = this.xiArray;
 
-        LOGGER.info("sort time:{}, bit time:{}, compare time:{}, andTime:{}, xorTime:{}", s.getTime(TimeUnit.MILLISECONDS), getBitTime, compareTime, andTime, xorTime);
+        LOGGER.info("sort time:{}, bit time:{}, compare time:{}", s.getTime(TimeUnit.MILLISECONDS), getBitTime, compareTime);
 
         return recoverPayload(payloadArrays);
     }
@@ -143,7 +133,6 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         for (int i = 0; i <= level; i++) {
             dealOneIter(level, i);
         }
-
 //        long[] data = transport(this.xiArray);
 //        LOGGER.info("level - {}, res:{}", level, Arrays.toString(data));
     }
@@ -187,12 +176,8 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         compareTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
 
-        stopWatch.start();
         MpcZ2Vector[] flags = IntStream.range(0, xiArray.length).mapToObj(i -> compFlag).toArray(MpcZ2Vector[]::new);
         MpcZ2Vector[] switchX = party.and(flags, party.xor(upperX, belowX));
-        stopWatch.stop();
-        andTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
 
 //        LOGGER.info("before skipLen - {}, res:{}", skipLen, Arrays.toString(transport(xiArray)));
 //        LOGGER.info("upperX:{}", Arrays.toString(transport(upperX)));
@@ -207,11 +192,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         getBitTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
 
-        stopWatch.start();
         xiArray = party.xor(extendSwitchX, xiArray);
-        stopWatch.stop();
-        xorTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
 
         // 然后再处理payload
         if (payloadArrays != null) {
@@ -228,12 +209,8 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
             getBitTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
 
-            stopWatch.start();
             flags = IntStream.range(0, payloadArrays.length).mapToObj(i -> compFlag).toArray(MpcZ2Vector[]::new);
             MpcZ2Vector[] switchPayload = party.and(flags, party.xor(upperPayload, belowPayload));
-            stopWatch.stop();
-            andTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
 
             stopWatch.start();
             intStream = party.getParallel() ? IntStream.range(0, payloadArrays.length).parallel() : IntStream.range(0, payloadArrays.length);
@@ -242,11 +219,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
             getBitTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
 
-            stopWatch.start();
             payloadArrays = party.xor(extendSwitchPayload, payloadArrays);
-            stopWatch.stop();
-            xorTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
         }
     }
 

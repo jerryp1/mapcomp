@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.Multiplier;
@@ -158,6 +159,69 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         checkInputs(xiArray, yiArray);
         MpcZ2Vector[] result = sub(xiArray, yiArray);
         return result[0];
+    }
+
+    /**
+     * 根据维度得到指示运行的数组
+     * 数组的用处是对于那些需要递归执行的算法，指示每一层的参与计算的数据是第几维的
+     */
+    public static int[][] parallelNumberGen(int rowLength){
+        int[][] number = new int[LongUtils.ceilLog2(rowLength)][];
+        number[0] = IntStream.range(0, rowLength).toArray();
+        for(int i = 1; i < number.length; i++){
+            int odd = number[i-1].length & 1;
+            int halfLen = number[i-1].length >> 1;
+            number[i] = new int[odd + halfLen];
+            if(odd == 1){
+                number[i][0] = number[i-1][0];
+            }
+            for(int j = 0; j < halfLen; j++){
+                number[i][j + odd] = number[i-1][2 * j + odd];
+            }
+        }
+        return number;
+    }
+
+    public MpcZ2Vector leqParallel(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
+        checkInputs(xiArray, yiArray);
+        int rowLength = xiArray.length;
+        // 两个数先计算 x^(x&Y)，得到每一位的 x<y
+        MpcZ2Vector[] andResult = party.and(xiArray, yiArray);
+        MpcZ2Vector[] bitResult = party.xor(yiArray, andResult);
+        // 还要记录下两个bit是否相同，即 !(x^y)
+        MpcZ2Vector[] xorResult = party.xor(xiArray, yiArray);
+        xorResult = party.not(xorResult);
+
+        int[][] number = parallelNumberGen(rowLength);
+        // 进行 log(K) 轮的乘法, 乘法数量为 2n
+        if(xiArray.length == 1){
+            return bitResult[0];
+        }
+        if(number[0].length == 1){
+            return bitResult[0];
+        }
+        for (int[] oneInt : number) {
+            int start = oneInt.length & 1;
+            int halfLen = oneInt.length >> 1;
+            // EQ = l.EQ·r.EQ, Big = l.Big^(l.EQ·r.Big)
+            MpcZ2Vector[] leftInput = new MpcZ2Vector[(halfLen << 1) - 1], rightInput = new MpcZ2Vector[(halfLen << 1) - 1];
+            for (int i = 0; i < halfLen; i++) {
+                leftInput[i] = xorResult[oneInt[2 * i + start]];
+                rightInput[i] = bitResult[oneInt[2 * i + 1 + start]];
+                if (i < halfLen - 1) {
+                    leftInput[i + halfLen] = xorResult[oneInt[2 * i + start]];
+                    rightInput[i + halfLen] = xorResult[oneInt[2 * i + 1 + start]];
+                }
+            }
+            MpcZ2Vector[] tmpAnd = party.and(leftInput, rightInput);
+            for (int i = 0; i < halfLen; i++) {
+                bitResult[oneInt[2 * i + start]] = party.xor(tmpAnd[i], bitResult[oneInt[2 * i + start]]);
+                if (i < halfLen - 1) {
+                    xorResult[oneInt[2 * i + start]] = tmpAnd[i + halfLen];
+                }
+            }
+        }
+        return bitResult[0];
     }
 
     public void sort(MpcZ2Vector[][] xiArray) throws MpcAbortException {

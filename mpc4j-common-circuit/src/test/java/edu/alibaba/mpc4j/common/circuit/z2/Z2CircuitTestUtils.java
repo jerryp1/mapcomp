@@ -85,9 +85,12 @@ public class Z2CircuitTestUtils {
 
     public static void assertPsortOutput(int l, long[] longXs, long[][] longPayload, int[] index, long[] sortedX, long[][] sortedPayload) {
         assert longXs.length == sortedX.length;
-        assert longPayload.length == sortedPayload.length;
+        if(longPayload != null){
+            assert longPayload.length == sortedPayload.length;
+        }
+
         int numOfSorted = longXs.length;
-        int payloadNum = longPayload.length;
+        int payloadNum = longPayload != null ? longPayload.length : 0;
 
         assertValidPermutation(index);
         for (int i = 0; i < numOfSorted; i++) {
