@@ -87,11 +87,11 @@ public class ShuffleFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static ShuffleConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static ShuffleConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23ShuffleConfig.Builder(zl, silent).build();
+                return new Xxx23ShuffleConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -106,11 +106,11 @@ public class ShuffleFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static ShuffleConfig createDefaultUnShuffleConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static ShuffleConfig createDefaultUnShuffleConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bShuffleConfig.Builder(zl, silent).build();
+                return new Xxx23bShuffleConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

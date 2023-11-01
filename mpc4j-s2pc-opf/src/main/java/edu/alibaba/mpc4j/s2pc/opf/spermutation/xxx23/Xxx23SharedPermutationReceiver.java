@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.AbstractSharedPermutationParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationPtoDesc.PtoStep;
 
@@ -46,13 +47,13 @@ public class Xxx23SharedPermutationReceiver extends AbstractSharedPermutationPar
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum);
+    public void init(int maxNum) throws MpcAbortException {
+        setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        shuffleReceiver.init(maxL, maxNum);
-        unShuffleReceiver.init(maxL, maxNum);
+        shuffleReceiver.init(maxNum);
+        unShuffleReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -67,7 +68,7 @@ public class Xxx23SharedPermutationReceiver extends AbstractSharedPermutationPar
         logPhaseInfo(PtoState.PTO_BEGIN);
         // shuffle
         stopWatch.start();
-        int[] randomPerms = genRandomPerm(num);
+        int[] randomPerms = ShuffleUtils.generateRandomPerm(num);
         List<Vector<byte[]>> shuffledInputs = shuffleReceiver.shuffle(Collections.singletonList(perms), randomPerms);
         Vector<byte[]> shuffledPerms = shuffledInputs.get(0);
         stopWatch.stop();

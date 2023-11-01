@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -250,5 +251,10 @@ public class CombinedBitVector implements BitVector {
     @Override
     public void setValues(int startByteIndex, byte[] data) {
         innerBitVector.setValues(startByteIndex, data);
+    }
+
+    @Override
+    public void extendLength(int targetBitLength) {
+        innerBitVector.extendLength(targetBitLength);
     }
 }

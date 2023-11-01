@@ -40,7 +40,7 @@ public class OsnTest extends AbstractTwoPartyPtoTest {
     /**
      * 统计字节长度
      */
-    private static final int STATS_BYTE_LENGTH = CommonConstants.STATS_BYTE_LENGTH;
+    private static final int SMALL_BYTE_LENGTH = 1;
     /**
      * 默认字节长度
      */
@@ -97,8 +97,8 @@ public class OsnTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
-    public void testStatsByteLength() {
-        testPto(DEFAULT_N, STATS_BYTE_LENGTH, false);
+    public void testSmallByteLength() {
+        testPto(DEFAULT_N, SMALL_BYTE_LENGTH, false);
     }
 
     @Test
@@ -114,6 +114,12 @@ public class OsnTest extends AbstractTwoPartyPtoTest {
     @Test
     public void testParallelDefault() {
         testPto(DEFAULT_N, DEFAULT_BYTE_LENGTH, true);
+    }
+
+
+    @Test
+    public void testSmallByteLengthLargeSize() {
+        testPto(LARGE_N, SMALL_BYTE_LENGTH, false);
     }
 
     @Test

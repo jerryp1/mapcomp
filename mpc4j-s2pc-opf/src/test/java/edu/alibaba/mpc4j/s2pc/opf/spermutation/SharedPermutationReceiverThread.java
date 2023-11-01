@@ -28,20 +28,15 @@ class SharedPermutationReceiverThread extends Thread {
      */
     private final int num;
     /**
-     * l
-     */
-    private final int l;
-    /**
      * z1
      */
     private Vector<byte[]> z1;
 
-    SharedPermutationReceiverThread(SharedPermutationParty receiver, Vector<byte[]> perms1, Vector<byte[]> x1, int l) {
+    SharedPermutationReceiverThread(SharedPermutationParty receiver, Vector<byte[]> perms1, Vector<byte[]> x1) {
         this.receiver = receiver;
         this.perms1 = perms1;
         this.num = perms1.size();
         this.x1 = x1;
-        this.l = l;
     }
 
     Vector<byte[]> getZ1() {
@@ -51,7 +46,7 @@ class SharedPermutationReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(l, num);
+            receiver.init(num);
             z1 = receiver.permute(perms1, x1);
         } catch (MpcAbortException e) {
             e.printStackTrace();

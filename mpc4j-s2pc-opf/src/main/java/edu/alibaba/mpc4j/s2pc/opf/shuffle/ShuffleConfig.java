@@ -19,13 +19,6 @@ public interface ShuffleConfig extends MultiPartyPtoConfig {
     ShuffleTypes getPtoType();
 
     /**
-     * Get the zl of plaintext.
-     *
-     * @return the zl.
-     */
-    Zl getZl();
-
-    /**
      * Whether the shuffle is reversed (un-shuffle).
      *
      * @return whether the shuffle is reversed (un-shuffle)

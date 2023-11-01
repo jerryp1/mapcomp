@@ -314,4 +314,10 @@ public class BigIntegerBitVector implements BitVector {
         BigInteger tmp = bigInteger.shiftRight(shiftBitNum).and(andNum).xor(BigIntegerUtils.byteArrayToNonNegBigInteger(data));
         bigInteger = bigInteger.xor(tmp.shiftLeft(shiftBitNum));
     }
+
+    @Override
+    public void extendLength(int targetBitLength){
+        assert bitNum <= targetBitLength;
+        bitNum = targetBitLength;
+    }
 }

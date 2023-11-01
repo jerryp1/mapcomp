@@ -341,9 +341,23 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
-    public void setValues(int startByteIndex, byte[] data){
+    public void setValues(int startByteIndex, byte[] data) {
         assert startByteIndex >= 0 && data != null;
         MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
         System.arraycopy(data, 0, bytes, startByteIndex, data.length);
+    }
+
+    @Override
+    public void extendLength(int targetBitLength) {
+        assert bitNum <= targetBitLength;
+        int targetByteLength = CommonUtils.getByteLength(targetBitLength);
+        if (byteNum < targetByteLength) {
+            byte[] res = new byte[targetByteLength];
+            System.arraycopy(bytes, 0, res, targetByteLength - byteNum, byteNum);
+            bytes = res;
+            byteNum = targetByteLength;
+        }
+        bitNum = targetBitLength;
+        offset = (targetByteLength << 3) - targetBitLength;
     }
 }

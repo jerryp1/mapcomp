@@ -19,25 +19,15 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
      * Osn config.
      */
     private final OsnConfig osnConfig;
-    /**
-     * Zl instance.
-     */
-    private final Zl zl;
 
     private Xxx23ShuffleConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig);
         this.osnConfig = builder.osnConfig;
-        this.zl = builder.zl;
     }
 
     @Override
     public ShuffleTypes getPtoType() {
         return ShuffleTypes.XXX23;
-    }
-
-    @Override
-    public Zl getZl() {
-        return zl;
     }
 
     @Override
@@ -54,13 +44,8 @@ public class Xxx23ShuffleConfig extends AbstractMultiPartyPtoConfig implements S
          * Osn config.
          */
         private final OsnConfig osnConfig;
-        /**
-         * Zl instance of plaintext.
-         */
-        private final Zl zl;
 
-        public Builder(Zl zl, boolean silent) {
-            this.zl = zl;
+        public Builder(boolean silent) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 

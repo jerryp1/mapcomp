@@ -11,21 +11,25 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterParty;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.AbstractPmapServer;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.*;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
@@ -34,7 +38,8 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
     private PlpsiClient<T> plpsiClient;
     private OsnReceiver osnReceiver;
     private PermutableSorterParty permutableSorterSender;
-
+    private Z2cParty z2cSender;
+    private ShuffleParty shuffleSender;
 
     private int[] osnMap;
 
@@ -48,6 +53,8 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         permutableSorterSender = PermutableSorterFactory.createSender(serverRpc, clientParty, config.getPermutableSorterConfig());
 
+        z2cSender = Z2cFactory.createSender(serverRpc, clientParty, config.getZ2cConfig());
+        shuffleSender = ShuffleFactory.createSender(serverRpc, clientParty, config.getShuffleConfig());
     }
 
     @Override
@@ -61,7 +68,7 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         osnReceiver.init(maxServerElementSize);
         MathPreconditions.checkGreaterOrEqual("bitLen", bitLen, LongUtils.ceilLog2(maxServerElementSize));
-        permutableSorterSender.init(bitLen, maxServerElementSize);
+        permutableSorterSender.init(bitLen, maxServerElementSize, 3);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -101,6 +108,29 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         stopWatch.start();
         SquareZlVector sigma0 = permutableSorterSender.sort(new SquareZ2Vector[]{SquareZ2Vector.create(shareRes[0], false)});
         logStepInfo(PtoState.INIT_STEP, 4, stepSteps, PmapUtils.resetAndGetTime(stopWatch));
+
+        // 5. client进行本地计算，并且share给server
+        // n_x = n_y || m_y > n_x > n_y -> bitLen + 1; n_x >= m_y -> bitLen
+        int[] expectedBitLens;
+        if (plpsiServerOutput.getBeta() > serverElementSize) {
+            // n_x = n_y || m_y > n_x > n_y
+            expectedBitLens = new int[bitLen + 1];
+            Arrays.fill(expectedBitLens, plpsiServerOutput.getBeta());
+        } else {
+            expectedBitLens = new int[bitLen];
+            Arrays.fill(expectedBitLens, serverElementSize);
+            // 还需要将第二次circuit PSI的结果长度拉长
+            plpsiServerOutput.getZ1().getBitVector().extendLength(serverElementSize);
+        }
+        SquareZ2Vector[] clientIndicators = z2cSender.shareOther(expectedBitLens);
+
+        // 6. shuffle
+        SquareZ2Vector[][] shuffleRes = shuffleSender.randomShuffle(new SquareZ2Vector[][]{new SquareZ2Vector[]{plpsiServerOutput.getZ1()}, clientIndicators});
+
+        // 7. compute permutation
+        SquareZlVector sigma1 = permutableSorterSender.sort(plpsiServerOutput.getBeta() > serverElementSize
+            ? new SquareZ2Vector[]{shuffleRes[0][0], shuffleRes[1][0]}
+            : new SquareZ2Vector[]{shuffleRes[0][0]});
 
         return null;
     }

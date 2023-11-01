@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 
@@ -80,7 +79,6 @@ public abstract class AbstractOsnSender extends AbstractTwoPartyPto implements O
 
     protected void setPtoInput(Vector<byte[]> inputVector, int byteLength) throws MpcAbortException {
         checkInitialized();
-        MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
         MathPreconditions.checkLessOrEqual("n", inputVector.size(), maxN);
         this.inputVector = inputVector.stream()
