@@ -45,7 +45,7 @@ public class Xxx23PrefixMaxSender extends PrefixMaxAggregator {
         zlcParty.init(maxNum);
         zlMuxParty.init(maxNum);
         zlGreaterParty.init(maxL, maxNum);
-        shuffleParty.init(maxL, maxNum);
+        shuffleParty.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

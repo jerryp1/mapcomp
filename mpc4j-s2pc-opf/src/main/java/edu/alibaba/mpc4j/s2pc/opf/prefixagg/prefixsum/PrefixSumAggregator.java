@@ -31,7 +31,7 @@ public abstract class PrefixSumAggregator extends AbstractGroupAggregator implem
     }
 
     @Override
-    protected PrefixAggNode[] vectorOp(PrefixAggNode[] input1, PrefixAggNode[] input2) throws MpcAbortException {
+     protected PrefixAggNode[] vectorOp(PrefixAggNode[] input1, PrefixAggNode[] input2) throws MpcAbortException {
         int num = input1.length;
         // 两种方式。1.矩阵转置+or 2.b2a再相减，后使用加法器/millioare取最高位。这里使用第一种方法
         byte[][] groupIn1 = Arrays.stream(input1).map(PrefixAggNode::getGroupShare).toArray(byte[][]::new);

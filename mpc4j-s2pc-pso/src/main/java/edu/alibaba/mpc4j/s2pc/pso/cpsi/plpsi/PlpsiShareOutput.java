@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * circuit PSI server output, where server encodes payload into circuit
@@ -35,7 +36,7 @@ public class PlpsiShareOutput {
         if(payloads == null || payloads.length == 0){
             payloadList = null;
         }else{
-            payloadList = Arrays.stream(payloads).toList();
+            payloadList = Arrays.stream(payloads).collect(Collectors.toList());
         }
     }
 

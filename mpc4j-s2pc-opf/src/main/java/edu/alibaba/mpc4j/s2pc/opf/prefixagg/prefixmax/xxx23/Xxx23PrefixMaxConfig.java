@@ -145,7 +145,7 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlGreaterConfig = ZlGreaterFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
-            shuffleConfig = ShuffleFactory.createDefaultUnShuffleConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            shuffleConfig = ShuffleFactory.createDefaultUnShuffleConfig(SecurityModel.SEMI_HONEST, silent);
             prefixTreeType = PrefixTreeTypes.BRENT_KUNG;
             needShuffle = false;
             this.zl = zl;

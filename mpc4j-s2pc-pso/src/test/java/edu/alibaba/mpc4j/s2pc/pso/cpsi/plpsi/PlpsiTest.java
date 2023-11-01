@@ -158,8 +158,8 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
             // generate the inputs
             ArrayList<Set<ByteBuffer>> sets = PsoUtils.generateBytesSets(serverSetSize, clientSetSize, ELEMENT_BYTE_LENGTH);
             List<List<ByteBuffer>> payloads = generatePayload(serverSetSize);
-            List<ByteBuffer> serverElementList = sets.get(0).stream().toList();
-            List<ByteBuffer> clientElementList = sets.get(1).stream().toList();
+            List<ByteBuffer> serverElementList = new ArrayList<>(sets.get(0));
+            List<ByteBuffer> clientElementList = new ArrayList<>(sets.get(1));
             PlpsiServerThread serverThread = new PlpsiServerThread(server, serverElementList, clientSetSize, payloads, PAYLOAD_BIT_LENS, IS_BINARY);
             PlpsiClientThread clientThread = new PlpsiClientThread(client, clientElementList, serverSetSize, PAYLOAD_BIT_LENS, IS_BINARY);
             StopWatch stopWatch = new StopWatch();
