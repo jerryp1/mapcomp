@@ -86,11 +86,11 @@ public class SharedPermutationFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static SharedPermutationConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static SharedPermutationConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bSharedPermutationConfig.Builder(zl, silent).build();
+                return new Xxx23bSharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -105,11 +105,11 @@ public class SharedPermutationFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static SharedPermutationConfig createDefaultReverseConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static SharedPermutationConfig createDefaultReverseConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23SharedPermutationConfig.Builder(zl, silent).build();
+                return new Xxx23SharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

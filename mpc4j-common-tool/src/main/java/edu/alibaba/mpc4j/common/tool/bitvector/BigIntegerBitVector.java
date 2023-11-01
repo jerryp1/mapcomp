@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
@@ -302,5 +303,21 @@ public class BigIntegerBitVector implements BitVector {
             bitVectorString.insert(0, "0");
         }
         return bitVectorString.toString();
+    }
+
+    @Override
+    public void setValues(int startByteIndex, byte[] data) {
+        assert startByteIndex >= 0 && data != null;
+        MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
+        int shiftBitNum = bitNum - ((startByteIndex + data.length) << 3);
+        BigInteger andNum = BigInteger.ONE.shiftLeft(data.length<<3).subtract(BigInteger.ONE);
+        BigInteger tmp = bigInteger.shiftRight(shiftBitNum).and(andNum).xor(BigIntegerUtils.byteArrayToNonNegBigInteger(data));
+        bigInteger = bigInteger.xor(tmp.shiftLeft(shiftBitNum));
+    }
+
+    @Override
+    public void extendLength(int targetBitLength){
+        assert bitNum <= targetBitLength;
+        bitNum = targetBitLength;
     }
 }

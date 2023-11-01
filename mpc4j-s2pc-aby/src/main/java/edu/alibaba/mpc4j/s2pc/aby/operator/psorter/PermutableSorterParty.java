@@ -17,9 +17,10 @@ public interface PermutableSorterParty extends TwoPartyPto {
      *
      * @param maxL   max l.
      * @param maxNum max num.
+     * @param maxBitNum max input bit number
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxL, int maxNum) throws MpcAbortException;
+    void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.

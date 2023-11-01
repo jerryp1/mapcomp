@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.AbstractSharedPermutationParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationPtoDesc.PtoStep;
 
@@ -41,12 +42,12 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum);
+    public void init(int maxNum) throws MpcAbortException {
+        setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        shuffleReceiver.init(maxL, maxNum);
+        shuffleReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -61,7 +62,7 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
         logPhaseInfo(PtoState.PTO_BEGIN);
         // shuffle
         stopWatch.start();
-        int[] randomPerms = genRandomPerm(num);
+        int[] randomPerms = ShuffleUtils.generateRandomPerm(num);
         List<Vector<byte[]>> shuffledInputs = shuffleReceiver.shuffle(Arrays.asList(perms, x), randomPerms);
         Vector<byte[]> shuffledPerms = shuffledInputs.get(0);
         Vector<byte[]> shuffledX = shuffledInputs.get(1);
@@ -87,7 +88,7 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
         rpc.send(DataPacket.fromByteArrayList(revealHeader1, new ArrayList<>(shuffledPerms)));
 
         // reverse permutation
-        int[] reversedPlainPerms = reversePermutation(plainPerms);
+        int[] reversedPlainPerms = ShuffleUtils.reversePermutation(plainPerms);
         // apply permutation
         Vector<byte[]> permutedX = BenesNetworkUtils.permutation(reversedPlainPerms, shuffledX);
         stopWatch.stop();

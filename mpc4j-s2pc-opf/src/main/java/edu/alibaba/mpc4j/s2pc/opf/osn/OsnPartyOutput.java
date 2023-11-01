@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.opf.osn;
 
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 
 import java.util.Vector;
@@ -23,7 +22,6 @@ public class OsnPartyOutput {
     private final int shareByteLength;
 
     public OsnPartyOutput(int shareByteLength, Vector<byte[]> shareVector) {
-        assert shareByteLength >= CommonConstants.STATS_BYTE_LENGTH;
         this.shareByteLength = shareByteLength;
         assert shareVector.size() > 1;
         this.shareVector = shareVector.stream()

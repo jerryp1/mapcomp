@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -44,14 +45,6 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
      */
     private static final int LARGE_NUM = 1 << 14;
     /**
-     * default Zl
-     */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
-    /**
-     * default Zl
-     */
-    private static final Zl LARGE_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
-    /**
      * default number of input vectors
      */
     private static final int DEFAULT_LENGTH = 10;
@@ -60,24 +53,24 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 default zl
+        // Xxx23 large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(DEFAULT_ZL, true).build()
+            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(false).build()
         });
 
         // Xxx23 large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(LARGE_ZL, true).build()
-        });
-
-        // Xxx23b default zl
-        configurations.add(new Object[]{
-            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(DEFAULT_ZL, true).build()
+            ShuffleTypes.XXX23.name() + "_silent", new Xxx23ShuffleConfig.Builder(true).build()
         });
 
         // Xxx23b large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(LARGE_ZL, true).build()
+            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(false).build()
+        });
+
+        // Xxx23b large zl
+        configurations.add(new Object[]{
+            ShuffleTypes.XXX23b.name() + "_silent", new Xxx23bShuffleConfig.Builder(true).build()
         });
         return configurations;
     }
@@ -138,19 +131,22 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int num, boolean parallel) {
-        Zl zl = config.getZl();
+        SecureRandom secureRandom = new SecureRandom();
+        Zl[] zl = new Zl[DEFAULT_LENGTH];
         // generate input
         List<int[]> inputs = new ArrayList<>();
         List<Vector<byte[]>> shareX0 = new ArrayList<>();
         List<Vector<byte[]>> shareX1 = new ArrayList<>();
-        int[] randomPerms0 = generateRandomPerm(num);
-        int[] randomPerms1 = generateRandomPerm(num);
+        int[] randomPerms0 = ShuffleUtils.generateRandomPerm(num);
+        int[] randomPerms1 = ShuffleUtils.generateRandomPerm(num);
         for (int i = 0; i < DEFAULT_LENGTH; i++) {
-            int[] input = generateRandomPerm(num);
-            Vector<byte[]> share0 = IntStream.range(0, num).mapToObj(j -> zl.createRandom(SECURE_RANDOM))
-                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, zl.getByteL())).collect(Collectors.toCollection(Vector::new));
+            zl[i] = ZlFactory.createInstance(EnvType.STANDARD, Math.max(secureRandom.nextInt(BLOCK_BIT_LENGTH), 32));
+            Zl currentZl = zl[i];
+            int[] input = ShuffleUtils.generateRandomPerm(num);
+            Vector<byte[]> share0 = IntStream.range(0, num).mapToObj(j -> currentZl.createRandom(SECURE_RANDOM))
+                .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, currentZl.getByteL())).collect(Collectors.toCollection(Vector::new));
             Vector<byte[]> share1 = IntStream.range(0, num).mapToObj(j ->
-                BytesUtils.xor(share0.get(j), BigIntegerUtils.nonNegBigIntegerToByteArray(BigInteger.valueOf(input[j]), zl.getByteL())))
+                BytesUtils.xor(share0.get(j), BigIntegerUtils.nonNegBigIntegerToByteArray(BigInteger.valueOf(input[j]), currentZl.getByteL())))
                 .collect(Collectors.toCollection(Vector::new));
             inputs.add(input);
             shareX0.add(share0);
@@ -164,8 +160,8 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            ShuffleSenderThread senderThread = new ShuffleSenderThread(sender, shareX0, randomPerms0, zl.getL());
-            ShuffleReceiverThread receiverThread = new ShuffleReceiverThread(receiver, shareX1, randomPerms1, zl.getL());
+            ShuffleSenderThread senderThread = new ShuffleSenderThread(sender, shareX0, randomPerms0);
+            ShuffleReceiverThread receiverThread = new ShuffleReceiverThread(receiver, shareX1, randomPerms1);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -194,10 +190,10 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
                               List<Vector<byte[]>> z1, boolean isReverse) {
         int length = xs.size();
         // true composition
-        int[] perms = composePerms(perms1, perms0);
+        int[] perms = ShuffleUtils.composePerms(perms1, perms0);
         // whether current pto is doing un-shuffling
         if (isReverse) {
-            perms = reversePermutation(perms);
+            perms = ShuffleUtils.reversePermutation(perms);
         }
         for (int i = 0; i < length; i++) {
             Vector<byte[]> z0i = z0.get(i);
@@ -210,48 +206,5 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
                 .stream().mapToInt(j -> j).toArray();
             IntStream.range(0, num).forEach(j -> Assert.assertEquals(z[j], x[j]));
         }
-    }
-
-    /**
-     * Generate random permutations.
-     *
-     * @param num the number of elements to be permuted.
-     * @return random permutations.
-     */
-    private int[] generateRandomPerm(int num) {
-        List<Integer> randomPermList = IntStream.range(0, num)
-            .boxed()
-            .collect(Collectors.toList());
-        Collections.shuffle(randomPermList, SECURE_RANDOM);
-        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
-    }
-
-    /**
-     * Compose two permutation.
-     *
-     * @param perms0 the permutation to be applied first.
-     * @param perms1 the permutation to be applied subsequently.
-     * @return composed permutation.
-     */
-    private int[] composePerms(int[] perms0, int[] perms1) {
-        int[] resultPerms = new int[perms0.length];
-        for (int i = 0; i < perms0.length; i++) {
-            resultPerms[i] = perms0[perms1[i]];
-        }
-        return resultPerms;
-    }
-
-    /**
-     * Reverse the permutation.
-     *
-     * @param perm permutation.
-     * @return reversed permutation.
-     */
-    protected int[] reversePermutation(int[] perm) {
-        int[] result = new int[perm.length];
-        for (int i = 0; i < perm.length; i++) {
-            result[perm[i]] = i;
-        }
-        return result;
     }
 }

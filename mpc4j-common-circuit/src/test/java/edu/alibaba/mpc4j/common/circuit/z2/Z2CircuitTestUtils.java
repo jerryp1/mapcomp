@@ -1,6 +1,9 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import org.junit.Assert;
 
 import java.util.Arrays;
@@ -77,6 +80,36 @@ public class Z2CircuitTestUtils {
                 long actual = longZs[j][i] & andMod;
                 Assert.assertEquals(expected[j].longValue(), actual);
             }
+        }
+    }
+
+    public static void assertPsortOutput(int l, long[] longXs, long[][] longPayload, int[] index, long[] sortedX, long[][] sortedPayload) {
+        assert longXs.length == sortedX.length;
+        if(longPayload != null){
+            assert longPayload.length == sortedPayload.length;
+        }
+
+        int numOfSorted = longXs.length;
+        int payloadNum = longPayload != null ? longPayload.length : 0;
+
+        assertValidPermutation(index);
+        for (int i = 0; i < numOfSorted; i++) {
+            Assert.assertEquals(longXs[index[i]], sortedX[i]);
+            for (int j = 0; j < payloadNum; j++) {
+                Assert.assertEquals(longPayload[j][index[i]], sortedPayload[j][i]);
+            }
+            if (i > 0) {
+                MathPreconditions.checkGreaterOrEqual("sortedX[i] >= sortedX[i-1]", sortedX[i], sortedX[i - 1]);
+            }
+        }
+    }
+
+    public static void assertValidPermutation(int[] index){
+        TIntSet set = new TIntHashSet();
+        for(int x : index){
+            assert x >= 0 && x < index.length;
+            assert !set.contains(x);
+            set.add(x);
         }
     }
 }

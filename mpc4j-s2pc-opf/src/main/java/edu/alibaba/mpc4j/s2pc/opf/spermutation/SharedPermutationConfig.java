@@ -19,13 +19,6 @@ public interface SharedPermutationConfig extends MultiPartyPtoConfig {
     SharedPermutationTypes getPtoType();
 
     /**
-     * Get the zl of plaintext.
-     *
-     * @return the zl.
-     */
-    Zl getZl();
-
-    /**
      * Get the indicator of whether the permutation is reversed.
      *
      * @return the indicator of whether the permutation is reversed.

@@ -28,15 +28,20 @@ class PermutableSorterReceiverThread extends Thread {
      */
     private final int l;
     /**
+     * l
+     */
+    private final int k;
+    /**
      * z1
      */
     private SquareZlVector z1;
 
-    PermutableSorterReceiverThread(PermutableSorterParty receiver, SquareZ2Vector[] x1, int l) {
+    PermutableSorterReceiverThread(PermutableSorterParty receiver, SquareZ2Vector[] x1, int l, int k) {
         this.receiver = receiver;
         this.x1 = x1;
         num = x1[0].getNum();
         this.l = l;
+        this.k = k;
     }
 
     SquareZlVector getZ1() {
@@ -46,7 +51,7 @@ class PermutableSorterReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(l, num);
+            receiver.init(l, num, k);
             z1 = receiver.sort(x1);
         } catch (MpcAbortException e) {
             e.printStackTrace();

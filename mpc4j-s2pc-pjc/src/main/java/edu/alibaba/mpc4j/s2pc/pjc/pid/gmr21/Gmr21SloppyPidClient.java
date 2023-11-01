@@ -252,7 +252,7 @@ public class Gmr21SloppyPidClient<T> extends AbstractPidParty<T> {
     }
 
     private void initVariable() throws MpcAbortException {
-        pidByteLength = PidUtils.getPidByteLength(otherElementSetSize, otherElementSetSize);
+        pidByteLength = PidUtils.getPidByteLength(ownElementSetSize, otherElementSetSize);
         pidMap = HashFactory.createInstance(envType, pidByteLength);
         clientPidPrf = PrfFactory.createInstance(envType, pidByteLength);
         clientPidPrf.setKey(clientPidPrfKey);

@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcpsiNativeUtils
  * Method:    genEncryptionParameters
- * Signature: (IJ)[B
+ * Signature: (IJ[I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcpsiNativeUtils_genEncryptionParameters
-  (JNIEnv *, jclass, jint, jlong);
+  (JNIEnv *, jclass, jint, jlong, jintArray);
 
 /*
  * Class:     edu_alibaba_mpc4j_s2pc_upso_ucpsi_sj23_peqt_Sj23PeqtUcpsiNativeUtils

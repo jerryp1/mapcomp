@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -202,6 +204,19 @@ public class Rrg21Z2cReceiver extends AbstractZ2cParty {
     }
 
     @Override
+    public void xori(MpcZ2Vector x1, MpcZ2Vector y1) {
+        SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
+        SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
+        // when y1 is secret, x1 cannot be plain
+        assert (!x1.isPlain()) || y1.isPlain();
+        setDyadicOperatorInput(x1SquareVector, y1SquareVector);
+        // if not the case that x is secret while y is plain, xor two values
+        if(x1.isPlain() || (!y1.isPlain())){
+            x1.getBitVector().xori(y1.getBitVector());
+        }
+    }
+
+    @Override
     public SquareZ2Vector and(MpcZ2Vector x1, MpcZ2Vector y1) throws MpcAbortException {
         SquareZ2Vector x1SquareVector = (SquareZ2Vector) x1;
         SquareZ2Vector y1SquareVector = (SquareZ2Vector) y1;
@@ -319,5 +334,15 @@ public class Rrg21Z2cReceiver extends AbstractZ2cParty {
         z1Vector.xori(s1Vector);
 
         return SquareZ2Vector.create(z1Vector, false);
+    }
+
+    @Override
+    public SquareZ2Vector[] setPublicValues(BitVector[] data) {
+        assert data != null && data.length > 0;
+        int bitNum = data[0].bitNum();
+        return Arrays.stream(data).map(x -> {
+            MathPreconditions.checkEqual("data[i].bitNum()", "data[0].bitNum()", x.bitNum(), bitNum);
+            return SquareZ2Vector.create(BitVectorFactory.createZeros(bitNum), false);
+        }).toArray(SquareZ2Vector[]::new);
     }
 }

@@ -48,7 +48,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
     /**
      * single index PIR client
      */
-    private final SingleIndexPirClient indexPirClient;
+    private final SingleIndexPirClient client;
     /**
      * bin num
      */
@@ -56,7 +56,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
 
     public CuckooHashBatchIndexPirClient(Rpc clientRpc, Party serverParty, CuckooHashBatchIndexPirConfig config) {
         super(CuckooHashBatchIndexPirPtoDesc.getInstance(), clientRpc, serverParty, config);
-        indexPirClient = SingleIndexPirFactory.createClient(clientRpc, serverParty, config.getSingleIndexPirConfig());
+        client = SingleIndexPirFactory.createClient(clientRpc, serverParty, config.getSingleIndexPirConfig());
         cuckooHashBinType = config.getCuckooHashBinType();
     }
 
@@ -86,9 +86,9 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
 
         stopWatch.start();
         // client init single index PIR client
-        indexPirClient.setParallel(parallel);
-        indexPirClient.setDefaultParams();
-        List<byte[]> publicKeysPayload = indexPirClient.clientSetup(maxBinSize, elementBitLength);
+        client.setParallel(parallel);
+        client.setDefaultParams();
+        List<byte[]> publicKeysPayload = client.clientSetup(maxBinSize, elementBitLength);
         DataPacketHeader clientPublicKeysHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_PUBLIC_KEYS.ordinal(), extraInfo,
             rpc.ownParty().getPartyId(), otherParty().getPartyId()
@@ -119,7 +119,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
         IntStream intStream = IntStream.range(0, binNum);
         intStream = parallel ? intStream.parallel() : intStream;
         List<byte[]> clientQueryPayload = intStream
-            .mapToObj(i -> indexPirClient.generateQuery(binIndexList.get(i)))
+            .mapToObj(i -> client.generateQuery(binIndexList.get(i)))
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         DataPacketHeader clientQueryHeader = new DataPacketHeader(
@@ -146,7 +146,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
         List<byte[]> decodedItemList = decodeStream.mapToObj(i -> {
             try {
                 if (binIndexList.get(i) != -1) {
-                    return indexPirClient.decodeResponse(
+                    return client.decodeResponse(
                         responsePayload.subList(i * binResponseSize, (i + 1) * binResponseSize), binIndexList.get(i), elementBitLength
                     );
                 } else {
@@ -218,12 +218,7 @@ public class CuckooHashBatchIndexPirClient extends AbstractBatchIndexPirClient {
         int[] totalIndex = IntStream.range(0, serverElementSize).toArray();
         IntHashBin intHashBin = new SimpleIntHashBin(envType, binNum, serverElementSize, hashKeys);
         intHashBin.insertItems(totalIndex);
-        int maxBinSize = intHashBin.binSize(0);
-        for (int i = 1; i < binNum; i++) {
-            if (intHashBin.binSize(i) > maxBinSize) {
-                maxBinSize = intHashBin.binSize(i);
-            }
-        }
+        int maxBinSize = IntStream.range(0, binNum).map(intHashBin::binSize).max().orElse(0);
         hashBin = new int[binNum][];
         for (int i = 0; i < binNum; i++) {
             hashBin[i] = new int[intHashBin.binSize(i)];

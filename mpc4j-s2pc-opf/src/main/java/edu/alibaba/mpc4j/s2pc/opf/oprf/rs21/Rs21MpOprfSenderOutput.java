@@ -77,7 +77,9 @@ public class Rs21MpOprfSenderOutput implements MpOprfSenderOutput {
         ByteBuffer inputByteBuffer = ByteBuffer.wrap(input);
         // Decode(K, y, r) - ΔH^F(y) + w
         byte[] y1 = okvs.decode(vectorK, inputByteBuffer);
-        gf2k.subi(y1, gf2k.mul(delta, hf.getBytes(input)));
+        byte[] fy = hf.getBytes(input);
+        gf2k.muli(fy, delta);
+        gf2k.subi(y1, fy);
         gf2k.addi(y1, w);
         // H(y1, y) = H(Decode(K, y, r) - ΔH^F(y) + w, y)
         byte[] y1y = ByteBuffer.allocate(CommonConstants.BLOCK_BYTE_LENGTH + input.length)

@@ -27,7 +27,7 @@ public class DistinctBloomFilter<T> extends AbstractBloomFilter<T> {
     /**
      * hash key num = 1
      */
-    static final int HASH_KEY_NUM = 1;
+    public static final int HASH_KEY_NUM = 1;
     /**
      * type
      */

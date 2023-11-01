@@ -1,7 +1,12 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+
+import java.util.Arrays;
 
 /**
  * MPC Z2 Circuit Party.
@@ -10,7 +15,12 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
  * @date 2023/4/20
  */
 public interface MpcZ2cParty {
-
+    /**
+     * get parallel setting
+     *
+     * @return status
+     */
+    boolean getParallel();
     /**
      * Creates a (plain) vector with assigned value.
      *
@@ -18,6 +28,8 @@ public interface MpcZ2cParty {
      * @return a vector.
      */
     MpcZ2Vector create(BitVector bitVector);
+
+    MpcZ2Vector create(BitVector bitVector, boolean isPlain);
 
     /**
      * Creates a (plain) all-one vector.
@@ -34,6 +46,7 @@ public interface MpcZ2cParty {
      * @return a vector.
      */
     MpcZ2Vector createZeros(int bitNum);
+    MpcZ2Vector createZeros(int bitNum, boolean isPlain);
 
     /**
      * Creates a (plain) vector with all bits equal to the assigned value.
@@ -197,6 +210,15 @@ public interface MpcZ2cParty {
     MpcZ2Vector xor(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
 
     /**
+     * XOR operation. the result stored in xi
+     *
+     * @param xi xi.
+     * @param yi yi.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    void xori(MpcZ2Vector xi, MpcZ2Vector yi) throws MpcAbortException;
+
+    /**
      * Vector XOR operation.
      *
      * @param xiArray xi array.
@@ -234,6 +256,15 @@ public interface MpcZ2cParty {
      * @throws MpcAbortException the protocol failure aborts.
      */
     MpcZ2Vector not(MpcZ2Vector xi) throws MpcAbortException;
+
+    /**
+     * NOT operation.
+     *
+     * @param xi xi.
+     * @return zi, such that z = !x.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    void noti(MpcZ2Vector xi) throws MpcAbortException;
 
     /**
      * Vector NOT operation.
@@ -292,5 +323,48 @@ public interface MpcZ2cParty {
      */
     default MpcZ2Vector[] eq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         return not(xor(xiArray, yiArray));
+    }
+
+
+    MpcZ2Vector[] setPublicValues(BitVector[] data);
+
+    /**
+     * splits the vector with padding each vector into a vec with bit length % 8 = 0
+     *
+     * @param vectors the vectors.
+     * @return the merged vector.
+     */
+    default MpcZ2Vector mergeWithPadding(MpcZ2Vector[] vectors) {
+        assert vectors.length > 0 : "merged vector length must be greater than 0";
+        boolean plain = vectors[0].isPlain();
+        int totalByteNum = Arrays.stream(vectors).mapToInt(MpcZ2Vector::byteNum).sum();
+        MpcZ2Vector mergeVector = createZeros(totalByteNum<<3, plain);
+
+        for(int i = 0, startIndex = 0; i < vectors.length; i++){
+            mergeVector.setValues(startIndex, vectors[i].getBitVector().getBytes());
+            startIndex += vectors[i].byteNum();
+        }
+        return mergeVector;
+    }
+
+    /**
+     * splits the vector, where the input vector is merged with padding
+     *
+     * @param mergeVector the merged vector.
+     * @param bitNums     bits for each of the split vector.
+     * @return the split vector.
+     */
+    default MpcZ2Vector[] splitWithPadding(MpcZ2Vector mergeVector, int[] bitNums) {
+        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
+        MathPreconditions.checkEqual("totalByteNum", "mergeVector.byteNum()", totalByteNum, mergeVector.byteNum());
+        MpcZ2Vector[] splitVectors = new MpcZ2Vector[bitNums.length];
+        byte[] mergeBytes = mergeVector.getBitVector().getBytes();
+        for (int index = 0, copyStart = 0; index < bitNums.length; index++) {
+            BitVector tmp = BitVectorFactory.create(bitNums[index],
+                Arrays.copyOfRange(mergeBytes, copyStart, copyStart + CommonUtils.getByteLength(bitNums[index])));
+            splitVectors[index] = create(tmp, mergeVector.isPlain());
+            copyStart += CommonUtils.getByteLength(bitNums[index]);
+        }
+        return splitVectors;
     }
 }

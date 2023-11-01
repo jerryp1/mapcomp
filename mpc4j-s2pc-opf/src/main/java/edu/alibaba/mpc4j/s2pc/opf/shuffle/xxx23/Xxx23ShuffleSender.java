@@ -42,8 +42,8 @@ public class Xxx23ShuffleSender extends AbstractShuffleParty {
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum);
+    public void init(int maxNum) throws MpcAbortException {
+        setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -62,10 +62,11 @@ public class Xxx23ShuffleSender extends AbstractShuffleParty {
         setPtoInput(x);
         logPhaseInfo(PtoState.PTO_BEGIN);
         // merge
+        int[] originByteLen = x.stream().mapToInt(single -> single.elementAt(0).length).toArray();
         Vector<byte[]> input = x.size() <= 1 ? x.get(0) : merge(x);
         // osn1
         stopWatch.start();
-        OsnPartyOutput osnOutput = osnSender.osn(input, byteL);
+        OsnPartyOutput osnOutput = osnSender.osn(input, input.elementAt(0).length);
         Vector<byte[]> osnOutputBytes = IntStream.range(0, num)
             .mapToObj(osnOutput::getShare).collect(Collectors.toCollection(Vector::new));
         stopWatch.stop();
@@ -74,7 +75,7 @@ public class Xxx23ShuffleSender extends AbstractShuffleParty {
         logStepInfo(PtoState.PTO_STEP, 1, 2, ptoTime);
         // osn2
         stopWatch.start();
-        OsnPartyOutput osn2Output = osnReceiver.osn(randomPerm, byteL);
+        OsnPartyOutput osn2Output = osnReceiver.osn(randomPerm, input.elementAt(0).length);
         Vector<byte[]> osn2OutputBytes = IntStream.range(0, num)
             .mapToObj(osn2Output::getShare).collect(Collectors.toCollection(Vector::new));
         // permute local share and merge
@@ -88,7 +89,7 @@ public class Xxx23ShuffleSender extends AbstractShuffleParty {
         logStepInfo(PtoState.PTO_STEP, 2, 2, ptoTime);
 
         // split
-        List<Vector<byte[]>> output = x.size() <= 1 ? Collections.singletonList(mergedX) : split(mergedX, x.size());
+        List<Vector<byte[]>> output = x.size() <= 1 ? Collections.singletonList(mergedX) : split(mergedX, originByteLen);
 
         logPhaseInfo(PtoState.PTO_END);
         return output;

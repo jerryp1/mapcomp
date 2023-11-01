@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
+import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.Gf2eDokvsFactory.Gf2eDokvsType;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ class H3SparseClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eD
     /**
      * type
      */
-    private static final Gf2eDokvsFactory.Gf2eDokvsType TYPE = Gf2eDokvsFactory.Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
+    private static final Gf2eDokvsType TYPE = Gf2eDokvsType.H3_SPARSE_CLUSTER_BLAZE_GCT;
 
     H3SparseClusterBlazeGctGf2eDokvs(EnvType envType, int n, int l, byte[][] keys) {
         this(envType, n, l, keys, new SecureRandom());
@@ -82,7 +83,7 @@ class H3SparseClusterBlazeGctGf2eDokvs<T> extends AbstractH3ClusterBlazeGctGf2eD
     }
 
     @Override
-    public Gf2eDokvsFactory.Gf2eDokvsType getType() {
+    public Gf2eDokvsType getType() {
         return TYPE;
     }
 

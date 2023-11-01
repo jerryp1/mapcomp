@@ -1,9 +1,5 @@
 package edu.alibaba.mpc4j.s2pc.upso.ucpsi.sj23.peqt;
 
-import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-
-import java.math.BigInteger;
-
 /**
  * SJ23 UCPSI params.
  *
@@ -44,6 +40,10 @@ public class Sj23PeqtUcpsiParams {
      */
     public final int polyModulusDegree;
     /**
+     * coeff modulus bits
+     */
+    public final int[] coeffModulusBits;
+    /**
      * item per ciphertext
      */
     public final int itemPerCiphertext;
@@ -61,7 +61,8 @@ public class Sj23PeqtUcpsiParams {
     public final byte[] encryptionParams;
 
     private Sj23PeqtUcpsiParams(int binNum, int maxPartitionSizePerBin, int itemEncodedSlotSize, int psLowDegree,
-                                int[] queryPowers, int plainModulusSize, long plainModulus, int polyModulusDegree) {
+                                int[] queryPowers, int plainModulusSize, long plainModulus, int polyModulusDegree,
+                                int[] coeffModulusBits) {
         this.binNum = binNum;
         this.maxPartitionSizePerBin = maxPartitionSizePerBin;
         this.itemEncodedSlotSize = itemEncodedSlotSize;
@@ -70,10 +71,13 @@ public class Sj23PeqtUcpsiParams {
         this.plainModulusSize = plainModulusSize;
         this.plainModulus = plainModulus;
         this.polyModulusDegree = polyModulusDegree;
+        this.coeffModulusBits = coeffModulusBits;
         this.itemPerCiphertext = polyModulusDegree / itemEncodedSlotSize;
         this.ciphertextNum = binNum / itemPerCiphertext;
         this.l = itemEncodedSlotSize * plainModulusSize;
-        this.encryptionParams = Sj23PeqtUcpsiNativeUtils.genEncryptionParameters(polyModulusDegree, plainModulus);
+        this.encryptionParams = Sj23PeqtUcpsiNativeUtils.genEncryptionParameters(
+            polyModulusDegree, plainModulus, coeffModulusBits
+        );
     }
 
     /**
@@ -82,7 +86,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_8 = new Sj23PeqtUcpsiParams(
         1 << 12, 228, 2,
         4, new int[]{1, 2, 3, 4, 5, 10, 15, 35, 55, 75, 95, 115, 125, 130, 140},
-        32, 8589852673L, 1 << 13
+        32, 8589852673L, 1 << 13, new int[]{50, 50, 50, 47}
     );
 
     /**
@@ -91,7 +95,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
         1 << 13, 98, 2,
         8, new int[]{1, 3, 4, 9, 27},
-        33, 17179672577L, 1 << 14
+        33, 17179672577L, 1 << 14, new int[]{50, 50, 50, 50, 46}
     );
 
     /**
@@ -100,7 +104,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_13 = new Sj23PeqtUcpsiParams(
         1 << 14, 98, 1,
         8, new int[]{1, 3, 4, 9, 27},
-        59, 1152921504606748673L, 1 << 14
+        59, 1152921504606748673L, 1 << 14, new int[]{60, 60, 60, 60, 60, 52}
     );
 
     /**
@@ -109,7 +113,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_20_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
         3 * (1 << 15), 40, 2,
         0, new int[]{1, 3, 4, 9, 11, 16, 17, 19, 20},
-        34, 34359410689L, 1 << 13
+        34, 34359410689L, 1 << 13, new int[]{50, 50, 50, 50}
     );
 
     /**
@@ -118,7 +122,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
         1 << 13, 1304, 2,
         44, new int[]{1, 3, 11, 18, 45, 225},
-        37, 274877153281L, 1 << 14
+        37, 274877153281L, 1 << 14, new int[]{60, 60, 60, 50, 50, 36}
     );
 
     /**
@@ -127,7 +131,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_13 = new Sj23PeqtUcpsiParams(
         1 << 14, 1304, 2,
         44, new int[]{1, 3, 11, 18, 45, 225},
-        38, 549755486209L, 1 << 14
+        38, 549755486209L, 1 << 14, new int[]{60, 60, 60, 50, 50, 40}
     );
 
     /**
@@ -136,7 +140,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_24_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
         3 * (1 << 15), 98, 2,
         8, new int[]{1, 3, 4, 9, 27},
-        35, 68718428161L, 1 << 14
+        35, 68718428161L, 1 << 14, new int[]{55, 50, 50, 50, 50}
     );
 
     /**
@@ -145,7 +149,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_12 = new Sj23PeqtUcpsiParams(
         1 << 13, 1304, 2,
         44, new int[]{1, 3, 11, 18, 45, 225},
-        37, 274877153281L, 1 << 14
+        37, 274877153281L, 1 << 14, new int[]{60, 56, 56, 40, 40, 40}
     );
 
     /**
@@ -154,7 +158,7 @@ public class Sj23PeqtUcpsiParams {
     public static final Sj23PeqtUcpsiParams SERVER_LOG_SIZE_26_CLIENT_LOG_SIZE_16 = new Sj23PeqtUcpsiParams(
         3 * (1 << 15), 98, 2,
         8, new int[]{1, 3, 4, 9, 27},
-        35, 68718428161L, 1 << 14
+        35, 68718428161L, 1 << 14, new int[]{55, 50, 50, 50, 50}
     );
 
     /**

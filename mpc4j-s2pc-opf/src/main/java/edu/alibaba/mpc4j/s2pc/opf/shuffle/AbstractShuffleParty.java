@@ -1,16 +1,18 @@
 package edu.alibaba.mpc4j.s2pc.opf.shuffle;
 
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstract shuffle sender.
@@ -20,10 +22,6 @@ import java.util.Vector;
  */
 public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implements ShuffleParty {
     /**
-     * max l
-     */
-    protected int maxL;
-    /**
      * max num
      */
     protected int maxNum;
@@ -32,36 +30,23 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
      */
     protected int num;
     /**
-     * l.
-     */
-    protected int l;
-    /**
-     * l in bytes
-     */
-    protected int byteL;
-    /**
      * inputs
      */
     protected SquareZ2Vector[] inputs;
 
     protected AbstractShuffleParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, ShuffleConfig config) {
         super(ptoDesc, rpc, otherParty, config);
-        l = config.getZl().getL();
-        byteL = config.getZl().getByteL();
     }
 
-    protected void setInitInput(int maxL, int maxNum) {
+    protected void setInitInput(int maxNum) {
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
-        MathPreconditions.checkPositive("maxL", maxL);
-        this.maxL = maxL;
         initState();
     }
 
     protected void setPtoInput(List<Vector<byte[]>> x) {
         num = x.get(0).size();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
-        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }
 
     /**
@@ -72,54 +57,55 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
      */
     protected Vector<byte[]> merge(List<Vector<byte[]>> x) {
         Vector<byte[]> result = new Vector<>();
+        int byteLen = x.stream().mapToInt(single -> single.elementAt(0).length).sum();
         for (int i = 0; i < num; i++) {
-            byte[] allByteArrays = new byte[x.size() * byteL];
+            byte[] allByteArrays = new byte[byteLen];
             ByteBuffer buff = ByteBuffer.wrap(allByteArrays);
             for (Vector<byte[]> bytes : x) {
                 buff.put(bytes.elementAt(i));
             }
             result.add(buff.array());
         }
-        // update byteL
-        byteL = byteL * x.size();
         return result;
     }
 
     /**
      * Split single vector into list of vectors.
      *
-     * @param x      single vector.
-     * @param length number of result list.
+     * @param x           single vector.
+     * @param byteLengths each byte length in result list.
      * @return list of vectors.
      */
-    protected List<Vector<byte[]>> split(Vector<byte[]> x, int length) {
-        // update byteL
-        byteL = byteL / length;
-        List<Vector<byte[]>> result = new ArrayList<>(length);
-        for (int i = 0; i < length; i++) {
+    protected List<Vector<byte[]>> split(Vector<byte[]> x, int[] byteLengths) {
+        List<Vector<byte[]>> result = new ArrayList<>(byteLengths.length);
+        int[] startIndex = new int[byteLengths.length];
+        for (int i = 0; i < byteLengths.length; i++) {
             result.add(new Vector<>());
+            if (i > 0) {
+                startIndex[i] = startIndex[i - 1] + byteLengths[i - 1];
+            }
         }
         for (int i = 0; i < num; i++) {
-            for (int j = 0; j < length; j++) {
-                byte[] temp = new byte[byteL];
-                System.arraycopy(x.elementAt(i), j * byteL, temp, 0, byteL);
+            byte[] current = x.elementAt(i);
+            for (int j = 0; j < byteLengths.length; j++) {
+                byte[] temp = new byte[byteLengths[j]];
+                System.arraycopy(current, startIndex[j], temp, 0, byteLengths[j]);
                 result.get(j).add(temp);
             }
         }
         return result;
     }
 
-    /**
-     * Reverse the permutation.
-     *
-     * @param perm permutation.
-     * @return reversed permutation.
-     */
-    protected int[] reversePermutation(int[] perm) {
-        int[] result = new int[perm.length];
-        for (int i = 0; i < perm.length; i++) {
-            result[perm[i]] = i;
-        }
-        return result;
+    @Override
+    public SquareZ2Vector[][] shuffle(SquareZ2Vector[][] x, int[] randomPerm) throws MpcAbortException {
+        int[] bitLens = Arrays.stream(x).mapToInt(arr -> arr.length).toArray();
+        return ShuffleUtils.splitSecret(shuffle(Collections.singletonList(
+            ShuffleUtils.mergeSecret(x, envType, parallel)), randomPerm).get(0), bitLens, envType, parallel);
+    }
+
+    @Override
+    public SquareZ2Vector[][] randomShuffle(SquareZ2Vector[][] x) throws MpcAbortException {
+        int[] randomPerm = ShuffleUtils.generateRandomPerm(x[0][0].bitNum());
+        return shuffle(x, randomPerm);
     }
 }

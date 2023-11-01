@@ -24,7 +24,7 @@ class NaiveNoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
     /**
      * max special (small) item size
      */
-    private static final int MAX_SPECIAL_ITEM_SIZE = 256;
+    private static final int MAX_SPECIAL_ITEM_SIZE = 100;
 
     /**
      * Gets ε.
@@ -37,32 +37,8 @@ class NaiveNoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
         if (maxItemSize == 1) {
             // although we can set binNum = 1 when n = 1, in some cases we must require BinNum > 1
             return 2.0;
-        } else if (maxItemSize == 2) {
-            // n = 2^1
-            return 14.187707604221078;
-        } else if (maxItemSize < (1 << 2)) {
-            // 2^1 < n < 2^2
-            return 14.187707604221078;
-        } else if (maxItemSize < (1 << 3)) {
-            // 2^2 <= n < 2^3
-            return 7.753054660935952;
-        } else if (maxItemSize < (1 << 4)) {
-            // 2^3 <= n < 2^4
-            return 4.607033636298429;
-        } else if (maxItemSize < (1 << 5)) {
-            // 2^4 <= n < 2^5
-            return 3.098373987514505;
-        } else if (maxItemSize < (1 << 6)) {
-            // 2^5 <= n < 2^6
-            return 2.404682247274576;
-        } else if (maxItemSize <= (1 << 7)) {
-            // 2^6 <= n < 2^7
-            return 1.977988668572465;
-        } else if (maxItemSize <= MAX_SPECIAL_ITEM_SIZE) {
-            // 2^6 <= n <= 2^7
-            return 1.7304160190125353;
         } else {
-            return EPSILON;
+            return Math.max(NoStashCuckooHashBinUtils.getH3SmallItemSizeEpsilon(maxItemSize), EPSILON);
         }
     }
 
@@ -84,7 +60,7 @@ class NaiveNoStashCuckooHashBin<T> extends AbstractNoStashCuckooHashBin<T> {
      */
     static int getMaxItemSize(int binNum) {
         // here we do not consider special cases
-        MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(MAX_SPECIAL_ITEM_SIZE) / EPSILON));
+        MathPreconditions.checkGreater("binNum", binNum, (int) Math.floor(getBinNum(MAX_SPECIAL_ITEM_SIZE)));
         return (int) Math.floor(binNum / EPSILON);
     }
 

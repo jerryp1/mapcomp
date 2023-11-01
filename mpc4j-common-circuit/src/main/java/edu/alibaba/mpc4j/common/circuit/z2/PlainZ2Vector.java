@@ -1,9 +1,15 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
+import edu.alibaba.mpc4j.common.circuit.z2.psorter.PSorterUtils;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -142,5 +148,17 @@ public class PlainZ2Vector implements MpcZ2Vector {
     public void merge(MpcVector other) {
         PlainZ2Vector that = (PlainZ2Vector) other;
         bitVector.merge(that.getBitVector());
+    }
+
+    @Override
+    public MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen) {
+        byte[] destByte = PSorterUtils.extendBitsWithSkip(this, destBitLen, skipLen);
+        return PlainZ2Vector.create(destBitLen, destByte);
+    }
+
+    @Override
+    public MpcZ2Vector[] getBitsWithSkip(int totalBitNum, int skipLen) {
+        byte[][] res = PSorterUtils.getBitsWithSkip(this, totalBitNum, skipLen);
+        return Arrays.stream(res).map(x -> PlainZ2Vector.create(totalBitNum, x)).toArray(PlainZ2Vector[]::new);
     }
 }

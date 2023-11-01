@@ -72,19 +72,4 @@ public abstract class AbstractPermutationSender extends AbstractTwoPartyPto impl
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }
-
-    /**
-     * Generates random permutation.
-     *
-     * @param num the number of inputs.
-     * @return a random permutation of num.
-     */
-    protected int[] genRandomPerm(int num) {
-        // generate random permutation
-        List<Integer> randomPermList = IntStream.range(0, num)
-            .boxed()
-            .collect(Collectors.toList());
-        Collections.shuffle(randomPermList, secureRandom);
-        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
-    }
 }

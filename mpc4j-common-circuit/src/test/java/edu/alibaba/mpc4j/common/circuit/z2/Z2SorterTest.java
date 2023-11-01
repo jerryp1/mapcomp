@@ -38,11 +38,11 @@ public class Z2SorterTest {
     /**
      * default num of elements to be sorted
      */
-    private static final int DEFAULT_SORTED_NUM = 10;
+    private static final int DEFAULT_SORTED_NUM = 5;
     /**
      * large num of elements to be sorted
      */
-    private static final int LARGE_SORTED_NUM = 1 << 8;
+    private static final int LARGE_SORTED_NUM = 573;
     /**
      * default num
      */
@@ -50,7 +50,7 @@ public class Z2SorterTest {
     /**
      * default large num
      */
-    private static final int DEFAULT_LARGE_NUM = 1 << 8;
+    private static final int DEFAULT_LARGE_NUM = 277;
     /**
      * default l
      */

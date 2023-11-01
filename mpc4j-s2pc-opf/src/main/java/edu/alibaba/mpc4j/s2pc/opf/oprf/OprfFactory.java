@@ -56,7 +56,7 @@ public class OprfFactory implements PtoFactory {
     }
 
     /**
-     * Creates a OPRF sender.
+     * Creates an OPRF sender.
      *
      * @param senderRpc     the sender RPC.
      * @param receiverParty the receiver party.
@@ -82,7 +82,7 @@ public class OprfFactory implements PtoFactory {
     }
 
     /**
-     * Creates a OPRF receiver.
+     * Creates an OPRF receiver.
      *
      * @param receiverRpc the receiver RPC.
      * @param senderParty the sender party.

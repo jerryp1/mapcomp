@@ -38,7 +38,7 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
     /**
      * we only need to use one hash key
      */
-    static final int HASH_KEY_NUM = 1;
+    public static final int HASH_KEY_NUM = 1;
 
     /**
      * Gets m for the given n.
@@ -46,7 +46,7 @@ abstract class AbstractGbfGf2eDokvs<T> extends AbstractGf2eDokvs<T> implements S
      * @param n number of key-value pairs.
      * @return m.
      */
-    static int getM(int n) {
+    public static int getM(int n) {
         MathPreconditions.checkPositive("n", n);
         // m = n / ln(2) * σ, flooring so that m % Byte.SIZE = 0.
         return CommonUtils.getByteLength(

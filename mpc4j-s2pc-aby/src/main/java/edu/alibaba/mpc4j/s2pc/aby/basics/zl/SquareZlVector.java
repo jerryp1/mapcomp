@@ -3,8 +3,14 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.zl;
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.circuit.zl.MpcZlVector;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -117,6 +123,22 @@ public class SquareZlVector implements MpcZlVector {
         shareVector.plain = plain;
 
         return shareVector;
+    }
+
+    /**
+     * Get the binary value of self last bit
+     *
+     * @return the binary share of the last bit
+     */
+    public SquareZ2Vector getLastBit(){
+        BigInteger[] data = this.zlVector.getElements();
+        byte[] b = new byte[CommonUtils.getByteLength(data.length)];
+        for(int i = 0, index = (b.length<<3) - data.length; i < data.length; i++, index++){
+            if(data[i].testBit(0)) {
+                BinaryUtils.setBoolean(b, index, true);
+            }
+        }
+        return SquareZ2Vector.create(data.length, b, this.isPlain());
     }
 
     private SquareZlVector() {

@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2Triple;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -185,6 +187,15 @@ public class Bea91Z2cSender extends AbstractZ2cParty {
     }
 
     @Override
+    public void xori(MpcZ2Vector x0, MpcZ2Vector y0) {
+        SquareZ2Vector x0SquareVector = (SquareZ2Vector) x0;
+        SquareZ2Vector y0SquareVector = (SquareZ2Vector) y0;
+        assert (!x0.isPlain()) || y0.isPlain();
+        setDyadicOperatorInput(x0SquareVector, y0SquareVector);
+        x0.getBitVector().xori(y0.getBitVector());
+    }
+
+    @Override
     public SquareZ2Vector and(MpcZ2Vector x0, MpcZ2Vector y0) throws MpcAbortException {
         SquareZ2Vector x0SquareVector = (SquareZ2Vector) x0;
         SquareZ2Vector y0SquareVector = (SquareZ2Vector) y0;
@@ -257,5 +268,15 @@ public class Bea91Z2cSender extends AbstractZ2cParty {
             logPhaseInfo(PtoState.PTO_END, "and");
             return z0SquareVector;
         }
+    }
+
+    @Override
+    public SquareZ2Vector[] setPublicValues(BitVector[] data) {
+        assert data != null && data.length > 0;
+        int bitNum = data[0].bitNum();
+        return Arrays.stream(data).map(x -> {
+            MathPreconditions.checkEqual("data[i].bitNum()", "data[0].bitNum()", x.bitNum(), bitNum);
+            return SquareZ2Vector.create(x, false);
+        }).toArray(SquareZ2Vector[]::new);
     }
 }

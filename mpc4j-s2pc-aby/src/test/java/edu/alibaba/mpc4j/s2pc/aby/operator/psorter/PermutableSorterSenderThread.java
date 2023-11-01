@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/10/12
  */
 class PermutableSorterSenderThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PermutableSorterSenderThread.class);
     /**
      * the sender
      */
@@ -31,15 +34,20 @@ class PermutableSorterSenderThread extends Thread {
      */
     private final int l;
     /**
+     * l
+     */
+    private final int k;
+    /**
      * z0
      */
     private SquareZlVector z0;
 
-    PermutableSorterSenderThread(PermutableSorterParty sender, SquareZ2Vector[] x0, int l) {
+    PermutableSorterSenderThread(PermutableSorterParty sender, SquareZ2Vector[] x0, int l, int k) {
         this.sender = sender;
         this.x0 = x0;
         num = x0[0].getNum();
         this.l = l;
+        this.k = k;
     }
 
     SquareZlVector getZ0() {
@@ -51,11 +59,11 @@ class PermutableSorterSenderThread extends Thread {
         try {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            sender.init(l, num);
+            sender.init(l, num, k);
             stopWatch.stop();
             long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            System.out.println("### init: " + initTime + " ms.");
+            LOGGER.info("### init: " + initTime + " ms.");
             z0 = sender.sort(x0);
         } catch (MpcAbortException e) {
             e.printStackTrace();

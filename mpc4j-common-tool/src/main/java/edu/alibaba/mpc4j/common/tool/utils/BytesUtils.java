@@ -13,6 +13,10 @@ import java.util.stream.IntStream;
  * @date 2021/06/19
  */
 public class BytesUtils {
+    static final byte[] BYTE_WITH_FIX_NUM_OF_ONE = new byte[]{
+        0, 1, 3, 7, 15, 31, 63, 127
+    };
+
     /**
      * 私有构造函数。
      */
@@ -158,9 +162,24 @@ public class BytesUtils {
         // 这里的bitLength指的是要保留多少个比特位，因此可以取到[0, byteArray.length * Byte.SIZE]
         assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
             : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
-        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-            BinaryUtils.setBoolean(byteArray, binaryIndex, false);
+        int resBitNum = bitLength & 7;
+        int zeroByteNum = (byteArray.length * Byte.SIZE - bitLength) >> 3;
+        Arrays.fill(byteArray, 0, zeroByteNum, (byte) 0x00);
+        if (resBitNum != 0) {
+            byteArray[zeroByteNum] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
+    }
+
+    public static byte[] keepLastBits(byte[] byteArray, final int bitLength){
+        assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
+            : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
+        int resBitNum = bitLength & 7;
+        int byteNum = CommonUtils.getByteLength(bitLength);
+        byte[] res = Arrays.copyOfRange(byteArray, byteArray.length - byteNum, byteArray.length);
+        if (resBitNum != 0) {
+            res[0] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
+        }
+        return res;
     }
 
     /**
@@ -183,12 +202,15 @@ public class BytesUtils {
         // 这里的bitLength指的是要保留多少个比特位，因此可以取到[0, byteArray.length * Byte.SIZE]
         assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
             : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
-        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-            if (BinaryUtils.getBoolean(byteArray, binaryIndex)) {
+        int resBitNum = bitLength & 7;
+        int zeroByteNum = (byteArray.length * Byte.SIZE - bitLength) >> 3;
+        for (int byteIndex = 0; byteIndex < zeroByteNum; byteIndex++) {
+            if (byteArray[byteIndex] != 0) {
                 return false;
             }
         }
-        return true;
+        // 如果没有前面几位需要置为0的byte，或者前面若干位确实是0，则返回true
+        return resBitNum == 0 || (byteArray[zeroByteNum] & BYTE_WITH_FIX_NUM_OF_ONE[resBitNum]) == byteArray[zeroByteNum];
     }
 
     /**
@@ -205,14 +227,7 @@ public class BytesUtils {
         if (byteArray.length != byteLength) {
             return false;
         }
-        assert bitLength >= 0 && bitLength <= byteLength * Byte.SIZE
-            : "bitLength must be in range [0, " + byteLength * Byte.SIZE + "]: " + bitLength;
-        for (int binaryIndex = 0; binaryIndex < byteArray.length * Byte.SIZE - bitLength; binaryIndex++) {
-            if (BinaryUtils.getBoolean(byteArray, binaryIndex)) {
-                return false;
-            }
-        }
-        return true;
+        return isReduceByteArray(byteArray, bitLength);
     }
 
     /**
@@ -225,7 +240,9 @@ public class BytesUtils {
         int byteLength = CommonUtils.getByteLength(bitLength);
         byte[] vector = new byte[byteLength];
         Arrays.fill(vector, (byte) 0xFF);
-        BytesUtils.reduceByteArray(vector, bitLength);
+        if ((bitLength & 7) != 0) {
+            vector[0] = BYTE_WITH_FIX_NUM_OF_ONE[bitLength & 7];
+        }
         return vector;
     }
 
@@ -378,7 +395,7 @@ public class BytesUtils {
      * @return x1 XOR x2。
      */
     public static byte[] xor(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] ^ x2[i]);
@@ -408,7 +425,7 @@ public class BytesUtils {
      * @return x1 AND x2。
      */
     public static byte[] and(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] & x2[i]);
@@ -424,7 +441,7 @@ public class BytesUtils {
      * @param x2 第二个字节数组。
      */
     public static void andi(byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         for (int i = x1.length - 1; i >= 0; i--) {
             x1[i] = (byte) (x1[i] & x2[i]);
         }
@@ -438,7 +455,7 @@ public class BytesUtils {
      * @return x1 OR x2。
      */
     public static byte[] or(final byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         byte[] out = new byte[x1.length];
         for (int i = x1.length - 1; i >= 0; i--) {
             out[i] = (byte) (x1[i] | x2[i]);
@@ -454,7 +471,7 @@ public class BytesUtils {
      * @param x2 第二个字节数组。
      */
     public static void ori(byte[] x1, final byte[] x2) {
-        assert x1.length == x2.length;
+        assert x1.length == x2.length : "x1.length = " + x1.length + " must be equal to x2.length = " + x2.length;
         for (int i = x1.length - 1; i >= 0; i--) {
             x1[i] = (byte) (x1[i] | x2[i]);
         }
@@ -470,9 +487,12 @@ public class BytesUtils {
     public static byte[] not(final byte[] x, final int bitLength) {
         assert bitLength >= 0 && bitLength <= x.length * Byte.SIZE;
         byte[] ones = new byte[x.length];
-        Arrays.fill(ones, (byte) 0xff);
-        reduceByteArray(ones, bitLength);
-
+        int resBitNum = bitLength & 7;
+        int zeroByteNum = (x.length * Byte.SIZE - bitLength) >> 3;
+        Arrays.fill(ones, zeroByteNum, ones.length, (byte) 0xff);
+        if (resBitNum != 0) {
+            ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
+        }
         return BytesUtils.xor(x, ones);
     }
 
@@ -485,37 +505,38 @@ public class BytesUtils {
      */
     public static void noti(byte[] x, final int bitLength) {
         byte[] ones = new byte[x.length];
-        Arrays.fill(ones, (byte) 0xff);
-        reduceByteArray(ones, bitLength);
+        int resBitNum = bitLength & 7;
+        int zeroByteNum = (x.length * Byte.SIZE - bitLength) >> 3;
+        Arrays.fill(ones, zeroByteNum, ones.length, (byte) 0xff);
+        if (resBitNum != 0) {
+            ones[zeroByteNum] = BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
+        }
         xori(x, ones);
     }
 
     /**
-     * 利用{@code byte[]}实现右移。
+     * shift right.
      *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特长度。
-     * @return 右移结果。
+     * @param byteArray byte array.
+     * @param x         number of shift bits.
+     * @return result.
      */
     public static byte[] shiftRight(final byte[] byteArray, final int x) {
         assert x >= 0;
-        // 如果右移0位，直接返回原始结果
         if (x == 0) {
+            // x = 0, byte array is unchanged.
             return clone(byteArray);
         }
-        // 如果右移的位数超过了字节数组的比特长度，则返回全0字节数组
         if (x >= byteArray.length * Byte.SIZE) {
+            // x is so large that result must be all 0
             return new byte[byteArray.length];
         }
-        // 移动的比特数
         int binaryMove = x % Byte.SIZE;
-        // 移动的字节数
         int byteMove = (x - binaryMove) / Byte.SIZE;
-        // 构建结果数组
         byte[] shiftRightByteArray = new byte[byteArray.length];
-        // 先把需要移动的字节比特移动到位
+        // shift by bytes
         System.arraycopy(byteArray, 0, shiftRightByteArray, byteMove, byteArray.length - byteMove);
-        // 移动剩余的比特长度
+        // shift by bits
         if (binaryMove != 0) {
             binaryShiftRight(shiftRightByteArray, binaryMove);
         }
@@ -523,77 +544,70 @@ public class BytesUtils {
     }
 
     /**
-     * 利用{@code byte[]}实现右移，并将右移结果放置在{@code byte[]}中。
+     * in-place shift right.
      *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特数。
+     * @param byteArray byte array.
+     * @param x         number of shift bits.
      */
     public static void shiftRighti(byte[] byteArray, final int x) {
         assert x >= 0;
-        // 如果右移0位，直接返回原始结果
         if (x == 0) {
+            // x = 0, byte array is unchanged.
             return;
         }
-        // 如果右移的位数超过了字节数组的比特长度，则返回全0字节数组
         if (x >= byteArray.length * Byte.SIZE) {
+            // x is so large that result must be all 0
             Arrays.fill(byteArray, (byte) 0x00);
         }
-        // 移动的比特数
         int binaryMove = x % Byte.SIZE;
-        // 移动的字节数
         int byteMove = (x - binaryMove) / Byte.SIZE;
-        // 先把需要移动的字节比特移动到位
+        // shift by bytes, note that we must clean higher bytes
         System.arraycopy(byteArray, 0, byteArray, byteMove, byteArray.length - byteMove);
-        // 移动剩余的比特长度
+        for (int i = 0; i < byteMove; i++) {
+            byteArray[i] = 0x00;
+        }
+        // shift by bits
         if (binaryMove != 0) {
             binaryShiftRight(byteArray, binaryMove);
         }
     }
 
-    /**
-     * 二进制右移。
-     *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特数，要求0 <= {@code x} < {@code Byte.SIZE}。
-     */
     private static void binaryShiftRight(byte[] byteArray, final int x) {
+        assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
         for (int i = byteArray.length - 1; i > 0; i--) {
-            // 当前位置右移后的字节
+            // shift current byte
             int currentByte = (byteArray[i] & 0xFF) >>> x;
-            // 上一个位置补充到当前位置的字节
-            int suppleByte = (byteArray[i - 1] & 0xFF) << (Byte.SIZE - x);
-            byteArray[i] = (byte) (currentByte | suppleByte);
+            // supply from next byte
+            int supplyByte = (byteArray[i - 1] & 0xFF) << (Byte.SIZE - x);
+            byteArray[i] = (byte) (currentByte | supplyByte);
         }
-        // 处理最后一个字节
+        // handle the last byte
         byteArray[0] = (byte) ((byteArray[0] & 0xFF) >>> x);
     }
 
     /**
-     * 利用{@code byte[]}实现左移。
+     * shift left.
      *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特数。
-     * @return 左移结果。
+     * @param byteArray byte array.
+     * @param x         number of shift bits.
+     * @return result.
      */
     public static byte[] shiftLeft(final byte[] byteArray, final int x) {
         assert x >= 0;
-        // 如果左移0位，直接返回原始结果
         if (x == 0) {
+            // x = 0, byte array is unchanged.
             return clone(byteArray);
         }
-        // 如果左移的位数超过了字节数组的比特长度，则返回全0字节数组
         if (x >= byteArray.length * Byte.SIZE) {
+            // x is so large that result must be all 0
             return new byte[byteArray.length];
         }
-        // 移动的比特数
         int binaryMove = x % Byte.SIZE;
-        // 移动的字节数
         int byteMove = (x - binaryMove) / Byte.SIZE;
-        // 构建结果数组
         byte[] resultByteArray = new byte[byteArray.length];
-        // 先把需要移动的字节比特移动到位
+        // shift by bytes
         System.arraycopy(byteArray, byteMove, resultByteArray, 0, byteArray.length - byteMove);
-        // 移动剩余的比特长度
+        // shift by bits
         if (binaryMove != 0) {
             binaryShiftLeft(resultByteArray, binaryMove);
         }
@@ -601,49 +615,45 @@ public class BytesUtils {
     }
 
     /**
-     * 利用{@code byte[]}实现左移，并将左移结果放置在{@code byte[]}中。
+     * in-place shift left.
      *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特数。
+     * @param byteArray byte array.
+     * @param x         number of shift bits.
      */
     public static void shiftLefti(byte[] byteArray, final int x) {
         assert x >= 0;
-        // 如果左移0位，直接返回原始结果
         if (x == 0) {
+            // x = 0, byte array is unchanged.
             return;
         }
-        // 如果左移的位数超过了字节数组的比特长度，则返回全0字节数组
         if (x >= byteArray.length * Byte.SIZE) {
+            // x is so large that result must be all 0
             Arrays.fill(byteArray, (byte) 0x00);
         }
-        // 移动的比特数
         int binaryMove = x % Byte.SIZE;
-        // 移动的字节数
         int byteMove = (x - binaryMove) / Byte.SIZE;
-        // 先把需要移动的字节比特移动到位
+        // shift by bytes, note that we must clean lower bytes
         System.arraycopy(byteArray, byteMove, byteArray, 0, byteArray.length - byteMove);
-        // 移动剩余的比特长度
+        for (int i = byteArray.length - byteMove; i < byteArray.length; i++) {
+            byteArray[i] = 0x00;
+        }
+        // shift by bits
         if (binaryMove != 0) {
             binaryShiftLeft(byteArray, binaryMove);
         }
     }
 
-    /**
-     * 二进制左移。
-     *
-     * @param byteArray 字节数组。
-     * @param x         移动的比特数，要求0 <= {@code x} < {@code Byte.SIZE}。
-     */
     private static void binaryShiftLeft(byte[] byteArray, final int x) {
+        assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
         for (int i = 0; i < byteArray.length - 1; i++) {
-            // 当前位置左移后的字节
+            // shift current byte
             int currentByte = (byteArray[i] & 0xFF) << x;
-            // 下一个位置补充到当前位置的字节
-            int suppleByte = (byteArray[i + 1] & 0xFF) >> (Byte.SIZE - x);
-            // 两个结果合并
-            byteArray[i] = (byte) (currentByte | suppleByte);
+            // supply from next byte
+            int supplyByte = (byteArray[i + 1] & 0xFF) >> (Byte.SIZE - x);
+            // combine
+            byteArray[i] = (byte) (currentByte | supplyByte);
         }
-        // 处理最后一个字节
+        // handle last byte
         byteArray[byteArray.length - 1] = (byte) ((byteArray[byteArray.length - 1] & 0xFF) << x);
     }
 

@@ -152,4 +152,19 @@ public interface BitVector {
      * Inner NOT operation.
      */
     void noti();
+
+    /**
+     * set the values of specific continuous positions.
+     *
+     * @param startByteIndex set the values of bytes[startByteIndex, startByteIndex + data.length].
+     * @param data src data
+     */
+    void setValues(int startByteIndex, byte[] data);
+
+    /**
+     * pad zeros in the front of bits to make the valid bit length = targetBitLength
+     *
+     * @param targetBitLength the target bit length
+     */
+    void extendLength(int targetBitLength);
 }

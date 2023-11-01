@@ -25,6 +25,7 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.AbstractPermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 
 import java.util.Arrays;
 import java.util.Vector;
@@ -143,7 +144,7 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
 
     public byte[][] permute(Vector<byte[]> perm, ZlVector xi) throws MpcAbortException {
         // generate random permutation
-        int[] randomPerm = genRandomPerm(num);
+        int[] randomPerm = ShuffleUtils.generateRandomPerm(num);
         // locally apply permutation
         Vector<byte[]> permutedPerm = BenesNetworkUtils.permutation(randomPerm, perm);
         // osn1

@@ -249,12 +249,7 @@ public class CuckooHashBatchSimplePirClient extends AbstractBatchIndexPirClient 
         int[] totalIndex = IntStream.range(0, serverElementSize).toArray();
         IntHashBin intHashBin = new SimpleIntHashBin(envType, binNum, serverElementSize, hashKeys);
         intHashBin.insertItems(totalIndex);
-        int maxBinSize = intHashBin.binSize(0);
-        for (int i = 1; i < binNum; i++) {
-            if (intHashBin.binSize(i) > maxBinSize) {
-                maxBinSize = intHashBin.binSize(i);
-            }
-        }
+        int maxBinSize = IntStream.range(0, binNum).map(intHashBin::binSize).max().orElse(0);
         hashBin = new int[binNum][];
         for (int i = 0; i < binNum; i++) {
             hashBin[i] = new int[intHashBin.binSize(i)];

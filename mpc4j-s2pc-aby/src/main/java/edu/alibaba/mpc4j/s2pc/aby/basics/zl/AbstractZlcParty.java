@@ -241,6 +241,4 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
             .map(vector -> (SquareZlVector) vector)
             .toArray(SquareZlVector[]::new);
     }
-
-
 }

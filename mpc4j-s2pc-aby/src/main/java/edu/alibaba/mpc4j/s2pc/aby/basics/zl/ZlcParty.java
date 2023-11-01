@@ -202,4 +202,13 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      */
     @Override
     SquareZlVector[] mul(MpcZlVector[] xiArray, MpcZlVector[] yiArray) throws MpcAbortException;
+
+    /**
+     * compute the prefix sum of vector
+     *
+     * @param x    the element vector
+     * @param prefix the prefix value
+     * @return a new vector: y[i] = \sum_0^i{x[i]} + prefix
+     */
+    public SquareZlVector rowAdderWithPrefix(SquareZlVector x, SquareZlVector prefix);
 }

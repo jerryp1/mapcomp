@@ -32,13 +32,47 @@ public class BitonicSorter extends AbstractSortingNetwork {
         bitonicSort(xiArrays, 0, xiArrays.length, dir);
     }
 
+//    private void bitonicSort(MpcZ2Vector[][] xiArrays, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
+//        if (len > 1) {
+//            // Divide the array into two partitions and then sort
+//            // the partitions in different directions.
+//            int m = len / 2;
+//            bitonicSort(xiArrays, start, m, party.not(dir));
+//            bitonicSort(xiArrays, start + m, len - m, dir);
+//            // Merge the results.
+//            bitonicMerge(xiArrays, start, len, dir);
+//        }
+//    }
+//
+//    /**
+//     * Sorts a bitonic sequence in the specified order.
+//     *
+//     * @param xiArray items.
+//     * @param start   start location
+//     * @param len     length.
+//     * @param dir     sorting order, ture for ascending.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    private void bitonicMerge(MpcZ2Vector[][] xiArray, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
+//        if (len > 1) {
+//            // minimum power of two greater than or equal to len.
+//            int m = 1 << (BigInteger.valueOf(len - 1).bitLength() - 1);
+//            for (int i = start; i < start + len - m; i++) {
+//                compareExchange(xiArray, i, i + m, dir);
+//            }
+//            bitonicMerge(xiArray, start, m, dir);
+//            bitonicMerge(xiArray, start + m, len - m, dir);
+//        }
+//    }
+
     private void bitonicSort(MpcZ2Vector[][] xiArrays, int start, int len, MpcZ2Vector dir) throws MpcAbortException {
         if (len > 1) {
             // Divide the array into two partitions and then sort
             // the partitions in different directions.
-            int m = len / 2;
-            bitonicSort(xiArrays, start, m, party.not(dir));
-            bitonicSort(xiArrays, start + m, len - m, dir);
+            int m = 1 << (BigInteger.valueOf(len - 1).bitLength() - 1);
+            m = len - m;
+            bitonicSort(xiArrays, start, m, dir);
+            bitonicSort(xiArrays, start + m, len - m, party.not(dir));
             // Merge the results.
             bitonicMerge(xiArrays, start, len, dir);
         }
@@ -60,8 +94,8 @@ public class BitonicSorter extends AbstractSortingNetwork {
             for (int i = start; i < start + len - m; i++) {
                 compareExchange(xiArray, i, i + m, dir);
             }
-            bitonicMerge(xiArray, start, m, dir);
-            bitonicMerge(xiArray, start + m, len - m, dir);
+            bitonicMerge(xiArray, start, len - m, dir);
+            bitonicMerge(xiArray, start + len - m, m, dir);
         }
     }
 }

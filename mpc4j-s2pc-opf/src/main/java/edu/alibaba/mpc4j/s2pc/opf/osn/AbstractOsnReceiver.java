@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetwork;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkFactory;
@@ -81,7 +80,6 @@ public abstract class AbstractOsnReceiver extends AbstractTwoPartyPto implements
 
     protected void setPtoInput(int[] permutationMap, int byteLength) {
         checkInitialized();
-        MathPreconditions.checkGreaterOrEqual("byteLength", byteLength, CommonConstants.STATS_BYTE_LENGTH);
         this.byteLength = byteLength;
         Preconditions.checkArgument(
             BenesNetworkUtils.validPermutation(permutationMap),

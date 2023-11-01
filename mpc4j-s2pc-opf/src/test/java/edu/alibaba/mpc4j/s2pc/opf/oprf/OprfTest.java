@@ -162,7 +162,7 @@ public class OprfTest extends AbstractTwoPartyPtoTest {
         }
     }
 
-    private void assertOutput(int n, OprfSenderOutput senderOutput, OprfReceiverOutput receiverOutput) {
+    public static void assertOutput(int n, OprfSenderOutput senderOutput, OprfReceiverOutput receiverOutput) {
         Assert.assertEquals(senderOutput.getPrfByteLength(), receiverOutput.getPrfByteLength());
         Assert.assertEquals(n, senderOutput.getBatchSize());
         Assert.assertEquals(n, receiverOutput.getBatchSize());

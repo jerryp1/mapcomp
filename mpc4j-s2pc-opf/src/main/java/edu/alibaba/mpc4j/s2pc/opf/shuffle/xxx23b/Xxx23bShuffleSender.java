@@ -6,12 +6,15 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.AbstractShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -42,8 +45,8 @@ public class Xxx23bShuffleSender extends AbstractShuffleParty {
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum);
+    public void init(int maxNum) throws MpcAbortException {
+        setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
@@ -62,11 +65,12 @@ public class Xxx23bShuffleSender extends AbstractShuffleParty {
         setPtoInput(x);
         logPhaseInfo(PtoState.PTO_BEGIN);
         // merge
+        int[] originByteLen = x.stream().mapToInt(single -> single.elementAt(0).length).toArray();
         Vector<byte[]> input = x.size() <= 1 ? x.get(0) : merge(x);
         // osn1
         stopWatch.start();
-        int[] reversePerm = reversePermutation(randomPerm);
-        OsnPartyOutput osn2Output = osnReceiver.osn(reversePerm, byteL);
+        int[] reversePerm = ShuffleUtils.reversePermutation(randomPerm);
+        OsnPartyOutput osn2Output = osnReceiver.osn(reversePerm, input.elementAt(0).length);
         Vector<byte[]> osn2OutputBytes = IntStream.range(0, num)
             .mapToObj(osn2Output::getShare).collect(Collectors.toCollection(Vector::new));
         // permute local share and merge
@@ -79,7 +83,7 @@ public class Xxx23bShuffleSender extends AbstractShuffleParty {
         logStepInfo(PtoState.PTO_STEP, 1, 2, ptoTime);
         // osn2
         stopWatch.start();
-        OsnPartyOutput osnOutput = osnSender.osn(mergedX, byteL);
+        OsnPartyOutput osnOutput = osnSender.osn(mergedX, input.elementAt(0).length);
         Vector<byte[]> osnOutputBytes = IntStream.range(0, num)
             .mapToObj(osnOutput::getShare).collect(Collectors.toCollection(Vector::new));
 
@@ -89,11 +93,9 @@ public class Xxx23bShuffleSender extends AbstractShuffleParty {
         logStepInfo(PtoState.PTO_STEP, 2, 2, ptoTime);
 
         // split
-        List<Vector<byte[]>> output = x.size() <= 1 ? Collections.singletonList(osnOutputBytes) : split(osnOutputBytes, x.size());
+        List<Vector<byte[]>> output = x.size() <= 1 ? Collections.singletonList(osnOutputBytes) : split(osnOutputBytes, originByteLen);
 
         logPhaseInfo(PtoState.PTO_END);
         return output;
     }
-
-
 }
