@@ -9,6 +9,11 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 /**
  * Abstract permutation receiver.
  *
@@ -52,7 +57,6 @@ public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto im
         byteL = zl.getByteL();
     }
 
-
     protected void setInitInput(int maxL, int maxNum) {
         MathPreconditions.checkPositive("maxL", maxL);
         this.maxL = maxL;
@@ -65,5 +69,34 @@ public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto im
         num = perm.getNum();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
+    }
+
+    /**
+     * Generates random permutation.
+     *
+     * @param num the number of inputs.
+     * @return a random permutation of num.
+     */
+    protected int[] genRandomPerm(int num) {
+        // generate random permutation
+        List<Integer> randomPermList = IntStream.range(0, num)
+            .boxed()
+            .collect(Collectors.toList());
+        Collections.shuffle(randomPermList, secureRandom);
+        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
+    }
+
+    /**
+     * Reverse the permutation.
+     *
+     * @param perm permutation.
+     * @return reversed permutation.
+     */
+    protected int[] reversePermutation(int[] perm) {
+        int[] result = new int[perm.length];
+        for (int i = 0; i < perm.length; i++) {
+            result[perm[i]] = i;
+        }
+        return result;
     }
 }

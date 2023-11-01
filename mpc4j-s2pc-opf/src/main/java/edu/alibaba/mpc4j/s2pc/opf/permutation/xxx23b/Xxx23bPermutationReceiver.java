@@ -1,12 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
@@ -21,6 +20,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.AbstractPermutationReceiver;
 
 import java.security.SecureRandom;
@@ -36,9 +36,13 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/5/22
  */
-public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
+public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
     /**
-     * Osn receciver.
+     * Osn sender.
+     */
+    private final OsnSender osnSender;
+    /**
+     * Osn receiver.
      */
     private final OsnReceiver osnReceiver;
     /**
@@ -46,9 +50,9 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
      */
     private final ZlcParty zlcReceiver;
     /**
-     * Z2 circuit receiver.
+     * Z2 circuit sender.
      */
-    private final Z2cParty z2cReceiver;
+    private final Z2cParty z2cSender;
     /**
      * A2b Receiver.
      */
@@ -58,11 +62,12 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
      */
     private final B2aParty b2aReceiver;
 
-    public Xxx23PermutationReceiver(Rpc receiverRpc, Party senderParty, Xxx23PermutationConfig config) {
-        super(Xxx23PermutationPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Xxx23bPermutationReceiver(Rpc receiverRpc, Party senderParty, Xxx23bPermutationConfig config) {
+        super(Xxx23bPermutationPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
-        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
+        z2cSender = Z2cFactory.createSender(receiverRpc, senderParty, config.getZ2cConfig());
         a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
         secureRandom = new SecureRandom();
@@ -75,8 +80,9 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
 
         stopWatch.start();
         osnReceiver.init(maxNum);
+        osnSender.init(maxNum);
         zlcReceiver.init(maxNum);
-        z2cReceiver.init(maxNum * maxL);
+        z2cSender.init(maxNum * maxL);
         a2bReceiver.init(maxL, maxNum);
         b2aReceiver.init(maxL, maxNum);
         stopWatch.stop();
@@ -134,23 +140,18 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
     }
 
     public byte[][] permute(Vector<byte[]> perm) throws MpcAbortException {
-        // generate random permutation
-        int[] randomPerm = genRandomPerm(num);
-        // locally apply permutation
-        Vector<byte[]> permutedPerm = BenesNetworkUtils.permutation(randomPerm, perm);
         // osn1
-        OsnPartyOutput osnPartyOutput = osnReceiver.osn(randomPerm, byteL);
-        // locally add
-        SquareZ2Vector[] osnResultShares = IntStream.range(0, num)
-            .mapToObj(i -> BytesUtils.xor(permutedPerm.elementAt(i), osnPartyOutput.getShare(i)))
-            .map(v -> SquareZ2Vector.create(l, v, false))
-            .toArray(SquareZ2Vector[]::new);
-
+        OsnPartyOutput osnPartyOutput = osnSender.osn(perm, byteL);
         // reveal and permute
-        z2cReceiver.revealOther(osnResultShares);
-        int[] reversePerm = reversePermutation(randomPerm);
+        SquareZ2Vector[] osnResultShares = IntStream.range(0, num).mapToObj(osnPartyOutput::getShare)
+            .map(v -> SquareZ2Vector.create(l, v, false)).toArray(SquareZ2Vector[]::new);
+        int[] perms = Arrays.stream(z2cSender.revealOwn(osnResultShares)).map(BitVector::getBytes)
+            .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
+        int[] reversePerms = reversePermutation(perms);
         // osn2
-        OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerm, byteL);
+        OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerms, byteL);
+        // boolean shares
         return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).toArray(byte[][]::new);
     }
+
 }

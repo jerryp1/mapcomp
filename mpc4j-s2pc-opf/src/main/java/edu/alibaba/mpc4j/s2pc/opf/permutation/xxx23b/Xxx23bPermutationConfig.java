@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -22,7 +22,7 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationType
  * @author Li Peng
  * @date 2023/5/22
  */
-public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implements PermutationConfig {
+public class Xxx23bPermutationConfig extends AbstractMultiPartyPtoConfig implements PermutationConfig {
     /**
      * Osn config.
      */
@@ -48,7 +48,7 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
      */
     private final Zl zl;
 
-    private Xxx23PermutationConfig(Builder builder) {
+    private Xxx23bPermutationConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlcConfig, builder.z2cConfig,
             builder.a2bConfig, builder.b2aConfig);
         this.osnConfig = builder.osnConfig;
@@ -61,7 +61,7 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
 
     @Override
     public PermutationTypes getPtoType() {
-        return PermutationTypes.XXX23;
+        return PermutationTypes.XXX23B;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
 
     @Override
     public boolean isReverse() {
-        return false;
+        return true;
     }
 
     public OsnConfig getOsnConfig() {
@@ -94,7 +94,7 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
         return b2aConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PermutationConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23bPermutationConfig> {
         /**
          * Osn config.
          */
@@ -130,8 +130,8 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
         }
 
         @Override
-        public Xxx23PermutationConfig build() {
-            return new Xxx23PermutationConfig(this);
+        public Xxx23bPermutationConfig build() {
+            return new Xxx23bPermutationConfig(this);
         }
     }
 }

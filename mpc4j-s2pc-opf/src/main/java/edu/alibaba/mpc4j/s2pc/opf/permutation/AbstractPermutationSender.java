@@ -10,6 +10,11 @@ import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 /**
  * Abstract permutation sender.
  *
@@ -53,7 +58,6 @@ public abstract class AbstractPermutationSender extends AbstractTwoPartyPto impl
         byteL = zl.getByteL();
     }
 
-
     protected void setInitInput(int maxL, int maxNum) {
         MathPreconditions.checkPositive("maxL", maxL);
         this.maxL = maxL;
@@ -67,5 +71,20 @@ public abstract class AbstractPermutationSender extends AbstractTwoPartyPto impl
         MathPreconditions.checkEqual("permutation.length", "input.length", perm.getNum(), x.getNum());
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
+    }
+
+    /**
+     * Generates random permutation.
+     *
+     * @param num the number of inputs.
+     * @return a random permutation of num.
+     */
+    protected int[] genRandomPerm(int num) {
+        // generate random permutation
+        List<Integer> randomPermList = IntStream.range(0, num)
+            .boxed()
+            .collect(Collectors.toList());
+        Collections.shuffle(randomPermList, secureRandom);
+        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
     }
 }

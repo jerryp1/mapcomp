@@ -1,5 +1,9 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
+import edu.alibaba.mpc4j.common.circuit.prefixsum.PrefixSumNode;
+import edu.alibaba.mpc4j.common.circuit.prefixsum.PrefixSumOp;
+import edu.alibaba.mpc4j.common.circuit.prefixsum.PrefixSumTree;
+import edu.alibaba.mpc4j.common.circuit.prefixsum.PrefixSumTreeFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2cParty;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
@@ -21,7 +25,11 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/6/1
  */
-public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
+public class ParallelPrefixAdder extends AbstractAdder implements PrefixSumOp {
+    /**
+     * Prefix sum tree used for addition.
+     */
+    PrefixSumTree prefixSumTree;
     /**
      * the (original) propagate bits, which are used in sum-out bits generation.
      */
@@ -31,14 +39,15 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      */
     protected Tuple[] tuples;
 
-    public AbstractParallelPrefixAdder(MpcZ2cParty party) {
+    public ParallelPrefixAdder(MpcZ2cParty party, PrefixSumTreeFactory.PrefixSumTreeTypes type) {
         super(party);
+        this.prefixSumTree = PrefixSumTreeFactory.createPrefixSumTree(type, this);
     }
 
     /**
      * The tuple consists of p and g bits, which are used in prefix network computation.
      */
-    protected static class Tuple {
+    protected static class Tuple implements PrefixSumNode {
         /**
          * the generate bit.
          */
@@ -66,12 +75,11 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
     public MpcZ2Vector[] add(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray, MpcZ2Vector cin)
         throws MpcAbortException {
         checkInputs(xiArray, yiArray);
-        this.l = xiArray.length;
-        this.num = xiArray[0].getNum();
+
         // 1. pre-computation of (g, p) tuples.
         genTuples(xiArray, yiArray);
         // 2. prefix computation using a prefix network
-        addPrefix();
+        prefixSumTree.addPrefix(l);
         // 3. carry-outs generation, where c_i = (P_i · cin) + Gi
         MpcZ2Vector[] c = genCarryOuts(cin);
         // 4. output sum bits generation, where s_i = c_i ⊕ p_{i-1}
@@ -91,13 +99,6 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         this.tuples = IntStream.range(0, l)
             .mapToObj(i -> new Tuple(gs[i], ps[i])).toArray(Tuple[]::new);
     }
-
-    /**
-     * Prefix computation using a prefix network.
-     *
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    protected abstract void addPrefix() throws MpcAbortException;
 
     /**
      * Generates the carry_out bits.
@@ -182,7 +183,8 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
      * @param outputIndexes the indexes of output tuples.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void updateCurrentLevel(int[] inputIndexes, int[] outputIndexes) throws MpcAbortException {
+    @Override
+    public void updateCurrentLevel(int[] inputIndexes, int[] outputIndexes) throws MpcAbortException {
         MathPreconditions.checkEqual("inputIndexes.num", "outputIndexes.num", inputIndexes.length, outputIndexes.length);
         MathPreconditions.checkLessOrEqual("inputIndexes.num", inputIndexes.length, tuples.length);
 
@@ -191,7 +193,21 @@ public abstract class AbstractParallelPrefixAdder extends AbstractAdder {
         Tuple[] inputs2 = Arrays.stream(inputIndexes).mapToObj(inputIndex -> tuples[inputIndex]).toArray(Tuple[]::new);
 
         Tuple[] outputs = vectorOp(inputs1, inputs2);
-
+        // update nodes.
         IntStream.range(0, inputIndexes.length).forEach(i -> tuples[outputIndexes[i]] = outputs[i]);
+    }
+
+    @Override
+    public PrefixSumNode[] getPrefixSumNodes() {
+        return tuples;
+    }
+
+    @Override
+    public void operateAndUpdate(PrefixSumNode[] x, PrefixSumNode[] y, int[] outputIndexes) throws MpcAbortException {
+        Tuple[] xTuples = Arrays.stream(x).map(v -> (Tuple) v).toArray(Tuple[]::new);
+        Tuple[] yTuples = Arrays.stream(y).map(v -> (Tuple) v).toArray(Tuple[]::new);
+        Tuple[] result = vectorOp(xTuples, yTuples);
+        // update nodes.
+        IntStream.range(0, x.length).forEach(i -> tuples[outputIndexes[i]] = result[i]);
     }
 }

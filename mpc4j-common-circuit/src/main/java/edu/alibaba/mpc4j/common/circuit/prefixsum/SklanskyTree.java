@@ -1,13 +1,12 @@
-package edu.alibaba.mpc4j.common.circuit.z2.adder;
+package edu.alibaba.mpc4j.common.circuit.prefixsum;
 
-import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.math.BigInteger;
 
 /**
- * Parallel prefix adder using Sklansky structure. The structure comes from the following paper:
+ * Parallel prefix tree of Sklansky structure. The structure comes from the following paper:
  *
  * <p>
  * Sklansky, Jack. "Conditional-sum addition logic." IRE Transactions on Electronic computers 2 (1960): 226-231.
@@ -16,15 +15,15 @@ import java.math.BigInteger;
  * @author Li Peng
  * @date 2023/6/1
  */
-public class SklanskyAdder extends AbstractParallelPrefixAdder {
+public class SklanskyTree extends AbstractPrefixSumTree {
 
-    public SklanskyAdder(Z2IntegerCircuit circuit) {
-        super(circuit.getParty());
+    public SklanskyTree(PrefixSumOp prefixSumOp) {
+        super(prefixSumOp);
     }
 
     @Override
-    protected void addPrefix() throws MpcAbortException {
-        int ceilL = 1 << (BigInteger.valueOf(tuples.length - 1).bitLength());
+    public void addPrefix(int l) throws MpcAbortException {
+        int ceilL = 1 << (BigInteger.valueOf(l - 1).bitLength());
         // offset denotes the distance of index in a perfect binary tree (with ceilL leaves) and index in the ture tree (with l nodes).
         int offset = ceilL - l;
         int logL = LongUtils.ceilLog2(ceilL);
@@ -47,7 +46,7 @@ public class SklanskyAdder extends AbstractParallelPrefixAdder {
                     }
                 }
             }
-            updateCurrentLevel(inputIndexes, outputIndexes);
+            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
         }

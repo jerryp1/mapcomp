@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.opf.permutation;
+package edu.alibaba.mpc4j.s2pc.opf.spermutation;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory.SharedPermutationTypes;
 
 /**
- * Permutation config.
+ * Shared permutation config.
  *
  * @author Li Peng
- * @date 2023/10/11
+ * @date 2023/10/25
  */
-public interface PermutationConfig extends MultiPartyPtoConfig {
+public interface SharedPermutationConfig extends MultiPartyPtoConfig {
     /**
      * Gets the protocol type.
      *
      * @return the protocol type.
      */
-    PermutationTypes getPtoType();
+    SharedPermutationTypes getPtoType();
 
     /**
      * Get the zl of plaintext.

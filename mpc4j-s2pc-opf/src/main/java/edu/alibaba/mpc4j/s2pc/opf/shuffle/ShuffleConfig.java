@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.opf.permutation;
+package edu.alibaba.mpc4j.s2pc.opf.shuffle;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 
 /**
- * Permutation config.
+ * Shuffle config.
  *
  * @author Li Peng
  * @date 2023/10/11
  */
-public interface PermutationConfig extends MultiPartyPtoConfig {
+public interface ShuffleConfig extends MultiPartyPtoConfig {
     /**
      * Gets the protocol type.
      *
      * @return the protocol type.
      */
-    PermutationTypes getPtoType();
+    ShuffleTypes getPtoType();
 
     /**
      * Get the zl of plaintext.
@@ -26,9 +26,9 @@ public interface PermutationConfig extends MultiPartyPtoConfig {
     Zl getZl();
 
     /**
-     * Get the indicator of whether the permutation is reversed.
+     * Whether the shuffle is reversed (un-shuffle).
      *
-     * @return the indicator of whether the permutation is reversed.
+     * @return whether the shuffle is reversed (un-shuffle)
      */
     boolean isReverse();
 }

@@ -46,7 +46,7 @@ class PermutationReceiverThread extends Thread {
     public void run() {
         try {
             receiver.init(l, num);
-            z1 = receiver.permutate(perm1);
+            z1 = receiver.permute(perm1);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
