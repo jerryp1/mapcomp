@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -15,10 +15,10 @@ import java.math.BigInteger;
  * @author Li Peng
  * @date 2023/6/1
  */
-public class SklanskyTree extends AbstractPrefixSumTree {
+public class SklanskyTree extends AbstractPrefixTree {
 
-    public SklanskyTree(PrefixSumOp prefixSumOp) {
-        super(prefixSumOp);
+    public SklanskyTree(PrefixOp prefixOp) {
+        super(prefixOp);
     }
 
     @Override
@@ -32,8 +32,9 @@ public class SklanskyTree extends AbstractPrefixSumTree {
         int blockNum = ceilL / 2;
         int blockSize = 2;
         for (int i = 0; i < logL; i++) {
-            int[] inputIndexes = new int[blockNum * (blockSize / 2)];
-            int[] outputIndexes = new int[blockNum * (blockSize / 2)];
+            int invalidNodesNum = obtainInvalidNodesNum(offset, blockSize);
+            int[] inputIndexes = new int[ceilL / 2 - invalidNodesNum];
+            int[] outputIndexes = new int[ceilL / 2 - invalidNodesNum];
             for (int j = 0; j < blockNum; j++) {
                 int inputIndex = ceilL - (j * blockSize + blockSize / 2) - offset;
                 if (inputIndex >= 0) {
@@ -46,9 +47,34 @@ public class SklanskyTree extends AbstractPrefixSumTree {
                     }
                 }
             }
-            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            for (int k = 0; k < inputIndexes.length; k++) {
+                if (inputIndexes[k] == 0 && outputIndexes[k] == 0) {
+                    System.out.println(123);
+                }
+            }
+            prefixOp.updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
+        }
+    }
+
+    /**
+     * Obtain number of invalid nodes in the perfect tree.
+     *
+     * @param offset    offset
+     * @param blockSize block size.
+     * @return number of invalid nodes
+     */
+    private int obtainInvalidNodesNum(int offset, int blockSize) {
+        if (offset >= blockSize) {
+            int n = offset / blockSize;
+            if (offset >= n * blockSize + blockSize / 2) {
+                return n * blockSize / 2 + blockSize / 2;
+            } else {
+                return n * blockSize / 2 + offset - n * blockSize;
+            }
+        } else {
+            return Math.min(offset, blockSize / 2);
         }
     }
 }

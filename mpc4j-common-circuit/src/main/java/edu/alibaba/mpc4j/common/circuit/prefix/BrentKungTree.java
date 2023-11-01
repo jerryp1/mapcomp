@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -15,10 +15,10 @@ import java.math.BigInteger;
  * @author Li Peng
  * @date 2023/6/1
  */
-public class BrentKungTree extends AbstractPrefixSumTree {
+public class BrentKungTree extends AbstractPrefixTree {
 
-    public BrentKungTree(PrefixSumOp prefixSumOp) {
-        super(prefixSumOp);
+    public BrentKungTree(PrefixOp prefixOp) {
+        super(prefixOp);
     }
 
     @Override
@@ -33,19 +33,22 @@ public class BrentKungTree extends AbstractPrefixSumTree {
         // while we should avoid iterations in the nodes which beyond ture indexes by determining if index >= 0.
         // first tree-reduction
         for (int i = 0; i < logL; i++) {
-            int[] inputIndexes = new int[blockNum];
-            int[] outputIndexes = new int[blockNum];
+            int invalidNodesNumFirst = obtainInvalidNodesNumFirst(offset, blockSize);
+            int[] inputIndexes = new int[blockNum - invalidNodesNumFirst];
+            int[] outputIndexes = new int[blockNum - invalidNodesNumFirst];
             for (int j = 0; j < blockNum; j++) {
                 int inputIndex = ceilL - (j * blockSize + blockSize / 2) - offset;
                 if (inputIndex >= 0) {
-                    inputIndexes[j] = inputIndex;
                     int currentIndex = ceilL - ((j + 1) * blockSize) - offset;
                     if (currentIndex >= 0) {
+                        inputIndexes[j] = inputIndex;
                         outputIndexes[j] = currentIndex;
                     }
                 }
             }
-            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            if (inputIndexes.length != 0) {
+                prefixOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            }
             blockNum >>= 1;
             blockSize <<= 1;
         }
@@ -53,21 +56,51 @@ public class BrentKungTree extends AbstractPrefixSumTree {
         blockNum = 2;
         blockSize = ceilL / 2;
         for (int i = 0; i < logL - 1; i++) {
-            int[] inputIndexes = new int[blockNum];
-            int[] outputIndexes = new int[blockNum];
+            int invalidNodesNumSecond = obtainInvalidNodesNumSecond(offset, blockSize);
+            int[] inputIndexes = new int[blockNum - 1 - invalidNodesNumSecond];
+            int[] outputIndexes = new int[blockNum - 1 - invalidNodesNumSecond];
             for (int j = 0; j < blockNum - 1; j++) {
                 int inputIndex = ceilL - (j + 1) * blockSize - offset;
                 if (inputIndex >= 0) {
-                    inputIndexes[j] = inputIndex;
                     int currentIndex = ceilL - (j + 1) * blockSize - blockSize / 2 - offset;
                     if (currentIndex >= 0) {
+                        inputIndexes[j] = inputIndex;
                         outputIndexes[j] = currentIndex;
                     }
                 }
             }
-            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            if (inputIndexes.length != 0) {
+                prefixOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            }
             blockNum <<= 1;
             blockSize >>= 1;
+        }
+    }
+
+    /**
+     * Obtain number of invalid nodes in the perfect tree in first tree iteration.
+     *
+     * @param offset    offset
+     * @param blockSize block size.
+     * @return number of invalid nodes
+     */
+    private int obtainInvalidNodesNumFirst(int offset, int blockSize) {
+        return (offset - 1) / blockSize + 1;
+    }
+
+    /**
+     * Obtain number of invalid nodes in the perfect tree in second tree iteration.
+     *
+     * @param offset    offset
+     * @param blockSize block size.
+     * @return number of invalid nodes
+     */
+    private int obtainInvalidNodesNumSecond(int offset, int blockSize) {
+        int n = offset / blockSize;
+        if (offset - n * blockSize - 1 >= blockSize / 2) {
+            return n + 1;
+        } else {
+            return n;
         }
     }
 }

@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2.adder;
 
-import edu.alibaba.mpc4j.common.circuit.prefixsum.PrefixSumTreeFactory.PrefixSumTreeTypes;
+import edu.alibaba.mpc4j.common.circuit.prefix.PrefixTreeFactory.PrefixTreeTypes;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 
 /**
@@ -64,11 +64,11 @@ public class AdderFactory {
             case RIPPLE_CARRY:
                 return new RippleCarryAdder(circuit);
             case SKLANSKY:
-                return new ParallelPrefixAdder(circuit.getParty(), PrefixSumTreeTypes.SKLANSKY);
+                return new ParallelPrefixAdder(circuit.getParty(), PrefixTreeTypes.SKLANSKY);
             case BRENT_KUNG:
-                return new ParallelPrefixAdder(circuit.getParty(), PrefixSumTreeTypes.BRENT_KUNG);
+                return new ParallelPrefixAdder(circuit.getParty(), PrefixTreeTypes.BRENT_KUNG);
             case KOGGE_STONE:
-                return new ParallelPrefixAdder(circuit.getParty(), PrefixSumTreeTypes.KOGGE_STONE);
+                return new ParallelPrefixAdder(circuit.getParty(), PrefixTreeTypes.KOGGE_STONE);
             default:
                 throw new IllegalArgumentException("Invalid " + AdderFactory.AdderTypes.class.getSimpleName() + ": " + type.name());
         }

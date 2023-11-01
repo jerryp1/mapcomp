@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
@@ -15,10 +15,10 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/6/6
  */
-public class KoggeStoneTree extends AbstractPrefixSumTree {
+public class KoggeStoneTree extends AbstractPrefixTree {
 
-    public KoggeStoneTree(PrefixSumOp prefixSumOp) {
-        super(prefixSumOp);
+    public KoggeStoneTree(PrefixOp prefixOp) {
+        super(prefixOp);
     }
 
     @Override
@@ -27,7 +27,7 @@ public class KoggeStoneTree extends AbstractPrefixSumTree {
         while (gap < l) {
             int[] inputIndexes = IntStream.range(gap, l).toArray();
             int[] outputIndexes = IntStream.range(0, l - gap).toArray();
-            prefixSumOp.updateCurrentLevel(inputIndexes, outputIndexes);
+            prefixOp.updateCurrentLevel(inputIndexes, outputIndexes);
             gap <<= 1;
         }
     }

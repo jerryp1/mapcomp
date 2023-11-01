@@ -1,14 +1,14 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 /**
- * Prefix-sum tree interface.
+ * Prefix tree interface.
  *
  * @author Li Peng
  * @date 2023/10/27
  */
-public interface PrefixSumTree {
+public interface PrefixTree {
 
     /**
      * Prefix computation using a prefix network.

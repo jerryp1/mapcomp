@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 /**
- * Prefix sum tree factory.
+ * Prefix tree factory.
  *
  * @author Li Peng
  * @date 2023/10/27
  */
-public class PrefixSumTreeFactory {
+public class PrefixTreeFactory {
     /**
      * Adder type enums.
      */
-    public enum PrefixSumTreeTypes {
+    public enum PrefixTreeTypes {
         /**
          * Parallel prefix tree of Sklansky structure. The structure comes from the following paper:
          *
@@ -41,20 +41,20 @@ public class PrefixSumTreeFactory {
     /**
      * Creates a prefix sum tree.
      *
-     * @param type        type of adder.
-     * @param prefixSumOp specified prefix sum operation.
+     * @param type     type of adder.
+     * @param prefixOp specified prefix sum operation.
      * @return a prefix sum tree.
      */
-    public static PrefixSumTree createPrefixSumTree(PrefixSumTreeTypes type, PrefixSumOp prefixSumOp) {
+    public static PrefixTree createPrefixSumTree(PrefixTreeTypes type, PrefixOp prefixOp) {
         switch (type) {
             case SKLANSKY:
-                return new SklanskyTree(prefixSumOp);
+                return new SklanskyTree(prefixOp);
             case BRENT_KUNG:
-                return new BrentKungTree(prefixSumOp);
+                return new BrentKungTree(prefixOp);
             case KOGGE_STONE:
-                return new KoggeStoneTree(prefixSumOp);
+                return new KoggeStoneTree(prefixOp);
             default:
-                throw new IllegalArgumentException("Invalid " + PrefixSumTreeFactory.PrefixSumTreeTypes.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + PrefixTreeTypes.class.getSimpleName() + ": " + type.name());
         }
     }
 }

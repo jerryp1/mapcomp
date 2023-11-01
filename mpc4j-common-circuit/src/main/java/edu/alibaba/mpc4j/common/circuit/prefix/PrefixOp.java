@@ -1,16 +1,16 @@
-package edu.alibaba.mpc4j.common.circuit.prefixsum;
+package edu.alibaba.mpc4j.common.circuit.prefix;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 
 import java.util.Arrays;
 
 /**
- * Prefix-sum operation interface
+ * Prefix operation interface
  *
  * @author Li Peng
  * @date 2023/10/27
  */
-public interface PrefixSumOp {
+public interface PrefixOp {
     /**
      * Updates the tuples in current level of tree.
      *
@@ -19,9 +19,9 @@ public interface PrefixSumOp {
      * @throws MpcAbortException the protocol failure aborts.
      */
     default void updateCurrentLevel(int[] inputIndexes, int[] outputIndexes) throws MpcAbortException {
-        PrefixSumNode[] currentNodes = getPrefixSumNodes();
-        PrefixSumNode[] inputs1 = Arrays.stream(inputIndexes).mapToObj(i -> currentNodes[i]).toArray(PrefixSumNode[]::new);
-        PrefixSumNode[] inputs2 = Arrays.stream(outputIndexes).mapToObj(i -> currentNodes[i]).toArray(PrefixSumNode[]::new);
+        PrefixNode[] currentNodes = getPrefixSumNodes();
+        PrefixNode[] inputs1 = Arrays.stream(outputIndexes).mapToObj(i -> currentNodes[i]).toArray(PrefixNode[]::new);
+        PrefixNode[] inputs2 = Arrays.stream(inputIndexes).mapToObj(i -> currentNodes[i]).toArray(PrefixNode[]::new);
         operateAndUpdate(inputs1, inputs2, outputIndexes);
     }
 
@@ -30,7 +30,7 @@ public interface PrefixSumOp {
      *
      * @return prefix sum nodes.
      */
-    PrefixSumNode[] getPrefixSumNodes();
+    PrefixNode[] getPrefixSumNodes();
 
     /**
      * Conduct prefix sum operations on inputs.
@@ -40,5 +40,5 @@ public interface PrefixSumOp {
      * @param outputIndexes indexes of outputs.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void operateAndUpdate(PrefixSumNode[] x, PrefixSumNode[] y, int[] outputIndexes) throws MpcAbortException;
+    void operateAndUpdate(PrefixNode[] x, PrefixNode[] y, int[] outputIndexes) throws MpcAbortException;
 }
