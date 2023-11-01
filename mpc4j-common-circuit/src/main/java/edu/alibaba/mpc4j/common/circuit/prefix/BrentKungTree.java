@@ -85,7 +85,12 @@ public class BrentKungTree extends AbstractPrefixTree {
      * @return number of invalid nodes
      */
     private int obtainInvalidNodesNumFirst(int offset, int blockSize) {
-        return (offset - 1) / blockSize + 1;
+        int n = offset / blockSize;
+        if (offset > n * blockSize) {
+            return n + 1;
+        } else {
+            return n;
+        }
     }
 
     /**

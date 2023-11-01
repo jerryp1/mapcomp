@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
@@ -28,5 +28,5 @@ public interface PrefixSumParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZlVector sum(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException;
+    PrefixAggOutput sum(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException;
 }

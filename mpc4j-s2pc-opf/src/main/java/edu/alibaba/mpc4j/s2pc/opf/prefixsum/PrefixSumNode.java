@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixmax;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
 
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixNode;
 
@@ -6,10 +6,11 @@ import java.math.BigInteger;
 
 /**
  * Prefix sum node.
+ *
  * @author Li Peng
  * @date 2023/10/30
  */
-public class PrefixMaxNode implements PrefixNode {
+public class PrefixSumNode implements PrefixNode {
     /**
      * Secret shares of grouping fields.
      */
@@ -19,7 +20,7 @@ public class PrefixMaxNode implements PrefixNode {
      */
     private final BigInteger sumShare;
 
-    public PrefixMaxNode(byte[] groupShare, BigInteger sumShare) {
+    public PrefixSumNode(byte[] groupShare, BigInteger sumShare) {
         this.groupShare = groupShare;
         this.sumShare = sumShare;
     }

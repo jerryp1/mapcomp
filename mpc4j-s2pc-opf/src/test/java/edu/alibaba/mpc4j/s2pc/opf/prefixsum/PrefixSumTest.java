@@ -1,23 +1,15 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.okve.dokvs.gf2e.BinaryGf2eDokvs;
-import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.rrk20.Rrk20ZlMaxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum.PrefixSumFactory.PrefixSumTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum.xxx23.Xxx23PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumFactory.PrefixSumTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumConfig;
 import org.apache.commons.lang3.time.StopWatch;
-import org.checkerframework.checker.units.qual.Prefix;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +35,7 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 100;
+    private static final int DEFAULT_NUM = 1 << 10;
     /**
      * large num
      */
@@ -65,9 +57,9 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // RRK+20, default zl
+        // default zl
         configurations.add(new Object[]{
-                PrefixSumTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            PrefixSumTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new Xxx23PrefixSumConfig.Builder(DEFAULT_ZL, true).build()
         });
         // RRK+20, small zl
@@ -146,7 +138,7 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         // generate inputs
         byte[][] groupings = new byte[num][];
         BigInteger[] aggs = new BigInteger[num];
-        for (int i = 0; i < num ;i++) {
+        for (int i = 0; i < num; i++) {
             groupings[i] = BigIntegerUtils.nonNegBigIntegerToByteArray(BigInteger.valueOf(i / groupSize), zl.getByteL());
             aggs[i] = BigInteger.valueOf(i);
         }
@@ -159,9 +151,9 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         Vector<byte[]> groupShares1 = IntStream.range(0, num).mapToObj(i ->
             BytesUtils.xor(groupings[i], groupShares0.elementAt(i))).collect(Collectors.toCollection(Vector::new));
 
-        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i ->
+        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
             new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
-        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i ->
+        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
             zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
 
         // init the protocol
@@ -185,9 +177,9 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            SquareZlVector shareZ0 = senderThread.getShareZ();
-            SquareZlVector shareZ1 = receiverThread.getShareZ();
-            assertOutput(groupings, aggs,  shareZ0, shareZ1);
+            PrefixAggOutput shareZ0 = senderThread.getShareZ();
+            PrefixAggOutput shareZ1 = receiverThread.getShareZ();
+            assertOutput(groupings, aggs, shareZ0, shareZ1);
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
@@ -198,15 +190,32 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         new Thread(receiver::destroy).start();
     }
 
-    private void assertOutput(byte[][] groupings, BigInteger[] aggs, SquareZlVector shareZ0, SquareZlVector shareZ1) {
+    private void assertOutput(byte[][] groupings, BigInteger[] aggs, PrefixAggOutput shareZ0, PrefixAggOutput shareZ1) {
         int num = aggs.length;
-        BigInteger[] groupingsBigInt = IntStream.range(0, num).mapToObj(i -> BigIntegerUtils.byteArrayToNonNegBigInteger(groupings[i])).toArray(BigInteger[]::new);
+        // true
+        List<BigInteger> trueGroup = IntStream.range(0, num).mapToObj(i -> BigIntegerUtils.byteArrayToNonNegBigInteger(groupings[i])).collect(Collectors.toList());
+        List<BigInteger> trueAgg = Arrays.asList(aggs);
+        Map<BigInteger, BigInteger> trueMap = genTrue(trueGroup, trueAgg);
+        // result
+        List<BigInteger> resultGroup = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(shareZ0.getGroupings().elementAt(i), shareZ1.getGroupings().elementAt(i)))
+            .map(BigIntegerUtils::byteArrayToNonNegBigInteger).collect(Collectors.toList());
+        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
+        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
+        // result
+        Assert.assertEquals(trueMap, resultMap);
+    }
 
-        BigInteger[] result = shareZ0.getZlVector().add(shareZ1.getZlVector()).getElements();
-        System.out.println(123);
-//        List<BigInteger> xElements = Arrays.asList(x0.add(x1).getElements());
-//        BigInteger z = shareZ0.getZlVector().add(shareZ1.getZlVector()).getElement(0);
-//        Collections.sort(xElements);
-//        Assert.assertEquals(z, xElements.get(xElements.size() - 1));
+    private Map<BigInteger, BigInteger> genTrue(List<BigInteger> trueGroup, List<BigInteger> trueAgg) {
+        int num = trueAgg.size();
+        Map<BigInteger, BigInteger> map = new HashMap<>();
+        for (int i = 0; i < num; i++) {
+            BigInteger key = trueGroup.get(i);
+            if (map.containsKey(key)) {
+                map.put(key, map.get(key).add(trueAgg.get(i)));
+            } else {
+                map.put(key, trueAgg.get(i));
+            }
+        }
+        return map;
     }
 }

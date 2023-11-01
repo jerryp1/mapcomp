@@ -1,8 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum.PrefixSumFactory.PrefixSumTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumFactory.PrefixSumTypes;
 
 /**
  * Prefix Sum Config.
@@ -22,4 +22,9 @@ public interface PrefixSumConfig extends MultiPartyPtoConfig {
      * Zl
      */
     Zl getZl();
+
+    /**
+     * whether need shuffle result before output.
+     */
+    boolean needShuffle();
 }

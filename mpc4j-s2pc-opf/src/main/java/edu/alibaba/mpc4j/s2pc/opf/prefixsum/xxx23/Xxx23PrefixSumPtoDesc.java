@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Xxx23 prefix sum protocol description. The protocol comes from Algorithm 2 of the following paper:
+ * Xxx23 prefix sum protocol description. The protocol comes from the following paper:
  * <p>
  *
  * </p>

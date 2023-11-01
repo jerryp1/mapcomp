@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -35,7 +35,7 @@ class PrefixSumPartyThread extends Thread {
     /**
      * z
      */
-    private SquareZlVector shareZ;
+    private PrefixAggOutput shareZ;
 
     PrefixSumPartyThread(PrefixSumParty prefixSumParty, Vector<byte[]> groups, SquareZlVector aggs) {
         this.prefixSumParty = prefixSumParty;
@@ -45,15 +45,15 @@ class PrefixSumPartyThread extends Thread {
         this.num = groups.size();
     }
 
-    SquareZlVector getShareZ() {
+    PrefixAggOutput getShareZ() {
         return shareZ;
     }
 
     @Override
     public void run() {
         try {
-            prefixSumParty.init(l,num);
-            shareZ = prefixSumParty.sum(groups,aggs);
+            prefixSumParty.init(l, num);
+            shareZ = prefixSumParty.sum(groups, aggs);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

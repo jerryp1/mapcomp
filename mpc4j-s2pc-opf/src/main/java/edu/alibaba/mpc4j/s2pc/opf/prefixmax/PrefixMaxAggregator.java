@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.agg.prefixmax;
+package edu.alibaba.mpc4j.s2pc.opf.prefixmax;
 
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixNode;
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixOp;
@@ -20,7 +20,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
@@ -28,7 +27,6 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Vector;
 import java.util.stream.IntStream;
 
