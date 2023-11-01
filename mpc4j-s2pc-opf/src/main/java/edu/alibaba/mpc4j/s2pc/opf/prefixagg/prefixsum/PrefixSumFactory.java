@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumSender;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumSender;
 
 /**
  * Prefix sum factory.

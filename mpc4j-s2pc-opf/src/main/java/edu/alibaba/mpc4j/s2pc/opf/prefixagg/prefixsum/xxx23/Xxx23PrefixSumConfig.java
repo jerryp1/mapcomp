@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23;
 
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixTreeFactory.PrefixTreeTypes;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
@@ -10,8 +10,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumFactory.PrefixSumTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 

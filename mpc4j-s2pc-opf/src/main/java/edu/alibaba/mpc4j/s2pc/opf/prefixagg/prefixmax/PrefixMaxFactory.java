@@ -1,10 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixmax;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23.Xxx23PrefixMaxConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23.Xxx23PrefixMaxReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23.Xxx23PrefixMaxSender;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxSender;
 
 /**
  * Prefix max factory.

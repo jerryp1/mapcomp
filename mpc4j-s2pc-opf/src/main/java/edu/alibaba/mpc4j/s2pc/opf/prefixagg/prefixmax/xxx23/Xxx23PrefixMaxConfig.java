@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23;
 
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixTreeFactory.PrefixTreeTypes;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
@@ -12,8 +12,8 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 

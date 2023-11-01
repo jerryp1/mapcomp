@@ -1,28 +1,26 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-import java.io.Serializable;
-
 /**
- * Xxx23 prefix max protocol description. The protocol comes from the following paper:
+ * Xxx23 prefix sum protocol description. The protocol comes from the following paper:
  * <p>
  *
  * </p>
  *
  * @author Li Peng
- * @date 2023/11/1
+ * @date 2023/5/30
  */
-public class Xxx23PrefixMaxPtoDesc implements PtoDesc, Serializable {
+public class Xxx23PrefixSumPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -8073511943334422743L);
+    private static final int PTO_ID = Math.abs((int) -4981462137146781151L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_PREFIX_MAX";
+    private static final String PTO_NAME = "XXX23_PREFIX_SUM";
 
     /**
      * protocol step
@@ -34,12 +32,12 @@ public class Xxx23PrefixMaxPtoDesc implements PtoDesc, Serializable {
     /**
      * singleton mode
      */
-    private static final Xxx23PrefixMaxPtoDesc INSTANCE = new Xxx23PrefixMaxPtoDesc();
+    private static final Xxx23PrefixSumPtoDesc INSTANCE = new Xxx23PrefixSumPtoDesc();
 
     /**
      * private constructor.
      */
-    private Xxx23PrefixMaxPtoDesc() {
+    private Xxx23PrefixSumPtoDesc() {
         // empty
     }
 

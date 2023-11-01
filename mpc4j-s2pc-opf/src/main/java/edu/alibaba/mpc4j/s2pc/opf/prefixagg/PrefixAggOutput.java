@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg;
 
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
@@ -14,11 +14,11 @@ public class PrefixAggOutput {
     /**
      * secret shares of grouping fields.
      */
-    private Vector<byte[]> groupings;
+    private final Vector<byte[]> groupings;
     /**
      * secret shares of aggregation fields.
      */
-    private SquareZlVector aggs;
+    private final SquareZlVector aggs;
 
     public PrefixAggOutput(Vector<byte[]> groupings, SquareZlVector aggs) {
         this.groupings = groupings;

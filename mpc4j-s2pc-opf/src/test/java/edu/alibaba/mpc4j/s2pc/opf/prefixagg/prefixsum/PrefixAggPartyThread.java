@@ -1,7 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
 import java.util.Vector;
 

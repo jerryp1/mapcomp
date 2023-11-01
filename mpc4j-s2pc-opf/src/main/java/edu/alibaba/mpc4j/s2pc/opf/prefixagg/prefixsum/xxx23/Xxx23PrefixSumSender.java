@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23;
+package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23;
 
 import edu.alibaba.mpc4j.common.circuit.prefix.PrefixTreeFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumAggregator;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 
 import java.util.concurrent.TimeUnit;
