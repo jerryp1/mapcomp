@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/10/30
  */
-public abstract class PrefixSumAggregator extends AbstractTwoPartyPto implements PrefixOp, PrefixSumParty {
+public abstract class PrefixSumAggregator extends AbstractTwoPartyPto implements PrefixOp, PrefixAggParty {
     /**
      * z2 circuit party.
      */
@@ -84,7 +84,7 @@ public abstract class PrefixSumAggregator extends AbstractTwoPartyPto implements
     }
 
     @Override
-    public PrefixAggOutput sum(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException {
+    public PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException {
         checkInputs(groupField, sumField);
         // generate prefix sum nodes.
         genNodes(groupField, sumField);
@@ -159,9 +159,9 @@ public abstract class PrefixSumAggregator extends AbstractTwoPartyPto implements
         // group_out = group_in1
         byte[][] groupingOut = Arrays.stream(input1).map(PrefixSumNode::getGroupShare).toArray(byte[][]::new);
         // group_indicator = (group_in1 ?= group_in2)
-        SquareZ2Vector groupIndicatorOut = (SquareZ2Vector) z2IntegerCircuit.eq(groupIn1Bc, groupIn2Bc);
+        SquareZ2Vector groupIndicator = (SquareZ2Vector) z2IntegerCircuit.eq(groupIn1Bc, groupIn2Bc);
         // sum_out = ((group_in1 ?= group_in2) ? sum_in2 : 0) + sum_in1
-        SquareZlVector sumOut = zlcParty.add(zlMuxParty.mux(groupIndicatorOut, sumIn2Ac), sumIn1Ac);
+        SquareZlVector sumOut = zlcParty.add(zlMuxParty.mux(groupIndicator, sumIn2Ac), sumIn1Ac);
 
         return IntStream.range(0, num).mapToObj(i ->
             new PrefixSumNode(groupingOut[i], sumOut.getZlVector().getElement(i))).toArray(PrefixSumNode[]::new);

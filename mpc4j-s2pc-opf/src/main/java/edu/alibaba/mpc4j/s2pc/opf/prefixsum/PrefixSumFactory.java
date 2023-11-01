@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumSender;
  * Prefix sum factory.
  *
  * @author Li Peng
- * @date 2023/6/1
+ * @date 2023/10/30
  */
 public class PrefixSumFactory {
     /**

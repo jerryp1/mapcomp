@@ -6,16 +6,16 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import java.util.Vector;
 
 /**
- * Zl Max party thread.
+ * Prefix aggregation party thread.
  *
  * @author Li Peng
  * @date 2023/10/30
  */
-class PrefixSumPartyThread extends Thread {
+class PrefixAggPartyThread extends Thread {
     /**
      * the sender
      */
-    private final PrefixSumParty prefixSumParty;
+    private final PrefixAggParty prefixAggParty;
     /**
      * x
      */
@@ -37,8 +37,8 @@ class PrefixSumPartyThread extends Thread {
      */
     private PrefixAggOutput shareZ;
 
-    PrefixSumPartyThread(PrefixSumParty prefixSumParty, Vector<byte[]> groups, SquareZlVector aggs) {
-        this.prefixSumParty = prefixSumParty;
+    PrefixAggPartyThread(PrefixAggParty prefixAggParty, Vector<byte[]> groups, SquareZlVector aggs) {
+        this.prefixAggParty = prefixAggParty;
         this.groups = groups;
         this.aggs = aggs;
         this.l = aggs.getZl().getL();
@@ -52,8 +52,8 @@ class PrefixSumPartyThread extends Thread {
     @Override
     public void run() {
         try {
-            prefixSumParty.init(l, num);
-            shareZ = prefixSumParty.sum(groups, aggs);
+            prefixAggParty.init(l, num);
+            shareZ = prefixAggParty.agg(groups, aggs);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

@@ -12,7 +12,7 @@ import java.util.Vector;
  * @author Li Peng
  * @date 2023/10/30
  */
-public interface PrefixSumParty extends TwoPartyPto {
+public interface PrefixAggParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
@@ -28,5 +28,5 @@ public interface PrefixSumParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput sum(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException;
+    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException;
 }

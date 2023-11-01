@@ -1,22 +1,22 @@
-package edu.alibaba.mpc4j.s2pc.opf.prefixsum;
+package edu.alibaba.mpc4j.s2pc.opf.prefixmax;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumFactory.PrefixSumTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
 
 /**
- * Prefix Sum Config.
+ * Prefix max config.
  *
  * @author Li Peng
- * @date 2023/10/30
+ * @date 2023/11/1
  */
-public interface PrefixSumConfig extends MultiPartyPtoConfig {
+public interface PrefixMaxConfig extends MultiPartyPtoConfig {
     /**
      * Gets the protocol type.
      *
      * @return the protocol type.
      */
-    PrefixSumTypes getPtoType();
+    PrefixMaxTypes getPtoType();
 
     /**
      * Zl

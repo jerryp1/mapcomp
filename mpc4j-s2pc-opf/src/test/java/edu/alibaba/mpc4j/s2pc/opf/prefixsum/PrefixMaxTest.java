@@ -7,8 +7,10 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.PrefixSumFactory.PrefixSumTypes;
-import edu.alibaba.mpc4j.s2pc.opf.prefixsum.xxx23.Xxx23PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixmax.xxx23.Xxx23PrefixMaxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,13 +26,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Prefix sum Test.
+ * Prefix max Test.
  *
  * @author Li Peng
- * @date 2023/10/30
+ * @date 2023/11/1
  */
 @RunWith(Parameterized.class)
-public class PrefixSumTest extends AbstractTwoPartyPtoTest {
+public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrefixMaxTest.class);
     /**
      * default num
@@ -55,8 +57,8 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
 
         // default zl
         configurations.add(new Object[]{
-            PrefixSumTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new Xxx23PrefixSumConfig.Builder(DEFAULT_ZL, true).build()
+            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, true).build()
         });
 
         return configurations;
@@ -65,9 +67,9 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
     /**
      * the config
      */
-    private final PrefixSumConfig config;
+    private final PrefixMaxConfig config;
 
-    public PrefixSumTest(String name, PrefixSumConfig config) {
+    public PrefixMaxTest(String name, PrefixMaxConfig config) {
         super(name);
         this.config = config;
         this.zl = config.getZl();
@@ -148,8 +150,8 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
             zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
 
         // init the protocol
-        PrefixAggParty sender = PrefixSumFactory.createPrefixSumSender(firstRpc, secondRpc.ownParty(), config);
-        PrefixAggParty receiver = PrefixSumFactory.createPrefixSumReceiver(secondRpc, firstRpc.ownParty(), config);
+        PrefixAggParty sender = PrefixMaxFactory.createPrefixMaxSender(firstRpc, secondRpc.ownParty(), config);
+        PrefixAggParty receiver = PrefixMaxFactory.createPrefixMaxReceiver(secondRpc, firstRpc.ownParty(), config);
 
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
@@ -202,7 +204,7 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         for (int i = 0; i < num; i++) {
             BigInteger key = trueGroup.get(i);
             if (map.containsKey(key)) {
-                map.put(key, map.get(key).add(trueAgg.get(i)));
+                map.put(key, map.get(key).compareTo(trueAgg.get(i)) < 0 ? trueAgg.get(i) : map.get(key));
             } else {
                 map.put(key, trueAgg.get(i));
             }

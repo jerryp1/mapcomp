@@ -5,9 +5,10 @@ import edu.alibaba.mpc4j.common.circuit.prefix.PrefixNode;
 import java.math.BigInteger;
 
 /**
- * Prefix sum node.
+ * Prefix max node.
+ *
  * @author Li Peng
- * @date 2023/10/30
+ * @date 2023/11/1
  */
 public class PrefixMaxNode implements PrefixNode {
     /**
@@ -28,7 +29,7 @@ public class PrefixMaxNode implements PrefixNode {
         return groupShare;
     }
 
-    public BigInteger getSumShare() {
+    public BigInteger getMaxShare() {
         return sumShare;
     }
 }
