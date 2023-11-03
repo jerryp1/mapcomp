@@ -303,7 +303,7 @@ public class Numth {
     }
 
     /**
-     * Compute a^{-1} mod b using Extended Gcd, basic idea is that gdc(a, b) = ax + by, if gcd(a, b) = 1, then
+     * Compute a^{-1} mod b using Extended Gcd, basic idea is that gcd(a, b) = ax + by, if gcd(a, b) = 1, then
      * 1 = ax + by, both sides mod b: 1 mod b = ax mod b, so a^{-1} mod b = x mod b.
      *
      * @param value   value a.
