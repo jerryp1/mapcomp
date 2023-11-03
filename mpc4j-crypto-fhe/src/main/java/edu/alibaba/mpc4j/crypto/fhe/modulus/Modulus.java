@@ -17,7 +17,7 @@ import java.util.Arrays;
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/modulus.h.
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/3
  */
 public class Modulus implements Cloneable {

@@ -35,14 +35,6 @@ class ModArithLazy {
         twoTimesModulus = modulus.getValue() << 1;
     }
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-            .append("modulus", modulus)
-            .append("twoTimesModulus", twoTimesModulus)
-            .build();
-    }
-
     /**
      * Computes a + b mod modulus, where the result is in [0, 2 * modulus - 1).
      *
@@ -109,5 +101,13 @@ class ModArithLazy {
      */
     public long guard(long a) {
         return a >= twoTimesModulus ? a - twoTimesModulus : a;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+            .append("modulus", modulus)
+            .append("twoTimesModulus", twoTimesModulus)
+            .build();
     }
 }

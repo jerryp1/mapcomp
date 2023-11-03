@@ -167,11 +167,8 @@ public class RnsTool {
             baseTGamma = new RnsBase(new Modulus[]{t, gamma});
         }
 
-        // todo: create NTTTablses
+        // here we create the reference of the table, NttTablesCreateIter.createNttTables will create instances.
         baseBskNttTables = new NttTables[baseBskSize];
-        for (int i = 0; i < baseBSize; i++) {
-            baseBskNttTables[i] = new NttTables();
-        }
         try {
             NttTablesCreateIter.createNttTables(
                     coeffCountPower,
