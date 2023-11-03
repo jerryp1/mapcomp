@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
 /**
- * This Class for some common arithmetic computation.
+ * Some common arithmetic computation.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/common.h
  * </p>
