@@ -19,7 +19,7 @@ public class UintArithmeticSmallMod {
      *
      * @param operand1 operand1 with uint64 value array.
      * @param operand2 operand2 with uint64 value array.
-     * @param count    count of uint64 value used in operand1 and operand2.
+     * @param count    number of uint64 values in operand1 and operand2.
      * @param modulus  modulus.
      * @return Σ_i (a_i * b_i) mod modulus, i ∈ [0, count).
      */

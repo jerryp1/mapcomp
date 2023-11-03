@@ -16,7 +16,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
  * @author Qixian Zhou
  * @date 2023/8/27
  */
-public class NttHandler {
+class NttHandler {
 
     private ModArithLazy arithmetic;
 
