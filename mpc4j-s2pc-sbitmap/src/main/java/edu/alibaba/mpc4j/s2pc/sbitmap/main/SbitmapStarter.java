@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
@@ -80,6 +81,10 @@ public class SbitmapStarter {
      * ε
      */
     protected double[] epsilons;
+    /**
+     * zl
+     */
+    protected Zl zl;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
@@ -229,7 +234,7 @@ public class SbitmapStarter {
         throws MpcAbortException {
         LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
 
-        SbitmapConfig sbitmapConfig = new SbitmapConfig.Builder(ownSchema)
+        SbitmapConfig sbitmapConfig = new SbitmapConfig.Builder(ownSchema, zl)
             .build();
         SbitmapPtoRunner ptoRunner = createRunner(sbitmapConfig);
         ptoRunner.init();
@@ -253,8 +258,7 @@ public class SbitmapStarter {
         LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
         for (double epsilon : epsilons) {
             Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
-            SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema)
-                .addLdpConfig(ldpConfigs)
+            SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema,zl)
                 .build();
             SbitmapPtoRunner ptoRunner = createRunner(slaveConfig);
             ptoRunner.init();

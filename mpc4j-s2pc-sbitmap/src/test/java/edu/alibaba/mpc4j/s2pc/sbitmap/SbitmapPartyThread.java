@@ -13,15 +13,15 @@ import smile.data.DataFrame;
  */
 public class SbitmapPartyThread extends Thread {
     /**
-     * 主机
+     * party
      */
     private final SbitmapPtoParty party;
     /**
-     * 主机训练数据
+     * dataset
      */
     private final DataFrame dataframe;
     /**
-     * 主机配置参数
+     * sbitmap config
      */
     private final SbitmapConfig sbitmapConfig;
     /**

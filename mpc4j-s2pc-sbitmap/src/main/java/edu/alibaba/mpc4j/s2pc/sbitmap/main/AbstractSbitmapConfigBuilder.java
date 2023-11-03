@@ -26,17 +26,12 @@ public abstract class AbstractSbitmapConfigBuilder<T> implements org.apache.comm
      */
     private final StructType schema;
     /**
-     * ldp config map.
-     */
-    private final Map<String, LdpConfig> ldpConfigMap;
-    /**
      * pid config.
      */
     private PidConfig pidConfig;
 
     public AbstractSbitmapConfigBuilder(StructType schema) {
         this.schema = schema;
-        ldpConfigMap = new HashMap<>(schema.length());
         pidConfig = new Bkms20EccPidConfig.Builder().build();
     }
 
@@ -44,65 +39,8 @@ public abstract class AbstractSbitmapConfigBuilder<T> implements org.apache.comm
         this.pidConfig = pidConfig;
     }
 
-    /**
-     * add ldp config map.
-     *
-     * @param ldpConfigMap ldp config map.
-     * @return ldp config builder.
-     */
-    protected AbstractSbitmapConfigBuilder<T> addLdpConfig(Map<String, LdpConfig> ldpConfigMap) {
-        for (String name : ldpConfigMap.keySet()) {
-            innerAddLdpConfig(name, ldpConfigMap.get(name));
-        }
-        return this;
-    }
-
-    /**
-     * add ldp config map.
-     *
-     * @param name      name.
-     * @param ldpConfig ldp config.
-     * @return ldp config builder.
-     */
-    protected AbstractSbitmapConfigBuilder<T> addLdpConfig(String name, LdpConfig ldpConfig) {
-        innerAddLdpConfig(name, ldpConfig);
-        return this;
-    }
-
-    private void innerAddLdpConfig(String name, LdpConfig ldpConfig) {
-        StructField structField = schema.field(name);
-        if (structField.measure instanceof NominalScale) {
-            // encodeLdpConfig for nominalScale
-            assert ldpConfig instanceof EncodeLdpConfig
-                : "LDP for " + name + " must be " + EncodeLdpConfig.class.getSimpleName();
-            NominalScale nominalScale = (NominalScale) structField.measure;
-            EncodeLdpConfig encodeLdpConfig = (EncodeLdpConfig) ldpConfig;
-            Set<String> labelSet = encodeLdpConfig.getLabelSet();
-            // assert consistency
-            for (String label : nominalScale.levels()) {
-                assert labelSet.contains(label) : label + " is not in label set";
-            }
-            assert labelSet.size() == nominalScale.size() : "# labels in schema does not match # labels in label set";
-        } else if (structField.type.isIntegral()) {
-            // IntegralLdpConfig for integral
-            assert ldpConfig instanceof IntegralLdpConfig
-                : "LDP for " + name + " must be " + IntegralLdpConfig.class.getSimpleName();
-        } else if (structField.type.isFloating()) {
-            // RealLdpConfig for floating
-            assert ldpConfig instanceof RealLdpConfig
-                : "LDP for " + name + " must be " + RealLdpConfig.class.getSimpleName();
-        } else {
-            throw new IllegalArgumentException("Does not support LDP for " + name + " with measure: " + structField.measure);
-        }
-        ldpConfigMap.put(name, ldpConfig);
-    }
-
     public StructType getSchema() {
         return schema;
-    }
-
-    public Map<String, LdpConfig> getLdpConfigMap() {
-        return ldpConfigMap;
     }
 
     public PidConfig getPidConfig() {
