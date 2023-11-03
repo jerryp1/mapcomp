@@ -4,12 +4,10 @@ import edu.alibaba.mpc4j.crypto.fhe.iterator.PolyIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
 
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * NTT tool class, used to perform NTT operations on polynomials.
- * Note that there is no such class in SEAL.
+ * NTT tool class, used to perform NTT operations on polynomials. Note that there is no such class in SEAL.
  * Here, the NTT related methods in SEAL under the util namespace are encapsulated into this class.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/ntt.h#L195
@@ -19,51 +17,46 @@ import java.util.stream.IntStream;
  * @date 2023/8/27
  */
 public class NttTool {
-
-    public static void nttNegAcyclicHarveyLazy(long[] operand, NttTables tables) {
-        tables.nttHandler.transformToRev(
-                operand,
-                tables.getCoeffCountPower(),
-                tables.getRootPowers(),
-                null
-        );
+    /**
+     * Negative cyclic NTT using Harvey's lazy butterfly. Negative cyclic means NTT in Z[x] / (x^n + 1) rather than
+     * Z[x] / (x^n + 1), where the latter is named positive cyclic NTT.
+     *
+     * @param values A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
+     * @param tables the pre-computed NTT tables.
+     */
+    public static void nttNegacyclicHarveyLazy(long[] values, NttTables tables) {
+        tables.nttHandler.transformToRev(values, tables.getCoeffCountPower(), tables.getRootPowers(), null);
     }
 
-    public static void nttNegAcyclicHarveyLazy(long[] operandArray, int startIndex, NttTables tables) {
-        tables.nttHandler.transformToRev(
-                operandArray,
-                startIndex,
-                tables.getCoeffCountPower(),
-                tables.getRootPowers(),
-                null
-        );
+    /**
+     * Negative cyclic NTT using Harvey's lazy butterfly. Negative cyclic means NTT in Z[x] / (x^n + 1) rather than
+     * Z[x] / (x^n + 1), where the latter is named positive cyclic NTT.
+     *
+     * @param values     A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
+     * @param startIndex the start index.
+     * @param tables     the pre-computed NTT tables.
+     */
+    public static void nttNegacyclicHarveyLazy(long[] values, int startIndex, NttTables tables) {
+        tables.nttHandler.transformToRev(values, startIndex, tables.getCoeffCountPower(), tables.getRootPowers(), null);
     }
 
-
-    public static void nttNegAcyclicHarveyLazy(RnsIter operand, int coeffModulusSize, NttTables[] tables) {
-
+    public static void nttNegacyclicHarveyLazy(RnsIter operand, int coeffModulusSize, NttTables[] tables) {
         for (int i = 0; i < coeffModulusSize; i++) {
-            nttNegAcyclicHarvey(operand.coeffIter, i * tables[i].getCoeffCount(), tables[i]);
+            nttNegacyclicHarvey(operand.coeffIter, i * tables[i].getCoeffCount(), tables[i]);
         }
     }
 
-
-    public static void nttNegAcyclicHarveyLazy(PolyIter operand, int size, NttTables[] tables) {
+    public static void nttNegacyclicHarveyLazy(PolyIter operand, int size, NttTables[] tables) {
         int coeffModulusSize = operand.getCoeffModulusSize();
-
-
-        IntStream.range(0, size).forEach(
-                i -> nttNegAcyclicHarveyLazy(operand.getRnsIter(i), coeffModulusSize, tables)
-        );
+        for (int i = 0; i < size; i++) {
+            nttNegacyclicHarveyLazy(operand.getRnsIter(i), coeffModulusSize, tables);
+        }
     }
 
-    public static void nttNegAcyclicHarvey(RnsIter operand, int coeffModulusSize, NttTables[] tables) {
-
-
+    public static void nttNegacyclicHarvey(RnsIter operand, int coeffModulusSize, NttTables[] tables) {
         for (int i = 0; i < coeffModulusSize; i++) {
-            nttNegAcyclicHarvey(operand.coeffIter, i * tables[i].getCoeffCount(), tables[i]);
+            nttNegacyclicHarvey(operand.coeffIter, i * tables[i].getCoeffCount(), tables[i]);
         }
-
     }
 
     /**
@@ -79,7 +72,7 @@ public class NttTool {
         assert rnsIterCoeffCount == tables[0].getCoeffCount();
 
         for (int i = 0; i < coeffModulusSize; i++) {
-            nttNegAcyclicHarvey(rnsIter, i * rnsIterCoeffCount, tables[i]);
+            nttNegacyclicHarvey(rnsIter, i * rnsIterCoeffCount, tables[i]);
         }
 
 //        IntStream.range(0, coeffModulusSize).parallel().forEach(
@@ -94,11 +87,11 @@ public class NttTool {
      * @param coeffModulusSize k
      * @param tables
      */
-    public static void nttNegAcyclicHarvey(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
+    public static void nttNegacyclicHarvey(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
 
         assert rnsIter.length == coeffModulusSize * tables[0].getCoeffCount();
         for (int i = 0; i < coeffModulusSize; i++) {
-            nttNegAcyclicHarvey(rnsIter, i * tables[i].getCoeffCount(), tables[i]);
+            nttNegacyclicHarvey(rnsIter, i * tables[i].getCoeffCount(), tables[i]);
         }
 
 //        IntStream.range(0, coeffModulusSize).parallel().forEach(
@@ -106,12 +99,12 @@ public class NttTool {
 //        );
     }
 
-    public static void nttNegAcyclicHarveyLazy(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
+    public static void nttNegacyclicHarveyLazy(long[] rnsIter, int coeffModulusSize, NttTables[] tables) {
 
         assert rnsIter.length == coeffModulusSize * tables[0].getCoeffCount();
 
         IntStream.range(0, coeffModulusSize).forEach(
-                i -> nttNegAcyclicHarveyLazy(rnsIter, i * tables[i].getCoeffCount(), tables[i])
+            i -> nttNegacyclicHarveyLazy(rnsIter, i * tables[i].getCoeffCount(), tables[i])
         );
     }
 
@@ -124,10 +117,10 @@ public class NttTool {
      * @param tables
      */
     public static void nttNegAcyclicHarveyLazyRnsIter(
-            long[] polyIter,
-            int startIndex,
-            int coeffModulusSize,
-            NttTables[] tables) {
+        long[] polyIter,
+        int startIndex,
+        int coeffModulusSize,
+        NttTables[] tables) {
 
         assert startIndex % (coeffModulusSize * tables[0].getCoeffCount()) == 0;
         assert coeffModulusSize == tables.length;
@@ -135,10 +128,10 @@ public class NttTool {
         int coeffCount = tables[0].getCoeffCount();
 
         for (int i = 0; i < coeffModulusSize; i++) {
-            nttNegAcyclicHarveyLazy(
-                    polyIter,
-                    startIndex + i * coeffCount,
-                    tables[i]);
+            nttNegacyclicHarveyLazy(
+                polyIter,
+                startIndex + i * coeffCount,
+                tables[i]);
         }
 
 //        IntStream.range(0, coeffModulusSize).parallel().forEach(
@@ -151,15 +144,15 @@ public class NttTool {
     }
 
     public static void inverseNttNegAcyclicHarveyLazyRnsIter(
-            long[] polyIter,
-            int startIndex,
-            int coeffModulusSize,
-            NttTables[] tables) {
+        long[] polyIter,
+        int startIndex,
+        int coeffModulusSize,
+        NttTables[] tables) {
 
         assert startIndex % (coeffModulusSize * tables[0].getCoeffCount()) == 0;
 
         IntStream.range(0, coeffModulusSize).forEach(
-                i -> inverseNttNegAcyclicHarveyLazy(polyIter, startIndex + i * tables[i].getCoeffCount(), tables[i])
+            i -> inverseNttNegAcyclicHarveyLazy(polyIter, startIndex + i * tables[i].getCoeffCount(), tables[i])
         );
     }
 
@@ -171,22 +164,22 @@ public class NttTool {
      * @param coeffModulusSize
      * @param tables
      */
-    public static void nttNegAcyclicHarvey(long[] polyIter, int startIndex, int coeffModulusSize, NttTables[] tables) {
+    public static void nttNegacyclicHarvey(long[] polyIter, int startIndex, int coeffModulusSize, NttTables[] tables) {
 
         assert startIndex % coeffModulusSize * tables[0].getCoeffCount() == 0;
 
         for (int i = 0; i < coeffModulusSize; i++) {
             // RnsIter + startIndex = CoeffIter , 最底层这里仍然只处理 单个 CoeffIter
-            nttNegAcyclicHarvey(polyIter, startIndex + i * tables[i].getCoeffCount(), tables[i]);
+            nttNegacyclicHarvey(polyIter, startIndex + i * tables[i].getCoeffCount(), tables[i]);
         }
     }
 
 
-    public static void nttNegAcyclicHarvey(PolyIter operand, int size, NttTables[] tables) {
+    public static void nttNegacyclicHarvey(PolyIter operand, int size, NttTables[] tables) {
         int coeffModulusSize = operand.getCoeffModulusSize();
 
         IntStream.range(0, size).forEach(
-                i -> nttNegAcyclicHarvey(operand.getRnsIter(i), coeffModulusSize, tables)
+            i -> nttNegacyclicHarvey(operand.getRnsIter(i), coeffModulusSize, tables)
         );
     }
 
@@ -200,11 +193,11 @@ public class NttTool {
      * @param tables
      */
     public static void nttNegAcyclicHarveyPolyIter(
-            long[] operand,
-            int operandCoeffCount,
-            int operandCoeffModulusSize,
-            int size,
-            NttTables[] tables) {
+        long[] operand,
+        int operandCoeffCount,
+        int operandCoeffModulusSize,
+        int size,
+        NttTables[] tables) {
 
         // 遍历每一个密文多项式
         for (int i = 0; i < size; i++) {
@@ -212,21 +205,21 @@ public class NttTool {
             // 遍历每一个 rns 下的 多项式
             for (int j = 0; j < operandCoeffModulusSize; j++) {
                 // 处理每一个 CoeffIter
-                nttNegAcyclicHarvey(
-                        operand,
-                        rnsStartIndex + j * operandCoeffCount,
-                        tables[j]
+                nttNegacyclicHarvey(
+                    operand,
+                    rnsStartIndex + j * operandCoeffCount,
+                    tables[j]
                 );
             }
         }
     }
 
     public static void inverseNttNegAcyclicHarveyPolyIter(
-            long[] operand,
-            int operandCoeffCount,
-            int operandCoeffModulusSize,
-            int size,
-            NttTables[] tables) {
+        long[] operand,
+        int operandCoeffCount,
+        int operandCoeffModulusSize,
+        int size,
+        NttTables[] tables) {
 
         // 遍历每一个密文多项式
         for (int i = 0; i < size; i++) {
@@ -235,20 +228,20 @@ public class NttTool {
             for (int j = 0; j < operandCoeffModulusSize; j++) {
                 // 处理每一个 CoeffIter
                 inverseNttNegAcyclicHarvey(
-                        operand,
-                        rnsStartIndex + j * operandCoeffCount,
-                        tables[j]
+                    operand,
+                    rnsStartIndex + j * operandCoeffCount,
+                    tables[j]
                 );
             }
         }
     }
 
     public static void inverseNttNegAcyclicHarveyLazyPolyIter(
-            long[] operand,
-            int operandCoeffCount,
-            int operandCoeffModulusSize,
-            int size,
-            NttTables[] tables) {
+        long[] operand,
+        int operandCoeffCount,
+        int operandCoeffModulusSize,
+        int size,
+        NttTables[] tables) {
 
         // 遍历每一个密文多项式
         for (int i = 0; i < size; i++) {
@@ -257,19 +250,19 @@ public class NttTool {
             for (int j = 0; j < operandCoeffModulusSize; j++) {
                 // 处理每一个 CoeffIter
                 inverseNttNegAcyclicHarveyLazy(
-                        operand,
-                        rnsStartIndex + j * operandCoeffCount,
-                        tables[j]
+                    operand,
+                    rnsStartIndex + j * operandCoeffCount,
+                    tables[j]
                 );
             }
         }
     }
 
 
-    public static void nttNegAcyclicHarvey(long[] operand, NttTables tables) {
+    public static void nttNegacyclicHarvey(long[] operand, NttTables tables) {
 
 
-        nttNegAcyclicHarveyLazy(operand, tables);
+        nttNegacyclicHarveyLazy(operand, tables);
         // Finally maybe we need to reduce every coefficient modulo q, but we
         // know that they are in the range [0, 4q).
         // Since word size is controlled this is fast.
@@ -288,10 +281,10 @@ public class NttTool {
         }
     }
 
-    public static void nttNegAcyclicHarvey(long[] operandArray, int startIndex, NttTables tables) {
+    public static void nttNegacyclicHarvey(long[] operandArray, int startIndex, NttTables tables) {
 
 
-        nttNegAcyclicHarveyLazy(operandArray, startIndex, tables);
+        nttNegacyclicHarveyLazy(operandArray, startIndex, tables);
         // Finally maybe we need to reduce every coefficient modulo q, but we
         // know that they are in the range [0, 4q).
         // Since word size is controlled this is fast.
@@ -316,10 +309,10 @@ public class NttTool {
         MultiplyUintModOperand invDegreeModulo = tables.getInvDegreeModulo();
 
         tables.nttHandler.transformFromRev(
-                operand,
-                tables.getCoeffCountPower(),
-                tables.getInvRootPowers(),
-                invDegreeModulo
+            operand,
+            tables.getCoeffCountPower(),
+            tables.getInvRootPowers(),
+            invDegreeModulo
         );
     }
 
@@ -328,11 +321,11 @@ public class NttTool {
         MultiplyUintModOperand invDegreeModulo = tables.getInvDegreeModulo();
 
         tables.nttHandler.transformFromRev(
-                operandArray,
-                startIndex,
-                tables.getCoeffCountPower(),
-                tables.getInvRootPowers(),
-                invDegreeModulo
+            operandArray,
+            startIndex,
+            tables.getCoeffCountPower(),
+            tables.getInvRootPowers(),
+            invDegreeModulo
         );
     }
 
@@ -350,7 +343,7 @@ public class NttTool {
         int coeffModulusSize = operand.getCoeffModulusSize();
 
         IntStream.range(0, size).forEach(
-                i -> inverseNttNegAcyclicHarveyLazy(operand.getRnsIter(i), coeffModulusSize, tables)
+            i -> inverseNttNegAcyclicHarveyLazy(operand.getRnsIter(i), coeffModulusSize, tables)
         );
     }
 
@@ -377,7 +370,7 @@ public class NttTool {
         int coeffModulusSize = operand.getCoeffModulusSize();
 
         IntStream.range(0, size).forEach(
-                i -> inverseNttNegAcyclicHarvey(operand.getRnsIter(i), coeffModulusSize, tables)
+            i -> inverseNttNegAcyclicHarvey(operand.getRnsIter(i), coeffModulusSize, tables)
         );
     }
 

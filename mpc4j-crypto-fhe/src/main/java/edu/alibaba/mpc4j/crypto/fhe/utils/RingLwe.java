@@ -402,7 +402,7 @@ public class RingLwe {
         // c[j] = u * public_key[j]
         for (int i = 0; i < coeffModulusSize; i++) {
             // u 是 RnsIter, 这里是对 CoeffIter 操作，RnsIter + startIndex ---> CoeffIter
-            NttTool.nttNegAcyclicHarvey(u, i * coeffCount, nttTables[i]);
+            NttTool.nttNegacyclicHarvey(u, i * coeffCount, nttTables[i]);
             // j 是对 密文多项式的索引
             for (int j = 0; j < encryptedSize; j++) {
                 // 注意这里是对 CoeffIter 操作，注意起点的计算
@@ -562,7 +562,7 @@ public class RingLwe {
             samplePolyUniform(ciphertextPrng, parms, destination.getData(), c1StartIndex);
             // c1 长度 k*N, 遍历 c1 中的每一个 poly, 然后做 ntt
             for (int i = 0; i < coeffModulusSize; i++) {
-                NttTool.nttNegAcyclicHarvey(destination.getData(), c1StartIndex + i * coeffCount, nttTables[i]);
+                NttTool.nttNegacyclicHarvey(destination.getData(), c1StartIndex + i * coeffCount, nttTables[i]);
             }
         }
 
@@ -601,7 +601,7 @@ public class RingLwe {
             // e 不是，需要根据参数，决定是否将 e 转换为 NTT，还是 将 as 转回系数表示
             if (isNttForm) {
                 // Transform the noise e into NTT representation
-                NttTool.nttNegAcyclicHarvey(noise, i * coeffCount, nttTables[i]);
+                NttTool.nttNegacyclicHarvey(noise, i * coeffCount, nttTables[i]);
             } else {
                 // 把 当前的 c0 = as 转回 系数表示
                 NttTool.inverseNttNegAcyclicHarvey(destination.getData(), c0StartIndex + i * coeffCount, nttTables[i]);

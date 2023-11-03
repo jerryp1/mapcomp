@@ -9,8 +9,6 @@ import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
-import java.util.stream.IntStream;
-
 /**
  * This class implements the BEHZ RNS scheme. The scheme comes from:
  * <p>
@@ -1193,13 +1191,13 @@ public class RnsTool {
 
                 qiLazy = baseQ.getBase(i).getValue() << 2;
                 // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
             } else {
                 // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
                 // from [0, 4*qi) to [0, 2*qi) after ntt.
                 qiLazy = baseQ.getBase(i).getValue() << 1;
                 // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
 
                 // 对 temp 做第一次 reduce
                 for (int j = 0; j < coeffCount; j++) {
@@ -1280,13 +1278,13 @@ public class RnsTool {
 
                 qiLazy = baseQ.getBase(i).getValue() << 2;
                 // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
             } else {
                 // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
                 // from [0, 4*qi) to [0, 2*qi) after ntt.
                 qiLazy = baseQ.getBase(i).getValue() << 1;
                 // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegAcyclicHarveyLazy(temp, rnsNttTables[i]);
+                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
 
                 // 对 temp 做第一次 reduce
                 for (int j = 0; j < coeffCount; j++) {

@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.crypto.fhe.rns;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTablesCreateIter;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
 import org.junit.Assert;
@@ -577,8 +576,8 @@ public class RnsToolTest {
         in[1] = 2;
         in[2] = 1;
         in[3] = 2;
-        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+        NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
@@ -591,8 +590,8 @@ public class RnsToolTest {
         in[1] = 12;
         in[2] = 4;
         in[3] = 12;
-        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+        NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
@@ -605,8 +604,8 @@ public class RnsToolTest {
         in[1] = 35;
         in[2] = 12;
         in[3] = 9;
-        NttTool.nttNegAcyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegAcyclicHarvey(in, polyModulusDegree, nttTables[1]);
+        NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
+        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);

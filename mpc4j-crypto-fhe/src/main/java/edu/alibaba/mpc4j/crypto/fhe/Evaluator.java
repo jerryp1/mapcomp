@@ -849,7 +849,7 @@ public class Evaluator {
                     }
                     // NTT conversion lazy outputs in [0, 4q)
                     // 直接对整个 CoffIter 处理
-                    NttTool.nttNegAcyclicHarveyLazy(tNtt, keyNttTables[keyIndex]);
+                    NttTool.nttNegacyclicHarveyLazy(tNtt, keyNttTables[keyIndex]);
                     // 一定要赋值给 tOperand 吗？
                     tOperand = tNtt;
                 }
@@ -2329,7 +2329,7 @@ public class Evaluator {
 
             for (int j = 0; j < coeffModulusSize; j++) {
                 // Lazy Reduction, 处理 单个 CoeffIter
-                NttTool.nttNegAcyclicHarveyLazy(
+                NttTool.nttNegacyclicHarveyLazy(
                     encrypted.getData(),
                     rnsStartIndex + j * coeffCount,
                     nttTables[j]

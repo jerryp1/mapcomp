@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
@@ -202,7 +201,7 @@ public class BatchEncoder {
 
         // Transform destination using negacyclic NTT.
         // 现在就是 系数表示法 转换为 点值表示法，正向的 ntt 来一次
-        NttTool.nttNegAcyclicHarvey(tempDest, contextData.getPlainNttTables());
+        NttTool.nttNegacyclicHarvey(tempDest, contextData.getPlainNttTables());
 
         // 再把值重构到 正确的顺序(normal order)上
         long plainModulusDivTwo = modulus >> 1;
@@ -239,7 +238,7 @@ public class BatchEncoder {
 
         // Transform destination using negacyclic NTT.
         // 现在就是 系数表示法 转换为 点值表示法，正向的 ntt 来一次
-        NttTool.nttNegAcyclicHarvey(tempDest, contextData.getPlainNttTables());
+        NttTool.nttNegacyclicHarvey(tempDest, contextData.getPlainNttTables());
 
         // 再把值重构到 正确的顺序(normal order)上
         for (int i = 0; i < slots; i++) {

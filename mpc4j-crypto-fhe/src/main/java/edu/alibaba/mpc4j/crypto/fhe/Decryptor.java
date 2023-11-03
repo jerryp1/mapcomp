@@ -10,13 +10,10 @@ import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
-import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
-import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.Arrays;
 
@@ -214,7 +211,7 @@ public class Decryptor {
                     // todo: need setUint? 还是直接 copy 即可? 直接 copy 吧， SEAL  的 set_uint 可以方便的传入起点，Java里不行，直接copy是最简单的
                     System.arraycopy(encrypted.getData(), c1StartIndex + i * coeffCount, destination, i * coeffCount, coeffCount);
                     // transform c1 to Ntt form
-                    NttTool.nttNegAcyclicHarveyLazy(destination, i * coeffCount, nttTables[i]);
+                    NttTool.nttNegacyclicHarveyLazy(destination, i * coeffCount, nttTables[i]);
                     // put < c_1 * s > mod q in destination
                     PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
                             destination,
@@ -271,7 +268,7 @@ public class Decryptor {
                 // todo: 尝试并行化加速
                 for (int i = 0; i < (encryptedSize - 1); i++) {
                     // 这是 RnsIter 层面的计算
-                    NttTool.nttNegAcyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, coeffModulusSize, nttTables);
+                    NttTool.nttNegacyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, coeffModulusSize, nttTables);
                 }
             }
 
@@ -426,7 +423,7 @@ public class Decryptor {
 
                     System.arraycopy(encrypted.getData(), c1StartIndex + i * coeffCount, destination.coeffIter, i * coeffCount, coeffCount);
                     // transform c1 to Ntt form
-                    NttTool.nttNegAcyclicHarveyLazy(destination.coeffIter, i * coeffCount, nttTables[i]);
+                    NttTool.nttNegacyclicHarveyLazy(destination.coeffIter, i * coeffCount, nttTables[i]);
                     // put < c_1 * s > mod q in destination
                     PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
                             destination.coeffIter,
@@ -478,7 +475,7 @@ public class Decryptor {
                 // todo: 尝试并行化加速
                 for (int i = 0; i < (encryptedSize - 1); i++) {
                     // 这是 RnsIter 层面的计算
-                    NttTool.nttNegAcyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, encryptedSize - 1, nttTables);
+                    NttTool.nttNegacyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, encryptedSize - 1, nttTables);
                 }
             }
 

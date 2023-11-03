@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -86,15 +85,15 @@ public class NttTest {
 
         NttTables tables = new NttTables(coeffCountPower, modulus);
         long[] poly = new long[]{0, 0};
-        NttTool.nttNegAcyclicHarvey(poly, tables);
+        NttTool.nttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(new long[2], poly);
 
         poly = new long[]{1, 0};
-        NttTool.nttNegAcyclicHarvey(poly, tables);
+        NttTool.nttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(new long[]{1, 1}, poly);
 
         poly = new long[]{1, 1};
-        NttTool.nttNegAcyclicHarvey(poly, tables);
+        NttTool.nttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(
                 new long[]{
                         288794978602139553L,
@@ -119,7 +118,7 @@ public class NttTest {
             temp[i] = poly[i];
         }
 
-        NttTool.nttNegAcyclicHarvey(poly, tables);
+        NttTool.nttNegacyclicHarvey(poly, tables);
         NttTool.inverseNttNegAcyclicHarvey(poly, tables);
 
         Assert.assertArrayEquals(temp, poly);
@@ -144,7 +143,7 @@ public class NttTest {
                     poly[j] = Math.abs(random.nextLong()) % modulus.getValue();
                     temp[j] = poly[j];
                 }
-                NttTool.nttNegAcyclicHarvey(poly,0,  tables);
+                NttTool.nttNegacyclicHarvey(poly,0,  tables);
                 NttTool.inverseNttNegAcyclicHarvey(poly,0,  tables);
 
                 Assert.assertArrayEquals(temp, poly);
@@ -187,7 +186,7 @@ public class NttTest {
                 RnsIter rnsIter = new RnsIter(poly, n);
 
 
-                NttTool.nttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
+                NttTool.nttNegacyclicHarvey(rnsIter, mod.length, nttTables);
                 NttTool.inverseNttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
 
                 Assert.assertArrayEquals(groundTruth, poly);

@@ -50,14 +50,14 @@ class NttHandler {
     /**
      * NTT based on the Cooley-Tukey (CT) butterfly. See Algorithm 1 of the paper for more details.
      *
-     * @param valuesArray A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
-     * @param startIndex  the start index.
-     * @param logN        log(n) such that n = 2^k so that n is a power of 2.
-     * @param roots       a precomputed table Ψ[0, ..., n) ∈ Z_n^q storing powers of ψ in bit-reversed order.
-     * @param scalar      an optional scalar that is multiplied to all output values.
+     * @param values     A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
+     * @param startIndex the start index.
+     * @param logN       log(n) such that n = 2^k so that n is a power of 2.
+     * @param roots      a precomputed table Ψ[0, ..., n) ∈ Z_n^q storing powers of ψ in bit-reversed order.
+     * @param scalar     an optional scalar that is multiplied to all output values.
      */
     @SuppressWarnings("PointlessArithmeticExpression")
-    public void transformToRev(long[] valuesArray, int startIndex, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
+    public void transformToRev(long[] values, int startIndex, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
         // constant transform size
         int n = 1 << logN;
         // registers to hold temporary values
@@ -80,13 +80,13 @@ class NttHandler {
                     // for (j = j_1; j ≤ j_2; j++) do, here j_1 = offSet
                     for (int j = 0; j < gap; j++) {
                         // U = a[j]
-                        u = arithmetic.guard(valuesArray[startIndex + offSet + j]);
+                        u = arithmetic.guard(values[startIndex + offSet + j]);
                         // V = a[j + t] · S
-                        v = arithmetic.mulRoot(valuesArray[startIndex + offSet + gap + j], r);
+                        v = arithmetic.mulRoot(values[startIndex + offSet + gap + j], r);
                         // a[j] = U + V mod q
-                        valuesArray[startIndex + offSet + j] = arithmetic.add(u, v);
+                        values[startIndex + offSet + j] = arithmetic.add(u, v);
                         // a[j + t] = U − V mod q
-                        valuesArray[startIndex + offSet + gap + j] = arithmetic.sub(u, v);
+                        values[startIndex + offSet + gap + j] = arithmetic.sub(u, v);
                     }
                     // offset is j_1 = 2 · i · t
                     offSet += (gap << 1);
@@ -96,25 +96,25 @@ class NttHandler {
                 for (int i = 0; i < m; i++) {
                     r = roots[++rootsIndex];
                     for (int j = 0; j < gap; j += 4) {
-                        u = arithmetic.guard(valuesArray[startIndex + offSet + j]);
-                        v = arithmetic.mulRoot(valuesArray[startIndex + offSet + gap + j], r);
-                        valuesArray[startIndex + offSet + j] = arithmetic.add(u, v);
-                        valuesArray[startIndex + offSet + gap + j] = arithmetic.sub(u, v);
+                        u = arithmetic.guard(values[startIndex + offSet + j]);
+                        v = arithmetic.mulRoot(values[startIndex + offSet + gap + j], r);
+                        values[startIndex + offSet + j] = arithmetic.add(u, v);
+                        values[startIndex + offSet + gap + j] = arithmetic.sub(u, v);
 
-                        u = arithmetic.guard(valuesArray[startIndex + offSet + j + 1]);
-                        v = arithmetic.mulRoot(valuesArray[startIndex + offSet + gap + j + 1], r);
-                        valuesArray[startIndex + offSet + j + 1] = arithmetic.add(u, v);
-                        valuesArray[startIndex + offSet + gap + j + 1] = arithmetic.sub(u, v);
+                        u = arithmetic.guard(values[startIndex + offSet + j + 1]);
+                        v = arithmetic.mulRoot(values[startIndex + offSet + gap + j + 1], r);
+                        values[startIndex + offSet + j + 1] = arithmetic.add(u, v);
+                        values[startIndex + offSet + gap + j + 1] = arithmetic.sub(u, v);
 
-                        u = arithmetic.guard(valuesArray[startIndex + offSet + j + 2]);
-                        v = arithmetic.mulRoot(valuesArray[startIndex + offSet + gap + j + 2], r);
-                        valuesArray[startIndex + offSet + j + 2] = arithmetic.add(u, v);
-                        valuesArray[startIndex + offSet + gap + j + 2] = arithmetic.sub(u, v);
+                        u = arithmetic.guard(values[startIndex + offSet + j + 2]);
+                        v = arithmetic.mulRoot(values[startIndex + offSet + gap + j + 2], r);
+                        values[startIndex + offSet + j + 2] = arithmetic.add(u, v);
+                        values[startIndex + offSet + gap + j + 2] = arithmetic.sub(u, v);
 
-                        u = arithmetic.guard(valuesArray[startIndex + offSet + j + 3]);
-                        v = arithmetic.mulRoot(valuesArray[startIndex + offSet + gap + j + 3], r);
-                        valuesArray[startIndex + offSet + j + 3] = arithmetic.add(u, v);
-                        valuesArray[startIndex + offSet + gap + j + 3] = arithmetic.sub(u, v);
+                        u = arithmetic.guard(values[startIndex + offSet + j + 3]);
+                        v = arithmetic.mulRoot(values[startIndex + offSet + gap + j + 3], r);
+                        values[startIndex + offSet + j + 3] = arithmetic.add(u, v);
+                        values[startIndex + offSet + gap + j + 3] = arithmetic.sub(u, v);
                     }
                     offSet += (gap << 1);
                 }
@@ -130,19 +130,19 @@ class NttHandler {
             for (int i = 0; i < m; i++) {
                 r = roots[++rootsIndex];
                 scaledR = arithmetic.mulRootScalar(r, scalar);
-                u = arithmetic.mulScalar(arithmetic.guard(valuesArray[startIndex + 0 + valuesIndex]), scalar);
-                v = arithmetic.mulRoot(valuesArray[startIndex + 1 + valuesIndex], scaledR);
-                valuesArray[startIndex + 0 + valuesIndex] = arithmetic.add(u, v);
-                valuesArray[startIndex + 1 + valuesIndex] = arithmetic.sub(u, v);
+                u = arithmetic.mulScalar(arithmetic.guard(values[startIndex + 0 + valuesIndex]), scalar);
+                v = arithmetic.mulRoot(values[startIndex + 1 + valuesIndex], scaledR);
+                values[startIndex + 0 + valuesIndex] = arithmetic.add(u, v);
+                values[startIndex + 1 + valuesIndex] = arithmetic.sub(u, v);
                 valuesIndex += 2;
             }
         } else {
             for (int i = 0; i < m; i++) {
                 r = roots[++rootsIndex];
-                u = arithmetic.guard(valuesArray[startIndex + 0 + valuesIndex]);
-                v = arithmetic.mulRoot(valuesArray[startIndex + 1 + valuesIndex], r);
-                valuesArray[startIndex + 0 + valuesIndex] = arithmetic.add(u, v);
-                valuesArray[startIndex + 1 + valuesIndex] = arithmetic.sub(u, v);
+                u = arithmetic.guard(values[startIndex + 0 + valuesIndex]);
+                v = arithmetic.mulRoot(values[startIndex + 1 + valuesIndex], r);
+                values[startIndex + 0 + valuesIndex] = arithmetic.add(u, v);
+                values[startIndex + 1 + valuesIndex] = arithmetic.sub(u, v);
                 valuesIndex += 2;
             }
         }
