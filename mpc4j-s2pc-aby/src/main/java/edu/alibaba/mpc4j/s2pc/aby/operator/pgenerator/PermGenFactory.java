@@ -9,6 +9,12 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22Smal
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenSender;
 
+/**
+ * permutation generator Factory
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 public class PermGenFactory {
 
     public enum PartyTypes{

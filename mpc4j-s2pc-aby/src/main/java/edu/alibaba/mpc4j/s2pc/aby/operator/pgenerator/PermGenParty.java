@@ -5,6 +5,12 @@ import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
+/**
+ * permutation generator Party.
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 public interface PermGenParty extends TwoPartyPto {
     /**
      * inits the protocol.
