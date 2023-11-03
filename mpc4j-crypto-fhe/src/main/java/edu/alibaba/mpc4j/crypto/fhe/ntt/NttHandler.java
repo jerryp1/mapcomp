@@ -17,7 +17,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
  * cryptography. CANS 2016, pp. 124-139.
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/27
  */
 class NttHandler {
