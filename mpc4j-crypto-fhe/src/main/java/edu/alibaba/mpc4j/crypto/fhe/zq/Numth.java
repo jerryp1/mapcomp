@@ -103,8 +103,9 @@ public class Numth {
         if (!tryPrimitiveRoot(degree, modulus, result)) {
             return false;
         }
-        // enumerate ψ, ψ^3, ψ^5, ..., ψ^(n - 1), and find the smallest one.
-        // we do not need to enumerate all, because ψ^(j + n / 2) = -ψ^j
+        // enumerate ψ, ψ^3, ψ^5, ..., ψ^(n - 1), and find the smallest one, we only need to consider ψ^j for odd j.
+        // The reason is that for a primitive n-root of unity (where n = 2^k is even), ψ^n = 1 and ψ^(n/2) = -1,
+        // but for all even j, (ψ^j)^{n/2} = (ψ^{j/2})^{n} = 1, this means ψ^j is only a primitive (n/2)-root of unity.
         long generatorSq = UintArithmeticSmallMod.multiplyUintMod(result[0], result[0], modulus);
         long currentGenerator = result[0];
         // destination is going to always contain the smallest generator found
