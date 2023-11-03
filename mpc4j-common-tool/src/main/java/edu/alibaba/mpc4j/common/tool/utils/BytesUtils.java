@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
  * @date 2021/06/19
  */
 public class BytesUtils {
-    static final byte[] BYTE_WITH_FIX_NUM_OF_ONE = new byte[]{
+    public static final byte[] BYTE_WITH_FIX_NUM_OF_ONE = new byte[]{
         0, 1, 3, 7, 15, 31, 63, 127
     };
 
@@ -164,11 +164,14 @@ public class BytesUtils {
             : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
         int resBitNum = bitLength & 7;
         int zeroByteNum = (byteArray.length * Byte.SIZE - bitLength) >> 3;
-        Arrays.fill(byteArray, 0, zeroByteNum, (byte) 0x00);
+        if(zeroByteNum > 0){
+            Arrays.fill(byteArray, 0, zeroByteNum, (byte) 0x00);
+        }
         if (resBitNum != 0) {
             byteArray[zeroByteNum] &= BYTE_WITH_FIX_NUM_OF_ONE[resBitNum];
         }
     }
+
 
     public static byte[] keepLastBits(byte[] byteArray, final int bitLength){
         assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
@@ -306,6 +309,24 @@ public class BytesUtils {
         byte[] paddingByteArray = new byte[length];
         System.arraycopy(byteArray, 0, paddingByteArray, length - byteArray.length, byteArray.length);
         return paddingByteArray;
+    }
+
+    /**
+     * 将给定{@code byte[]}填充或截断，如果填充，则在数组前填充0x00到指定的长度；如果截断，则截取后length个byte。
+     *
+     * @param byteArray 给定的{@code byte[]}。
+     * @param length    目标长度。
+     * @return 指定长度的{@code byte[]}。
+     */
+    public static byte[] fixedByteArrayLength(byte[] byteArray, int length) {
+        assert length > 0;
+        if (byteArray.length == length) {
+            return byteArray;
+        }else if(byteArray.length < length){
+            return paddingByteArray(byteArray, length);
+        }else{
+            return Arrays.copyOfRange(byteArray, byteArray.length - length, byteArray.length);
+        }
     }
 
     /**

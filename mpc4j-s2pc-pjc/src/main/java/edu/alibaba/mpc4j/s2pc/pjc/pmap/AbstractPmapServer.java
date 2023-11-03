@@ -42,6 +42,7 @@ public abstract class AbstractPmapServer<T> extends AbstractTwoPartyPto implemen
     }
 
     protected void setInitInput(int maxServerElementSize, int maxClientElementSize) {
+        MathPreconditions.checkGreaterOrEqual("maxServerElementSize >= 2", maxServerElementSize, 2);
         MathPreconditions.checkGreaterOrEqual("maxServerElementSize >= maxClientElementSize", maxServerElementSize, maxClientElementSize);
         MathPreconditions.checkPositive("maxServerElementSize", maxServerElementSize);
         this.maxServerElementSize = maxServerElementSize;
@@ -52,6 +53,7 @@ public abstract class AbstractPmapServer<T> extends AbstractTwoPartyPto implemen
 
     protected void setPtoInput(List<T> serverElementList, int clientElementSize) {
         checkInitialized();
+        MathPreconditions.checkGreaterOrEqual("serverElementList.size() >= 2", serverElementList.size(), 2);
         MathPreconditions.checkPositiveInRangeClosed("serverElementSize", serverElementList.size(), maxServerElementSize);
         serverElementSize = serverElementList.size();
         serverElementArrayList = new ArrayList<>(serverElementList);

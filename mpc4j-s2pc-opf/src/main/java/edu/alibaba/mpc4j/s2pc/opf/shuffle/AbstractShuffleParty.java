@@ -6,13 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Abstract shuffle sender.
@@ -99,8 +96,9 @@ public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implement
     @Override
     public SquareZ2Vector[][] shuffle(SquareZ2Vector[][] x, int[] randomPerm) throws MpcAbortException {
         int[] bitLens = Arrays.stream(x).mapToInt(arr -> arr.length).toArray();
-        return ShuffleUtils.splitSecret(shuffle(Collections.singletonList(
-            ShuffleUtils.mergeSecret(x, envType, parallel)), randomPerm).get(0), bitLens, envType, parallel);
+        Vector<byte[]> tmp = shuffle(Collections.singletonList(
+            ShuffleUtils.mergeSecret(x, envType, parallel)), randomPerm).get(0);
+        return ShuffleUtils.splitSecret(tmp, bitLens, envType, parallel);
     }
 
     @Override

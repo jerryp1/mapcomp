@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
-
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -249,5 +249,12 @@ public class BitVectorFactory {
         }
         assert mergeBitVector.bitNum() == 0 : "merged vector must remain 0 bits: " + mergeBitVector.bitNum();
         return bitVectors;
+    }
+
+    public static BitVector mergeWithPadding(BitVector[] vectors){
+        ByteBuffer buffer = ByteBuffer.allocate(Arrays.stream(vectors).mapToInt(BitVector::byteNum).sum());
+        Arrays.stream(vectors).forEach(x -> buffer.put(x.getBytes()));
+        byte[] resBytes = buffer.array();
+        return create(resBytes.length<<3, resBytes);
     }
 }

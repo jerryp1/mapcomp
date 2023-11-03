@@ -8,6 +8,8 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
+import java.util.Arrays;
+
 /**
  * Abstract A2b Party.
  *
@@ -59,11 +61,24 @@ public abstract class AbstractA2bParty extends AbstractTwoPartyPto implements A2
     }
 
     protected void setPtoInput(SquareZlVector xi) {
+        // todo 如果要检查l的大小，为什么不在init的时候检查，这里没有用到xi的信息
         l = zl.getL();
         num = xi.getNum();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
         byteL = zl.getByteL();
         input = xi;
+    }
+
+    protected void setPtoInputs(SquareZlVector[] xi) {
+        assert xi != null;
+        l = zl.getL();
+        for (SquareZlVector zlVector : xi) {
+            MathPreconditions.checkEqual("l", "xi[i].l", zlVector.getZlVector().getZl().getL(), l);
+        }
+        num = Arrays.stream(xi).mapToInt(SquareZlVector::getNum).sum();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
+        byteL = zl.getByteL();
     }
 }

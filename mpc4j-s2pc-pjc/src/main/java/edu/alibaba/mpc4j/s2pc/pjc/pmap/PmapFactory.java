@@ -2,6 +2,9 @@ package edu.alibaba.mpc4j.s2pc.pjc.pmap;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapClient;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapServer;
 
 /**
  * PMAP协议工厂。
@@ -38,7 +41,7 @@ public class PmapFactory {
     public static <T> PmapServer<T> createServer(Rpc serverRpc, Party clientParty, PmapConfig config) {
         PmapType type = config.getPtoType();
         if (type == PmapType.HPL24) {
-            return null;
+            return new Hpl24PmapServer<>(serverRpc, clientParty, (Hpl24PmapConfig) config);
         }
         throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
     }
@@ -54,7 +57,7 @@ public class PmapFactory {
     public static <X> PmapClient<X> createClient(Rpc clientRpc, Party serverParty, PmapConfig config) {
         PmapType type = config.getPtoType();
         if (type == PmapType.HPL24) {
-            return null;
+            return new Hpl24PmapClient<>(clientRpc, serverParty, (Hpl24PmapConfig) config);
         }
         throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
     }

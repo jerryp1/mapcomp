@@ -43,6 +43,7 @@ public class Xxx23SharedPermutationReceiver extends AbstractSharedPermutationPar
         super(Xxx23SharedPermutationPtoDesc.getInstance(), receiverRpc, senderParty, config);
         shuffleReceiver = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
         unShuffleReceiver = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getUnShuffleConfig());
+        addMultipleSubPtos(shuffleReceiver, unShuffleReceiver);
         secureRandom = new SecureRandom();
     }
 

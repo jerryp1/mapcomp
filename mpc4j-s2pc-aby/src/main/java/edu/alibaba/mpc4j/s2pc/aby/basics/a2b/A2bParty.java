@@ -30,4 +30,12 @@ public interface A2bParty extends TwoPartyPto {
      */
     SquareZ2Vector[] a2b(SquareZlVector xi) throws MpcAbortException;
 
+    /**
+     * Executes the protocol.
+     *
+     * @param xi the share xi.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    SquareZ2Vector[][] a2b(SquareZlVector[] xi) throws MpcAbortException;
 }

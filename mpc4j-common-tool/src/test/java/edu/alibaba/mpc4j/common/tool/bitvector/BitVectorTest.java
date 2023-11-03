@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -486,6 +487,19 @@ public class BitVectorTest {
         // inner NOT
         bitVector1.noti();
         assertCorrectness(bitVector1, bitNum, new byte[]{0b00000010});
+    }
+
+    @Test
+    public void testExtendLength() {
+        BitVector bitVector1;
+        // empty extend
+        SecureRandom secureRandom = new SecureRandom();
+        bitVector1 = BitVectorFactory.createEmpty(type);
+        for(int i = 0, currentBitLen = 0; i < 10; i++){
+            currentBitLen += IntUtils.randomNonNegative(64, secureRandom);
+            bitVector1.extendLength(currentBitLen);
+            assertZerosCorrectness(bitVector1, currentBitLen);
+        }
     }
 
     private void assertEmptyCorrectness(BitVector bitVector) {

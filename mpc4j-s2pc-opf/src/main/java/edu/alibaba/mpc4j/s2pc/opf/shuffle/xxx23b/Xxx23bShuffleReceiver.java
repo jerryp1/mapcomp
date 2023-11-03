@@ -41,6 +41,7 @@ public class Xxx23bShuffleReceiver extends AbstractShuffleParty {
         super(Xxx23bShufflePtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
+        addMultipleSubPtos(osnReceiver, osnSender);
         secureRandom = new SecureRandom();
     }
 

@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -14,7 +13,6 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.AbstractShuffleParty;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -42,6 +40,7 @@ public class Xxx23bShuffleSender extends AbstractShuffleParty {
         super(Xxx23bShufflePtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(senderRpc, receiverParty, config.getOsnConfig());
+        addMultipleSubPtos(osnSender, osnReceiver);
     }
 
     @Override

@@ -16,7 +16,7 @@ public class PlpsiServerThread extends Thread {
     /**
      * server
      */
-    private final PlpsiServer<ByteBuffer> server;
+    private final PlpsiServer<ByteBuffer, ByteBuffer> server;
     /**
      * server element list
      */
@@ -42,7 +42,7 @@ public class PlpsiServerThread extends Thread {
      */
     private PlpsiShareOutput serverOutput;
 
-    PlpsiServerThread(PlpsiServer<ByteBuffer> server, List<ByteBuffer> serverElementList, int clientElementSize,
+    PlpsiServerThread(PlpsiServer<ByteBuffer, ByteBuffer> server, List<ByteBuffer> serverElementList, int clientElementSize,
                       List<List<ByteBuffer>> serverPayloadLists, int[] serverPayloadBitLs, boolean[] isBinaryShares) {
         this.server = server;
         this.serverElementList = serverElementList;

@@ -1,10 +1,8 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.util.Arrays;
 
@@ -261,7 +259,6 @@ public interface MpcZ2cParty {
      * NOT operation.
      *
      * @param xi xi.
-     * @return zi, such that z = !x.
      * @throws MpcAbortException the protocol failure aborts.
      */
     void noti(MpcZ2Vector xi) throws MpcAbortException;
@@ -337,14 +334,11 @@ public interface MpcZ2cParty {
     default MpcZ2Vector mergeWithPadding(MpcZ2Vector[] vectors) {
         assert vectors.length > 0 : "merged vector length must be greater than 0";
         boolean plain = vectors[0].isPlain();
-        int totalByteNum = Arrays.stream(vectors).mapToInt(MpcZ2Vector::byteNum).sum();
-        MpcZ2Vector mergeVector = createZeros(totalByteNum<<3, plain);
-
-        for(int i = 0, startIndex = 0; i < vectors.length; i++){
-            mergeVector.setValues(startIndex, vectors[i].getBitVector().getBytes());
-            startIndex += vectors[i].byteNum();
-        }
-        return mergeVector;
+        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors).map(x -> {
+            assert x.isPlain() == plain;
+            return x.getBitVector();
+        }).toArray(BitVector[]::new));
+        return create(mergeBit, plain);
     }
 
     /**
@@ -355,16 +349,7 @@ public interface MpcZ2cParty {
      * @return the split vector.
      */
     default MpcZ2Vector[] splitWithPadding(MpcZ2Vector mergeVector, int[] bitNums) {
-        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
-        MathPreconditions.checkEqual("totalByteNum", "mergeVector.byteNum()", totalByteNum, mergeVector.byteNum());
-        MpcZ2Vector[] splitVectors = new MpcZ2Vector[bitNums.length];
-        byte[] mergeBytes = mergeVector.getBitVector().getBytes();
-        for (int index = 0, copyStart = 0; index < bitNums.length; index++) {
-            BitVector tmp = BitVectorFactory.create(bitNums[index],
-                Arrays.copyOfRange(mergeBytes, copyStart, copyStart + CommonUtils.getByteLength(bitNums[index])));
-            splitVectors[index] = create(tmp, mergeVector.isPlain());
-            copyStart += CommonUtils.getByteLength(bitNums[index]);
-        }
-        return splitVectors;
+        BitVector[] splitBitVectors = mergeVector.getBitVector().splitWithPadding(bitNums);
+        return Arrays.stream(splitBitVectors).map(x -> create(x, mergeVector.isPlain())).toArray(MpcZ2Vector[]::new);
     }
 }

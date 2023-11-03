@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
  * @author Feng Han
  * @date 2023/10/20
  */
-public class AbstractBopprfPlpsiServer<T> extends AbstractPlpsiServer<T> {
+public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
     /**
      * batched OPPRF sender
      */
@@ -165,13 +165,14 @@ public class AbstractBopprfPlpsiServer<T> extends AbstractPlpsiServer<T> {
     }
 
     @Override
-    public Payload intersectPayload(List<T> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException {
+    public Payload intersectPayload(List<X> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException {
+        assert plpsiShareOutput != null;
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
         int payloadByteL = CommonUtils.getByteLength(payloadBitLs);
         byte[][] serverPayloadArray = serverPayloadList.stream().map(x ->
-            BytesUtils.paddingByteArray(ObjectUtils.objectToByteArray(x), payloadByteL)).toArray(byte[][]::new);
+            BytesUtils.fixedByteArrayLength(ObjectUtils.objectToByteArray(x), payloadByteL)).toArray(byte[][]::new);
         byte[][] payloadTargetArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> BytesUtils.randomByteArray(payloadByteL, payloadBitLs, secureRandom)).toArray(byte[][]::new);
         Payload payload = new Payload(envType, parallel, payloadTargetArray, payloadBitLs, isBinaryShare);
@@ -201,9 +202,7 @@ public class AbstractBopprfPlpsiServer<T> extends AbstractPlpsiServer<T> {
             .toArray(byte[][][]::new);
 
         bopprfSender.opprf(payloadBitLs, inputArrays, payloadTargetArrays);
-        if(plpsiShareOutput != null){
-            plpsiShareOutput.addPayload(payload);
-        }
+        plpsiShareOutput.addPayload(payload);
         stopWatch.stop();
         long payloadOpprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

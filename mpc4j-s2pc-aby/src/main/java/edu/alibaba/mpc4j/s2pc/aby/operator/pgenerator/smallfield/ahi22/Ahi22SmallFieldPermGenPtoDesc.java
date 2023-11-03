@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter.ahi22;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -13,7 +13,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Li Peng
  * @date 2023/10/11
  */
-public class Ahi22PermutableSorterPtoDesc implements PtoDesc {
+public class Ahi22SmallFieldPermGenPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -24,22 +24,15 @@ public class Ahi22PermutableSorterPtoDesc implements PtoDesc {
     private static final String PTO_NAME = "AHI22_P_SORTER";
 
     /**
-     * protocol step
-     */
-    enum PtoStep {
-        // empty
-    }
-
-    /**
      * singleton mode
      */
-    private static final Ahi22PermutableSorterPtoDesc INSTANCE =
-        new Ahi22PermutableSorterPtoDesc();
+    private static final Ahi22SmallFieldPermGenPtoDesc INSTANCE =
+        new Ahi22SmallFieldPermGenPtoDesc();
 
     /**
      * private constructor.
      */
-    private Ahi22PermutableSorterPtoDesc() {
+    private Ahi22SmallFieldPermGenPtoDesc() {
         // empty
     }
 

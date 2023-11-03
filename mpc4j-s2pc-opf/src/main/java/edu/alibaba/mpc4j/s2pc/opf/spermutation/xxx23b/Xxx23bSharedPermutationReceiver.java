@@ -38,6 +38,7 @@ public class Xxx23bSharedPermutationReceiver extends AbstractSharedPermutationPa
     public Xxx23bSharedPermutationReceiver(Rpc receiverRpc, Party senderParty, Xxx23bSharedPermutationConfig config) {
         super(Xxx23bSharedPermutationPtoDesc.getInstance(), receiverRpc, senderParty, config);
         shuffleReceiver = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
+        addSubPtos(shuffleReceiver);
         secureRandom = new SecureRandom();
     }
 

@@ -1,17 +1,11 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
-/**
- * Permutable Sorter Party Interface.
- *
- * @author Li Peng
- * @date 2023/10/11
- */
-public interface PermutableSorterParty extends TwoPartyPto {
+public interface PermGenParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *

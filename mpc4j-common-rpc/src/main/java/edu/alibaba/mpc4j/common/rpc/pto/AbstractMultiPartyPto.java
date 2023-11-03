@@ -18,6 +18,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract multi-party protocol.
@@ -148,13 +149,21 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     protected void addSubPtos(MultiPartyPto subPto) {
         int rowLevel = subPtos.size();
         subPtos.add(subPto);
-        MathPreconditions.checkLessOrEqual("# of sub-protocols", subPtos.size(), MAX_SUB_PROTOCOL_NUM);
+//        MathPreconditions.checkLessOrEqual("# of sub-protocols", subPtos.size(), MAX_SUB_PROTOCOL_NUM);
         subPto.addTreeLevel(rowLevel, taskId, treeId);
+    }
+
+    protected void addMultipleSubPtos(MultiPartyPto... subPto) {
+        for(MultiPartyPto one : subPto){
+            int rowLevel = subPtos.size();
+            subPtos.add(one);
+            one.addTreeLevel(rowLevel, taskId, treeId);
+        }
     }
 
     @Override
     public void addTreeLevel(int rowLevel, int taskId, int parentTreeId) {
-        MathPreconditions.checkNonNegativeInRange("rowLevel", rowLevel, MAX_SUB_PROTOCOL_NUM);
+//        MathPreconditions.checkNonNegativeInRange("rowLevel", rowLevel, MAX_SUB_PROTOCOL_NUM);
         treeLevel++;
         MathPreconditions.checkNonNegativeInRange("treeLevel", treeLevel, MAX_TREE_LEVEL);
         this.rowLevel = rowLevel;
@@ -279,18 +288,24 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
 
     @Override
     public void checkInitialized() {
+//        if(this.ownParty().getPartyId() == 0){
+//            LOGGER.info(ptoBeginLogPrefix + "checking " + this.ptoDesc.getPtoName());
+//        }
         switch (partyState) {
             case INITIALIZED:
                 // check sub-protocols
                 for (MultiPartyPto subPto : subPtos) {
                     subPto.checkInitialized();
                 }
-                return;
+                break;
             case NON_INITIALIZED:
             case DESTROYED:
             default:
-                throw new IllegalStateException("Party state must not be " + partyState);
+                throw new IllegalStateException(ptoDesc.getPtoName() + " protocol state must not be " + partyState);
         }
+//        if(this.ownParty().getPartyId() == 0){
+//            LOGGER.info(ptoEndLogPrefix + "checked " + this.ptoDesc.getPtoName());
+//        }
     }
 
     @Override
@@ -483,5 +498,15 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         if (treeLevel < DISPLAY_LOG_LEVEL) {
             LOGGER.info(format, arguments);
         }
+    }
+
+    /**
+     * reset stopWatch and return time
+     */
+    protected long resetAndGetTime(){
+        stopWatch.stop();
+        long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        return time;
     }
 }

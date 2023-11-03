@@ -42,6 +42,7 @@ public class Xxx23SharedPermutationSender extends AbstractSharedPermutationParty
         super(Xxx23SharedPermutationPtoDesc.getInstance(), senderRpc, receiverParty, config);
         shuffleSender = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
         unShuffleSender = ShuffleFactory.createSender(senderRpc, receiverParty, config.getUnShuffleConfig());
+        addMultipleSubPtos(shuffleSender, unShuffleSender);
     }
 
     @Override

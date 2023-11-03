@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
@@ -51,6 +50,7 @@ public class Kvh21Bit2aSender extends AbstractBit2aParty {
         super(Kvh21Bit2aPtoDesc.getInstance(), rpc, otherParty, config);
         cotSender = CotFactory.createSender(rpc, otherParty, config.getCotConfig());
         z2cSender = Z2cFactory.createSender(rpc, otherParty, config.getZ2cConfig());
+        addMultipleSubPtos(cotSender, z2cSender);
     }
 
     @Override
@@ -62,6 +62,7 @@ public class Kvh21Bit2aSender extends AbstractBit2aParty {
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         cotSender.init(delta, maxNum);
+        z2cSender.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

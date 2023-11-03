@@ -11,7 +11,7 @@ import java.util.List;
  * @author Feng Han
  * @date 2023/10/20
  */
-public interface PlpsiServer<T> extends TwoPartyPto {
+public interface PlpsiServer<T, X> extends TwoPartyPto {
     /**
      * Inits the protocol.
      *
@@ -39,5 +39,5 @@ public interface PlpsiServer<T> extends TwoPartyPto {
      * @return the server output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Payload intersectPayload(List<T> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException;
+    Payload intersectPayload(List<X> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException;
 }

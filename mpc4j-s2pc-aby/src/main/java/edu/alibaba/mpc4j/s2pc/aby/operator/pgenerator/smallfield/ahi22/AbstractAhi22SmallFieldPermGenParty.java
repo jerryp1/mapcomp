@@ -1,12 +1,10 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter.ahi22;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22;
 
-import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -15,14 +13,13 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.AbstractPermutableSorterParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PartyTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PartyTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.AbstractSmallFieldPermGenParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Ahi22 Permutable Sorter abstract party
@@ -30,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng, Feng Han
  * @date 2023/10/25
  */
-public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermutableSorterParty {
+public abstract class AbstractAhi22SmallFieldPermGenParty extends AbstractSmallFieldPermGenParty {
     /**
      * Bit2a sender.
      */
@@ -48,7 +45,7 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
      */
     private final ZlMuxParty zlMuxParty;
 
-    protected AbstractAhi22PermutableSorterParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, Ahi22PermutableSorterConfig config, PartyTypes partyTypes) {
+    protected AbstractAhi22SmallFieldPermGenParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, Ahi22SmallFieldPermGenConfig config, PartyTypes partyTypes) {
         super(ptoDesc, rpc, otherParty, config);
         if (partyTypes.equals(PartyTypes.SENDER)) {
             bit2aParty = Bit2aFactory.createSender(rpc, otherParty, config.getBit2aConfig());
@@ -61,10 +58,7 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
             z2cParty = Z2cFactory.createReceiver(rpc, otherParty, config.getZ2cConfig());
             zlMuxParty = ZlMuxFactory.createReceiver(rpc, otherParty, config.getZlMuxConfig());
         }
-        addSubPtos(bit2aParty);
-        addSubPtos(zlcParty);
-        addSubPtos(z2cParty);
-        addSubPtos(zlMuxParty);
+        addMultipleSubPtos(bit2aParty, zlcParty, z2cParty, zlMuxParty);
         zl = config.getBit2aConfig().getZl();
         byteL = zl.getByteL();
     }
@@ -75,22 +69,17 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxCompNum = maxNum * (1 << maxBitNum);
         bit2aParty.init(maxL, maxNum * ((1 << maxBitNum) - 1));
         z2cParty.init(maxNum * (1 << (maxBitNum - 1)));
         zlcParty.init(maxNum);
         zlMuxParty.init(maxBitNum == 1 ? maxNum : maxNum * (1 << maxBitNum));
-        stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public SquareZlVector sort(SquareZ2Vector[] xiArray) throws MpcAbortException {
-        checkInputs(xiArray);
         setPtoInput(xiArray);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -107,10 +96,6 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         return result;
     }
 
-    void checkInputs(MpcZ2Vector[] xiArrays) {
-        MathPreconditions.checkGreaterOrEqual("Number of input bits <= 3", 3, xiArrays.length);
-    }
-
     private SquareZlVector execute(SquareZ2Vector xi) throws MpcAbortException {
 
         stopWatch.start();
@@ -118,10 +103,7 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         SquareZlVector[] signs = new SquareZlVector[2];
         signs[1] = bit2aParty.bit2a(xi);
         signs[0] = zlcParty.sub(ones, signs[1]);
-        stopWatch.stop();
-        long signTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, signTime, "compute signs");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime(), "compute signs");
 
         // prefix sum
         stopWatch.start();
@@ -129,10 +111,7 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         SquareZlVector res = zlcParty.add(indexes[0], zlMuxParty.mux(xi, zlcParty.sub(indexes[1], indexes[0])));
         SquareZlVector plainOne = SquareZlVector.createOnes(zl, res.getNum());
         res = zlcParty.sub(res, plainOne);
-        stopWatch.stop();
-        long perTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, perTime, "compute permutation");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime(), "compute permutation");
 
         return res;
     }
@@ -151,19 +130,13 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         signs[2] = zlcParty.sub(originSigns[0], signs[3]);
         signs[1] = zlcParty.sub(originSigns[1], signs[3]);
         signs[0] = zlcParty.sub(zlcParty.sub(arithmeticOnes, originSigns[0]), signs[1]);
-        stopWatch.stop();
-        long signTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, signTime, "compute signs");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime(), "compute signs");
 
         // prefix sum
         stopWatch.start();
         SquareZlVector[] indexes = computeIndex(signs);
         SquareZlVector res = mulWithAdd(signs, indexes);
-        stopWatch.stop();
-        long perTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, perTime, "compute permutation");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime(), "compute permutation");
 
         return res;
     }
@@ -187,19 +160,13 @@ public abstract class AbstractAhi22PermutableSorterParty extends AbstractPermuta
         signs[1] = zlcParty.sub(bitA[2], zlcParty.add(bitA[4], signs[5]));
         SquareZlVector invAInvB = zlcParty.add(zlcParty.sub(bitA[3], zlcParty.add(bitA[0], bitA[1])), SquareZlVector.createOnes(zl, a.bitNum()));
         signs[0] = zlcParty.sub(invAInvB, signs[1]);
-        stopWatch.stop();
-        long signTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, signTime, "compute signs");
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime(), "compute signs");
 
         // prefix sum
         stopWatch.start();
         SquareZlVector[] indexes = computeIndex(signs);
         SquareZlVector res = mulWithAdd(signs, indexes);
-        stopWatch.stop();
-        long perTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, perTime, "compute permutation");
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime(), "compute permutation");
 
         return res;
     }
