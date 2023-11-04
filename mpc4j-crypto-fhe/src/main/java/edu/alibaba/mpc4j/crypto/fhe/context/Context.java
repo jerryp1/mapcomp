@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.crypto.fhe.context;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTablesCreateIter;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
@@ -16,7 +15,6 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.IntStream;
 
 /**
  * Performs sanity checks (validation) and pre-computations for a given set of encryption
@@ -267,7 +265,7 @@ public class Context {
         // Can we use NTT with coeff_modulus?
         contextData.qualifiers.usingNtt = true;
         try {
-            NttTablesCreateIter.createNttTables(coeffCountPower, coeffModulus, contextData.smallNttTables);
+            NttTables.createNttTables(coeffCountPower, coeffModulus, contextData.smallNttTables);
         } catch (Exception e) {
             contextData.qualifiers.usingNtt = false;
             contextData.qualifiers.parameterError = ErrorType.INVALID_COEFF_MODULUS_NO_NTT;

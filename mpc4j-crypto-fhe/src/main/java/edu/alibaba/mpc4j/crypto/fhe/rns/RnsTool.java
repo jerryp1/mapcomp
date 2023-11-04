@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.crypto.fhe.rns;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
-import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTablesCreateIter;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
@@ -168,7 +167,7 @@ public class RnsTool {
         // here we create the reference of the table, NttTablesCreateIter.createNttTables will create instances.
         baseBskNttTables = new NttTables[baseBskSize];
         try {
-            NttTablesCreateIter.createNttTables(
+            NttTables.createNttTables(
                     coeffCountPower,
                     baseBsk.getBase(),// 这里是一种浅拷贝
                     baseBskNttTables);
