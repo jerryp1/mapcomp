@@ -38,7 +38,7 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/11/1
  */
-public abstract class AbstractGroupAggregator extends AbstractTwoPartyPto implements PrefixAggParty, PrefixOp {
+public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto implements PrefixAggParty, PrefixOp {
     /**
      * z2 circuit party.
      */
@@ -82,7 +82,7 @@ public abstract class AbstractGroupAggregator extends AbstractTwoPartyPto implem
      */
     protected boolean needShuffle;
 
-    protected AbstractGroupAggregator(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
+    protected AbstractPrefixGroupAggregator(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
         super(ptoDesc, rpc, otherParty, config);
     }
 

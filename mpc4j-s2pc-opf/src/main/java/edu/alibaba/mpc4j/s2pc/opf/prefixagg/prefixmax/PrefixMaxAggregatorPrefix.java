@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterParty;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.AbstractGroupAggregator;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.AbstractPrefixGroupAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggNode;
 
 import java.math.BigInteger;
@@ -23,13 +23,13 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/11/1
  */
-public abstract class PrefixMaxAggregator extends AbstractGroupAggregator {
+public abstract class PrefixMaxAggregatorPrefix extends AbstractPrefixGroupAggregator {
     /**
      * Zl greater party;
      */
     protected ZlGreaterParty zlGreaterParty;
 
-    protected PrefixMaxAggregator(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
+    protected PrefixMaxAggregatorPrefix(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
         super(ptoDesc, rpc, otherParty, config);
     }
 

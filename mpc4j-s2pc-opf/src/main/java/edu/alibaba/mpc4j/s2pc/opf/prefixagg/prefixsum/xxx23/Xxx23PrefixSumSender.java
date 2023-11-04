@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumAggregator;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumAggregatorPrefix;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 
 import java.util.concurrent.TimeUnit;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/5/30
  */
-public class Xxx23PrefixSumSender extends PrefixSumAggregator {
+public class Xxx23PrefixSumSender extends PrefixSumAggregatorPrefix {
 
     public Xxx23PrefixSumSender(Rpc senderRpc, Party receiverParty, Xxx23PrefixSumConfig config) {
         super(Xxx23PrefixSumPtoDesc.getInstance(), senderRpc, receiverParty, config);

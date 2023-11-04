@@ -35,7 +35,7 @@ public class PrefixMaxFactory {
      *
      * @return a prefix max aggregator.
      */
-    public static PrefixMaxAggregator createPrefixMaxSender(Rpc senderRpc, Party receiverParty, PrefixMaxConfig config) {
+    public static PrefixMaxAggregatorPrefix createPrefixMaxSender(Rpc senderRpc, Party receiverParty, PrefixMaxConfig config) {
         PrefixMaxTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
@@ -51,7 +51,7 @@ public class PrefixMaxFactory {
      *
      * @return a prefix max aggregator.
      */
-    public static PrefixMaxAggregator createPrefixMaxReceiver(Rpc receiverRpc, Party senderParty, PrefixMaxConfig config) {
+    public static PrefixMaxAggregatorPrefix createPrefixMaxReceiver(Rpc receiverRpc, Party senderParty, PrefixMaxConfig config) {
         PrefixMaxTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {

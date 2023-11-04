@@ -112,8 +112,8 @@ public class SbitmapStarter {
         runPlainPto(printWriter);
         // Full secure
         runFullSecurePto(printWriter, SbitmapSecurityMode.ULDP);
-        // dp secure
-        runDpPto(printWriter, SbitmapSecurityMode.ULDP);
+//        // dp secure
+//        runDpPto(printWriter, SbitmapSecurityMode.ULDP);
         // clean
         printWriter.close();
         fileWriter.close();
@@ -246,30 +246,30 @@ public class SbitmapStarter {
         );
     }
 
-    /**
-     * Run dp protocol
-     *
-     * @param printWriter print writer.
-     * @param ldpType     ldp type.
-     * @throws MpcAbortException the protocol failure aborts.
-     */
-    protected void runDpPto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
-        throws MpcAbortException {
-        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
-        for (double epsilon : epsilons) {
-            Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
-            SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema,zl)
-                .build();
-            SbitmapPtoRunner ptoRunner = createRunner(slaveConfig);
-            ptoRunner.init();
-            ptoRunner.run();
-            ptoRunner.stop();
-            writeInfo(printWriter, ldpType.name(), epsilon, ptoRunner.getTime(),
-                null,
-                ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
-            );
-        }
-    }
+//    /**
+//     * Run dp protocol
+//     *
+//     * @param printWriter print writer.
+//     * @param ldpType     ldp type.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    protected void runDpPto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
+//        throws MpcAbortException {
+//        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
+//        for (double epsilon : epsilons) {
+//            Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
+//            SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema,zl)
+//                .build();
+//            SbitmapPtoRunner ptoRunner = createRunner(slaveConfig);
+//            ptoRunner.init();
+//            ptoRunner.run();
+//            ptoRunner.stop();
+//            writeInfo(printWriter, ldpType.name(), epsilon, ptoRunner.getTime(),
+//                null,
+//                ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
+//            );
+//        }
+//    }
 
     SbitmapPtoRunner createRunner(SbitmapConfig sbitmapConfig) {
         SbitmapPtoParty party = SbitmapMainUtils.createParty(taskType, ownRpc, otherParty, sbitmapConfig);

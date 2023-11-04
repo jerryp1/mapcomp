@@ -35,7 +35,7 @@ public class PrefixSumFactory {
      *
      * @return a prefix sum aggregator.
      */
-    public static PrefixSumAggregator createPrefixSumSender(Rpc senderRpc, Party receiverParty, PrefixSumConfig config) {
+    public static PrefixSumAggregatorPrefix createPrefixSumSender(Rpc senderRpc, Party receiverParty, PrefixSumConfig config) {
         PrefixSumTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
@@ -51,7 +51,7 @@ public class PrefixSumFactory {
      *
      * @return a prefix sum aggregator.
      */
-    public static PrefixSumAggregator createPrefixSumReceiver(Rpc receiverRpc, Party senderParty, PrefixSumConfig config) {
+    public static PrefixSumAggregatorPrefix createPrefixSumReceiver(Rpc receiverRpc, Party senderParty, PrefixSumConfig config) {
         PrefixSumTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
