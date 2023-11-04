@@ -1150,7 +1150,7 @@ public class RnsTool {
         int lastInputIndex = startIndex + (baseQSize - 1) * coeffCount;
 
         // convert to non-NTT form
-        NttTool.inverseNttNegAcyclicHarvey(
+        NttTool.inverseNttNegacyclicHarvey(
                 polyIter,
                 lastInputIndex,
                 rnsNttTables[baseQSize - 1]
@@ -1237,7 +1237,7 @@ public class RnsTool {
         int lastInputIndex = (baseQSize - 1) * coeffCount;
 
         // convert to non-NTT form
-        NttTool.inverseNttNegAcyclicHarvey(
+        NttTool.inverseNttNegacyclicHarvey(
                 input.coeffIter,
                 lastInputIndex,
                 rnsNttTables[baseQSize - 1]

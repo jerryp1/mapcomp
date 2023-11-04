@@ -581,7 +581,7 @@ public class RnsToolTest {
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
-        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
         Assert.assertEquals(0, in[0]);
         Assert.assertEquals(0, in[1]);
 
@@ -595,7 +595,7 @@ public class RnsToolTest {
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
-        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
         Assert.assertTrue((53 + 1 - in[0]) % 53 <= 1); // in[0] = 0, round(4/13) = 0
         Assert.assertTrue((53 + 2 - in[1]) % 53 <= 1); // in[1] = 1, round(12/13) = 1
 
@@ -609,7 +609,7 @@ public class RnsToolTest {
 
         // We expect to get a zero output also in this case
         rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
-        NttTool.inverseNttNegAcyclicHarvey(in, 0, nttTables[0]);
+        NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
         Assert.assertTrue((53 + 2 - in[0]) % 53 <= 1); // round(25/13) = 2
         Assert.assertTrue((53 + 3 - in[1]) % 53 <= 1);// round(35/13) = 3
     }

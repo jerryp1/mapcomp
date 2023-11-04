@@ -6,90 +6,98 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * Represent a degree-N poly in RNS representation.
- * A degree-N poly has N coeffs. Supposing that RnsBase is q = [q1, q2, ..., qk],
- * then, each coeff will be spilt into k parts. So, we can use a k * N matrix represent a degree-N poly under RNS representation.
- * Such as :
- * [ c1 mod q1, c2 mod q1,  ..., cn mod q1]
- * .......
- * [c1 mod qk, c2 mod qk, ....., cn mod qk]
+ * Represent a degree-(N-1) polynomial in RNS representation. A degree-(N-1) polynomial has N coefficients.
+ * Suppose RnsBase is q = [q1, q2, ..., qk]. Each coefficient can be spilt into k parts. Therefore, we use k * N matrix
+ * to represent a degree-(N-1) polynomial in RNS representation with the following form:
  * <p>
- * But remember, most of the time, we use this matrix column by column,
- * which is what we often call this matrix: [c1 mod q1, c1 mod q2, ..., c1 mod qk]^T
+ * [ c1 mod q1, c2 mod q1, ..., cn mod q1]
+ * </p>
+ * <p>
+ * ...
+ * </p>
+ * <p>
+ * [ c1 mod qk, c2 mod qk, ..., cn mod qk]
+ * </p>
+ * But most of the time, we use this matrix via column, i.e., operate on [c1 mod q1, c1 mod q2, ..., c1 mod qk]^T.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/iterator.h#L951
  * </p>
- * <p>
- *  todo: Consider deleting this class. Currently, this class is not used in practice. Instead, array + startIndex + k + N is used directly to represent an RnsIter.
  *
  * @author Qixian Zhou
  * @date 2023/8/20
  */
 public class RnsIter implements Cloneable {
-
-//    // use long[][] represent CoeffIter in SEAL, k * N
-//    // a single CoeffIter is long[] with length k, can treat as a column vector
-//    private long[][] coeffIter;
-
     /**
-     * Using a 1D-array with length k * N to represent a degree-N poly in RNS.
-     * Logically, we can treat it as a k*N matrix. 1D-Array is used here mainly for performance reasons.
-     */
-    public long[] coeffIter;
-
-    // k
-    public int coeffModulusSize;
-
-    // N
-    public int polyModulusDegree;
-
-    public RnsIter() {
-    }
-
-
-    public RnsIter(long[] coeffIter, int polyModulusDegree) {
-        assert coeffIter.length % polyModulusDegree == 0;
-
-        this.coeffIter = coeffIter;
-        this.polyModulusDegree = polyModulusDegree;
-        this.coeffModulusSize = coeffIter.length / polyModulusDegree;
-    }
-
-    public RnsIter(int coeffModulusSize, int polyModulusDegree) {
-        this.polyModulusDegree = polyModulusDegree;
-        this.coeffModulusSize = coeffModulusSize;
-        this.coeffIter = new long[coeffModulusSize * polyModulusDegree];
-    }
-
-
-    /**
-     * Flatten a 2D array of k * N into a 1D array with length k*N.
-     *
-     * @param data a k * N matrix
-     */
-    public static RnsIter from2dArray(long[][] data) {
-
-        RnsIter rnsIter = new RnsIter();
-        rnsIter.coeffModulusSize = data.length;
-        rnsIter.polyModulusDegree = data[0].length;
-        // flatten
-        rnsIter.coeffIter = Arrays.stream(data).flatMapToLong(Arrays::stream).toArray();
-        return rnsIter;
-    }
-
-    /**
-     * convert 1d Array with lenght k*N to a 2d Array with shape k * N
+     * Converts an RNS iterator 1d Array with lenght k*N to a 2d Array with shape k * N
      *
      * @return a 2d Array
      */
     public static long[][] to2dArray(RnsIter rnsIter) {
 
         return IntStream.range(0, rnsIter.coeffModulusSize)
-                .mapToObj(i -> Arrays.copyOfRange(rnsIter.coeffIter, i * rnsIter.polyModulusDegree, (i + 1) * rnsIter.polyModulusDegree))
-                .toArray(long[][]::new);
+            .mapToObj(i -> Arrays.copyOfRange(rnsIter.coeffIter, i * rnsIter.polyModulusDegree, (i + 1) * rnsIter.polyModulusDegree))
+            .toArray(long[][]::new);
 
     }
 
+    /**
+     * a 1D-array with length k * N to represent a degree-N polynomial in RNS representation.
+     */
+    public long[] coeffIter;
+    /**
+     * k, i.e., the number of RNS bases.
+     */
+    public int coeffModulusSize;
+    /**
+     * N, i.e., modulus polynomial degree.
+     */
+    public int polyModulusDegree;
+
+    /**
+     * private constructor.
+     */
+    private RnsIter() {
+        // empty
+    }
+
+    /**
+     * Creates an RNS iterator with the given coefficient iterator represented in 1D-array with length k * N.
+     *
+     * @param coeffIter         the coefficient iterator.
+     * @param polyModulusDegree N, i.e., the modulus polynomial degree.
+     */
+    public RnsIter(long[] coeffIter, int polyModulusDegree) {
+        assert coeffIter.length % polyModulusDegree == 0;
+        this.coeffIter = coeffIter;
+        this.polyModulusDegree = polyModulusDegree;
+        this.coeffModulusSize = coeffIter.length / polyModulusDegree;
+    }
+
+    /**
+     * Creates an RNS iterator with the number of RNS bases and the modulus polynomial degree. All coefficients are
+     * initialized with 0.
+     *
+     * @param coeffModulusSize  k, i.e., the number of RNS bases.
+     * @param polyModulusDegree N, i.e., the modulus polynomial degree.
+     */
+    public RnsIter(int coeffModulusSize, int polyModulusDegree) {
+        this.polyModulusDegree = polyModulusDegree;
+        this.coeffModulusSize = coeffModulusSize;
+        this.coeffIter = new long[coeffModulusSize * polyModulusDegree];
+    }
+
+    /**
+     * Creates an RNS iterator from an 2D-array coefficient matrix with size k * N.
+     *
+     * @param data an 2D-array coefficient matrix with size k * N.
+     */
+    public static RnsIter from2dArray(long[][] data) {
+        RnsIter rnsIter = new RnsIter();
+        rnsIter.coeffModulusSize = data.length;
+        rnsIter.polyModulusDegree = data[0].length;
+        rnsIter.coeffIter = Arrays.stream(data).flatMapToLong(Arrays::stream).toArray();
+        return rnsIter;
+    }
 
     /**
      * update this object inner coeffIter = (k1 + k2) * N
@@ -168,9 +176,9 @@ public class RnsIter implements Cloneable {
         RnsIter rnsIter = (RnsIter) o;
 
         return new EqualsBuilder()
-                .append(polyModulusDegree, rnsIter.polyModulusDegree)
-                .append(coeffIter, rnsIter.coeffIter)
-                .isEquals();
+            .append(polyModulusDegree, rnsIter.polyModulusDegree)
+            .append(coeffIter, rnsIter.coeffIter)
+            .isEquals();
     }
 
     @Override

@@ -14,9 +14,6 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.ValueChecker;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 
-import java.util.Arrays;
-import java.util.stream.IntStream;
-
 /**
  * Generates matching secret key and public key. An existing KeyGenerator can
  * also at any time be used to generate relinearization keys and Galois keys.
@@ -125,7 +122,7 @@ public class KeyGenerator {
             // Transform the secret s into NTT representation.
             NttTables[] nttTables = contextData.getSmallNttTables();
             // k * N, 以其中每一个 N 为单位进行 nttForward
-            NttTool.nttNegAcyclicHarveyRnsIter(secretKey.data().getData(), coeffCount, coeffModulusSize, nttTables);
+            NttTool.nttNegacyclicHarveyRns(secretKey.data().getData(), coeffCount, coeffModulusSize, nttTables);
 
             // Set the parms_id for secret key
             // TODO: here need deep-copy?

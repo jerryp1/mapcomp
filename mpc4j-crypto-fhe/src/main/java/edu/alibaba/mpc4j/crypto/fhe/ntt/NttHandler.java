@@ -38,18 +38,6 @@ class NttHandler {
     /**
      * NTT based on the Cooley-Tukey (CT) butterfly. See Algorithm 1 of the paper for more details.
      *
-     * @param values A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
-     * @param logN   log(n) such that n = 2^k so n is a power of 2.
-     * @param roots  a precomputed table Ψ[0, ..., n) ∈ Z_n^q storing powers of ψ in bit-reversed order.
-     * @param scalar an optional scalar that is multiplied to all output values.
-     */
-    public void transformToRev(long[] values, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
-        transformToRev(values, 0, logN, roots, scalar);
-    }
-
-    /**
-     * NTT based on the Cooley-Tukey (CT) butterfly. See Algorithm 1 of the paper for more details.
-     *
      * @param values     A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
      * @param startIndex the start index.
      * @param logN       log(n) such that n = 2^k so that n is a power of 2.
@@ -152,23 +140,11 @@ class NttHandler {
      * Function INTT based on the Gentleman-Sande (GS) butterfly.
      *
      * @param values A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param logN   log(n) such that n = 2^k so n is a power of 2.
-     * @param roots  a precomputed table Ψ^{-1}[0, ..., n) ∈ Z_n^q storing powers of ψ in bit-reversed order of [0, -n).
-     * @param scalar optional scalar that is multiplied to all output values.
-     */
-    public void transformFromRev(long[] values, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
-        transformFromRev(values, 0, logN, roots, scalar);
-    }
-
-    /**
-     * Function INTT based on the Gentleman-Sande (GS) butterfly.
-     *
-     * @param valuesArray A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
      * @param logN        log(n) such that n = 2^k so n is a power of 2.
      * @param roots       a precomputed table Ψ^{-1}[0, ..., n) ∈ Z_n^q storing powers of ψ in bit-reversed order of [0, -n).
      * @param scalar      optional scalar that is multiplied to all output values.
      */
-    public void transformFromRev(long[] valuesArray, int startIndex, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
+    public void transformFromRev(long[] values, int startIndex, int logN, MultiplyUintModOperand[] roots, MultiplyUintModOperand scalar) {
         // constant transform size
         int n = 1 << logN;
         // registers to hold temporary values
@@ -192,13 +168,13 @@ class NttHandler {
                     // for (j = j_1; j ≤ j_2; j++) do, here j_1 = offSet
                     for (int j = 0; j < gap; j++) {
                         // U = a[j]
-                        u = valuesArray[startIndex + offset + j];
+                        u = values[startIndex + offset + j];
                         // V = a[j + t]
-                        v = valuesArray[startIndex + offset + gap + j];
+                        v = values[startIndex + offset + gap + j];
                         // a[j] = U + V mod q
-                        valuesArray[startIndex + offset + j] = arithmetic.guard(arithmetic.add(u, v));
+                        values[startIndex + offset + j] = arithmetic.guard(arithmetic.add(u, v));
                         // a[j + t] = (U − V) · S mod q
-                        valuesArray[startIndex + offset + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                        values[startIndex + offset + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
                     }
                     // j_1 = j_1 + 2t
                     offset += (gap << 1);
@@ -208,25 +184,25 @@ class NttHandler {
                 for (int i = 0; i < m; i++) {
                     r = roots[++rootsIndex];
                     for (int j = 0; j < gap; j += 4) {
-                        u = valuesArray[startIndex + offset + j];
-                        v = valuesArray[startIndex + offset + gap + j];
-                        valuesArray[startIndex + offset + j] = arithmetic.guard(arithmetic.add(u, v));
-                        valuesArray[startIndex + offset + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                        u = values[startIndex + offset + j];
+                        v = values[startIndex + offset + gap + j];
+                        values[startIndex + offset + j] = arithmetic.guard(arithmetic.add(u, v));
+                        values[startIndex + offset + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                        u = valuesArray[startIndex + offset + j + 1];
-                        v = valuesArray[startIndex + offset + gap + j + 1];
-                        valuesArray[startIndex + offset + j + 1] = arithmetic.guard(arithmetic.add(u, v));
-                        valuesArray[startIndex + offset + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                        u = values[startIndex + offset + j + 1];
+                        v = values[startIndex + offset + gap + j + 1];
+                        values[startIndex + offset + j + 1] = arithmetic.guard(arithmetic.add(u, v));
+                        values[startIndex + offset + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                        u = valuesArray[startIndex + offset + j + 2];
-                        v = valuesArray[startIndex + offset + gap + j + 2];
-                        valuesArray[startIndex + offset + j + 2] = arithmetic.guard(arithmetic.add(u, v));
-                        valuesArray[startIndex + offset + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                        u = values[startIndex + offset + j + 2];
+                        v = values[startIndex + offset + gap + j + 2];
+                        values[startIndex + offset + j + 2] = arithmetic.guard(arithmetic.add(u, v));
+                        values[startIndex + offset + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                        u = valuesArray[startIndex + offset + j + 3];
-                        v = valuesArray[startIndex + offset + gap + j + 3];
-                        valuesArray[startIndex + offset + j + 3] = arithmetic.guard(arithmetic.add(u, v));
-                        valuesArray[startIndex + offset + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                        u = values[startIndex + offset + j + 3];
+                        v = values[startIndex + offset + gap + j + 3];
+                        values[startIndex + offset + j + 3] = arithmetic.guard(arithmetic.add(u, v));
+                        values[startIndex + offset + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
                     }
                     offset += (gap << 1);
                 }
@@ -240,32 +216,32 @@ class NttHandler {
             MultiplyUintModOperand scaledR = arithmetic.mulRootScalar(r, scalar);
             if (gap < 4) {
                 for (int j = 0; j < gap; j++) {
-                    u = arithmetic.guard(valuesArray[startIndex + j]);
-                    v = valuesArray[startIndex + gap + j];
-                    valuesArray[startIndex + j] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
-                    valuesArray[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
+                    u = arithmetic.guard(values[startIndex + j]);
+                    v = values[startIndex + gap + j];
+                    values[startIndex + j] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
+                    values[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
                 }
             } else {
                 for (int j = 0; j < gap; j += 4) {
-                    u = arithmetic.guard(valuesArray[startIndex + j]);
-                    v = valuesArray[startIndex + gap + j];
-                    valuesArray[startIndex + j] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
-                    valuesArray[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
+                    u = arithmetic.guard(values[startIndex + j]);
+                    v = values[startIndex + gap + j];
+                    values[startIndex + j] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
+                    values[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
 
-                    u = arithmetic.guard(valuesArray[startIndex + j + 1]);
-                    v = valuesArray[startIndex + gap + j + 1];
-                    valuesArray[startIndex + j + 1] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
-                    valuesArray[startIndex + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
+                    u = arithmetic.guard(values[startIndex + j + 1]);
+                    v = values[startIndex + gap + j + 1];
+                    values[startIndex + j + 1] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
+                    values[startIndex + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
 
-                    u = arithmetic.guard(valuesArray[startIndex + j + 2]);
-                    v = valuesArray[startIndex + gap + j + 2];
-                    valuesArray[startIndex + j + 2] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
-                    valuesArray[startIndex + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
+                    u = arithmetic.guard(values[startIndex + j + 2]);
+                    v = values[startIndex + gap + j + 2];
+                    values[startIndex + j + 2] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
+                    values[startIndex + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
 
-                    u = arithmetic.guard(valuesArray[startIndex + j + 3]);
-                    v = valuesArray[startIndex + gap + j + 3];
-                    valuesArray[startIndex + j + 3] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
-                    valuesArray[startIndex + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
+                    u = arithmetic.guard(values[startIndex + j + 3]);
+                    v = values[startIndex + gap + j + 3];
+                    values[startIndex + j + 3] = arithmetic.mulScalar(arithmetic.guard(arithmetic.add(u, v)), scalar);
+                    values[startIndex + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), scaledR);
                 }
             }
         } else {
@@ -273,33 +249,33 @@ class NttHandler {
             r = roots[++rootsIndex];
             if (gap < 4) {
                 for (int j = 0; j < gap; j++) {
-                    u = valuesArray[startIndex + j];
-                    v = valuesArray[startIndex + gap + j];
-                    valuesArray[startIndex + j] = arithmetic.guard(arithmetic.add(u, v));
-                    valuesArray[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                    u = values[startIndex + j];
+                    v = values[startIndex + gap + j];
+                    values[startIndex + j] = arithmetic.guard(arithmetic.add(u, v));
+                    values[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
                 }
             } else {
                 for (int j = 0; j < gap; j += 4) {
 
-                    u = valuesArray[startIndex + j];
-                    v = valuesArray[startIndex + gap + j];
-                    valuesArray[startIndex + j] = arithmetic.guard(arithmetic.add(u, v));
-                    valuesArray[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                    u = values[startIndex + j];
+                    v = values[startIndex + gap + j];
+                    values[startIndex + j] = arithmetic.guard(arithmetic.add(u, v));
+                    values[startIndex + gap + j] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                    u = valuesArray[startIndex + j + 1];
-                    v = valuesArray[startIndex + gap + j + 1];
-                    valuesArray[startIndex + j + 1] = arithmetic.guard(arithmetic.add(u, v));
-                    valuesArray[startIndex + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                    u = values[startIndex + j + 1];
+                    v = values[startIndex + gap + j + 1];
+                    values[startIndex + j + 1] = arithmetic.guard(arithmetic.add(u, v));
+                    values[startIndex + gap + j + 1] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                    u = valuesArray[startIndex + j + 2];
-                    v = valuesArray[startIndex + gap + j + 2];
-                    valuesArray[startIndex + j + 2] = arithmetic.guard(arithmetic.add(u, v));
-                    valuesArray[startIndex + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                    u = values[startIndex + j + 2];
+                    v = values[startIndex + gap + j + 2];
+                    values[startIndex + j + 2] = arithmetic.guard(arithmetic.add(u, v));
+                    values[startIndex + gap + j + 2] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
 
-                    u = valuesArray[startIndex + j + 3];
-                    v = valuesArray[startIndex + gap + j + 3];
-                    valuesArray[startIndex + j + 3] = arithmetic.guard(arithmetic.add(u, v));
-                    valuesArray[startIndex + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
+                    u = values[startIndex + j + 3];
+                    v = values[startIndex + gap + j + 3];
+                    values[startIndex + j + 3] = arithmetic.guard(arithmetic.add(u, v));
+                    values[startIndex + gap + j + 3] = arithmetic.mulRoot(arithmetic.sub(u, v), r);
                 }
             }
         }

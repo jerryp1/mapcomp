@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe;
 
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.keys.SecretKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
@@ -211,7 +210,7 @@ public class Decryptor {
                     // todo: need setUint? 还是直接 copy 即可? 直接 copy 吧， SEAL  的 set_uint 可以方便的传入起点，Java里不行，直接copy是最简单的
                     System.arraycopy(encrypted.getData(), c1StartIndex + i * coeffCount, destination, i * coeffCount, coeffCount);
                     // transform c1 to Ntt form
-                    NttTool.nttNegacyclicHarveyLazy(destination, i * coeffCount, nttTables[i]);
+                    NttTool.nttNegAcyclicHarveyLazyRns(destination, coeffCount, coeffModulusSize, i, nttTables);
                     // put < c_1 * s > mod q in destination
                     PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
                             destination,
@@ -224,7 +223,7 @@ public class Decryptor {
                             destination
                     );
                     // transform back
-                    NttTool.inverseNttNegAcyclicHarvey(
+                    NttTool.inverseNttNegacyclicHarvey(
                             destination,
                             i * coeffCount,
                             nttTables[i]
@@ -268,7 +267,7 @@ public class Decryptor {
                 // todo: 尝试并行化加速
                 for (int i = 0; i < (encryptedSize - 1); i++) {
                     // 这是 RnsIter 层面的计算
-                    NttTool.nttNegacyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, coeffModulusSize, nttTables);
+                    NttTool.nttNegacyclicHarveyPoly(encryptedCopy, encryptedSize, coeffCount, coeffModulusSize, i, nttTables);
                 }
             }
 
@@ -326,7 +325,7 @@ public class Decryptor {
                 // If the input was not in NTT form, need to transform back
                 // 逐 CoeffIter 处理
                 for (int i = 0; i < coeffModulusSize; i++) {
-                    NttTool.inverseNttNegAcyclicHarvey(
+                    NttTool.inverseNttNegacyclicHarvey(
                             destination,
                             i * coeffCount,
                             nttTables[i]
@@ -350,209 +349,6 @@ public class Decryptor {
             }
         }
     }
-
-
-    /**
-     * Compute c_0 + c_1 *s + ... + c_{count-1} * s^{count-1} mod q.
-     * Store result in destination in RNS form.
-     * destination has the size of an RNS polynomial.
-     *
-     * @param encrypted
-     * @param destination
-     */
-    private void dotProductCtSkArray(Ciphertext encrypted, RnsIter destination) {
-
-        Context.ContextData contextData = context.getContextData(encrypted.getParmsId());
-        EncryptionParams parms = contextData.getParms();
-        Modulus[] coeffModulus = parms.getCoeffModulus();
-        int coeffCount = parms.getPolyModulusDegree();
-        int coeffModulusSize = coeffModulus.length;
-        int keyCoeffModulusSize = context.keyContextData().getParms().getCoeffModulus().length;
-        int encryptedSize = encrypted.getSize();
-        boolean isNttForm = encrypted.isNttForm();
-
-        NttTables[] nttTables = contextData.getSmallNttTables();
-
-        // Make sure we have enough secret key powers computed
-        computeSecretKeyArray(encryptedSize - 1);
-
-        if (encryptedSize == 2) {
-            // 密文中 多项式数量是2的情况下，secretKeyArray 中 只包含一个 sk, 可以理解为 就是一个 RnsIter
-
-            // 提取当前 Ciphertext 中的 c0 c1
-            int c0StartIndex = 0;
-            int c1StartIndex = encrypted.indexAt(1);
-
-            //   现在可以认为 sk c0 c1 都是 RnsIter, 然后在 RnsIter 下进行计算
-            if (isNttForm) {
-                //todo: 考虑并行化提速
-                for (int i = 0; i < coeffModulusSize; i++) {
-                    // 再分解了一层，现在处理的是 coeffIter
-
-                    //put < c_1 * s > mod q in destination
-                    PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                            encrypted.getData(),
-                            c1StartIndex + i * coeffCount,
-                            secretKeyArray,
-                            i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination.coeffIter
-                    );
-
-                    // add c_0 to the result; note that destination should be in the same (NTT) form as encrypted
-                    // 前参数1、2表示 c_1 * s, 参数 3、4表示 c0,
-                    PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination.coeffIter,
-                            i * coeffCount,
-                            encrypted.getData(),
-                            c0StartIndex + i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination.coeffIter
-                    );
-                }
-            } else { // 处理 non-NTT 下的计算
-                // 同样是分解为 CoeffIter 层面的计算
-                for (int i = 0; i < coeffModulusSize; i++) {
-                    // 拷贝 c1 给 Destination
-                    // 注意各自起点的计算
-                    // todo: need setUint? 还是直接 copy 即可?
-
-                    System.arraycopy(encrypted.getData(), c1StartIndex + i * coeffCount, destination.coeffIter, i * coeffCount, coeffCount);
-                    // transform c1 to Ntt form
-                    NttTool.nttNegacyclicHarveyLazy(destination.coeffIter, i * coeffCount, nttTables[i]);
-                    // put < c_1 * s > mod q in destination
-                    PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                            destination.coeffIter,
-                            i * coeffCount,
-                            secretKeyArray,
-                            i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination.coeffIter
-                    );
-                    // transform back
-                    NttTool.inverseNttNegAcyclicHarvey(
-                            destination.coeffIter,
-                            i * coeffCount,
-                            nttTables[i]
-                    );
-                    // add c0 to the result; note that destination should be in the same (NTT) form as encrypted
-                    // 密文是 ntt，destination 就是 Ntt, 密文是非 Ntt，destination 就是 non-ntt
-                    PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination.coeffIter,
-                            i * coeffCount,
-                            encrypted.getData(),
-                            c0StartIndex + i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination.coeffIter
-                    );
-                }
-            }
-
-        } else { // 密文中 多项式数量 > 2
-
-            // put < (c_1 , c_2, ... , c_{count-1}) , (s,s^2,...,s^{count-1}) > mod q in destination
-            // Now do the dot product of encrypted_copy and the secret key array using NTT.
-            // The secret key powers are already NTT transformed.
-
-            // 拷贝 (c_1 , c_2, ... , c_{count-1})
-            // encrypted 是一个 polyIter
-            long[] encryptedCopy = new long[(encryptedSize - 1) * coeffCount * coeffModulusSize];
-            // todo: need setPolyArray？ 还是直接调用 System.arraycopy 即可？
-            System.arraycopy(encrypted.getData(), encrypted.indexAt(1), encryptedCopy, 0, encryptedCopy.length);
-
-            // Transform c_1, c_2, ... to NTT form unless they already are
-            if (!isNttForm) {
-                // 这里需要对一个 polyIter 做处理，这里拆成 long[] + startIndex 来表示一个 RnsIter
-                // 这里需要遍历 polyIter 中的每一个 RnsIter, 以达到处理整个 PolyIter 的效果
-                // todo: 尝试并行化加速
-                for (int i = 0; i < (encryptedSize - 1); i++) {
-                    // 这是 RnsIter 层面的计算
-                    NttTool.nttNegacyclicHarvey(encryptedCopy, i * coeffCount * coeffModulusSize, encryptedSize - 1, nttTables);
-                }
-            }
-
-            // Compute dyadic product with secret power array
-            // c1 * s, c2 * s^2 ...
-            // encryptedCopy 和 secretKeyArray 可以理解为 PolyIter，这里是拆到最低粒度 CoeffIter 进行了处理
-            // todo: 是否需要以 RnsIter 为单位进行处理？
-            // todo: keyCoeffModulusSize 和 coeffModulusSize? 为何在 SEAL 里，secret_key_array 用的是 keyCoeffModulusSize
-            for (int i = 0; i < (encryptedSize - 1); i++) {
-                // 处理 单个 RnsIter
-                int rnsIterStartIndex = i * coeffCount * coeffModulusSize;
-                for (int j = 0; j < coeffModulusSize; j++) {
-                    // 处理单个 CoeffIter
-                    PolyArithmeticSmallMod.dyadicProductCoeffMod(
-                            encryptedCopy,
-                            rnsIterStartIndex + j * coeffCount,
-                            secretKeyArray,
-                            rnsIterStartIndex + j * coeffCount,
-                            coeffCount,
-                            coeffModulus[j],
-                            rnsIterStartIndex + j * coeffCount,
-                            encryptedCopy
-                    );
-                }
-            }
-
-            // Aggregate all polynomials together to complete the dot product
-            Arrays.fill(destination.coeffIter, 0, coeffCount * coeffModulusSize, 0);
-            // encrypted 的结果累加到 destination 中
-            // PolyIter + RnsIter
-            for (int i = 0; i < (encryptedSize - 1); i++) {
-                // 处理 单个 RnsIter
-                int rnsIterStartIndex = i * coeffCount * coeffModulusSize;
-                for (int j = 0; j < coeffModulusSize; j++) {
-                    // 处理单个 CoeffIter, 注意二者的起点不一样
-                    PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination.coeffIter,
-                            j * coeffCount,
-                            encryptedCopy,
-                            rnsIterStartIndex + j * coeffCount,
-                            coeffCount,
-                            coeffModulus[j],
-                            j * coeffCount,
-                            destination.coeffIter
-                    );
-                }
-            }
-
-            if (!isNttForm) {
-                // If the input was not in NTT form, need to transform back
-                // 逐 CoeffIter 处理
-                for (int i = 0; i < coeffModulusSize; i++) {
-                    NttTool.inverseNttNegAcyclicHarvey(
-                            destination.coeffIter,
-                            i * coeffCount,
-                            nttTables[i]
-                    );
-                }
-            }
-            // Finally add c_0 to the result; note that destination should be in the same (NTT) form as encrypted
-            // c0 和 destination 都是 RnsIter, 拆解为 CoeffIter 处理
-
-            for (int i = 0; i < coeffModulusSize; i++) {
-                PolyArithmeticSmallMod.addPolyCoeffMod(
-                        destination.coeffIter,
-                        i * coeffCount,
-                        encrypted.getData(),
-                        i * coeffCount, // c0StartIndex = 0
-                        coeffCount,
-                        coeffModulus[i],
-                        i * coeffCount,
-                        destination.coeffIter
-                );
-            }
-        }
-    }
-
 
     /**
      * 和 KeyGenerator 中 computeSecretKeyArray 完全相同的逻辑

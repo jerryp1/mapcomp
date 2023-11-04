@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.ntt;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
@@ -10,80 +9,70 @@ import org.junit.Test;
 import java.util.Random;
 
 /**
- * @author Qixian Zhou
+ * NTT tests.
+ *
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/27
  */
 public class NttTest {
-
-
-    public static final int MAX_LOOP_NUM = 1000;
-
+    /**
+     * maximal number of loops in the test
+     */
+    private static final int MAX_LOOP_NUM = 1000;
 
     @Test
-    public void nttBasics() {
+    public void testNttBasics() {
+        int logN = 1;
+        Modulus modulus = Numth.getPrime(2 << logN, 60);
+        NttTables table = new NttTables(logN, modulus);
+        Assert.assertEquals(1 << logN, table.getCoeffCount());
+        Assert.assertEquals(logN, table.getCoeffCountPower());
 
-        int coeffCountPower = 1;
-        Modulus modulus = Numth.getPrime(2 << coeffCountPower, 60);
-        NttTables table = new NttTables(coeffCountPower, modulus);
-        Assert.assertEquals(2, table.getCoeffCount());
-        Assert.assertEquals(1, table.getCoeffCountPower());
+        logN = 2;
+        modulus = Numth.getPrime(2 << logN, 50);
+        table = new NttTables(logN, modulus);
+        Assert.assertEquals(1 << logN, table.getCoeffCount());
+        Assert.assertEquals(logN, table.getCoeffCountPower());
 
-        coeffCountPower = 2;
-        modulus = Numth.getPrime(2 << coeffCountPower, 50);
-        table = new NttTables(coeffCountPower, modulus);
-        Assert.assertEquals(4, table.getCoeffCount());
-        Assert.assertEquals(2, table.getCoeffCountPower());
+        logN = 10;
+        modulus = Numth.getPrime(2 << logN, 40);
+        table = new NttTables(logN, modulus);
+        Assert.assertEquals(1 << logN, table.getCoeffCount());
+        Assert.assertEquals(logN, table.getCoeffCountPower());
 
-        coeffCountPower = 10;
-        modulus = Numth.getPrime(2 << coeffCountPower, 40);
-        table = new NttTables(coeffCountPower, modulus);
-        Assert.assertEquals(1024, table.getCoeffCount());
-        Assert.assertEquals(10, table.getCoeffCountPower());
-
-
-        CoeffModulus.create(1 << coeffCountPower, new int[]{20, 20, 20, 20, 20});
-
+        Modulus[] modulusArray = CoeffModulus.create(1 << logN, new int[]{20, 20, 20, 20, 20});
+        int k = modulusArray.length;
         NttTables[] nttTables = new NttTables[5];
-        NttTablesCreateIter.createNttTables(
-                coeffCountPower,
-                CoeffModulus.create(1 << coeffCountPower, new int[]{20, 20, 20, 20, 20}),
-                nttTables
-        );
-        for (int i = 0; i < 5; i++) {
-            Assert.assertEquals(1024, nttTables[i].getCoeffCount());
-            Assert.assertEquals(10, nttTables[i].getCoeffCountPower());
+        NttTablesCreateIter.createNttTables(logN, modulusArray, nttTables);
+        for (int j = 0; j < k; j++) {
+            Assert.assertEquals(1 << logN, nttTables[j].getCoeffCount());
+            Assert.assertEquals(logN, nttTables[j].getCoeffCountPower());
         }
     }
 
-
     @Test
-    public void nttPrimitiveRoot() {
-
-        int coeffCountPower = 1;
+    public void testNttPrimitiveRoot() {
+        int logN = 1;
         Modulus modulus = new Modulus(0xffffffffffc0001L);
-        NttTables tables = new NttTables(coeffCountPower, modulus);
-        Assert.assertEquals(1, tables.getCoeffCountPower());
+        NttTables tables = new NttTables(logN, modulus);
         Assert.assertEquals(288794978602139552L, tables.getRootPowers(1).operand);
         long[] inv = new long[1];
         Numth.tryInvertUintMod(tables.getRootPowers(1).operand, modulus.getValue(), inv);
         Assert.assertEquals(tables.getInvRootPowers(1).operand, inv[0]);
 
-        coeffCountPower = 2;
-        tables = new NttTables(coeffCountPower, modulus);
+        logN = 2;
+        tables = new NttTables(logN, modulus);
         Assert.assertEquals(1, tables.getRootPowers(0).operand);
         Assert.assertEquals(288794978602139552L, tables.getRootPowers(1).operand);
         Assert.assertEquals(178930308976060547L, tables.getRootPowers(2).operand);
         Assert.assertEquals(748001537669050592L, tables.getRootPowers(3).operand);
     }
 
-
     @Test
-    public void nttNegAcyclicHarvey() {
-
-        int coeffCountPower = 1;
+    public void testNttNegacyclicHarvey() {
+        int logN = 1;
         Modulus modulus = new Modulus(0xffffffffffc0001L);
-
-        NttTables tables = new NttTables(coeffCountPower, modulus);
+        NttTables tables = new NttTables(logN, modulus);
         long[] poly = new long[]{0, 0};
         NttTool.nttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(new long[2], poly);
@@ -94,145 +83,119 @@ public class NttTest {
 
         poly = new long[]{1, 1};
         NttTool.nttNegacyclicHarvey(poly, tables);
-        Assert.assertArrayEquals(
-                new long[]{
-                        288794978602139553L,
-                        864126526004445282L},
-                poly);
+        Assert.assertArrayEquals(new long[]{288794978602139553L, 864126526004445282L}, poly);
     }
 
     @Test
-    public void inverseNttNegAcyclicHarvey() {
-
-        int coeffCountPower = 3;
+    public void testInverseNttNegacyclicHarvey() {
+        int logN = 3;
+        int n = 800;
         Modulus modulus = new Modulus(0xffffffffffc0001L);
-        NttTables tables = new NttTables(coeffCountPower, modulus);
-        long[] poly = new long[800];
-        long[] temp = new long[800];
-        NttTool.inverseNttNegAcyclicHarvey(poly, tables);
+        NttTables tables = new NttTables(logN, modulus);
+        long[] poly = new long[n];
+        long[] temp = new long[n];
+        NttTool.inverseNttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(temp, poly);
 
         Random random = new Random();
-        for (int i = 0; i < 800; i++) {
-            poly[i] = Math.abs(random.nextLong()) % modulus.getValue();
-            temp[i] = poly[i];
+        for (int index = 0; index < n; index++) {
+            poly[index] = Math.abs(random.nextLong()) % modulus.getValue();
+            temp[index] = poly[index];
         }
-
         NttTool.nttNegacyclicHarvey(poly, tables);
-        NttTool.inverseNttNegAcyclicHarvey(poly, tables);
-
+        NttTool.inverseNttNegacyclicHarvey(poly, tables);
         Assert.assertArrayEquals(temp, poly);
     }
 
     @Test
-    public void randomTest() {
-
+    public void testRandomNttNegacyclicHarvey() {
         Modulus modulus = new Modulus(0xffffffffffc0001L);
-        int[] coeffCountPowers = new int[]{1, 3, 6, 8, 10, 11, 12, 13, 14, 15};
+        int[] logNs = new int[]{1, 3, 6, 8, 10, 11, 12, 13, 14, 15};
         Random random = new Random();
 
-        for (int coeffCountPower : coeffCountPowers) {
-            int n = 1 << coeffCountPower;
-            NttTables tables = new NttTables(coeffCountPower, modulus);
-
+        for (int logN : logNs) {
+            int n = 1 << logN;
+            NttTables tables = new NttTables(logN, modulus);
             long[] poly = new long[n];
             long[] temp = new long[n];
-
-            for (int i = 0; i < MAX_LOOP_NUM; i++) {
-                for (int j = 0; j < n; j++) {
-                    poly[j] = Math.abs(random.nextLong()) % modulus.getValue();
-                    temp[j] = poly[j];
+            for (int round = 0; round < MAX_LOOP_NUM; round++) {
+                for (int index = 0; index < n; index++) {
+                    poly[index] = Math.abs(random.nextLong()) % modulus.getValue();
+                    temp[index] = poly[index];
                 }
-                NttTool.nttNegacyclicHarvey(poly,0,  tables);
-                NttTool.inverseNttNegAcyclicHarvey(poly,0,  tables);
-
+                NttTool.nttNegacyclicHarvey(poly, 0, tables);
+                NttTool.inverseNttNegacyclicHarvey(poly, 0, tables);
                 Assert.assertArrayEquals(temp, poly);
             }
         }
     }
 
     @Test
-    public void randomRnsIterTest() {
-
-
-        Modulus[] mod = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
-
-
-        // N = 4096
-        int[] coeffCountPowers = new int[]{12};
+    public void testRandomNttNegacyclicHarveyRns() {
+        Modulus[] modulusArray = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
+        int k = modulusArray.length;
+        int[] logNs = new int[]{12};
         Random random = new Random();
 
+        for (int logN : logNs) {
+            NttTables[] nttTables = new NttTables[k];
+            int n = 1 << logN;
+            NttTablesCreateIter.createNttTables(logN, modulusArray, nttTables);
+            long[] rns = new long[n * k];
+            long[] groundTruth = new long[n * k];
 
-        for (int coeffCountPower : coeffCountPowers) {
-
-            NttTables[] nttTables = new NttTables[mod.length];
-
-            int n = 1 << coeffCountPower;
-            NttTablesCreateIter.createNttTables(coeffCountPower, mod, nttTables);
-
-            long[] poly = new long[n * mod.length];
-            long[] groundTruth = new long[n * mod.length];
-
-            for (int i = 0; i < MAX_LOOP_NUM; i++) {
-
-                for (int j = 0; j < mod.length; j++) {
-                    for (int k = 0; k < n; k++) {
-                        poly[j * n + k] = Math.abs(random.nextLong()) % mod[j].getValue();
+            for (int round = 0; round < MAX_LOOP_NUM; round++) {
+                for (int j = 0; j < k; j++) {
+                    int offset = j * n;
+                    for (int index = 0; index < n; index++) {
+                        rns[offset + index] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
                     }
+                    System.arraycopy(rns, 0, groundTruth, 0, n * k);
+                    NttTool.nttNegacyclicHarveyRns(rns, n, k, j, nttTables);
+                    NttTool.inverseNttNegacyclicHarveyRns(rns, n, k, j, nttTables);
                 }
-
-                System.arraycopy(poly, 0, groundTruth, 0, n * mod.length);
-
-                RnsIter rnsIter = new RnsIter(poly, n);
-
-
-                NttTool.nttNegacyclicHarvey(rnsIter, mod.length, nttTables);
-                NttTool.inverseNttNegAcyclicHarvey(rnsIter, mod.length, nttTables);
-
-                Assert.assertArrayEquals(groundTruth, poly);
+                System.arraycopy(rns, 0, groundTruth, 0, n * k);
+                NttTool.nttNegacyclicHarveyRns(rns, n, k, nttTables);
+                NttTool.inverseNttNegacyclicHarveyRns(rns, n, k, nttTables);
+                Assert.assertArrayEquals(groundTruth, rns);
             }
         }
     }
 
     @Test
-    public void randomRnsIterTest2() {
-
-
-        Modulus[] mod = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
-
-
-        // N = 4096
-        int[] coeffCountPowers = new int[]{12};
+    public void testRandomNttNegacyclicHarveyPoly() {
+        Modulus[] modulusArray = Modulus.createModulus(new long[]{0xffffee001L, 0xffffc4001L, 0x1ffffe0001L});
+        int m = 3;
+        int k = modulusArray.length;
+        int[] logNs = new int[]{12};
         Random random = new Random();
 
+        for (int logN : logNs) {
+            NttTables[] nttTables = new NttTables[k];
+            int n = 1 << logN;
+            NttTablesCreateIter.createNttTables(logN, modulusArray, nttTables);
+            long[] poly = new long[m * n * k];
+            long[] groundTruth = new long[m * n * k];
 
-        for (int coeffCountPower : coeffCountPowers) {
-
-            NttTables[] nttTables = new NttTables[mod.length];
-
-            int n = 1 << coeffCountPower;
-            NttTablesCreateIter.createNttTables(coeffCountPower, mod, nttTables);
-
-            long[] poly = new long[n * mod.length];
-            long[] groundTruth = new long[n * mod.length];
-
-            for (int i = 0; i < MAX_LOOP_NUM; i++) {
-
-                for (int j = 0; j < mod.length; j++) {
-                    for (int k = 0; k < n; k++) {
-                        poly[j * n + k] = Math.abs(random.nextLong()) % mod[j].getValue();
+            for (int round = 0; round < MAX_LOOP_NUM; round++) {
+                for (int i = 0; i < m; i++) {
+                    int iOffset = i * k * n;
+                    for (int j = 0; j < k; j++) {
+                        int jOffset = j * n;
+                        for (int index = 0; index < n; index++) {
+                            poly[iOffset + jOffset + index] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
+                        }
                     }
+                    System.arraycopy(poly, 0, groundTruth, 0, m * n * k);
+                    NttTool.nttNegacyclicHarveyPoly(poly, m, n, k, i, nttTables);
+                    NttTool.inverseNttNegacyclicHarveyPoly(poly, m, n, k, i, nttTables);
+                    Assert.assertArrayEquals(groundTruth, poly);
                 }
-
-                System.arraycopy(poly, 0, groundTruth, 0, n * mod.length);
-
-                NttTool.nttNegAcyclicHarveyRnsIter(poly, n, mod.length, nttTables);
-                NttTool.inverseNttNegAcyclicHarveyRnsIter(poly, n, mod.length, nttTables);
-
+                System.arraycopy(poly, 0, groundTruth, 0, m * n * k);
+                NttTool.nttNegacyclicHarveyPoly(poly, m, n, k, nttTables);
+                NttTool.inverseNttNegacyclicHarveyPoly(poly, m, n, k, nttTables);
                 Assert.assertArrayEquals(groundTruth, poly);
             }
         }
     }
-
-
 }

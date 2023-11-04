@@ -790,7 +790,7 @@ public class Evaluator {
 
         // In CKKS t_target is in NTT form; switch back to normal form
         if (scheme == SchemeType.CKKS) {
-            NttTool.inverseNttNegAcyclicHarveyRnsIter(
+            NttTool.inverseNttNegacyclicHarveyRns(
                 tTarget,
                 coeffCount,
                 decompModulusSize,
@@ -959,7 +959,7 @@ public class Evaluator {
                 // Lazy reduction; this needs to be then reduced mod qi
                 // 定位到 t_poly_prod 的 第 i 个 RnsIter 中的 第 decomp_modulus_size 个 CoeffIter
                 int tLastIndex = i * coeffCount * rnsModulusSize + decompModulusSize * coeffCount;
-                NttTool.inverseNttNegAcyclicHarveyLazy(
+                NttTool.inverseNttNegacyclicHarveyLazy(
                     tPolyProd,
                     tLastIndex,
                     keyNttTables[keyModulusSize - 1]
@@ -1011,7 +1011,7 @@ public class Evaluator {
                     if (scheme == SchemeType.CKKS) {
                         throw new IllegalArgumentException("unsupported CKKS");
                     } else if (scheme == SchemeType.BFV) {
-                        NttTool.inverseNttNegAcyclicHarveyLazy(
+                        NttTool.inverseNttNegacyclicHarveyLazy(
                             tPolyProd,
                             zeroOneJ,
                             keyNttTables[j]
@@ -1168,12 +1168,7 @@ public class Evaluator {
 //            );
 
             //
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encryptedQ,
-                i * coeffCount * baseQSize,
-                baseQSize,
-                baseQNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encryptedQ, encryptedSize, coeffCount, baseQSize, i, baseQNttTables);
 //            System.out.println("ntt lazy, encrypted1Q: \n" +
 //                    Arrays.toString(
 //                            Arrays.copyOfRange(encrypted1Q, i * coeffCount * baseQSize, (i+1) * coeffCount * baseQSize)
@@ -1211,12 +1206,7 @@ public class Evaluator {
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encryptedBsk,
-                i * coeffCount * baseBskSize,
-                baseBskSize,
-                baseBskNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encryptedBsk, encryptedSize, coeffCount, baseBskSize, i, baseBskNttTables);
         }
 
         // Allocate temporary space for the output of step (4)
@@ -1350,21 +1340,9 @@ public class Evaluator {
         // Perform BEHZ step (5): transform data from NTT form
         // Lazy reduction here. The following multiply_poly_scalar_coeffmod will correct the value back to [0, p)
         // 处理整个 polyIter
-        NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-            tempDestinationQ,
-            coeffCount,
-            baseQSize,
-            destinationSize,
-            baseQNttTables
-        );
+        NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationQ, destinationSize, coeffCount, baseQSize, baseQNttTables);
 
-        NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-            tempDestinationBsk,
-            coeffCount,
-            baseBskSize,
-            destinationSize,
-            baseBskNttTables
-        );
+        NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationBsk, destinationSize, coeffCount, baseBskSize, baseBskNttTables);
 
 //        System.out.println("step(4) tempDestinationQ after inverse ntt \n" + Arrays.toString(tempDestinationQ));
 //        System.out.println("step(4) tempDestinationBsk after inverse ntt \n" + Arrays.toString(tempDestinationBsk));
@@ -1588,12 +1566,7 @@ public class Evaluator {
 //            );
 
             //
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encrypted1Q,
-                i * coeffCount * baseQSize,
-                baseQSize,
-                baseQNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encrypted1Q, encrypted1Size, coeffCount, baseQSize, i, baseQNttTables);
 //            System.out.println("ntt lazy, encrypted1Q: \n" +
 //                    Arrays.toString(
 //                            Arrays.copyOfRange(encrypted1Q, i * coeffCount * baseQSize, (i+1) * coeffCount * baseQSize)
@@ -1631,12 +1604,7 @@ public class Evaluator {
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encrypted1Bsk,
-                i * coeffCount * baseBskSize,
-                baseBskSize,
-                baseBskNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encrypted1Bsk, encrypted1Size, coeffCount, baseBskSize, i, baseBskNttTables);
         }
 
 //        System.out.println("steps (1)-(3): encrypted1Q: \n" + Arrays.toString(encrypted1Q));
@@ -1660,12 +1628,7 @@ public class Evaluator {
                 coeffCount * baseQSize
             );
             //
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encrypted2Q,
-                i * coeffCount * baseQSize,
-                baseQSize,
-                baseQNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encrypted2Q, encrypted2Size, coeffCount, baseQSize, i, baseQNttTables);
             // Allocate temporary space for a polynomial in the Bsk U {m_tilde} base
             // 这是一个 RnsIter
             long[] temp = new long[coeffCount * baseBskMTildeSize];
@@ -1696,12 +1659,7 @@ public class Evaluator {
 
             // Transform to NTT form in base Bsk
             // Lazy reduction
-            NttTool.nttNegAcyclicHarveyLazyRnsIter(
-                encrypted2Bsk,
-                i * coeffCount * baseBskSize,
-                baseBskSize,
-                baseBskNttTables
-            );
+            NttTool.nttNegacyclicHarveyLazyPoly(encrypted2Bsk, encrypted2Size, coeffCount, baseBskSize, i, baseBskNttTables);
         }
 
 //        System.out.println("steps (1)-(3) encrypted2Q: \n" + Arrays.toString(encrypted2Q));
@@ -1825,21 +1783,8 @@ public class Evaluator {
         // Perform BEHZ step (5): transform data from NTT form
         // Lazy reduction here. The following multiply_poly_scalar_coeffmod will correct the value back to [0, p)
         // 处理整个 polyIter
-        NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-            tempDestinationQ,
-            coeffCount,
-            baseQSize,
-            destinationSize,
-            baseQNttTables
-        );
-
-        NttTool.inverseNttNegAcyclicHarveyLazyPolyIter(
-            tempDestinationBsk,
-            coeffCount,
-            baseBskSize,
-            destinationSize,
-            baseBskNttTables
-        );
+        NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationQ, destinationSize, coeffCount, baseQSize, baseQNttTables);
+        NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationBsk, destinationSize, coeffCount, baseBskSize, baseBskNttTables);
 
 //        System.out.println("step(4) tempDestinationQ after inverse ntt \n" + Arrays.toString(tempDestinationQ));
 //        System.out.println("step(4) tempDestinationBsk after inverse ntt \n" + Arrays.toString(tempDestinationBsk));
@@ -2030,7 +1975,7 @@ public class Evaluator {
         }
 
         // 处理 RnsIter
-        NttTool.nttNegAcyclicHarveyRnsIter(
+        NttTool.nttNegacyclicHarveyRns(
             plain.getData(),
             coeffCount, // 注意这个 coeffCount 是 密文的 N, 也是目前 plain 作为 RnsIter 的 N, 注意到这个值一定不能是 plain.getCoeffCount 完全两码事
             coeffModulusSize,
@@ -2073,13 +2018,7 @@ public class Evaluator {
             throw new IllegalArgumentException("invalid parameters");
         }
         // Transform each polynomial to NTT domain
-        NttTool.nttNegAcyclicHarveyPolyIter(
-            encrypted.getData(),
-            coeffCount,
-            coeffModulusSize,
-            encryptedSize,
-            nttTables
-        );
+        NttTool.nttNegacyclicHarveyPoly(encrypted.getData(), encryptedSize, coeffCount, coeffModulusSize, nttTables);
         // Finally change the is_ntt_transformed flag
         encrypted.setIsNttForm(true);
 
@@ -2121,13 +2060,7 @@ public class Evaluator {
             throw new IllegalArgumentException("invalid parameters");
         }
         // Transform each polynomial to NTT domain
-        NttTool.inverseNttNegAcyclicHarveyPolyIter(
-            encryptedNtt.getData(),
-            coeffCount,
-            coeffModulusSize,
-            encryptedSize,
-            nttTables
-        );
+        NttTool.inverseNttNegacyclicHarveyPoly(encryptedNtt.getData(), encryptedSize, coeffCount, coeffModulusSize, nttTables);
         // Finally change the is_ntt_transformed flag
         encryptedNtt.setIsNttForm(false);
 
@@ -2317,7 +2250,7 @@ public class Evaluator {
 
         // Need to multiply each component in encrypted with temp; first step is to transform to NTT form
         // 把 temp 视为 RnsIter, 整体进行处理
-        NttTool.nttNegAcyclicHarveyRnsIter(
+        NttTool.nttNegacyclicHarveyRns(
             temp,
             coeffCount,
             coeffModulusSize,
@@ -2329,11 +2262,7 @@ public class Evaluator {
 
             for (int j = 0; j < coeffModulusSize; j++) {
                 // Lazy Reduction, 处理 单个 CoeffIter
-                NttTool.nttNegacyclicHarveyLazy(
-                    encrypted.getData(),
-                    rnsStartIndex + j * coeffCount,
-                    nttTables[j]
-                );
+                NttTool.nttNegacyclicHarveyLazyPoly(encrypted.getData(), encryptedSize, coeffCount, coeffModulusSize, i, j, nttTables);
                 PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
                     encrypted.getData(),
                     rnsStartIndex + j * coeffCount,
@@ -2345,7 +2274,7 @@ public class Evaluator {
                     encrypted.getData()
                 );
 
-                NttTool.inverseNttNegAcyclicHarvey(
+                NttTool.inverseNttNegacyclicHarvey(
                     encrypted.getData(),
                     rnsStartIndex + j * coeffCount,
                     nttTables[j]

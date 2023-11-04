@@ -47,15 +47,15 @@ public class NttTables {
     /**
      * ψ^0, ψ^{ 1}, ψ^{ 2}, ..., ψ^{ (n - 1)} in the bit-reverse order of [0, n).
      */
-    MultiplyUintModOperand[] rootPowers;
+    private MultiplyUintModOperand[] rootPowers;
     /**
      * ψ^0, ψ^{-1}, ψ^{-2}, ..., ψ^{-(n - 1)} in the shift bit-reverse order of [0, -n).
      */
-    MultiplyUintModOperand[] invRootPowers;
+    private MultiplyUintModOperand[] invRootPowers;
     /**
      * lazy modulo operation
      */
-    ModArithLazy modArithLazy;
+    private ModArithLazy modArithLazy;
     /**
      * NTT handler
      */

@@ -402,7 +402,7 @@ public class RingLwe {
         // c[j] = u * public_key[j]
         for (int i = 0; i < coeffModulusSize; i++) {
             // u 是 RnsIter, 这里是对 CoeffIter 操作，RnsIter + startIndex ---> CoeffIter
-            NttTool.nttNegacyclicHarvey(u, i * coeffCount, nttTables[i]);
+            NttTool.nttNegacyclicHarveyRns(u, coeffCount, coeffModulusSize, i, nttTables);
             // j 是对 密文多项式的索引
             for (int j = 0; j < encryptedSize; j++) {
                 // 注意这里是对 CoeffIter 操作，注意起点的计算
@@ -418,7 +418,7 @@ public class RingLwe {
                 );
                 // Addition with e_0, e_1 is in non-NTT form
                 if (!isNttForm) {
-                    NttTool.inverseNttNegAcyclicHarvey(destination.getData(), destination.indexAt(j) + i * coeffCount, nttTables[i]);
+                    NttTool.inverseNttNegacyclicHarvey(destination.getData(), destination.indexAt(j) + i * coeffCount, nttTables[i]);
                 }
             }
         }
@@ -438,7 +438,7 @@ public class RingLwe {
             } else { // BFV & CKKS
                 if (isNttForm) {
                     // 注意函数签名, 直接处理 u 这个 RnsIter
-                    NttTool.nttNegAcyclicHarveyRnsIter(u, coeffCount, coeffModulusSize, nttTables);
+                    NttTool.nttNegacyclicHarveyRns(u, coeffCount, coeffModulusSize, nttTables);
                 }
             }
             //开始完成加法
@@ -561,9 +561,7 @@ public class RingLwe {
             // Sample non-NTT form and store the seed
             samplePolyUniform(ciphertextPrng, parms, destination.getData(), c1StartIndex);
             // c1 长度 k*N, 遍历 c1 中的每一个 poly, 然后做 ntt
-            for (int i = 0; i < coeffModulusSize; i++) {
-                NttTool.nttNegacyclicHarvey(destination.getData(), c1StartIndex + i * coeffCount, nttTables[i]);
-            }
+            NttTool.nttNegacyclicHarveyPoly(destination.getData(), 2, coeffCount, coeffModulusSize, 1, nttTables);
         }
 
         // Sample e <-- chi, 误差分布， seal 里具体采用那种哪种分布，存在一个配置项
@@ -601,10 +599,10 @@ public class RingLwe {
             // e 不是，需要根据参数，决定是否将 e 转换为 NTT，还是 将 as 转回系数表示
             if (isNttForm) {
                 // Transform the noise e into NTT representation
-                NttTool.nttNegacyclicHarvey(noise, i * coeffCount, nttTables[i]);
+                NttTool.nttNegacyclicHarveyRns(noise, coeffCount, coeffModulusSize, i, nttTables);
             } else {
                 // 把 当前的 c0 = as 转回 系数表示
-                NttTool.inverseNttNegAcyclicHarvey(destination.getData(), c0StartIndex + i * coeffCount, nttTables[i]);
+                NttTool.inverseNttNegacyclicHarvey(destination.getData(), c0StartIndex + i * coeffCount, nttTables[i]);
             }
 
             if (type == SchemeType.BGV) {
@@ -635,7 +633,7 @@ public class RingLwe {
         if (!isNttForm && !saveSeed) {
             for (int i = 0; i < coeffModulusSize; i++) {
                 // Transform the c1 into non-NTT representation
-                NttTool.inverseNttNegAcyclicHarvey(
+                NttTool.inverseNttNegacyclicHarvey(
                         destination.getData(),
                         c1StartIndex + i * coeffCount,
                         nttTables[i]);

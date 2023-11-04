@@ -130,7 +130,7 @@ public class BatchEncoder {
         // Note: We already performed bit-reversal when reading in the matrix
 
         // 一次 inverseNtt, 给定的输入 可以理解为 (点，值) 表示法下的多项式，将其转换回 系数表示法
-        NttTool.inverseNttNegAcyclicHarvey(destination.getData(), contextData.getPlainNttTables());
+        NttTool.inverseNttNegacyclicHarvey(destination.getData(), contextData.getPlainNttTables());
     }
 
     public void encode(long[] valuesMatrix, Plaintext destination) {
@@ -163,7 +163,7 @@ public class BatchEncoder {
         // Note: We already performed bit-reversal when reading in the matrix
 
         // 一次 inverseNtt, 给定的输入 可以理解为 (点，值) 表示法下的多项式，将其转换回 系数表示法
-        NttTool.inverseNttNegAcyclicHarvey(destination.getData(), contextData.getPlainNttTables());
+        NttTool.inverseNttNegacyclicHarvey(destination.getData(), contextData.getPlainNttTables());
     }
 
     /**
