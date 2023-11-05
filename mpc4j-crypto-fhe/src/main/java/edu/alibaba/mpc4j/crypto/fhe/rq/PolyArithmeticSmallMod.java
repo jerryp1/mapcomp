@@ -684,13 +684,13 @@ public class PolyArithmeticSmallMod {
     /**
      * Multiplies a scalar to the first m RNS representations in the Poly-RNS representation.
      *
-     * @param poly the Poly-RNS representation.
-     * @param n the modulus polynomial degree.
-     * @param k the number of RNS bases.
-     * @param m the number of multiplied RNS representations.
-     * @param scalar scalar.
+     * @param poly    the Poly-RNS representation.
+     * @param n       the modulus polynomial degree.
+     * @param k       the number of RNS bases.
+     * @param m       the number of multiplied RNS representations.
+     * @param scalar  scalar.
      * @param modulus modulus.
-     * @param polyR the result Poly-RNS representation.
+     * @param polyR   the result Poly-RNS representation.
      * @param nR      the result modulus polynomial degree.
      * @param kR      the result number of RNS bases.
      */
