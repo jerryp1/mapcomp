@@ -1041,8 +1041,8 @@ public class Evaluator {
                         zeroZeroJ,
                         coeffCount,
                         keyModulus[j],
-                        zeroZeroJ,
-                        encrypted.getData()
+                        encrypted.getData(),
+                        zeroZeroJ
                     );
                 }
             }
@@ -1244,7 +1244,7 @@ public class Evaluator {
                 coeffCount * baseQSize,
                 tempDestinationQ
             );
-            PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
+            PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationQ,
                 coeffCount * baseQSize, // 起点
                 coeffCount,
@@ -1252,7 +1252,6 @@ public class Evaluator {
                 tempDestinationQ,
                 coeffCount * baseQSize, // 起点
                 coeffCount,
-                baseQSize,
                 baseQSize,
                 baseQ,
                 tempDestinationQ,
@@ -1300,7 +1299,7 @@ public class Evaluator {
                 coeffCount * baseBskSize,
                 tempDestinationBsk
             );
-            PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
+            PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationBsk,
                 coeffCount * baseBskSize, // 起点
                 coeffCount,
@@ -1308,7 +1307,6 @@ public class Evaluator {
                 tempDestinationBsk,
                 coeffCount * baseBskSize, // 起点
                 coeffCount,
-                baseBskSize,
                 baseBskSize,
                 baseBsk,
                 tempDestinationBsk,
@@ -1724,8 +1722,8 @@ public class Evaluator {
                             shiftedOutIter + k * coeffCount,
                             coeffCount,
                             baseQ[k],
-                            shiftedOutIter + k * coeffCount,
-                            tempDestinationQ
+                            tempDestinationQ,
+                            shiftedOutIter + k * coeffCount
                         );
                     }
                 }
@@ -1767,8 +1765,8 @@ public class Evaluator {
                             shiftedOutIter + k * coeffCount,
                             coeffCount,
                             baseBsk[k],
-                            shiftedOutIter + k * coeffCount,
-                            tempDestinationBsk
+                            tempDestinationBsk,
+                            shiftedOutIter + k * coeffCount
                         );
                     }
                 }
@@ -2650,7 +2648,7 @@ public class Evaluator {
             // todo: 一定需要 resize吗？ 如果 encrypted1Size = maxCount 是否就不需要 resize？
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
             // AddCiphertexts
-            PolyArithmeticSmallMod.addPolyCoeffModPolyIter(
+            PolyArithmeticSmallMod.addPolyCoeffModPoly(
                 encrypted1.getData(),
                 encrypted1.getPolyModulusDegree(),
                 encrypted1.getCoeffModulusSize(),
@@ -2779,7 +2777,7 @@ public class Evaluator {
             // todo: 一定需要 resize吗？ 如果 encrypted1Size = maxCount 是否就不需要 resize？
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
             // AddCiphertexts
-            PolyArithmeticSmallMod.subPolyCoeffModPolyIter(
+            PolyArithmeticSmallMod.subPolyCoeffModPoly(
                 encrypted1.getData(),
                 encrypted1.getPolyModulusDegree(),
                 encrypted1.getCoeffModulusSize(),

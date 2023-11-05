@@ -104,8 +104,8 @@ public class NttTest {
         Assert.assertArrayEquals(groundTruth, poly);
 
         Random random = new Random();
-        for (int index = 0; index < n; index++) {
-            poly[index] = Math.abs(random.nextLong()) % modulus.getValue();
+        for (int i = 0; i < n; i++) {
+            poly[i] = Math.abs(random.nextLong()) % modulus.getValue();
         }
         System.arraycopy(poly, 0, groundTruth, 0, n);
 
@@ -126,8 +126,8 @@ public class NttTest {
             long[] poly = new long[n];
             long[] groundTruth = new long[n];
             for (int round = 0; round < MAX_LOOP_NUM; round++) {
-                for (int index = 0; index < n; index++) {
-                    poly[index] = Math.abs(random.nextLong()) % modulus.getValue();
+                for (int i = 0; i < n; i++) {
+                    poly[i] = Math.abs(random.nextLong()) % modulus.getValue();
                 }
                 System.arraycopy(poly, 0, groundTruth, 0, n);
 
@@ -154,9 +154,9 @@ public class NttTest {
 
             for (int round = 0; round < MAX_LOOP_NUM; round++) {
                 for (int j = 0; j < k; j++) {
-                    int offset = j * n;
-                    for (int index = 0; index < n; index++) {
-                        rns[offset + index] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
+                    int pos = j * n;
+                    for (int i = 0; i < n; i++) {
+                        rns[pos + i] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
                     }
                     System.arraycopy(rns, 0, groundTruth, 0, n * k);
 
@@ -189,18 +189,18 @@ public class NttTest {
             long[] groundTruth = new long[m * n * k];
 
             for (int round = 0; round < MAX_LOOP_NUM; round++) {
-                for (int i = 0; i < m; i++) {
-                    int iOffset = i * k * n;
+                for (int r = 0; r < m; r++) {
+                    int iOffset = r * k * n;
                     for (int j = 0; j < k; j++) {
-                        int jOffset = j * n;
-                        for (int index = 0; index < n; index++) {
-                            poly[iOffset + jOffset + index] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
+                        int pos = iOffset + j * n;
+                        for (int i = 0; i < n; i++) {
+                            poly[pos + i] = Math.abs(random.nextLong()) % modulusArray[j].getValue();
                         }
                     }
                     System.arraycopy(poly, 0, groundTruth, 0, m * n * k);
 
-                    NttTool.nttNegacyclicHarveyPoly(poly, m, n, k, i, nttTables);
-                    NttTool.inverseNttNegacyclicHarveyPoly(poly, m, n, k, i, nttTables);
+                    NttTool.nttNegacyclicHarveyPoly(poly, m, n, k, r, nttTables);
+                    NttTool.inverseNttNegacyclicHarveyPoly(poly, m, n, k, r, nttTables);
                     Assert.assertArrayEquals(groundTruth, poly);
                 }
                 System.arraycopy(poly, 0, groundTruth, 0, m * n * k);

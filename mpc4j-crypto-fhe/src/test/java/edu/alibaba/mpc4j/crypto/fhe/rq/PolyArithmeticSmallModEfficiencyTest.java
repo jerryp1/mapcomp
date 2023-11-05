@@ -122,21 +122,6 @@ public class PolyArithmeticSmallModEfficiencyTest {
         );
 
         STOP_WATCH.start();
-        IntStream.range(0, MAX_LOOP_NUM).forEach(i -> PolyArithmeticSmallMod.addPolyCoeffModFor(poly1, poly2, coeffCount, mod, result));
-        STOP_WATCH.stop();
-        double addPolyCoeffModForTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / MAX_LOOP_NUM;
-        STOP_WATCH.reset();
-
-        // output
-        LOGGER.info(
-                "{}\t{}\t{}",
-                StringUtils.leftPad("addPolyCoeffModFor", 25),
-                StringUtils.leftPad(String.valueOf(coeffCount), 10),
-                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(addPolyCoeffModForTime), 20)
-        );
-
-
-        STOP_WATCH.start();
         IntStream.range(0, MAX_LOOP_NUM).forEach(i -> PolyArithmeticSmallMod.negatePolyCoeffMod(poly1, coeffCount, mod, result));
         STOP_WATCH.stop();
         double negatePolyCoeffModTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / MAX_LOOP_NUM;

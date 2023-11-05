@@ -102,7 +102,7 @@ public class RingLwe {
      * @param destination 此时的 long[] 表示 1 个多项式在 RNS 下被分解为 k 个多项式
      */
     public static void samplePolyUniform(
-            UniformRandomGenerator prng, EncryptionParams parms, long[] destination
+        UniformRandomGenerator prng, EncryptionParams parms, long[] destination
     ) {
 
         Modulus[] coeffModulus = parms.getCoeffModulus();
@@ -143,7 +143,7 @@ public class RingLwe {
      * @param startIndex  标记当前处理的是哪一个多项式 [0, size)
      */
     public static void samplePolyUniform(
-            UniformRandomGenerator prng, EncryptionParams parms, long[] destination, int startIndex
+        UniformRandomGenerator prng, EncryptionParams parms, long[] destination, int startIndex
     ) {
 
         Modulus[] coeffModulus = parms.getCoeffModulus();
@@ -186,7 +186,7 @@ public class RingLwe {
         x[2] &= 0x1F; // 0001 1111
         x[5] &= 0x1F;
         return Common.hammingWeight(x[0]) + Common.hammingWeight(x[1]) + Common.hammingWeight(x[2])
-                - Common.hammingWeight(x[3]) - Common.hammingWeight(x[4]) - Common.hammingWeight(x[5]);
+            - Common.hammingWeight(x[3]) - Common.hammingWeight(x[4]) - Common.hammingWeight(x[5]);
     }
 
     /**
@@ -407,14 +407,14 @@ public class RingLwe {
             for (int j = 0; j < encryptedSize; j++) {
                 // 注意这里是对 CoeffIter 操作，注意起点的计算
                 PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                        u,
-                        i * coeffCount,
-                        publicKey.data().getData(), // 密文，PolyIter
-                        publicKey.data().indexAt(j) + i * coeffCount, // RnsIter + startIndx = CoeffIter
-                        coeffCount,
-                        coeffModulus[i],
-                        destination.indexAt(j) + i * coeffCount,
-                        destination.getData()
+                    u,
+                    i * coeffCount,
+                    publicKey.data().getData(), // 密文，PolyIter
+                    publicKey.data().indexAt(j) + i * coeffCount, // RnsIter + startIndx = CoeffIter
+                    coeffCount,
+                    coeffModulus[i],
+                    destination.indexAt(j) + i * coeffCount,
+                    destination.getData()
                 );
                 // Addition with e_0, e_1 is in non-NTT form
                 if (!isNttForm) {
@@ -448,14 +448,14 @@ public class RingLwe {
             // todo: 需要设计一个 统一、高效的 基于 long[] 的 CoeffIter/RnsIter/PolyIter 的处理方式
             for (int i = 0; i < coeffModulusSize; i++) {
                 PolyArithmeticSmallMod.addPolyCoeffMod(
-                        u,
-                        i * coeffCount,
-                        destination.getData(), // Ciphertext 有多个 poly（polyIter）, destination.indexAt(j) 定位到单个poly（RnsIter） + i * coeffCount 定位到 CoffIter
-                        destination.indexAt(j) + i * coeffCount,
-                        coeffCount,
-                        coeffModulus[i],
-                        destination.indexAt(j) + i * coeffCount,
-                        destination.getData()
+                    u,
+                    i * coeffCount,
+                    destination.getData(), // Ciphertext 有多个 poly（polyIter）, destination.indexAt(j) 定位到单个poly（RnsIter） + i * coeffCount 定位到 CoffIter
+                    destination.indexAt(j) + i * coeffCount,
+                    coeffCount,
+                    coeffModulus[i],
+                    destination.getData(),
+                    destination.indexAt(j) + i * coeffCount
                 );
             }
         }
@@ -463,12 +463,12 @@ public class RingLwe {
 
 
     public static void encryptZeroSymmetric(
-            SecretKey secretKey,
-            Context context,
-            ParmsIdType parmsId,
-            Boolean isNttForm,
-            Boolean saveSeed,
-            Ciphertext destination) {
+        SecretKey secretKey,
+        Context context,
+        ParmsIdType parmsId,
+        Boolean isNttForm,
+        Boolean saveSeed,
+        Ciphertext destination) {
 
         assert ValueChecker.isValidFor(secretKey, context);
 
@@ -586,14 +586,14 @@ public class RingLwe {
         for (int i = 0; i < coeffModulusSize; i++) {
             // c1 就是 a, 一个均匀分布的多项式， 这里在计算 as
             PolyArithmeticSmallMod.dyadicProductCoeffMod(
-                    secretKey.data().getData(),
-                    i * coeffCount,
-                    destination.getData(),
-                    c1StartIndex + i * coeffCount,
-                    coeffCount,
-                    coeffModulus[i],
-                    c0StartIndex + i * coeffCount,
-                    destination.getData()
+                secretKey.data().getData(),
+                i * coeffCount,
+                destination.getData(),
+                c1StartIndex + i * coeffCount,
+                coeffCount,
+                coeffModulus[i],
+                c0StartIndex + i * coeffCount,
+                destination.getData()
             );
             // 到这里 a s 都是 ntt form
             // e 不是，需要根据参数，决定是否将 e 转换为 NTT，还是 将 as 转回系数表示
@@ -611,32 +611,32 @@ public class RingLwe {
 
             // c0 = as + e
             PolyArithmeticSmallMod.addPolyCoeffMod(
-                    noise,
-                    i * coeffCount,
-                    destination.getData(),
-                    c0StartIndex + i * coeffCount,
-                    coeffCount,
-                    coeffModulus[i],
-                    c0StartIndex + i * coeffCount,
-                    destination.getData()
+                noise,
+                i * coeffCount,
+                destination.getData(),
+                c0StartIndex + i * coeffCount,
+                coeffCount,
+                coeffModulus[i],
+                destination.getData(),
+                c0StartIndex + i * coeffCount
             );
             // (as + e, a) ---> (-(as + e), a)
             PolyArithmeticSmallMod.negatePolyCoeffMod(
-                    destination.getData(),
-                    c0StartIndex + i * coeffCount,
-                    coeffCount,
-                    coeffModulus[i],
-                    c0StartIndex + i * coeffCount,
-                    destination.getData());
+                destination.getData(),
+                c0StartIndex + i * coeffCount,
+                coeffCount,
+                coeffModulus[i],
+                c0StartIndex + i * coeffCount,
+                destination.getData());
         }
 
         if (!isNttForm && !saveSeed) {
             for (int i = 0; i < coeffModulusSize; i++) {
                 // Transform the c1 into non-NTT representation
                 NttTool.inverseNttNegacyclicHarvey(
-                        destination.getData(),
-                        c1StartIndex + i * coeffCount,
-                        nttTables[i]);
+                    destination.getData(),
+                    c1StartIndex + i * coeffCount,
+                    nttTables[i]);
             }
         }
 

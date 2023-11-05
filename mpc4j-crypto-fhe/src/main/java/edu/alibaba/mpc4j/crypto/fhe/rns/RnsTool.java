@@ -1082,7 +1082,7 @@ public class RnsTool {
             // (ct mod qi) - (ct mod qk) mod qi
             // [i * N, (i+1) * N) is current ct
             // 注意起点的计算
-            PolyArithmeticSmallMod.subPolyCoeffMod(polyIter, startIndex + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), startIndex + i * coeffCount, polyIter);
+            PolyArithmeticSmallMod.subPolyCoeffMod(polyIter, startIndex + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), polyIter, startIndex + i * coeffCount);
 
             // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
             // [i * N, (i+1) * N) is current ct
@@ -1120,7 +1120,7 @@ public class RnsTool {
 
             // (ct mod qi) - (ct mod qk) mod qi
             // [i * N, (i+1) * N) is current ct
-            PolyArithmeticSmallMod.subPolyCoeffMod(input.coeffIter, i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), i * coeffCount, input.coeffIter);
+            PolyArithmeticSmallMod.subPolyCoeffMod(input.coeffIter, i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), input.coeffIter, i * coeffCount);
 
             // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
             // [i * N, (i+1) * N) is current ct

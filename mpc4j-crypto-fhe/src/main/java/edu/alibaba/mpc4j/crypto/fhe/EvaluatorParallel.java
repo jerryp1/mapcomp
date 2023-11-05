@@ -1007,8 +1007,8 @@ public class EvaluatorParallel {
                         zeroZeroJ,
                         coeffCount,
                         keyModulus[j],
-                        zeroZeroJ,
-                        encrypted.getData()
+                        encrypted.getData(),
+                        zeroZeroJ
                     );
                 }
             }
@@ -1210,7 +1210,7 @@ public class EvaluatorParallel {
                 coeffCount * baseQSize,
                 tempDestinationQ
             );
-            PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
+            PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationQ,
                 coeffCount * baseQSize, // 起点
                 coeffCount,
@@ -1218,7 +1218,6 @@ public class EvaluatorParallel {
                 tempDestinationQ,
                 coeffCount * baseQSize, // 起点
                 coeffCount,
-                baseQSize,
                 baseQSize,
                 baseQ,
                 tempDestinationQ,
@@ -1266,7 +1265,7 @@ public class EvaluatorParallel {
                 coeffCount * baseBskSize,
                 tempDestinationBsk
             );
-            PolyArithmeticSmallMod.addPolyCoeffModRnsIter(
+            PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationBsk,
                 coeffCount * baseBskSize, // 起点
                 coeffCount,
@@ -1274,7 +1273,6 @@ public class EvaluatorParallel {
                 tempDestinationBsk,
                 coeffCount * baseBskSize, // 起点
                 coeffCount,
-                baseBskSize,
                 baseBskSize,
                 baseBsk,
                 tempDestinationBsk,
@@ -1689,8 +1687,8 @@ public class EvaluatorParallel {
                             shiftedOutIter + k * coeffCount,
                             coeffCount,
                             baseQ[k],
-                            shiftedOutIter + k * coeffCount,
-                            tempDestinationQ
+                            tempDestinationQ,
+                            shiftedOutIter + k * coeffCount
                         );
                     }
                 }
@@ -1732,8 +1730,8 @@ public class EvaluatorParallel {
                             shiftedOutIter + k * coeffCount,
                             coeffCount,
                             baseBsk[k],
-                            shiftedOutIter + k * coeffCount,
-                            tempDestinationBsk
+                            tempDestinationBsk,
+                            shiftedOutIter + k * coeffCount
                         );
                     }
                 }
@@ -2626,8 +2624,8 @@ public class EvaluatorParallel {
                             encrypted2.indexAt(i) + j * coeffCount,
                             coeffCount,
                             coeffModulus[j],
-                            encrypted1.indexAt(i) + j * coeffCount,
-                            encrypted1.getData()
+                            encrypted1.getData(),
+                            encrypted1.indexAt(i) + j * coeffCount
                         );
                     }
                 }
@@ -2749,7 +2747,7 @@ public class EvaluatorParallel {
             // todo: 一定需要 resize吗？ 如果 encrypted1Size = maxCount 是否就不需要 resize？
             encrypted1.resize(context, contextData.getParmsId(), maxCount);
             // AddCiphertexts
-            PolyArithmeticSmallMod.subPolyCoeffModPolyIter(
+            PolyArithmeticSmallMod.subPolyCoeffModPoly(
                 encrypted1.getData(),
                 encrypted1.getPolyModulusDegree(),
                 encrypted1.getCoeffModulusSize(),

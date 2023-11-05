@@ -179,27 +179,27 @@ public class Decryptor {
 
                     //put < c_1 * s > mod q in destination
                     PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                            encrypted.getData(),
-                            c1StartIndex + i * coeffCount,
-                            secretKeyArray,
-                            i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination
+                        encrypted.getData(),
+                        c1StartIndex + i * coeffCount,
+                        secretKeyArray,
+                        i * coeffCount,
+                        coeffCount,
+                        coeffModulus[i],
+                        i * coeffCount,
+                        destination
                     );
 
                     // add c_0 to the result; note that destination should be in the same (NTT) form as encrypted
                     // 前参数1、2表示 c_1 * s, 参数 3、4表示 c0,
                     PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination,
-                            i * coeffCount,
-                            encrypted.getData(),
-                            c0StartIndex + i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination
+                        destination,
+                        i * coeffCount,
+                        encrypted.getData(),
+                        c0StartIndex + i * coeffCount,
+                        coeffCount,
+                        coeffModulus[i],
+                        destination,
+                        i * coeffCount
                     );
                 }
             } else { // 处理 non-NTT 下的计算
@@ -213,32 +213,32 @@ public class Decryptor {
                     NttTool.nttNegAcyclicHarveyLazyRns(destination, coeffCount, coeffModulusSize, i, nttTables);
                     // put < c_1 * s > mod q in destination
                     PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
-                            destination,
-                            i * coeffCount,
-                            secretKeyArray,
-                            i * coeffCount, // 因为可以确定只有1个密文，所以可以当做 RnsIter 来使用
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination
+                        destination,
+                        i * coeffCount,
+                        secretKeyArray,
+                        i * coeffCount, // 因为可以确定只有1个密文，所以可以当做 RnsIter 来使用
+                        coeffCount,
+                        coeffModulus[i],
+                        i * coeffCount,
+                        destination
                     );
                     // transform back
                     NttTool.inverseNttNegacyclicHarvey(
-                            destination,
-                            i * coeffCount,
-                            nttTables[i]
+                        destination,
+                        i * coeffCount,
+                        nttTables[i]
                     );
                     // add c0 to the result; note that destination should be in the same (NTT) form as encrypted
                     // 密文是 ntt，destination 就是 Ntt, 密文是非 Ntt，destination 就是 non-ntt
                     PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination,
-                            i * coeffCount,
-                            encrypted.getData(),
-                            c0StartIndex + i * coeffCount,
-                            coeffCount,
-                            coeffModulus[i],
-                            i * coeffCount,
-                            destination
+                        destination,
+                        i * coeffCount,
+                        encrypted.getData(),
+                        c0StartIndex + i * coeffCount,
+                        coeffCount,
+                        coeffModulus[i],
+                        destination,
+                        i * coeffCount
                     );
                 }
             }
@@ -254,11 +254,11 @@ public class Decryptor {
             long[] encryptedCopy = new long[(encryptedSize - 1) * coeffCount * coeffModulusSize];
             // todo: need setPolyArray？ 还是直接调用 System.arraycopy 即可？
             System.arraycopy(
-                    encrypted.getData(),
-                    encrypted.indexAt(1),
-                    encryptedCopy,
-                    0,
-                    encryptedCopy.length);
+                encrypted.getData(),
+                encrypted.indexAt(1),
+                encryptedCopy,
+                0,
+                encryptedCopy.length);
 
             // Transform c_1, c_2, ... to NTT form unless they already are
             if (!isNttForm) {
@@ -287,14 +287,14 @@ public class Decryptor {
                 for (int j = 0; j < coeffModulusSize; j++) {
                     // 处理单个 CoeffIter
                     PolyArithmeticSmallMod.dyadicProductCoeffMod(
-                            encryptedCopy,
-                            rnsIterStartIndex1 + j * coeffCount,
-                            secretKeyArray,
-                            rnsIterStartIndex2 + j * coeffCount,
-                            coeffCount,
-                            coeffModulus[j],
-                            rnsIterStartIndex1 + j * coeffCount,
-                            encryptedCopy
+                        encryptedCopy,
+                        rnsIterStartIndex1 + j * coeffCount,
+                        secretKeyArray,
+                        rnsIterStartIndex2 + j * coeffCount,
+                        coeffCount,
+                        coeffModulus[j],
+                        rnsIterStartIndex1 + j * coeffCount,
+                        encryptedCopy
                     );
                 }
             }
@@ -309,14 +309,14 @@ public class Decryptor {
                 for (int j = 0; j < coeffModulusSize; j++) {
                     // 处理单个 CoeffIter, 注意二者的起点不一样
                     PolyArithmeticSmallMod.addPolyCoeffMod(
-                            destination,
-                            j * coeffCount,
-                            encryptedCopy,
-                            rnsIterStartIndex + j * coeffCount,
-                            coeffCount,
-                            coeffModulus[j],
-                            j * coeffCount,
-                            destination
+                        destination,
+                        j * coeffCount,
+                        encryptedCopy,
+                        rnsIterStartIndex + j * coeffCount,
+                        coeffCount,
+                        coeffModulus[j],
+                        destination,
+                        j * coeffCount
                     );
                 }
             }
@@ -326,9 +326,9 @@ public class Decryptor {
                 // 逐 CoeffIter 处理
                 for (int i = 0; i < coeffModulusSize; i++) {
                     NttTool.inverseNttNegacyclicHarvey(
-                            destination,
-                            i * coeffCount,
-                            nttTables[i]
+                        destination,
+                        i * coeffCount,
+                        nttTables[i]
                     );
                 }
             }
@@ -337,14 +337,14 @@ public class Decryptor {
 
             for (int i = 0; i < coeffModulusSize; i++) {
                 PolyArithmeticSmallMod.addPolyCoeffMod(
-                        destination,
-                        i * coeffCount,
-                        encrypted.getData(),
-                        i * coeffCount, // c0StartIndex = 0
-                        coeffCount,
-                        coeffModulus[i],
-                        i * coeffCount,
-                        destination
+                    destination,
+                    i * coeffCount,
+                    encrypted.getData(),
+                    i * coeffCount, // c0StartIndex = 0
+                    coeffCount,
+                    coeffModulus[i],
+                    destination,
+                    i * coeffCount
                 );
             }
         }
@@ -425,15 +425,15 @@ public class Decryptor {
             int skLastPlusOneStartIndex = (i + 1) * coeffCount * coeffModulusSize;
 
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    newSecretKeyArray,
-                    skLastStartIndex, // 指向 sk^{n-1}
-                    secretKeyArray,
-                    skStartIndex, // 始终指向 sk
-                    coeffModulusSize,
-                    coeffCount,
-                    coeffModulus,
-                    skLastPlusOneStartIndex, // 指向 sk^n = sk^{n-1} * sk
-                    newSecretKeyArray
+                newSecretKeyArray,
+                skLastStartIndex, // 指向 sk^{n-1}
+                secretKeyArray,
+                skStartIndex, // 始终指向 sk
+                coeffModulusSize,
+                coeffCount,
+                coeffModulus,
+                skLastPlusOneStartIndex, // 指向 sk^n = sk^{n-1} * sk
+                newSecretKeyArray
             );
         }
 
@@ -496,15 +496,15 @@ public class Decryptor {
         // coeff_modulus()*noise.
         if (scheme == SchemeType.BFV) {
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
-                    noisePoly,
-                    0,
-                    coeffCount,
-                    coeffModulusSize,
-                    plainModulus.getValue(),
-                    coeffModulus,
-                    noisePoly,
-                    0,
-                    coeffCount
+                noisePoly,
+                0,
+                coeffCount,
+                coeffModulusSize,
+                plainModulus.getValue(),
+                coeffModulus,
+                noisePoly,
+                0,
+                coeffCount
             );
         }
 
@@ -515,11 +515,11 @@ public class Decryptor {
         // 这是一个 StrideIter, 步长为 coeffModulusSize
         // 把NoisePoly 视为一个 StrideIter, 步长为 coeffModulusSize
         polyInftyNormCoeffModStrideIter(
-                noisePoly,
-                coeffModulusSize,
-                coeffCount,
-                contextData.getTotalCoeffModulus(),
-                norm
+            noisePoly,
+            coeffModulusSize,
+            coeffCount,
+            contextData.getTotalCoeffModulus(),
+            norm
         );
         // The -1 accounts for scaling the invariant noise by 2;
         // note that we already took plain_modulus into account in compose
@@ -538,11 +538,11 @@ public class Decryptor {
      * @param result
      */
     private void polyInftyNormCoeffModStrideIter(
-            long[] poly,
-            int polyStride,
-            int coeffCount,
-            long[] modulus,
-            long[] result
+        long[] poly,
+        int polyStride,
+        int coeffCount,
+        long[] modulus,
+        long[] result
     ) {
 
         int coeffUint64Count = polyStride;

@@ -167,8 +167,8 @@ public class KeyGenerator {
 
     public void createGaloisKeys(GaloisKeys destination) {
         createGaloisKeys(
-                context.keyContextData().getGaloisTool().getEltsAll()
-                , destination);
+            context.keyContextData().getGaloisTool().getEltsAll()
+            , destination);
     }
 
     /**
@@ -422,12 +422,12 @@ public class KeyGenerator {
             long[] temp = new long[coeffCount];
 
             RingLwe.encryptZeroSymmetric(
-                    secretKey,
-                    context,
-                    keyContextData.getParmsId(),
-                    true,
-                    saveSeed,
-                    destinations[destinationIndex][i].data()
+                secretKey,
+                context,
+                keyContextData.getParmsId(),
+                true,
+                saveSeed,
+                destinations[destinationIndex][i].data()
             );
 //            System.out.println(
 //                    "destination[I]: \n"
@@ -438,21 +438,21 @@ public class KeyGenerator {
 
 
             long factor = UintArithmeticSmallMod.barrettReduce64(
-                    keyModulus[keyModulus.length - 1].getValue(),
-                    keyModulus[i]);
+                keyModulus[keyModulus.length - 1].getValue(),
+                keyModulus[i]);
 
 //            System.out.println(
 //                  "factor: " + factor
 //            );
 
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                    newKeys,
-                    i * coeffCount,
-                    coeffCount,
-                    factor,
-                    keyModulus[i],
-                    0,
-                    temp
+                newKeys,
+                i * coeffCount,
+                coeffCount,
+                factor,
+                keyModulus[i],
+                0,
+                temp
             );
 
 //            System.out.println(
@@ -464,14 +464,15 @@ public class KeyGenerator {
 
             // destination[i].data() 是 Ciphertext, .getData() 是 Ciphertext 的底层数组，可认为是 multi-poly in RNS, size * k * N
             PolyArithmeticSmallMod.addPolyCoeffMod(
-                    destinations[destinationIndex][i].data().getData(),
-                    i * coeffCount, // 第 0个 RnsIter 中的 第 i 个 CoeffIter
-                    temp,
-                    0,
-                    coeffCount,
-                    keyModulus[i],
-                    i * coeffCount,
-                    destinations[destinationIndex][i].data().getData());
+                destinations[destinationIndex][i].data().getData(),
+                i * coeffCount, // 第 0个 RnsIter 中的 第 i 个 CoeffIter
+                temp,
+                0,
+                coeffCount,
+                keyModulus[i],
+                destinations[destinationIndex][i].data().getData(),
+                i * coeffCount
+            );
 
 
 //            System.out.println(
@@ -577,25 +578,25 @@ public class KeyGenerator {
             long[] temp = new long[coeffCount];
 
             RingLwe.encryptZeroSymmetric(
-                    secretKey,
-                    context,
-                    keyContextData.getParmsId(),
-                    true,
-                    saveSeed,
-                    destinations[destinationIndex][i].data() // 传入的是一个 Ciphertext
+                secretKey,
+                context,
+                keyContextData.getParmsId(),
+                true,
+                saveSeed,
+                destinations[destinationIndex][i].data() // 传入的是一个 Ciphertext
             );
 
             long factor = UintArithmeticSmallMod.barrettReduce64(
-                    keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
+                keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
 
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                    newKeys,
-                    startIndex + i * coeffCount,
-                    coeffCount,
-                    factor,
-                    keyModulus[i],
-                    0,
-                    temp
+                newKeys,
+                startIndex + i * coeffCount,
+                coeffCount,
+                factor,
+                keyModulus[i],
+                0,
+                temp
             );
 
             // We use the SeqIter at get<3>(I) to find the i-th RNS factor of the first destination polynomial.
@@ -608,14 +609,15 @@ public class KeyGenerator {
             // i = 0 --> c0 (size * k * N ) --> c0[0] --> [0, k * N) ---> c0[0][i] --> c0[0][0] --> [0, N)
             // i = 1 --->c1 (size * k * N ) ---> c1[0] ---> [0, k * N) ---> c1[0][i] --> c0[0][1] --> [N, 2N)
             PolyArithmeticSmallMod.addPolyCoeffMod(
-                    destinations[destinationIndex][i].data().getData(), // 获取到完整的 PolyIter
-                    i * coeffCount, // 第 0个 RnsIter 的 第 i 个 CoeffIter
-                    temp,
-                    0,
-                    coeffCount,
-                    keyModulus[i],
-                    i * coeffCount,
-                    destinations[destinationIndex][i].data().getData());
+                destinations[destinationIndex][i].data().getData(), // 获取到完整的 PolyIter
+                i * coeffCount, // 第 0个 RnsIter 的 第 i 个 CoeffIter
+                temp,
+                0,
+                coeffCount,
+                keyModulus[i],
+                destinations[destinationIndex][i].data().getData(),
+                i * coeffCount
+            );
         }
 
 //        // 这里面是比较耗时的操作，所以考虑并发
@@ -726,13 +728,13 @@ public class KeyGenerator {
      * @param saveSeed
      */
     private void generateKeySwitchKeys(
-            long[] newKeys,
-            int startIndex,
-            int newKeysCoeffCount,
-            int newKeysModulusSize,
-            int numKeys,
-            KeySwitchKeys destination,
-            boolean saveSeed) {
+        long[] newKeys,
+        int startIndex,
+        int newKeysCoeffCount,
+        int newKeysModulusSize,
+        int numKeys,
+        KeySwitchKeys destination,
+        boolean saveSeed) {
 
         assert startIndex % (newKeysCoeffCount * newKeysModulusSize) == 0;
 
@@ -754,11 +756,11 @@ public class KeyGenerator {
         // 注意起点的计算
         for (int i = 0; i < numKeys; i++) {
             generateOneKeySwitchKey(
-                    newKeys,
-                    startIndex + i * coeffCount * coeffModulusSize,
-                    destination.data(),
-                    i,
-                    saveSeed);
+                newKeys,
+                startIndex + i * coeffCount * coeffModulusSize,
+                destination.data(),
+                i,
+                saveSeed);
         }
 
 //        IntStream.range(0, numKeys).parallel().forEach(
@@ -803,13 +805,13 @@ public class KeyGenerator {
         // 开始计算 KeySwitchKeys
         // 注意第二个参数是 secretKeyArray 的起点
         generateKeySwitchKeys(
-                secretKeyArray,
-                coeffCount * coeffModulusSize, // 起点是 1
-                coeffCount,
-                coeffModulusSize,
-                count,
-                (KeySwitchKeys) destination,
-                saveSeed
+            secretKeyArray,
+            coeffCount * coeffModulusSize, // 起点是 1
+            coeffCount,
+            coeffModulusSize,
+            count,
+            (KeySwitchKeys) destination,
+            saveSeed
         );
         // todo: really need deep-copy?
         destination.setParmsId(contextData.getParmsId().clone());
@@ -851,12 +853,12 @@ public class KeyGenerator {
         RelinKeys relinKeys = new RelinKeys();
 
         generateKeySwitchKeys(secretKeyArray,
-                coeffCount * coeffModulusSize,
-                coeffCount,
-                coeffModulusSize,
-                coeffCount,
-                (KeySwitchKeys) relinKeys,
-                saveSeed
+            coeffCount * coeffModulusSize,
+            coeffCount,
+            coeffModulusSize,
+            coeffCount,
+            (KeySwitchKeys) relinKeys,
+            saveSeed
         );
         // todo: really need deep-copy?
         relinKeys.setParmsId(contextData.getParmsId().clone());
@@ -901,12 +903,12 @@ public class KeyGenerator {
             // Rotate secret key for each coeff_modulus, A RnsIter
             long[] rotatedSecretKey = new long[coeffModulusSize * coeffCount];
             galoisTool.applyGaloisNttRnsIter(
-                    secretKey.data().getData(),
-                    coeffCount,
-                    coeffModulusSize,
-                    galoisElt,
-                    rotatedSecretKey,
-                    coeffCount);
+                secretKey.data().getData(),
+                coeffCount,
+                coeffModulusSize,
+                galoisElt,
+                rotatedSecretKey,
+                coeffCount);
 
 //            System.out.println(
 //                    "rotatedSecretKey: \n"
@@ -1035,15 +1037,15 @@ public class KeyGenerator {
             int newStartIndexPlusOne = (i + 1) * coeffCount * coeffModulusSize;
 
             PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
-                    newSecretKeyArray,
-                    newStartIndex,
-                    secretKeyArray,
-                    oldStartIndex,
-                    coeffModulusSize,
-                    coeffCount,
-                    coeffModulus,
-                    newStartIndexPlusOne,
-                    newSecretKeyArray
+                newSecretKeyArray,
+                newStartIndex,
+                secretKeyArray,
+                oldStartIndex,
+                coeffModulusSize,
+                coeffCount,
+                coeffModulus,
+                newStartIndexPlusOne,
+                newSecretKeyArray
             );
         }
 

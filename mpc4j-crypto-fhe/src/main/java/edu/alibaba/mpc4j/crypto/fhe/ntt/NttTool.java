@@ -30,19 +30,19 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand    A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
-     * @param startIndex the start index.
-     * @param tables     the pre-computed NTT tables.
+     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in standard ordering.
+     * @param pos     the start position.
+     * @param tables  the pre-computed NTT tables.
      */
-    private static void nttNegacyclicHarveyLazy(long[] operand, int startIndex, NttTables tables) {
-        tables.nttHandler.transformToRev(operand, startIndex, tables.getCoeffCountPower(), tables.getRootPowers(), null);
+    private static void nttNegacyclicHarveyLazy(long[] operand, int pos, NttTables tables) {
+        tables.nttHandler.transformToRev(operand, pos, tables.getCoeffCountPower(), tables.getRootPowers(), null);
     }
 
     /**
      * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation for the j-th small modulo in the RNS
      * representation.
      *
-     * @param rns    an RNS representation with k small modulus under Z[x] / (x^N + 1).
+     * @param rns    an RNS representation.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param j      the i-th RNS representation.
@@ -52,52 +52,58 @@ public class NttTool {
         assert k == tables.length;
         assert j >= 0 && j < k;
         assert n == tables[j].getCoeffCount();
-        // the j-th small polynomial is at offset + j * n
+
+        // the j-th small polynomial is at j * n
         nttNegacyclicHarveyLazy(rns, j * n, tables[j]);
     }
 
     /**
-     * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation for the i-th RNS representation in the
+     * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation for the r-th RNS representation in the
      * Poly-RNS representation.
      *
-     * @param poly   a Poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a Poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
-     * @param i      the i-th RNS representation.
+     * @param r      the r-th RNS representation.
      * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarveyLazyPoly(long[] poly, int m, int n, int k, int i, NttTables[] tables) {
+    public static void nttNegacyclicHarveyLazyPoly(long[] poly, int m, int n, int k, int r, NttTables[] tables) {
         assert k == tables.length;
-        assert i >= 0 && i < m;
-        // the i-th RNS representation is at offset = i * n * k
-        int offset = i * n * k;
+        assert r >= 0 && r < m;
+
+        // the r-th RNS representation is at rOffset = r * n * k
+        int rOffset = r * n * k;
         for (int j = 0; j < k; j++) {
             assert n == tables[j].getCoeffCount();
-            // the j-th small modulo is at offset + j * n
-            nttNegacyclicHarveyLazy(poly, offset + j * n, tables[j]);
+            // the j-th small modulo is at rOffset + j * n
+            int pos = rOffset + j * n;
+            nttNegacyclicHarveyLazy(poly, pos, tables[j]);
         }
     }
 
     /**
-     * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation for the i-th RNS representation, j-th
+     * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation for the r-th RNS representation, j-th
      * small modulo in the Poly-RNS representation.
      *
-     * @param poly   a Poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a Poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
-     * @param i      the i-th RNS representation.
+     * @param r      the r-th RNS representation.
      * @param j      the j-th small module.
      * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarveyLazyPoly(long[] poly, int m, int n, int k, int i, int j, NttTables[] tables) {
+    public static void nttNegacyclicHarveyLazyPoly(long[] poly, int m, int n, int k, int r, int j, NttTables[] tables) {
         assert k == tables.length;
-        assert i >= 0 && i < m;
+        assert r >= 0 && r < m;
         assert j >= 0 && j < k;
         assert n == tables[j].getCoeffCount();
-        // the i-th RNS representation is at offset = i * n * k, the j-th small module is at offset + j * n
-        nttNegacyclicHarveyLazy(poly, i * n * k + j * n, tables[j]);
+
+        // the r-th RNS representation is at rOffset = r * n * k, the j-th small module is at offset + j * n
+        int rOffset = r * n * k;
+        int pos = rOffset + j * n;
+        nttNegacyclicHarveyLazy(poly, pos, tables[j]);
     }
 
     /**
@@ -113,23 +119,23 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly.
      *
-     * @param operand    A vector a = (a[0 + startIndex], ..., a[n + startIndex − 1]) ∈ Z_n^q in standard ordering.
-     * @param startIndex the start index.
-     * @param tables     the pre-computed NTT tables.
+     * @param operand A vector a = (a[0 + pos], ..., a[n + pos − 1]) ∈ Z_n^q in standard ordering.
+     * @param pos     the start position.
+     * @param tables  the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarvey(long[] operand, int startIndex, NttTables tables) {
-        nttNegacyclicHarveyLazy(operand, startIndex, tables);
+    public static void nttNegacyclicHarvey(long[] operand, int pos, NttTables tables) {
+        nttNegacyclicHarveyLazy(operand, pos, tables);
         // Finally, maybe we need to reduce every coefficient modulo q, but we know that they are in the range [0, 4q).
         long modulus = tables.getModulus().getValue();
         long twoTimesModulus = modulus * 2;
         int n = 1 << tables.getCoeffCountPower();
         for (int i = 0; i < n; i++) {
             // Note: I must be passed to the lambda by reference.
-            if (operand[startIndex + i] >= twoTimesModulus) {
-                operand[startIndex + i] -= twoTimesModulus;
+            if (operand[pos + i] >= twoTimesModulus) {
+                operand[pos + i] -= twoTimesModulus;
             }
-            if (operand[startIndex + i] >= modulus) {
-                operand[startIndex + i] -= modulus;
+            if (operand[pos + i] >= modulus) {
+                operand[pos + i] -= modulus;
             }
         }
     }
@@ -137,13 +143,14 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly for all polynomials in the RNS polynomial representation.
      *
-     * @param rns    an RNS representation with k small modulus under Z[x] / (x^N + 1).
+     * @param rns    an RNS representation.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param tables the pre-computed NTT tables.
      */
     public static void nttNegacyclicHarveyRns(long[] rns, int n, int k, NttTables[] tables) {
         assert k == tables.length;
+
         for (int j = 0; j < k; j++) {
             assert n == tables[j].getCoeffCount();
             nttNegacyclicHarvey(rns, j * n, tables[j]);
@@ -153,7 +160,7 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly for j-th small modulo in the RNS polynomial representation.
      *
-     * @param rns    an RNS representation with k small modulus under Z[x] / (x^N + 1).
+     * @param rns    an RNS representation.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param j      the j-th small module.
@@ -163,47 +170,49 @@ public class NttTool {
         assert k == tables.length;
         assert j >= 0 && j < k;
         assert n == tables[j].getCoeffCount();
+
         nttNegacyclicHarvey(rns, j * n, tables[j]);
     }
 
     /**
      * Negative cyclic NTT using Harvey's butterfly for all polynomials in the Poly-RNS polynomial representation.
      *
-     * @param poly   a poly-RNS representation with m RNS polynomials, each has k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param tables the pre-computed NTT tables.
      */
     public static void nttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, NttTables[] tables) {
-        for (int i = 0; i < m; i++) {
-            int offset = i * n * k;
+        for (int r = 0; r < m; r++) {
+            int rOffset = r * n * k;
             for (int j = 0; j < k; j++) {
-                nttNegacyclicHarvey(poly, offset + j * n, tables[j]);
+                int pos = rOffset + j * n;
+                nttNegacyclicHarvey(poly, pos, tables[j]);
             }
         }
     }
 
     /**
-     * Negative cyclic NTT using Harvey's butterfly for the i-th RNS representation in the Poly-RNS polynomial
+     * Negative cyclic NTT using Harvey's butterfly for the r-th RNS representation in the Poly-RNS polynomial
      * representation.
      *
-     * @param poly   a poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
-     * @param i      the i-th RNS representation.
+     * @param r      the r-th RNS representation.
      * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, int i, NttTables[] tables) {
+    public static void nttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, int r, NttTables[] tables) {
         assert k == tables.length;
-        assert i >= 0 && i < m;
-        // each polynomial starts at offset = i * n * k
-        int offset = i * n * k;
+        assert r >= 0 && r < m;
+
+        int rOffset = r * n * k;
         for (int j = 0; j < k; j++) {
             assert n == tables[j].getCoeffCount();
-            // the j-th small polynomial is at offset + j * n
-            nttNegacyclicHarvey(poly, offset + j * n, tables[j]);
+            int pos = rOffset + j * n;
+            nttNegacyclicHarvey(poly, pos, tables[j]);
         }
     }
 
@@ -220,31 +229,32 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand    A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param startIndex the start index.
-     * @param tables     the pre-computed NTT tables.
+     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param pos     the start position.
+     * @param tables  the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarveyLazy(long[] operand, int startIndex, NttTables tables) {
+    public static void inverseNttNegacyclicHarveyLazy(long[] operand, int pos, NttTables tables) {
         // Final adjustments; compute a[j] = a[j] * n^{-1} mod q. We incorporated the final adjustment in the butterfly.
         MultiplyUintModOperand invN = tables.getInvDegreeModulo();
-        tables.nttHandler.transformFromRev(operand, startIndex, tables.getCoeffCountPower(), tables.getInvRootPowers(), invN);
+        tables.nttHandler.transformFromRev(operand, pos, tables.getCoeffCountPower(), tables.getInvRootPowers(), invN);
     }
 
     /**
      * Negative cyclic INTT using Harvey's butterfly with lazy modulo operation for all polynomials in the Poly-RNS
      * representation.
      *
-     * @param poly   a Poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a Poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param tables the pre-computed NTT tables.
      */
     public static void inverseNttNegacyclicHarveyLazyPoly(long[] poly, int m, int n, int k, NttTables[] tables) {
-        for (int i = 0; i < m; i++) {
-            int offset = i * n * k;
+        for (int r = 0; r < m; r++) {
+            int rOffset = r * n * k;
             for (int j = 0; j < k; j++) {
-                inverseNttNegacyclicHarveyLazy(poly, offset + j * n, tables[j]);
+                int pos = rOffset + j * n;
+                inverseNttNegacyclicHarveyLazy(poly, pos, tables[j]);
             }
         }
     }
@@ -262,18 +272,18 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly.
      *
-     * @param operand    A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param startIndex the start index.
-     * @param tables     the pre-computed NTT tables.
+     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param pos     the start position.
+     * @param tables  the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarvey(long[] operand, int startIndex, NttTables tables) {
-        inverseNttNegacyclicHarveyLazy(operand, startIndex, tables);
+    public static void inverseNttNegacyclicHarvey(long[] operand, int pos, NttTables tables) {
+        inverseNttNegacyclicHarveyLazy(operand, pos, tables);
         // We incorporated the final adjustment in the butterfly. Only need to reduce here.
         long modulus = tables.getModulus().getValue();
         int n = 1 << tables.getCoeffCountPower();
         for (int i = 0; i < n; i++) {
-            if (operand[startIndex + i] >= modulus) {
-                operand[startIndex + i] -= modulus;
+            if (operand[pos + i] >= modulus) {
+                operand[pos + i] -= modulus;
             }
         }
     }
@@ -281,13 +291,14 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly for all polynomials in the RNS polynomial representation.
      *
-     * @param rns    an RNS representation with k small modulus under Z[x] / (x^N + 1).
+     * @param rns    an RNS representation.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param tables the pre-computed NTT tables.
      */
     public static void inverseNttNegacyclicHarveyRns(long[] rns, int n, int k, NttTables[] tables) {
         assert k == tables.length;
+
         for (int j = 0; j < k; j++) {
             assert n == tables[0].getCoeffCount();
             inverseNttNegacyclicHarvey(rns, j * n, tables[j]);
@@ -297,7 +308,7 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly for the j-th small modulo in the RNS polynomial representation.
      *
-     * @param rns    an RNS representation with k small modulus under Z[x] / (x^N + 1).
+     * @param rns    an RNS representation.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
      * @param j      the j-th small modulo.
@@ -306,13 +317,14 @@ public class NttTool {
     public static void inverseNttNegacyclicHarveyRns(long[] rns, int n, int k, int j, NttTables[] tables) {
         assert k == tables.length;
         assert n == tables[j].getCoeffCount();
+
         inverseNttNegacyclicHarvey(rns, j * n, tables[j]);
     }
 
     /**
      * Negative cyclic INTT using Harvey's butterfly for all polynomials in the Poly-RNS polynomial representation.
      *
-     * @param poly   a poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a Poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
@@ -320,31 +332,35 @@ public class NttTool {
      */
     public static void inverseNttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, NttTables[] tables) {
         assert k == tables.length;
-        for (int i = 0; i < m; i++) {
-            int offset = i * n * k;
+
+        for (int r = 0; r < m; r++) {
+            int rOffset = r * n * k;
             for (int j = 0; j < k; j++) {
-                inverseNttNegacyclicHarvey(poly, offset + j * n, tables[j]);
+                int pos = rOffset + j * n;
+                inverseNttNegacyclicHarvey(poly, pos, tables[j]);
             }
         }
     }
 
     /**
-     * Negative cyclic NTT using Harvey's butterfly for the i-th RNS representation in the Poly-RNS polynomial
+     * Negative cyclic NTT using Harvey's butterfly for the r-th RNS representation in the Poly-RNS polynomial
      * representation.
      *
-     * @param poly   a poly-RNS representation with m RNS representations, each with k small modulus under Z[x] / (x^N + 1).
+     * @param poly   a Poly-RNS representation.
      * @param m      number of RNS representations.
      * @param n      modulus degree N.
      * @param k      coefficient modulus size k.
-     * @param i      the i-th RNS representation.
+     * @param r      the r-th RNS representation.
      * @param tables the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, int i, NttTables[] tables) {
+    public static void inverseNttNegacyclicHarveyPoly(long[] poly, int m, int n, int k, int r, NttTables[] tables) {
         assert k == tables.length;
-        assert i >= 0 && i < m;
-        int offset = i * n * k;
+        assert r >= 0 && r < m;
+
+        int rOffset = r * n * k;
         for (int j = 0; j < k; j++) {
-            inverseNttNegacyclicHarvey(poly, offset + j * n, tables[j]);
+            int pos = rOffset + j * n;
+            inverseNttNegacyclicHarvey(poly, pos, tables[j]);
         }
     }
 }
