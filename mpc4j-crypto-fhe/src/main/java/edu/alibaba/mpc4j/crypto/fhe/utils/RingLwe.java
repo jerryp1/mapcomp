@@ -626,8 +626,9 @@ public class RingLwe {
                 c0StartIndex + i * coeffCount,
                 coeffCount,
                 coeffModulus[i],
-                c0StartIndex + i * coeffCount,
-                destination.getData());
+                destination.getData(),
+                c0StartIndex + i * coeffCount
+            );
         }
 
         if (!isNttForm && !saveSeed) {

@@ -451,8 +451,8 @@ public class KeyGenerator {
                 coeffCount,
                 factor,
                 keyModulus[i],
-                0,
-                temp
+                temp,
+                0
             );
 
 //            System.out.println(
@@ -595,8 +595,8 @@ public class KeyGenerator {
                 coeffCount,
                 factor,
                 keyModulus[i],
-                0,
-                temp
+                temp,
+                0
             );
 
             // We use the SeqIter at get<3>(I) to find the i-th RNS factor of the first destination polynomial.

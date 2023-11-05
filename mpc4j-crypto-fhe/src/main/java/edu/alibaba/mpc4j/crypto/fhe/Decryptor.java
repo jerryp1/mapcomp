@@ -495,7 +495,7 @@ public class Decryptor {
         // Multiply by plain_modulus and reduce mod coeff_modulus to get
         // coeff_modulus()*noise.
         if (scheme == SchemeType.BFV) {
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 noisePoly,
                 0,
                 coeffCount,
@@ -504,7 +504,8 @@ public class Decryptor {
                 coeffModulus,
                 noisePoly,
                 0,
-                coeffCount
+                coeffCount,
+                coeffModulusSize
             );
         }
 

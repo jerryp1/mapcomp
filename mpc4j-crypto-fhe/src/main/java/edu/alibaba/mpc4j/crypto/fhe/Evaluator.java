@@ -843,8 +843,8 @@ public class Evaluator {
                             j * coeffCount,
                             coeffCount,
                             keyModulus[keyIndex],
-                            0,
-                            tNtt
+                            tNtt,
+                            0
                         );
                     }
                     // NTT conversion lazy outputs in [0, 4q)
@@ -987,8 +987,8 @@ public class Evaluator {
                             tLastIndex,
                             coeffCount,
                             keyModulus[j],
-                            0,
-                            tNtt
+                            tNtt,
+                            0
                         );
                     } else {
                         // 直接 copy
@@ -1023,14 +1023,14 @@ public class Evaluator {
                     }
 
                     // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffModCoeffIter(
+                    PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
                         tPolyProd,
                         zeroOneJ,
                         coeffCount,
                         modSwitchFactors[j],
                         keyModulus[j],
-                        zeroOneJ,
-                        tPolyProd
+                        tPolyProd,
+                        zeroOneJ
                     );
                     //todo: 修改更容易理解的变量名
                     int zeroZeroJ = i * encrypted.getPolyModulusDegree() * encrypted.getCoeffModulusSize() + j * encrypted.getPolyModulusDegree();
@@ -1353,7 +1353,7 @@ public class Evaluator {
             long[] tempQBsk = new long[coeffCount * (baseQSize + baseBskSize)];
 
             // Step (6): multiply base q components by t (plain_modulus)
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationQ,
                 i * coeffCount * baseQSize, // 注意这里的 k
                 coeffCount,
@@ -1362,10 +1362,11 @@ public class Evaluator {
                 baseQ,
                 tempQBsk,
                 0,
-                coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                coeffCount, // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                baseQSize
             );
 
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationBsk,
                 i * coeffCount * baseBskSize, // 注意这里的 k
                 coeffCount,
@@ -1374,7 +1375,8 @@ public class Evaluator {
                 baseBsk,
                 tempQBsk,
                 baseQSize * coeffCount, // 注意起点
-                coeffCount
+                coeffCount,
+                baseBskSize
             );
 
             // Allocate yet another temporary for fast divide-and-floor result in base Bsk
@@ -1795,7 +1797,7 @@ public class Evaluator {
             long[] tempQBsk = new long[coeffCount * (baseQSize + baseBskSize)];
 
             // Step (6): multiply base q components by t (plain_modulus)
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationQ,
                 i * coeffCount * baseQSize, // 注意这里的 k
                 coeffCount,
@@ -1804,10 +1806,11 @@ public class Evaluator {
                 baseQ,
                 tempQBsk,
                 0,
-                coeffCount // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                coeffCount, // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                baseQSize
             );
 
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRnsIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationBsk,
                 i * coeffCount * baseBskSize, // 注意这里的 k
                 coeffCount,
@@ -1816,7 +1819,8 @@ public class Evaluator {
                 baseBsk,
                 tempQBsk,
                 baseQSize * coeffCount, // 注意起点
-                coeffCount
+                coeffCount,
+                baseBskSize
             );
 
             // Allocate yet another temporary for fast divide-and-floor result in base Bsk
@@ -2513,7 +2517,7 @@ public class Evaluator {
         int encryptedSize = encrypted.getSize();
 
         // 对密文中的每一个多项式取反， 这里就是在处理一个完整的PolyIter
-        PolyArithmeticSmallMod.negatePolyCoeffModPolyIter(
+        PolyArithmeticSmallMod.negatePolyCoeffModPoly(
             encrypted.getData(),
             encrypted.getPolyModulusDegree(),
             encrypted.getCoeffModulusSize(),
@@ -2613,7 +2617,7 @@ public class Evaluator {
         if (encrypted1.getCorrectionFactor() != encrypted2.getCorrectionFactor()) {
             // (f, e1, e2)
             long[] factors = balanceCorrectionFactors(encrypted1.getCorrectionFactor(), encrypted2.getCorrectionFactor(), plainModulus);
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(
                 encrypted1.getData(),
                 coeffCount,
                 coeffModulusSize,
@@ -2627,7 +2631,7 @@ public class Evaluator {
 
             Ciphertext encrypted2Copy = new Ciphertext();
             encrypted2Copy.copyFrom(encrypted2);
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(
                 encrypted2.getData(),
                 coeffCount,
                 coeffModulusSize,
@@ -2741,7 +2745,7 @@ public class Evaluator {
         if (encrypted1.getCorrectionFactor() != encrypted2.getCorrectionFactor()) {
             // (f, e1, e2)
             long[] factors = balanceCorrectionFactors(encrypted1.getCorrectionFactor(), encrypted2.getCorrectionFactor(), plainModulus);
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(
                 encrypted1.getData(),
                 coeffCount,
                 coeffModulusSize,
@@ -2756,7 +2760,7 @@ public class Evaluator {
             Ciphertext encrypted2Copy = new Ciphertext();
             encrypted2Copy.copyFrom(encrypted2);
 
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPolyIter(
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(
                 encrypted2.getData(),
                 coeffCount,
                 coeffModulusSize,
@@ -2800,15 +2804,16 @@ public class Evaluator {
                 // 多项式起点是 minCount，终点是 encrypted2Size - 1, 我们还需要处理 (encrypted2Size - minCount)
                 // 个 RnsIter
                 for (int i = minCount; i < encrypted2Size; i++) {
-                    PolyArithmeticSmallMod.negatePolyCoeffModRnsIter(
+                    PolyArithmeticSmallMod.negatePolyCoeffModRns(
                         encrypted2.getData(),
                         encrypted2.indexAt(i),
                         encrypted2.getPolyModulusDegree(),
                         coeffModulusSize,
                         coeffModulus,
                         encrypted1.getData(),
+                        encrypted1.indexAt(i),
                         encrypted1.getPolyModulusDegree(),
-                        encrypted1.indexAt(i)
+                        coeffModulusSize
                     );
                 }
             }

@@ -134,23 +134,6 @@ public class PolyArithmeticSmallModEfficiencyTest {
                 StringUtils.leftPad(String.valueOf(coeffCount), 10),
                 StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(negatePolyCoeffModTime), 20)
         );
-
-        STOP_WATCH.start();
-        IntStream.range(0, MAX_LOOP_NUM).forEach(i -> PolyArithmeticSmallMod.negatePolyCoeffModFor(poly1, coeffCount, mod, result));
-        STOP_WATCH.stop();
-        double negatePolyCoeffModForTime = (double) STOP_WATCH.getTime(TimeUnit.MICROSECONDS) / MAX_LOOP_NUM;
-        STOP_WATCH.reset();
-
-        // output
-        LOGGER.info(
-                "{}\t{}\t{}",
-                StringUtils.leftPad("negatePolyCoeffModFor", 25),
-                StringUtils.leftPad(String.valueOf(coeffCount), 10),
-                StringUtils.leftPad(TIME_DECIMAL_FORMAT.format(negatePolyCoeffModForTime), 20)
-        );
-
-
-
     }
 
 }
