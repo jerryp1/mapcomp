@@ -42,6 +42,9 @@ public abstract class AbstractTwoPartyPtoTest {
         Preconditions.checkArgument(StringUtils.isNotBlank(name));
         // We cannot use NettyRPC in the test case since it needs multi-thread connect / disconnect.
         // In other word, we cannot connect / disconnect NettyRpc in @Before / @After, respectively.
+//        RpcManager rpcManager = new FileRpcManager(2);
+//        firstRpc = rpcManager.getRpc(0);
+//        secondRpc = rpcManager.getRpc(1);
         RpcManager rpcManager = new MemoryRpcManager(2);
         firstRpc = rpcManager.getRpc(0);
         secondRpc = rpcManager.getRpc(1);

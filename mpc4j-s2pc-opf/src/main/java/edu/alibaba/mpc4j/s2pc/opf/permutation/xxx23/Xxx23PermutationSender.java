@@ -65,6 +65,7 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
         z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
         a2bSender = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
+        addMultipleSubPtos(osnSender, zlcSender, z2cSender, a2bSender, b2aSender);
     }
 
     @Override

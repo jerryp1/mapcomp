@@ -1,6 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pmap;
 
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,6 +13,11 @@ import java.util.stream.Collectors;
  * @date 2023/10/23
  */
 public class PmapPartyOutput<T> {
+    public enum MapType{
+        MAP,
+        PSI,
+        PID,
+    }
     /**
      * valid element list
      */
@@ -19,6 +26,10 @@ public class PmapPartyOutput<T> {
      * 位置映射map
      */
     private final Map<Integer, T> indexMap;
+    /**
+     * 表示对应位置元素是否在交集中的flag
+     */
+    private final SquareZ2Vector equalFlag;
 
     /**
      * 构造PID服务端输出。
@@ -26,17 +37,29 @@ public class PmapPartyOutput<T> {
      * @param elementList 有效的数据列表，即map input的keys
      * @param indexMap    从位置到
      */
-    public PmapPartyOutput(List<T> elementList, Map<Integer, T> indexMap) {
+    public PmapPartyOutput(MapType mapType, List<T> elementList, Map<Integer, T> indexMap, SquareZ2Vector equalFlag) {
         MathPreconditions.checkPositive("elementList.size()", elementList.size());
         this.elementList = elementList;
-        MathPreconditions.checkGreaterOrEqual("indexMap.size()", indexMap.size(), elementList.size());
+        switch (mapType){
+            case PID:
+            case MAP:
+                MathPreconditions.checkGreaterOrEqual("indexMap.size()", indexMap.size(), elementList.size());
+                break;
+            case PSI:
+                MathPreconditions.checkGreaterOrEqual("indexMap.size()", elementList.size(), indexMap.size());
+        }
         // 验证index映射中的object都在elementList中
-        Set<T> mapSet = indexMap.values().stream().filter(Objects::nonNull).collect(Collectors.toSet());
-        assert elementList.size() == mapSet.size();
+        List<T> mapList = indexMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
+        Set<T> mapSet = new HashSet<>(mapList);
+        assert elementList.size() == mapList.size();
         for (T value : elementList) {
             assert mapSet.contains(value);
         }
         this.indexMap = indexMap;
+        if(equalFlag != null){
+            MathPreconditions.checkEqual("indexMap.size()", "equalSign.bitNum()", indexMap.size(), equalFlag.bitNum());
+        }
+        this.equalFlag = equalFlag;
     }
 
     /**
@@ -55,6 +78,15 @@ public class PmapPartyOutput<T> {
      */
     public Map<Integer, T> getIndexMap() {
         return indexMap;
+    }
+
+    /**
+     * 返回equalFlag
+     *
+     * @return equalFlag
+     */
+    public SquareZ2Vector getEqualFlag() {
+        return equalFlag;
     }
 
     /**

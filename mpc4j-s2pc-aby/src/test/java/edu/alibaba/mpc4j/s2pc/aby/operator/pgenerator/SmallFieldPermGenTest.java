@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PermutableSorterTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.ahi22.Ahi22PermutableSorterConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,8 +35,8 @@ import java.util.stream.IntStream;
  * @date 2023/10/12
  */
 @RunWith(Parameterized.class)
-public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PermutableSorterTest.class);
+public class SmallFieldPermGenTest extends AbstractTwoPartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmallFieldPermGenTest.class);
     /**
      * default num
      */
@@ -57,7 +57,7 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
         // AHI+22 default zl
         Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(DEFAULT_ZL).build();
         configurations.add(new Object[]{
-            PermutableSorterTypes.AHI22.name(), new Ahi22PermutableSorterConfig.Builder(bit2aConfig).build()
+            PermGenTypes.AHI22_SMALL_FIELD.name(), new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build()
         });
 
         return configurations;
@@ -66,9 +66,9 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
     /**
      * the config
      */
-    private final PermutableSorterConfig config;
+    private final PermGenConfig config;
 
-    public PermutableSorterTest(String name, PermutableSorterConfig config) {
+    public SmallFieldPermGenTest(String name, PermGenConfig config) {
         super(name);
         this.config = config;
     }
@@ -134,14 +134,14 @@ public class PermutableSorterTest extends AbstractTwoPartyPtoTest {
                     SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false))
                 .toArray(SquareZ2Vector[]::new);
             // init the protocol
-            PermutableSorterParty sender = PermutableSorterFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-            PermutableSorterParty receiver = PermutableSorterFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+            PermGenParty sender = PermGenFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+            PermGenParty receiver = PermGenFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
             sender.setParallel(parallel);
             receiver.setParallel(parallel);
             try {
                 LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-                PermutableSorterSenderThread senderThread = new PermutableSorterSenderThread(sender, x0Share, config.getZl().getL(), bitNum);
-                PermutableSorterReceiverThread receiverThread = new PermutableSorterReceiverThread(receiver, x1Share, config.getZl().getL(), bitNum);
+                PermGenSenderThread senderThread = new PermGenSenderThread(sender, x0Share, config.getZl().getL(), bitNum);
+                PermGenReceiverThread receiverThread = new PermGenReceiverThread(receiver, x1Share, config.getZl().getL(), bitNum);
                 StopWatch stopWatch = new StopWatch();
                 // execute the protocol
                 stopWatch.start();

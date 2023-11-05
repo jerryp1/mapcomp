@@ -44,6 +44,7 @@ public class Kvh21Bit2aReceiver extends AbstractBit2aParty {
         super(Kvh21Bit2aPtoDesc.getInstance(), rpc, otherParty, config);
         cotReceiver = CotFactory.createReceiver(rpc, otherParty, config.getCotConfig());
         z2cReceiver = Z2cFactory.createReceiver(rpc, otherParty, config.getZ2cConfig());
+        addMultipleSubPtos(cotReceiver, z2cReceiver);
     }
 
     @Override
@@ -53,6 +54,7 @@ public class Kvh21Bit2aReceiver extends AbstractBit2aParty {
 
         stopWatch.start();
         cotReceiver.init(maxNum);
+        z2cReceiver.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

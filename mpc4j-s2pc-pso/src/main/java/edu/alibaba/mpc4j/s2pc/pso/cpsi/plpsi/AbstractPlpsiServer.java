@@ -5,15 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.ObjectUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -22,7 +17,7 @@ import java.util.stream.IntStream;
  * @author Feng Han
  * @date 2023/10/20
  */
-public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto implements PlpsiServer<T> {
+public abstract class AbstractPlpsiServer<T, X> extends AbstractTwoPartyPto implements PlpsiServer<T, X> {
     /**
      * max server element size
      */
@@ -35,10 +30,6 @@ public abstract class AbstractPlpsiServer<T> extends AbstractTwoPartyPto impleme
      * server element array list
      */
     protected ArrayList<T> serverElementArrayList;
-    /**
-     * server payload array list
-     */
-    protected byte[][][] serverPayloadArrays;
     /**
      * server element size
      */

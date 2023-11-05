@@ -164,7 +164,7 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
                 }
             })
             .collect(Collectors.toCollection(ArrayList::new));
-        clientOutput = new PlpsiClientOutput<>(envType, parallel, table, z1);
+        clientOutput = new PlpsiClientOutput<>(table, z1);
         stopWatch.stop();
         long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

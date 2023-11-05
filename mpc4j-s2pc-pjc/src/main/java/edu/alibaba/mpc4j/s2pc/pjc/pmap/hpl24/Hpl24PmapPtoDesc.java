@@ -14,28 +14,6 @@ public class Hpl24PmapPtoDesc implements PtoDesc {
     private static final String PTO_NAME = "HPL24_PMAP";
 
     /**
-     * 协议步骤
-     */
-    enum PtoStep {
-        /**
-         * 第一次plpsi
-         */
-        SERVER_SEND_UC,
-        /**
-         * 第二次plpsi
-         */
-        CLIENT_SEND_UP,
-        /**
-         * server执行osn
-         */
-        SERVER_SEND_VP,
-        /**
-         * 根据e计算稳定排序对应的置换
-         */
-        CLIENT_SEND_VC,
-    }
-
-    /**
      * 单例模式
      */
     private static final Hpl24PmapPtoDesc INSTANCE = new Hpl24PmapPtoDesc();

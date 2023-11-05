@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.AbstractA2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -85,6 +86,48 @@ public class Dsz15A2bReceiver extends AbstractA2bParty {
         // add
         stopWatch.start();
         SquareZ2Vector[] result = Arrays.stream(z2IntegerCircuit.add(reSharedX0, reSharedX1)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        stopWatch.stop();
+        ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, ptoTime);
+
+        logPhaseInfo(PtoState.PTO_END);
+        return result;
+    }
+
+    @Override
+    public SquareZ2Vector[][] a2b(SquareZlVector[] xi) throws MpcAbortException {
+        setPtoInputs(xi);
+
+        logPhaseInfo(PtoState.PTO_BEGIN);
+        // transpose and re-share
+        stopWatch.start();
+        BitVector[][] bitVectors = Arrays.stream(xi).map(x -> {
+            ZlDatabase zlDatabase = ZlDatabase.create(l, x.getZlVector().getElements());
+            return zlDatabase.bitPartition(envType, parallel);
+        }).toArray(BitVector[][]::new);
+        // merge
+        BitVector[] mergeRes = IntStream.range(0, bitVectors[0].length).mapToObj(i -> {
+            BitVector[] tmp = Arrays.stream(bitVectors).map(x -> x[i]).toArray(BitVector[]::new);
+            return BitVectorFactory.mergeWithPadding(tmp);
+        }).toArray(BitVector[]::new);
+        // re-share
+        int[] nums = IntStream.range(0, l).map(i -> mergeRes[0].bitNum()).toArray();
+        SquareZ2Vector[] reSharedX0 = z2cReceiver.shareOther(nums);
+        SquareZ2Vector[] reSharedX1 = z2cReceiver.shareOwn(mergeRes);
+        stopWatch.stop();
+        long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, ptoTime);
+
+        // add
+        stopWatch.start();
+        SquareZ2Vector[] midResult = Arrays.stream(z2IntegerCircuit.add(reSharedX0, reSharedX1)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        int[] targetBitLens = Arrays.stream(xi).mapToInt(SquareZlVector::getNum).toArray();
+        BitVector[][] vec = Arrays.stream(midResult).map(x -> x.getBitVector().splitWithPadding(targetBitLens)).toArray(BitVector[][]::new);
+        SquareZ2Vector[][] result = IntStream.range(0, vec[0].length).mapToObj(i ->
+            Arrays.stream(vec).map(vectors -> SquareZ2Vector.create(vectors[i], xi[0].isPlain()))
+                .toArray(SquareZ2Vector[]::new)).toArray(SquareZ2Vector[][]::new);
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -10,11 +10,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
  * @author Li Peng
  * @date 2023/10/12
  */
-class PermutableSorterReceiverThread extends Thread {
+class PermGenReceiverThread extends Thread {
     /**
      * the receiver
      */
-    private final PermutableSorterParty receiver;
+    private final PermGenParty receiver;
     /**
      * x1
      */
@@ -36,7 +36,7 @@ class PermutableSorterReceiverThread extends Thread {
      */
     private SquareZlVector z1;
 
-    PermutableSorterReceiverThread(PermutableSorterParty receiver, SquareZ2Vector[] x1, int l, int k) {
+    PermGenReceiverThread(PermGenParty receiver, SquareZ2Vector[] x1, int l, int k) {
         this.receiver = receiver;
         this.x1 = x1;
         num = x1[0].getNum();

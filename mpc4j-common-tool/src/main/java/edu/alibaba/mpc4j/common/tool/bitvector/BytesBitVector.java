@@ -206,14 +206,15 @@ public class BytesBitVector implements BitVector {
         if (bitNum < this.bitNum) {
             // compute number of reduced bytes, and set the remaining first byte as leading zeros.
             int remainByteNum = CommonUtils.getByteLength(bitNum);
-            offset = remainByteNum * Byte.SIZE - bitNum;
-            bytes = Arrays.copyOfRange(bytes, byteNum - remainByteNum, byteNum);
-            if (offset > 0) {
-                bytes[0] &= (byte) ((1 << (Byte.SIZE - offset)) - 1);
+            if (remainByteNum < byteNum) {
+                bytes = BytesUtils.keepLastBits(bytes, bitNum);
+                byteNum = remainByteNum;
+            }else{
+                bytes[0] &= (byte) ((1 << (bitNum & 7)) - 1);
             }
             // update other parameters
+            offset = (remainByteNum << 3) - bitNum;
             this.bitNum = bitNum;
-            this.byteNum = remainByteNum;
         }
     }
 
@@ -359,5 +360,21 @@ public class BytesBitVector implements BitVector {
         }
         bitNum = targetBitLength;
         offset = (targetByteLength << 3) - targetBitLength;
+    }
+
+    @Override
+    public BitVector[] splitWithPadding(int[] bitNums){
+        BitVector[] res = new BitVector[bitNums.length];
+        byte[] src = getBytes();
+        int k = 0;
+        for(int i = 0; i < bitNums.length; i++){
+            int byteNum = CommonUtils.getByteLength(bitNums[i]);
+            byte[] tmp = Arrays.copyOfRange(src, k, k + byteNum);
+            BytesUtils.reduceByteArray(tmp, bitNums[i]);
+            res[i] = create(bitNums[i], tmp);
+            k += byteNum;
+        }
+        assert k == src.length;
+        return res;
     }
 }

@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.hashbin.object.cuckoo.CuckooHashBinFactory.CuckooHashBinType;
@@ -36,7 +35,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default payload bit length
      */
-    private static final int[] PAYLOAD_BIT_LENS = new int[]{55, 41, 47};
+    private static final int[] PAYLOAD_BIT_LENS = new int[]{55, 23, 47};
     private static final boolean[] IS_BINARY = new boolean[]{true, false, true};
     /**
      * default size
@@ -144,7 +143,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int serverSetSize, int clientSetSize, boolean parallel) {
-        PlpsiServer<ByteBuffer> server = PlpsiFactory.createServer(firstRpc, secondRpc.ownParty(), config);
+        PlpsiServer<ByteBuffer, ByteBuffer> server = PlpsiFactory.createServer(firstRpc, secondRpc.ownParty(), config);
         PlpsiClient<ByteBuffer> client = PlpsiFactory.createClient(secondRpc, firstRpc.ownParty(), config);
         server.setParallel(parallel);
         client.setParallel(parallel);
@@ -223,9 +222,11 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
                     if (expectIntersectionSet.contains(table.get(i))) {
                         Assert.assertTrue(z.get(i));
                         if (IS_BINARY[payloadIndex]) {
+                            assert serverPayloadShare != null;
                             Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
                                 BytesUtils.xor(serverPayloadShare[i].getBitVector().getBytes(), clientPayloadShare[i].getBitVector().getBytes()));
                         } else {
+                            assert serverShareA != null;
                             Assert.assertArrayEquals(hashMap.get(table.get(i)).array(),
                                 BytesUtils.paddingByteArray(BigIntegerUtils.bigIntegerToByteArray(zl.add(serverShareA[i], clientShareA[i])), byteL));
                         }
@@ -233,12 +234,6 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
                 }
             }
         }
-    }
-
-    private List<byte[]> trans(SquareZ2Vector[] vectors) {
-        SquareZ2Vector[] tmpRes = Payload.transZ2Share(EnvType.STANDARD, true,
-            Arrays.stream(vectors).map(x -> x.getBitVector().getBytes()).toArray(byte[][]::new), vectors[0].bitNum());
-        return Arrays.stream(tmpRes).map(x -> x.getBitVector().getBytes()).collect(Collectors.toList());
     }
 
     private List<List<ByteBuffer>> generatePayload(int serverSetSize) {

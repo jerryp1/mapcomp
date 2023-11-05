@@ -8,6 +8,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -319,5 +320,22 @@ public class BigIntegerBitVector implements BitVector {
     public void extendLength(int targetBitLength){
         assert bitNum <= targetBitLength;
         bitNum = targetBitLength;
+        byteNum = CommonUtils.getByteLength(bitNum);
+    }
+
+    @Override
+    public BitVector[] splitWithPadding(int[] bitNums){
+        BitVector[] res = new BitVector[bitNums.length];
+        byte[] src = getBytes();
+        int k = 0;
+        for(int i = 0; i < bitNums.length; i++){
+            int byteNum = CommonUtils.getByteLength(bitNums[i]);
+            byte[] tmp = Arrays.copyOfRange(src, k, k + byteNum);
+            BytesUtils.reduceByteArray(tmp, bitNums[i]);
+            res[i] = create(bitNums[i], tmp);
+            k += byteNum;
+        }
+        assert k == src.length;
+        return res;
     }
 }

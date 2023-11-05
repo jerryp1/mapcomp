@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter.ahi22;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -8,8 +8,9 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.psorter.PermutableSorterFactory.PermutableSorterTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.FieldTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 
@@ -19,7 +20,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
  * @author Li Peng
  * @date 2023/10/11
  */
-public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig implements PermutableSorterConfig {
+public class Ahi22SmallFieldPermGenConfig extends AbstractMultiPartyPtoConfig implements PermGenConfig {
     /**
      * bit2a config.
      */
@@ -37,7 +38,7 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
      */
     private final ZlMuxConfig zlMuxConfig;
 
-    private Ahi22PermutableSorterConfig(Ahi22PermutableSorterConfig.Builder builder) {
+    private Ahi22SmallFieldPermGenConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.bit2aConfig, builder.zlcConfig, builder.zlMuxConfig);
         bit2aConfig = builder.bit2aConfig;
         zlcConfig = builder.zlcConfig;
@@ -46,13 +47,18 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
     }
 
     @Override
-    public PermutableSorterTypes getPtoType() {
-        return PermutableSorterTypes.AHI22;
+    public PermGenTypes getPtoType() {
+        return PermGenTypes.AHI22_SMALL_FIELD;
     }
 
     @Override
     public Zl getZl() {
         return zlcConfig.getZl();
+    }
+
+    @Override
+    public FieldTypes getFieldType() {
+        return FieldTypes.SMALL_FIELD;
     }
 
     public Bit2aConfig getBit2aConfig() {
@@ -71,7 +77,7 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
         return zlMuxConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ahi22PermutableSorterConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Ahi22SmallFieldPermGenConfig> {
         /**
          * bit2a config.
          */
@@ -113,8 +119,8 @@ public class Ahi22PermutableSorterConfig extends AbstractMultiPartyPtoConfig imp
         }
 
         @Override
-        public Ahi22PermutableSorterConfig build() {
-            return new Ahi22PermutableSorterConfig(this);
+        public Ahi22SmallFieldPermGenConfig build() {
+            return new Ahi22SmallFieldPermGenConfig(this);
         }
     }
 }

@@ -167,4 +167,6 @@ public interface BitVector {
      * @param targetBitLength the target bit length
      */
     void extendLength(int targetBitLength);
+
+    BitVector[] splitWithPadding(int[] bitNums);
 }

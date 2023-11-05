@@ -50,7 +50,7 @@ public class PlpsiFactory {
      * @param config      the config.
      * @return a server.
      */
-    public static <X> PlpsiServer<X> createServer(Rpc serverRpc, Party clientParty, PlpsiConfig config) {
+    public static <X, T> PlpsiServer<X, T> createServer(Rpc serverRpc, Party clientParty, PlpsiConfig config) {
         PlpsiType type = config.getPtoType();
         switch (type) {
             case RS21:

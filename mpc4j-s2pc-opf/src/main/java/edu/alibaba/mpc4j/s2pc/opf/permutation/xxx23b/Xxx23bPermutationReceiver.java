@@ -70,6 +70,7 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         z2cSender = Z2cFactory.createSender(receiverRpc, senderParty, config.getZ2cConfig());
         a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
+        addMultipleSubPtos(osnReceiver, osnSender, zlcReceiver, z2cSender, a2bReceiver, b2aReceiver);
         secureRandom = new SecureRandom();
     }
 

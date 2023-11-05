@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.psorter;
+package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -8,13 +8,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
-/**
- * Abstract Permutable Sorter Party.
- *
- * @author Li Peng
- * @date 2023/10/11
- */
-public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto implements PermutableSorterParty {
+public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implements PermGenParty {
     /**
      * max l
      */
@@ -48,7 +42,7 @@ public abstract class AbstractPermutableSorterParty extends AbstractTwoPartyPto 
      */
     protected SquareZ2Vector[] inputs;
 
-    protected AbstractPermutableSorterParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, PermutableSorterConfig config) {
+    protected AbstractPermGenParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, PermGenConfig config) {
         super(ptoDesc, rpc, otherParty, config);
     }
 

@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.osn;
 
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -40,6 +41,20 @@ public class OsnPartyOutput {
      */
     public byte[] getShare(int index) {
         return shareVector.get(index);
+    }
+
+    /**
+     * 返回所有分享值。
+     *
+     * @return 分享值。
+     */
+    public byte[][] getShareArray(int bitNum) {
+        assert CommonUtils.getByteLength(bitNum) == shareVector.get(0).length;
+        if((bitNum & 7) > 0){
+            byte andNum = (byte) ((1 << (bitNum & 7)) - 1);
+            shareVector.forEach(x -> x[0] &= andNum);
+        }
+        return shareVector.toArray(new byte[0][]);
     }
 
     /**
