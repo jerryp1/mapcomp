@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -13,10 +13,9 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.AbstractPlainMuxParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21.Xxx23PlainMuxPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.AbstractPlainBitMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSender;
@@ -30,12 +29,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Plain mux sender.
+ * Plain bit mux sender.
  *
  * @author Li Peng
  * @date 2023/11/5
  */
-public class Xxx23PlainMuxSender extends AbstractPlainMuxParty {
+public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
     /**
      * COT sender
      */
@@ -53,8 +52,8 @@ public class Xxx23PlainMuxSender extends AbstractPlainMuxParty {
      */
     private ZlVector t0ZlVector;
 
-    public Xxx23PlainMuxSender(Rpc senderRpc, Party receiverParty, Xxx23PlainMuxConfig config) {
-        super(Xxx23PlainMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
+    public Xxx23PlainBitMuxSender(Rpc senderRpc, Party receiverParty, Xxx23PlainBitMuxConfig config) {
+        super(Xxx23PlainBitMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
         cotSender = CotFactory.createSender(senderRpc, receiverParty, config.getCotConfig());
         addSubPtos(cotSender);
         cotReceiver = CotFactory.createReceiver(senderRpc, receiverParty, config.getCotConfig());
@@ -81,8 +80,8 @@ public class Xxx23PlainMuxSender extends AbstractPlainMuxParty {
     }
 
     @Override
-    public SquareZlVector mux(SquareZ2Vector x0, long[] y0) throws MpcAbortException {
-        assert y0 != null;
+    public SquareZlVector mux(BitVector x0, SquareZlVector y0) throws MpcAbortException {
+        assert x0 == null;
         setPtoInput(x0, y0);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -108,15 +107,13 @@ public class Xxx23PlainMuxSender extends AbstractPlainMuxParty {
 
     private SquareZlVector t0t1(CotSenderOutput cotSenderOutput) {
         Prg prg = PrgFactory.createInstance(envType, byteL);
-        BitVector inputBits = this.inputBits.getBitVector();
         // generate random rs
         BigInteger[] rs = ZlVector.createRandom(zl, num, secureRandom).getElements();
-        byte[][] r0s = IntStream.range(0, num)
-            .mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.valueOf(inputs[i]) : BigInteger.ZERO))
+        byte[][] r0s = Arrays.stream(rs)
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
         byte[][] r1s = IntStream.range(0, num)
-            .mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.ZERO : BigInteger.valueOf(inputs[i])))
+            .mapToObj(i -> zl.add(rs[i], inputPayloads.getZlVector().getElement(i)))
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
         // P1 creates t0

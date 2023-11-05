@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21;
 
 import edu.alibaba.mpc4j.common.rpc.*;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.AbstractPlainMuxParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21.Xxx23PlainMuxPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.AbstractPlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
  * @author Li Peng
  * @date 2023/11/5
  */
-public class Xxx23PlainMuxReceiver extends AbstractPlainMuxParty {
+public class Xxx23PlainPayloadMuxReceiver extends AbstractPlainPayloadMuxParty {
     /**
      * COT receiver
      */
@@ -39,8 +39,8 @@ public class Xxx23PlainMuxReceiver extends AbstractPlainMuxParty {
      */
     private final CotSender cotSender;
 
-    public Xxx23PlainMuxReceiver(Rpc receiverRpc, Party senderParty, Xxx23PlainMuxConfig config) {
-        super(Xxx23PlainMuxPtoDesc.getInstance(), receiverRpc, senderParty, config);
+    public Xxx23PlainPayloadMuxReceiver(Rpc receiverRpc, Party senderParty, Xxx23PlainPayloadMuxConfig config) {
+        super(Xxx23PlainPayloadMuxPtoDesc.getInstance(), receiverRpc, senderParty, config);
         cotReceiver = CotFactory.createReceiver(receiverRpc, senderParty, config.getCotConfig());
         addSubPtos(cotReceiver);
         cotSender = CotFactory.createSender(receiverRpc, senderParty, config.getCotConfig());

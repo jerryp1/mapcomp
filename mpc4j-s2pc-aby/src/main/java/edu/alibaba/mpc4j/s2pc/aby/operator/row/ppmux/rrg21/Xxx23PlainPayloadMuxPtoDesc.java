@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Li Peng
  * @date 2023/11/5
  */
-class Xxx23PlainMuxPtoDesc implements PtoDesc {
+class Xxx23PlainPayloadMuxPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -32,12 +32,12 @@ class Xxx23PlainMuxPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final Xxx23PlainMuxPtoDesc INSTANCE = new Xxx23PlainMuxPtoDesc();
+    private static final Xxx23PlainPayloadMuxPtoDesc INSTANCE = new Xxx23PlainPayloadMuxPtoDesc();
 
     /**
      * private constructor.
      */
-    private Xxx23PlainMuxPtoDesc() {
+    private Xxx23PlainPayloadMuxPtoDesc() {
         // empty
     }
 

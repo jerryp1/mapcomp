@@ -1,7 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
@@ -10,15 +10,19 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
  * @author Li Peng
  * @date 2023/11/5
  */
-class PlainMuxReceiverThread extends Thread {
+class PlainBitMuxReceiverThread extends Thread {
     /**
      * the receiver
      */
-    private final PlainMuxParty receiver;
+    private final PlainBitMuxParty receiver;
     /**
      * x1
      */
-    private final SquareZ2Vector x1;
+    private final BitVector x1;
+    /**
+     * y1
+     */
+    private final SquareZlVector y1;
     /**
      * the num
      */
@@ -32,10 +36,11 @@ class PlainMuxReceiverThread extends Thread {
      */
     private long[] y;
 
-    PlainMuxReceiverThread(PlainMuxParty receiver, SquareZ2Vector x1) {
+    PlainBitMuxReceiverThread(PlainBitMuxParty receiver, BitVector x1, SquareZlVector y1) {
         this.receiver = receiver;
         this.x1 = x1;
-        num = x1.getNum();
+        num = x1.bitNum();
+        this.y1 = y1;
     }
 
     SquareZlVector getZ1() {
@@ -46,7 +51,7 @@ class PlainMuxReceiverThread extends Thread {
     public void run() {
         try {
             receiver.init(num);
-            z1 = receiver.mux(x1, null);
+            z1 = receiver.mux(x1, y1);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

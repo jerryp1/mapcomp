@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.PlainMuxFactory.PlainMuxType;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux.rrg21.Xxx23PlainMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory.PlainMuxType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,8 +31,8 @@ import java.util.stream.IntStream;
  * @date 2023/11/5
  */
 @RunWith(Parameterized.class)
-public class PlainMuxTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlainMuxTest.class);
+public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlainPayloadMuxTest.class);
     /**
      * default num
      */
@@ -52,7 +52,7 @@ public class PlainMuxTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            PlainMuxType.Xxx23.name(), new Xxx23PlainMuxConfig.Builder(DEFAULT_ZL).build()
+            PlainMuxType.Xxx23.name(), new Xxx23PlainPayloadMuxConfig.Builder(DEFAULT_ZL).build()
         });
 
         return configurations;
@@ -61,9 +61,9 @@ public class PlainMuxTest extends AbstractTwoPartyPtoTest {
     /**
      * the config
      */
-    private final PlainMuxConfig config;
+    private final PlainPayloadMuxConfig config;
 
-    public PlainMuxTest(String name, PlainMuxConfig config) {
+    public PlainPayloadMuxTest(String name, PlainPayloadMuxConfig config) {
         super(name);
         this.config = config;
     }
@@ -127,14 +127,14 @@ public class PlainMuxTest extends AbstractTwoPartyPtoTest {
 
         long[] y = IntStream.range(0, num).map(i -> SECURE_RANDOM.nextInt(Integer.MAX_VALUE)).mapToLong(i -> i).toArray();
         // init the protocol
-        PlainMuxParty sender = PlainMuxFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        PlainMuxParty receiver = PlainMuxFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        PlainPayloadMuxParty sender = PlainPlayloadMuxFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        PlainPayloadMuxParty receiver = PlainPlayloadMuxFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            PlainMuxSenderThread senderThread = new PlainMuxSenderThread(sender, shareX0, y);
-            PlainMuxReceiverThread receiverThread = new PlainMuxReceiverThread(receiver, shareX1);
+            PlainPayloadMuxSenderThread senderThread = new PlainPayloadMuxSenderThread(sender, shareX0, y);
+            PlainPayloadMuxReceiverThread receiverThread = new PlainPayloadMuxReceiverThread(receiver, shareX1);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();

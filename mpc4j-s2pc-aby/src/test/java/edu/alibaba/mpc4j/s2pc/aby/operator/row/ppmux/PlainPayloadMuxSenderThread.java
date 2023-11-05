@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.row.plainmux;
+package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -10,11 +10,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
  * @author Li Peng
  * @date 2023/11/5
  */
-class PlainMuxSenderThread extends Thread {
+class PlainPayloadMuxSenderThread extends Thread {
     /**
      * the sender
      */
-    private final PlainMuxParty sender;
+    private final PlainPayloadMuxParty sender;
     /**
      * x0
      */
@@ -32,7 +32,7 @@ class PlainMuxSenderThread extends Thread {
      */
     private SquareZlVector z0;
 
-    PlainMuxSenderThread(PlainMuxParty sender, SquareZ2Vector x0, long[] y) {
+    PlainPayloadMuxSenderThread(PlainPayloadMuxParty sender, SquareZ2Vector x0, long[] y) {
         this.sender = sender;
         this.x0 = x0;
         num = x0.getNum();
