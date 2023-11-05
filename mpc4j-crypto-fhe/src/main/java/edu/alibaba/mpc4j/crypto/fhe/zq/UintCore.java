@@ -545,18 +545,32 @@ public class UintCore {
      *
      * @param value             the value.
      * @param valueUint64Count  number of uint64 in the value.
-     * @param resultUint64Count number of uint64 in the result.
      * @param result            the result to write the value.
+     * @param resultUint64Count number of uint64 in the result.
      */
-    public static void setUint(long[] value, int valueUint64Count, int resultUint64Count, long[] result) {
-        assert value.length >= valueUint64Count;
-        assert result.length >= resultUint64Count;
+    public static void setUint(long[] value, int valueUint64Count, long[] result, int resultUint64Count) {
+        setUint(value, 0, valueUint64Count, result, 0, resultUint64Count);
+    }
+
+    /**
+     * Sets value = result.
+     *
+     * @param value             the value.
+     * @param pos               the start position.
+     * @param valueUint64Count  number of uint64 in the value.
+     * @param result            the result to write the value.
+     * @param posR              the result start position.
+     * @param resultUint64Count number of uint64 in the result.
+     */
+    public static void setUint(long[] value, int pos, int valueUint64Count, long[] result, int posR, int resultUint64Count) {
+        assert value.length >= pos + valueUint64Count;
+        assert result.length >= posR + resultUint64Count;
         if (value == result || valueUint64Count == 0) {
-            Arrays.fill(result, valueUint64Count, resultUint64Count, 0);
+            Arrays.fill(result, posR + valueUint64Count, posR + resultUint64Count, 0);
         } else {
             int minUint64Count = Math.min(valueUint64Count, resultUint64Count);
-            System.arraycopy(value, 0, result, 0, minUint64Count);
-            Arrays.fill(result, minUint64Count, resultUint64Count, 0);
+            System.arraycopy(value, pos, result, posR, minUint64Count);
+            Arrays.fill(result, posR + minUint64Count, posR + resultUint64Count, 0);
         }
     }
 
@@ -609,7 +623,7 @@ public class UintCore {
             return input;
         }
         long[] newUint = new long[newUint64Count];
-        setUint(input, uint64Count, newUint64Count, newUint);
+        setUint(input, uint64Count, newUint, newUint64Count);
         return newUint;
     }
 

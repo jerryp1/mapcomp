@@ -262,11 +262,11 @@ public class UintCoreTest {
         long[] ptr2 = new long[1];
         ptr2[0] = 0xFFFFFFFFFFFFFFFFL;
 
-        UintCore.setUint(ptr1, 1, 1, ptr2);
+        UintCore.setUint(ptr1, 1, ptr2, 1);
         Assert.assertEquals(0x1234567887654321L, ptr2[0]);
 
         ptr1[0] = 0x1231231231231231L;
-        UintCore.setUint(ptr1, 1, 1, ptr2);
+        UintCore.setUint(ptr1, 1, ptr2, 1);
         Assert.assertEquals(0x1231231231231231L, ptr2[0]);
 
         ptr1 = new long[2];
@@ -275,23 +275,23 @@ public class UintCoreTest {
         ptr1[1] = 0x8765432112345678L;
         ptr2[0] = 0xFFFFFFFFFFFFFFFFL;
         ptr2[1] = 0xFFFFFFFFFFFFFFFFL;
-        UintCore.setUint(ptr1, 1,  2, ptr2);
+        UintCore.setUint(ptr1, 1, ptr2,  2);
         Assert.assertEquals(0x1234567887654321L, ptr2[0]);
         Assert.assertEquals(0, ptr2[1]);
 
         ptr2[0] = 0xFFFFFFFFFFFFFFFFL;
         ptr2[1] = 0xFFFFFFFFFFFFFFFFL;
-        UintCore.setUint(ptr1, 2,  2, ptr2);
+        UintCore.setUint(ptr1, 2, ptr2,  2);
         Assert.assertEquals(0x1234567887654321L, ptr2[0]);
         Assert.assertEquals(0x8765432112345678L, ptr2[1]);
 
         ptr1[0] = 0x1231231231231321L;
         ptr1[1] = 0x3213213213213211L;
-        UintCore.setUint(ptr1, 2,  2, ptr2);
+        UintCore.setUint(ptr1, 2, ptr2,  2);
         Assert.assertEquals(0x1231231231231321L, ptr2[0]);
         Assert.assertEquals(0x3213213213213211L, ptr2[1]);
 
-        UintCore.setUint(ptr1, 1,  2, ptr2);
+        UintCore.setUint(ptr1, 1, ptr2,  2);
         Assert.assertEquals(0x1231231231231321L, ptr2[0]);
         Assert.assertEquals(0, ptr2[1]);
     }

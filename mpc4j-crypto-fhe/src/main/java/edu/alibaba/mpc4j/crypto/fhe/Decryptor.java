@@ -178,15 +178,15 @@ public class Decryptor {
                     // 再分解了一层，现在处理的是 coeffIter
 
                     //put < c_1 * s > mod q in destination
-                    PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                    PolyArithmeticSmallMod.dyadicProductCoeffMod(
                         encrypted.getData(),
                         c1StartIndex + i * coeffCount,
                         secretKeyArray,
                         i * coeffCount,
                         coeffCount,
                         coeffModulus[i],
-                        i * coeffCount,
-                        destination
+                        destination,
+                        i * coeffCount
                     );
 
                     // add c_0 to the result; note that destination should be in the same (NTT) form as encrypted
@@ -212,15 +212,15 @@ public class Decryptor {
                     // transform c1 to Ntt form
                     NttTool.nttNegAcyclicHarveyLazyRns(destination, coeffCount, coeffModulusSize, i, nttTables);
                     // put < c_1 * s > mod q in destination
-                    PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                    PolyArithmeticSmallMod.dyadicProductCoeffMod(
                         destination,
                         i * coeffCount,
                         secretKeyArray,
                         i * coeffCount, // 因为可以确定只有1个密文，所以可以当做 RnsIter 来使用
                         coeffCount,
                         coeffModulus[i],
-                        i * coeffCount,
-                        destination
+                        destination,
+                        i * coeffCount
                     );
                     // transform back
                     NttTool.inverseNttNegacyclicHarvey(
@@ -293,8 +293,8 @@ public class Decryptor {
                         rnsIterStartIndex2 + j * coeffCount,
                         coeffCount,
                         coeffModulus[j],
-                        rnsIterStartIndex1 + j * coeffCount,
-                        encryptedCopy
+                        encryptedCopy,
+                        rnsIterStartIndex1 + j * coeffCount
                     );
                 }
             }
@@ -424,16 +424,20 @@ public class Decryptor {
             int skLastStartIndex = i * coeffCount * coeffModulusSize;
             int skLastPlusOneStartIndex = (i + 1) * coeffCount * coeffModulusSize;
 
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 newSecretKeyArray,
                 skLastStartIndex, // 指向 sk^{n-1}
+                coeffCount,
+                coeffModulusSize,
                 secretKeyArray,
                 skStartIndex, // 始终指向 sk
-                coeffModulusSize,
                 coeffCount,
+                coeffModulusSize,
                 coeffModulus,
+                newSecretKeyArray,
                 skLastPlusOneStartIndex, // 指向 sk^n = sk^{n-1} * sk
-                newSecretKeyArray
+                coeffCount,
+                coeffModulusSize
             );
         }
 

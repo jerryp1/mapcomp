@@ -1074,7 +1074,7 @@ public class RnsTool {
             long[] temp = new long[coeffCount];
 
             // (ct mod qk) mod qi
-            PolyArithmeticSmallMod.moduloPolyCoeffs(polyIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
+            PolyArithmeticSmallMod.moduloPolyCoeff(polyIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
 
             // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
             long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
@@ -1113,7 +1113,7 @@ public class RnsTool {
             long[] temp = new long[coeffCount];
 
             // (ct mod qk) mod qi
-            PolyArithmeticSmallMod.moduloPolyCoeffs(input.coeffIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
+            PolyArithmeticSmallMod.moduloPolyCoeff(input.coeffIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
 
             // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
             long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
@@ -1167,7 +1167,7 @@ public class RnsTool {
             long[] temp = new long[coeffCount];
 
             if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                PolyArithmeticSmallMod.moduloPolyCoeffs(
+                PolyArithmeticSmallMod.moduloPolyCoeff(
                     polyIter,
                     lastInputIndex,
                     coeffCount,
@@ -1254,7 +1254,7 @@ public class RnsTool {
             long[] temp = new long[coeffCount];
 
             if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                PolyArithmeticSmallMod.moduloPolyCoeffs(
+                PolyArithmeticSmallMod.moduloPolyCoeff(
                     input.coeffIter,
                     lastInputIndex,
                     coeffCount,

@@ -404,7 +404,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
         for (int i = 0; i < encryptedCount; i++) {
             // 依次处理每一个 CoeffIter
             for (int j = 0; j < coeffModCount; j++) {
-                PolyArithmeticSmallMod.negAcyclicShiftPolyCoeffModCoeffIter(
+                PolyArithmeticSmallMod.negacyclicShiftPolyCoeffMod(
                         encrypted.getData(),
                         encrypted.indexAt(i) + j * coeffCount,
                         coeffCount,

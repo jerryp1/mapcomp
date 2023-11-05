@@ -1036,16 +1036,20 @@ public class KeyGenerator {
             int newStartIndex = i * coeffCount * coeffModulusSize;
             int newStartIndexPlusOne = (i + 1) * coeffCount * coeffModulusSize;
 
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 newSecretKeyArray,
                 newStartIndex,
+                coeffCount,
+                coeffModulusSize,
                 secretKeyArray,
                 oldStartIndex,
-                coeffModulusSize,
                 coeffCount,
+                coeffModulusSize,
                 coeffModulus,
+                newSecretKeyArray,
                 newStartIndexPlusOne,
-                newSecretKeyArray
+                coeffCount,
+                coeffModulusSize
             );
         }
 

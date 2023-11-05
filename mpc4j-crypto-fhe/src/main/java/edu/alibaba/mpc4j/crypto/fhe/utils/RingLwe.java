@@ -406,15 +406,15 @@ public class RingLwe {
             // j 是对 密文多项式的索引
             for (int j = 0; j < encryptedSize; j++) {
                 // 注意这里是对 CoeffIter 操作，注意起点的计算
-                PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                PolyArithmeticSmallMod.dyadicProductCoeffMod(
                     u,
                     i * coeffCount,
                     publicKey.data().getData(), // 密文，PolyIter
                     publicKey.data().indexAt(j) + i * coeffCount, // RnsIter + startIndx = CoeffIter
                     coeffCount,
                     coeffModulus[i],
-                    destination.indexAt(j) + i * coeffCount,
-                    destination.getData()
+                    destination.getData(),
+                    destination.indexAt(j) + i * coeffCount
                 );
                 // Addition with e_0, e_1 is in non-NTT form
                 if (!isNttForm) {
@@ -592,8 +592,8 @@ public class RingLwe {
                 c1StartIndex + i * coeffCount,
                 coeffCount,
                 coeffModulus[i],
-                c0StartIndex + i * coeffCount,
-                destination.getData()
+                destination.getData(),
+                c0StartIndex + i * coeffCount
             );
             // 到这里 a s 都是 ntt form
             // e 不是，需要根据参数，决定是否将 e 转换为 NTT，还是 将 as 转回系数表示

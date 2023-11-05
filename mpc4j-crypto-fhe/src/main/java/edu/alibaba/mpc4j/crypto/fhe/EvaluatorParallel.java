@@ -804,7 +804,7 @@ public class EvaluatorParallel {
                             coeffCount);
                     } else {  // Perform RNS conversion (modular reduction)
                         // 处理一个 CoeffIter
-                        PolyArithmeticSmallMod.moduloPolyCoeffs(
+                        PolyArithmeticSmallMod.moduloPolyCoeff(
                             tTarget,
                             j * coeffCount,
                             coeffCount,
@@ -948,7 +948,7 @@ public class EvaluatorParallel {
                     long qi = keyModulus[j].getValue();
                     if (qk > qi) {
                         // This cannot be spared. NTT only tolerates input that is less than 4*modulus (i.e. qk <=4*qi).
-                        PolyArithmeticSmallMod.moduloPolyCoeffs(
+                        PolyArithmeticSmallMod.moduloPolyCoeff(
                             tPolyProd,
                             tLastIndex,
                             coeffCount,
@@ -1187,28 +1187,36 @@ public class EvaluatorParallel {
         // 单独一个代码块来处理 behz_ciphertext_square(encrypted_q, base_q, base_q_size, temp_dest_q);
         {
             // compute c0^2
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedQ,
                 0, // 注意起点固定为 0
+                coeffCount,
+                baseQSize,
                 encryptedQ,
                 0,
-                baseQSize,
                 coeffCount,
+                baseQSize,
                 baseQ,
+                tempDestinationQ,
                 0,
-                tempDestinationQ
+                coeffCount,
+                baseQSize
             );
             // compute 2* c0 * c1
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedQ,
                 0, // 注意起点固定为 0
+                coeffCount,
+                baseQSize,
                 encryptedQ,
                 coeffCount * baseQSize, // 这里起点固定为 1
-                baseQSize,
                 coeffCount,
+                baseQSize,
                 baseQ,
+                tempDestinationQ,
                 coeffCount * baseQSize,
-                tempDestinationQ
+                coeffCount,
+                baseQSize
             );
             PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationQ,
@@ -1227,43 +1235,55 @@ public class EvaluatorParallel {
             );
 
             // Compute c1^2
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedQ,
                 coeffCount * baseQSize, // 注意起点固定为 1
+                coeffCount,
+                baseQSize,
                 encryptedQ,
                 coeffCount * baseQSize,
-                baseQSize,
                 coeffCount,
+                baseQSize,
                 baseQ,
+                tempDestinationQ,
                 2 * coeffCount * baseQSize, // 这里的起点就是 2 了
-                tempDestinationQ
+                coeffCount,
+                baseQSize
             );
         }
         // behz_ciphertext_square(encrypted_Bsk, base_Bsk, base_Bsk_size, temp_dest_Bsk);
         {
             // compute c0^2
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedBsk,
                 0, // 注意起点固定为 0
+                coeffCount,
+                baseBskSize,
                 encryptedBsk,
                 0,
-                baseBskSize,
                 coeffCount,
+                baseBskSize,
                 baseBsk,
+                tempDestinationBsk,
                 0,
-                tempDestinationBsk
+                coeffCount,
+                baseBskSize
             );
             // compute 2* c0 * c1
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedBsk,
                 0, // 注意起点固定为 0
+                coeffCount,
+                baseBskSize,
                 encryptedBsk,
                 coeffCount * baseBskSize, // 这里起点固定为 1
-                baseBskSize,
                 coeffCount,
+                baseBskSize,
                 baseBsk,
+                tempDestinationBsk,
                 coeffCount * baseBskSize,
-                tempDestinationBsk
+                coeffCount,
+                baseBskSize
             );
             PolyArithmeticSmallMod.addPolyCoeffModRns(
                 tempDestinationBsk,
@@ -1282,16 +1302,20 @@ public class EvaluatorParallel {
             );
 
             // Compute c1^2
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedBsk,
                 coeffCount * baseBskSize, // 注意起点固定为 1
+                coeffCount,
+                baseBskSize,
                 encryptedBsk,
                 coeffCount * baseBskSize,
-                baseBskSize,
                 coeffCount,
+                baseBskSize,
                 baseBsk,
+                tempDestinationBsk,
                 2 * coeffCount * baseBskSize, // 这里的起点就是 2 了
-                tempDestinationBsk
+                coeffCount,
+                baseBskSize
             );
         }
 
@@ -1670,15 +1694,15 @@ public class EvaluatorParallel {
                         // 每次只处理一个 coeffIter
                         long[] temp = new long[coeffCount];
 
-                        PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                        PolyArithmeticSmallMod.dyadicProductCoeffMod(
                             encrypted1Q,
                             shiftedIn1Iter + j * coeffCount * baseQSize + k * coeffCount,
                             encrypted2Q,
                             (shiftedReversedIn2Iter - j * coeffCount * baseQSize) + k * coeffCount,// 注意这里的 index 是减
                             coeffCount,
                             baseQ[k],
-                            0,
-                            temp
+                            temp,
+                            0
                         );
                         // 也只处理一个 CoeffIter
                         // 注意 shiftedOutIter 是按 k 迭代的, 迭代步长为
@@ -1714,15 +1738,15 @@ public class EvaluatorParallel {
                         // 每次只处理一个 coeffIter
                         long[] temp = new long[coeffCount];
 
-                        PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                        PolyArithmeticSmallMod.dyadicProductCoeffMod(
                             encrypted1Bsk,
                             shiftedIn1Iter + j * coeffCount * baseBskSize + k * coeffCount,
                             encrypted2Bsk,
                             (shiftedReversedIn2Iter - j * coeffCount * baseBskSize) + k * coeffCount,// 注意这里的 index 是减
                             coeffCount,
                             baseBsk[k],
-                            0,
-                            temp
+                            temp,
+                            0
                         );
                         // 也只处理一个 CoeffIter
                         PolyArithmeticSmallMod.addPolyCoeffMod(
@@ -2231,15 +2255,15 @@ public class EvaluatorParallel {
             for (int j = 0; j < coeffModulusSize; j++) {
                 // Lazy Reduction, 处理 单个 CoeffIter
                 NttTool.nttNegacyclicHarveyLazyPoly(encrypted.getData(), encryptedSize, coeffCount, coeffModulusSize, i, j, nttTables);
-                PolyArithmeticSmallMod.dyadicProductCoeffModCoeffIter(
+                PolyArithmeticSmallMod.dyadicProductCoeffMod(
                     encrypted.getData(),
                     rnsStartIndex + j * coeffCount,
                     temp,
                     j * coeffCount,
                     coeffCount,
                     coeffModulus[j],
-                    rnsStartIndex + j * coeffCount,
-                    encrypted.getData()
+                    encrypted.getData(),
+                    rnsStartIndex + j * coeffCount
                 );
 
                 NttTool.inverseNttNegacyclicHarvey(
@@ -2288,16 +2312,20 @@ public class EvaluatorParallel {
         // 这是是在处理一个 RnsIter
         for (int i = 0; i < encryptedNttSize; i++) {
             // 都是 Ntt 形式，直接调用这个函数做 多项式乘法
-            PolyArithmeticSmallMod.dyadicProductCoeffModRnsIter(
+            PolyArithmeticSmallMod.dyadicProductCoeffModRns(
                 encryptedNtt.getData(),
                 encryptedNtt.indexAt(i),
+                coeffCount,
+                coeffModulusSize,
                 plainNtt.getData(),
                 0, // plain 是 single RnsIter 所以它的起点为 0
-                coeffModulusSize,
                 coeffCount,
+                coeffModulusSize,
                 coeffModulus,
+                encryptedNtt.getData(),
                 encryptedNtt.indexAt(i),
-                encryptedNtt.getData()
+                coeffCount,
+                coeffModulusSize
             );
         }
 
