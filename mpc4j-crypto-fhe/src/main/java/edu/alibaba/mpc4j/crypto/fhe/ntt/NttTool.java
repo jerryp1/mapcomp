@@ -20,22 +20,22 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarveyLazy(long[] operand, NttTables tables) {
-        nttNegacyclicHarveyLazy(operand, 0, tables);
+    public static void nttNegacyclicHarveyLazy(long[] coeff, NttTables tables) {
+        nttNegacyclicHarveyLazy(coeff, 0, tables);
     }
 
     /**
      * Negative cyclic NTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in standard ordering.
-     * @param pos     the start position.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in standard ordering.
+     * @param pos    the start position.
+     * @param tables the pre-computed NTT tables.
      */
-    private static void nttNegacyclicHarveyLazy(long[] operand, int pos, NttTables tables) {
-        tables.nttHandler.transformToRev(operand, pos, tables.getCoeffCountPower(), tables.getRootPowers(), null);
+    private static void nttNegacyclicHarveyLazy(long[] coeff, int pos, NttTables tables) {
+        tables.nttHandler.transformToRev(coeff, pos, tables.getCoeffCountPower(), tables.getRootPowers(), null);
     }
 
     /**
@@ -109,33 +109,33 @@ public class NttTool {
     /**
      * Negative cyclic NTT using Harvey's butterfly.
      *
-     * @param operand A vector a = (a[0], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[0], ..., a[n − 1]) ∈ Z_n^q in standard ordering.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarvey(long[] operand, NttTables tables) {
-        nttNegacyclicHarvey(operand, 0, tables);
+    public static void nttNegacyclicHarvey(long[] coeff, NttTables tables) {
+        nttNegacyclicHarvey(coeff, 0, tables);
     }
 
     /**
      * Negative cyclic NTT using Harvey's butterfly.
      *
-     * @param operand A vector a = (a[0 + pos], ..., a[n + pos − 1]) ∈ Z_n^q in standard ordering.
-     * @param pos     the start position.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[0 + pos], ..., a[n + pos − 1]) ∈ Z_n^q in standard ordering.
+     * @param pos    the start position.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void nttNegacyclicHarvey(long[] operand, int pos, NttTables tables) {
-        nttNegacyclicHarveyLazy(operand, pos, tables);
+    public static void nttNegacyclicHarvey(long[] coeff, int pos, NttTables tables) {
+        nttNegacyclicHarveyLazy(coeff, pos, tables);
         // Finally, maybe we need to reduce every coefficient modulo q, but we know that they are in the range [0, 4q).
         long modulus = tables.getModulus().getValue();
         long twoTimesModulus = modulus * 2;
         int n = 1 << tables.getCoeffCountPower();
         for (int i = 0; i < n; i++) {
             // Note: I must be passed to the lambda by reference.
-            if (operand[pos + i] >= twoTimesModulus) {
-                operand[pos + i] -= twoTimesModulus;
+            if (coeff[pos + i] >= twoTimesModulus) {
+                coeff[pos + i] -= twoTimesModulus;
             }
-            if (operand[pos + i] >= modulus) {
-                operand[pos + i] -= modulus;
+            if (coeff[pos + i] >= modulus) {
+                coeff[pos + i] -= modulus;
             }
         }
     }
@@ -219,24 +219,24 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarveyLazy(long[] operand, NttTables tables) {
-        inverseNttNegacyclicHarveyLazy(operand, 0, tables);
+    public static void inverseNttNegacyclicHarveyLazy(long[] coeff, NttTables tables) {
+        inverseNttNegacyclicHarveyLazy(coeff, 0, tables);
     }
 
     /**
      * Negative cyclic INTT using Harvey's butterfly with lazy modulo operation.
      *
-     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param pos     the start position.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param pos    the start position.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarveyLazy(long[] operand, int pos, NttTables tables) {
+    public static void inverseNttNegacyclicHarveyLazy(long[] coeff, int pos, NttTables tables) {
         // Final adjustments; compute a[j] = a[j] * n^{-1} mod q. We incorporated the final adjustment in the butterfly.
         MultiplyUintModOperand invN = tables.getInvDegreeModulo();
-        tables.nttHandler.transformFromRev(operand, pos, tables.getCoeffCountPower(), tables.getInvRootPowers(), invN);
+        tables.nttHandler.transformFromRev(coeff, pos, tables.getCoeffCountPower(), tables.getInvRootPowers(), invN);
     }
 
     /**
@@ -262,28 +262,28 @@ public class NttTool {
     /**
      * Negative cyclic INTT using Harvey's butterfly.
      *
-     * @param operand A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[0], a[1], ..., a[n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarvey(long[] operand, NttTables tables) {
-        inverseNttNegacyclicHarvey(operand, 0, tables);
+    public static void inverseNttNegacyclicHarvey(long[] coeff, NttTables tables) {
+        inverseNttNegacyclicHarvey(coeff, 0, tables);
     }
 
     /**
      * Negative cyclic INTT using Harvey's butterfly.
      *
-     * @param operand A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
-     * @param pos     the start position.
-     * @param tables  the pre-computed NTT tables.
+     * @param coeff  A vector a = (a[pos + 0], a[pos + 1], ..., a[pos + n − 1]) ∈ Z_n^q in bit-reversed ordering.
+     * @param pos    the start position.
+     * @param tables the pre-computed NTT tables.
      */
-    public static void inverseNttNegacyclicHarvey(long[] operand, int pos, NttTables tables) {
-        inverseNttNegacyclicHarveyLazy(operand, pos, tables);
+    public static void inverseNttNegacyclicHarvey(long[] coeff, int pos, NttTables tables) {
+        inverseNttNegacyclicHarveyLazy(coeff, pos, tables);
         // We incorporated the final adjustment in the butterfly. Only need to reduce here.
         long modulus = tables.getModulus().getValue();
         int n = 1 << tables.getCoeffCountPower();
         for (int i = 0; i < n; i++) {
-            if (operand[pos + i] >= modulus) {
-                operand[pos + i] -= modulus;
+            if (coeff[pos + i] >= modulus) {
+                coeff[pos + i] -= modulus;
             }
         }
     }
