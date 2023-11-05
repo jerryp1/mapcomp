@@ -2178,7 +2178,7 @@ public class Evaluator {
                     // temp 对 每一个 qi 取模
                     contextData.getRnsTool().getBaseQ().decompose(temp);
                     // 注意函数签名中的 第5个参数，现在是一个数组, 下面的两次调用都是单个数
-                    PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
+                    PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffModPoly(
                         encrypted.getData(),
                         encrypted.getPolyModulusDegree(),
                         encrypted.getCoeffModulusSize(),
@@ -2194,7 +2194,7 @@ public class Evaluator {
                     // Every coeff_modulus prime is larger than plain_modulus, so there is no need to adjust the
                     // monomial. Instead, just do an RNS multiplication.
                     // todo：理解这里的逻辑，这里和下面处理的不是完全一样吗
-                    PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
+                    PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffModPoly(
                         encrypted.getData(),
                         encrypted.getPolyModulusDegree(),
                         encrypted.getCoeffModulusSize(),
@@ -2212,7 +2212,7 @@ public class Evaluator {
                 // todo: 为什么 positive number 就不需要 RNS 乘法了？
                 //
                 // 注意这个函数签名
-                PolyArithmeticSmallMod.negAcyclicMultiplyPolyMonoCoeffModPolyIter(
+                PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffModPoly(
                     encrypted.getData(),
                     encrypted.getPolyModulusDegree(),
                     encrypted.getCoeffModulusSize(),

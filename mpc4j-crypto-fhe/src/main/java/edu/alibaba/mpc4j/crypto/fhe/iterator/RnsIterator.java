@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.crypto.fhe.iterator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.nio.LongBuffer;
+
 /**
  * RnsIterator represents k degree-(N-1) polynomials in RNS representation. A degree-(N-1) polynomial has N coefficients.
  * Suppose RNS base is q = [q1, q2, ..., qk]. Each coefficient can be spilt into k parts. Therefore, we use 1D array
@@ -25,6 +27,60 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @date 2023/11/5
  */
 public class RnsIterator {
+    /**
+     * Converts an 2D-array RNS representation into an 1D-array RNS representation.
+     *
+     * @param data an 2D-array RNS representation.
+     * @return an 1D-array RNS representation.
+     */
+    public static long[] from2dArray(long[][] data) {
+        int k = data.length;
+        assert k > 0;
+        int n = data[0].length;
+        assert n > 0;
+
+        LongBuffer longBuffer = LongBuffer.allocate(n * k);
+        for (long[] coeff : data) {
+            assert coeff.length == n;
+            longBuffer.put(coeff);
+        }
+        return longBuffer.array();
+    }
+
+    /**
+     * Creates an 1D-array RNS representations with all coefficients initialized as 0.
+     *
+     * @param n     modulus polynomial degree.
+     * @param k     number of RNS bases.
+     * @return an 1D-array RNS representations with all coefficients initialized as 0.
+     */
+    public static long[] createZero(int n, int k) {
+        assert n > 0;
+        assert k > 0;
+        return new long[n * k];
+    }
+
+    /**
+     * Converts an 1D-array RNS representation into an 2D-array RNS representation.
+     *
+     * @param coeff an 1D-arry RNS representation.
+     * @param n     modulus polynomial degree.
+     * @param k     number of RNS bases.
+     * @return an 2D-array RNS representation.
+     */
+    public static long[][] to2dArray(long[] coeff, int n, int k) {
+        assert n > 0;
+        assert k > 0;
+        assert n * k == coeff.length;
+
+        LongBuffer longBuffer = LongBuffer.wrap(coeff);
+        long[][] data = new long[k][n];
+        for (int j = 0; j < k; j++) {
+            longBuffer.get(data[j]);
+        }
+        return data;
+    }
+
     /**
      * The coefficient for the j-th degree-(N-1) polynomial is coeff[offset + j * N + 0 .. offset + j * N + N).
      */

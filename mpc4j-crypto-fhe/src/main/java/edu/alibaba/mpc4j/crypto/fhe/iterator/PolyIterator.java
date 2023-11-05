@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.crypto.fhe.iterator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.nio.LongBuffer;
+
 /**
  * PolyIterator represents multiple (m >= 1) degree-(N-1) RNS representations.
  * <p>
@@ -13,6 +15,71 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @date 2023/11/5
  */
 public class PolyIterator {
+    /**
+     * Converts an 3D-array Poly-RNS representation into an 1D-array Poly-RNS representation.
+     *
+     * @param data an 3D-array Poly-RNS representation.
+     * @return an an 1D-array Poly-RNS representation.
+     */
+    public static long[] from3dArray(long[][][] data) {
+        int m = data.length;
+        assert m > 0;
+        int k = data[0].length;
+        assert k > 0;
+        int n = data[0][0].length;
+        assert n > 0;
+
+        LongBuffer longBuffer = LongBuffer.allocate(m * n * k);
+        for (long[][] rns : data) {
+            assert rns.length == k;
+            for (long[] coeff : rns) {
+                assert coeff.length == n;
+                longBuffer.put(coeff);
+            }
+        }
+        return longBuffer.array();
+    }
+
+    /**
+     * Creates an 1D-array Poly-RNS representations with all coefficients initialized as 0.
+     *
+     * @param m number of RNS representations.
+     * @param n     modulus polynomial degree.
+     * @param k     number of RNS bases.
+     * @return an 1D-array Poly-RNS representations with all coefficients initialized as 0.
+     */
+    public static long[] createZero(int m, int n, int k) {
+        assert m > 0;
+        assert n > 0;
+        assert k > 0;
+        return new long[m * n * k];
+    }
+
+    /**
+     * Converts an 1D-array Poly-RNS representation into an 3D-array Poly-RNS representation.
+     *
+     * @param coeff an 1D-array Poly-RNS representation.
+     * @param m     number of RNS representations.
+     * @param n     modulus polynomial degree.
+     * @param k     number of RNS bases.
+     * @return an 3D-array Poly-RNS representation.
+     */
+    public static long[][][] to3dArray(long[] coeff, int m, int n, int k) {
+        assert m > 0;
+        assert n > 0;
+        assert k > 0;
+        assert m * n * k == coeff.length;
+
+        LongBuffer longBuffer = LongBuffer.wrap(coeff);
+        long[][][] data = new long[m][k][n];
+        for (int r = 0; r < m; r++) {
+            for (int j = 0; j < k; j++) {
+                longBuffer.get(data[r][j]);
+            }
+        }
+        return data;
+    }
+
     /**
      * The coefficient for the r-th RNS representation is coeff[offset + r * N * k + 0 .. offset + r * N * k + N * k).
      */
