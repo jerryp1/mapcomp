@@ -104,68 +104,69 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
     @Override
     public PlpsiShareOutput psi(List<T> serverElementList, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementList, clientElementSize);
-        logPhaseInfo(PtoState.PTO_BEGIN);
-
-        // P1 receives the cuckoo hash bin keys
-        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
-
-        stopWatch.start();
-        // β = (1 + ε) * n_s
-        beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
-        // point_num = hash_num * n_s
-        int pointNum = hashNum * serverElementSize;
-        // l_peqt = σ + log_2(β)
-        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
-        int peqtByteL = CommonUtils.getByteLength(peqtL);
-        // l_opprf = σ + log_2(point_num)
-        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
-        int opprfByteL = CommonUtils.getByteLength(opprfL);
-        // P1 inserts items into simple hash bin Table_2 with β bins
-        handleCuckooHashKeyPayload(cuckooHashKeyPayload);
-        stopWatch.stop();
-        long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Client inserts simple hash");
-
-        stopWatch.start();
-        // The parties invoke a batched OPPRF.
-        // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
-        generateBopprfInputs(opprfL);
-        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
-        targetArrays = null;
-        stopWatch.stop();
-        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
-
-        stopWatch.start();
-        // The parties invoke a private equality test
-        targetArray = Arrays.stream(targetArray)
-            .map(target -> {
-                byte[] truncatedTarget = new byte[peqtByteL];
-                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
-                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
-                return truncatedTarget;
-            })
-            .toArray(byte[][]::new);
-        // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
-        targetArray = null;
-        plpsiShareOutput = new PlpsiShareOutput(z0);
-        stopWatch.stop();
-        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime);
-        logPhaseInfo(PtoState.PTO_END);
-        return plpsiShareOutput;
+        return psiCommonPart(false);
+//        logPhaseInfo(PtoState.PTO_BEGIN);
+//
+//        // P1 receives the cuckoo hash bin keys
+//        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+//            otherParty().getPartyId(), ownParty().getPartyId()
+//        );
+//        List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
+//
+//        stopWatch.start();
+//        // β = (1 + ε) * n_s
+//        beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
+//        // point_num = hash_num * n_s
+//        int pointNum = hashNum * serverElementSize;
+//        // l_peqt = σ + log_2(β)
+//        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+//        int peqtByteL = CommonUtils.getByteLength(peqtL);
+//        // l_opprf = σ + log_2(point_num)
+//        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+//        int opprfByteL = CommonUtils.getByteLength(opprfL);
+//        // P1 inserts items into simple hash bin Table_2 with β bins
+//        handleCuckooHashKeyPayload(cuckooHashKeyPayload);
+//        stopWatch.stop();
+//        long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+//        stopWatch.reset();
+//        logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Client inserts simple hash");
+//
+//        stopWatch.start();
+//        // The parties invoke a batched OPPRF.
+//        // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
+//        generateBopprfInputs(opprfL);
+//        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
+//        targetArrays = null;
+//        stopWatch.stop();
+//        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+//        stopWatch.reset();
+//        logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
+//
+//        stopWatch.start();
+//        // The parties invoke a private equality test
+//        targetArray = Arrays.stream(targetArray)
+//            .map(target -> {
+//                byte[] truncatedTarget = new byte[peqtByteL];
+//                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+//                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+//                return truncatedTarget;
+//            })
+//            .toArray(byte[][]::new);
+//        // P1 inputs y_1^*, ..., y_β^* and outputs z0.
+//        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
+//        targetArray = null;
+//        plpsiShareOutput = new PlpsiShareOutput(z0);
+//        stopWatch.stop();
+//        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+//        stopWatch.reset();
+//        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime);
+//        logPhaseInfo(PtoState.PTO_END);
+//        return plpsiShareOutput;
     }
 
     @Override
-    public Payload intersectPayload(List<X> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException {
+    public void intersectPayload(List<X> serverPayloadList, int payloadBitLs, boolean isBinaryShare) throws MpcAbortException {
         assert plpsiShareOutput != null;
         logPhaseInfo(PtoState.PTO_BEGIN);
 
@@ -173,11 +174,12 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
         int payloadByteL = CommonUtils.getByteLength(payloadBitLs);
         byte[][] serverPayloadArray = serverPayloadList.stream().map(x ->
             BytesUtils.fixedByteArrayLength(ObjectUtils.objectToByteArray(x), payloadByteL)).toArray(byte[][]::new);
-        byte[][] payloadTargetArray = IntStream.range(0, beta)
-            .mapToObj(batchIndex -> BytesUtils.randomByteArray(payloadByteL, payloadBitLs, secureRandom)).toArray(byte[][]::new);
+        IntStream intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
+        byte[][] payloadTargetArray = intStream.mapToObj(batchIndex ->
+            BytesUtils.randomByteArray(payloadByteL, payloadBitLs, secureRandom)).toArray(byte[][]::new);
         Payload payload = new Payload(envType, parallel, payloadTargetArray, payloadBitLs, isBinaryShare);
-        byte[][][] payloadTargetArrays = IntStream.range(0, beta)
-            .mapToObj(batchIndex -> {
+        intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
+        byte[][][] payloadTargetArrays = intStream.mapToObj(batchIndex -> {
                 ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
                 return bin.stream()
                     .map(entry -> {
@@ -209,7 +211,80 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
         logStepInfo(PtoState.PTO_STEP, 1, 1, payloadOpprfTime, "opprf for payload");
 
         logPhaseInfo(PtoState.PTO_END);
-        return payload;
+    }
+
+    @Override
+    public PlpsiShareOutput psiWithPayload(List<T> serverElementList, int clientElementSize,
+                                           List<List<X>> serverPayloadLists, int[] payloadBitLs, boolean[] isBinaryShare) throws MpcAbortException {
+        setPtoInput(serverElementList, clientElementSize);
+        if (serverPayloadLists == null || serverPayloadLists.isEmpty()) {
+            return psiCommonPart(false);
+        }else{
+            setPayload(serverPayloadLists, payloadBitLs, isBinaryShare);
+            return psiCommonPart(true);
+        }
+    }
+
+    private PlpsiShareOutput psiCommonPart(boolean withPayload) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        // P1 receives the cuckoo hash bin keys
+        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
+
+        stopWatch.start();
+        // β = (1 + ε) * n_s
+        beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
+        // point_num = hash_num * n_s
+        int pointNum = hashNum * serverElementSize;
+        // l_peqt = σ + log_2(β)
+        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
+        int peqtByteL = CommonUtils.getByteLength(peqtL);
+        // l_opprf = σ + log_2(point_num)
+        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
+        int opprfByteL = CommonUtils.getByteLength(opprfL);
+        // P1 inserts items into simple hash bin Table_2 with β bins
+        handleCuckooHashKeyPayload(cuckooHashKeyPayload);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, resetAndGetTime(), "Client inserts simple hash");
+
+        stopWatch.start();
+        // The parties invoke a batched OPPRF.
+        // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
+        Payload[] payloadRes = null;
+        if(withPayload){
+            payloadRes = generateBopprfInputsWithPayload(opprfL);
+        }else{
+            generateBopprfInputs(opprfL);
+        }
+        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
+        targetArrays = null;
+        logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime());
+
+        stopWatch.start();
+        // The parties invoke a private equality test
+        targetArray = Arrays.stream(targetArray)
+            .map(target -> {
+                byte[] truncatedTarget = new byte[peqtByteL];
+                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
+                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
+                return truncatedTarget;
+            })
+            .toArray(byte[][]::new);
+        // P1 inputs y_1^*, ..., y_β^* and outputs z0.
+        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
+        targetArray = null;
+        plpsiShareOutput = new PlpsiShareOutput(z0);
+        if(withPayload){
+            for(Payload payload : payloadRes){
+                plpsiShareOutput.addPayload(payload);
+            }
+        }
+        logStepInfo(PtoState.PTO_STEP, 3, 3, resetAndGetTime());
+        logPhaseInfo(PtoState.PTO_END);
+        return plpsiShareOutput;
     }
 
     private void handleCuckooHashKeyPayload(List<byte[]> cuckooHashKeyPayload) throws MpcAbortException {
@@ -221,21 +296,8 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
 
     private void generateBopprfInputs(int l) {
         int byteL = CommonUtils.getByteLength(l);
-        // P2 generates the input arrays
-        inputArrays = IntStream.range(0, beta)
-            .mapToObj(batchIndex -> {
-                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
-                return bin.stream()
-                    .map(entry -> {
-                        byte[] itemBytes = entry.getItemByteArray();
-                        return ByteBuffer.allocate(itemBytes.length + Integer.BYTES)
-                            .put(itemBytes)
-                            .putInt(entry.getHashIndex())
-                            .array();
-                    })
-                    .toArray(byte[][]::new);
-            })
-            .toArray(byte[][][]::new);
+        // generates the input arrays
+        generateInputArrays();
         // P1 samples uniformly random and independent target values t_1, ..., t_β ∈ {0,1}^κ
         targetArray = IntStream.range(0, beta)
             .mapToObj(batchIndex -> BytesUtils.randomByteArray(byteL, l, secureRandom)).toArray(byte[][]::new);
@@ -251,55 +313,87 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
             .toArray(byte[][][]::new);
     }
 
+    private void generateInputArrays() {
+        inputArrays = IntStream.range(0, beta)
+            .mapToObj(batchIndex -> {
+                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
+                return bin.stream()
+                    .map(entry -> {
+                        byte[] itemBytes = entry.getItemByteArray();
+                        return ByteBuffer.allocate(itemBytes.length + Integer.BYTES)
+                            .put(itemBytes)
+                            .putInt(entry.getHashIndex())
+                            .array();
+                    })
+                    .toArray(byte[][]::new);
+            })
+            .toArray(byte[][][]::new);
+    }
 
-//    /**
-//     * 一次性处理多个payload的版本
-//     */
-//    private void generateBopprfPayloadInputs() {
-//        int[] payloadByteLs = Arrays.stream(serverPayloadBitLs).map(CommonUtils::getByteLength).toArray();
-//        totalByteLen = Arrays.stream(payloadByteLs).sum();
-//
-//        byte[][][] mask = IntStream.range(0, payloadByteLs.length)
-//            .mapToObj(payloadIndex -> {
-//                int byteLen = payloadByteLs[payloadIndex], bitLen = serverPayloadBitLs[payloadIndex];
-//                return IntStream.range(0, beta)
-//                    .mapToObj(rowIndex -> BytesUtils.randomByteArray(byteLen, bitLen, secureRandom))
-//                    .toArray(byte[][]::new);
-//            })
-//            .toArray(byte[][][]::new);
-//        payloads = IntStream.range(0, serverPayloadBitLs.length).mapToObj(i ->
-//            new Payload(envType, parallel, mask[i], serverPayloadBitLs[i], isBinaryShare[i])).toArray(Payload[]::new);
-//        IntStream intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
-//        payloadTargetArrays = intStream
-//            .mapToObj(batchIndex -> {
-//                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
-//                return bin.stream()
-//                    .map(entry -> {
-//                        T item = entry.getItem();
-//                        ByteBuffer onePayload = ByteBuffer.allocate(totalByteLen);
-//                        if (hashMap.containsKey(item)) {
-//                            int index = hashMap.get(item);
-//                            for (int payloadIndex = 0; payloadIndex < serverPayloadBitLs.length; payloadIndex++){
-//                                byte[] value = serverPayloadArrays[payloadIndex][index];
-//                                if (isBinaryShare[payloadIndex]) {
-//                                    onePayload.put(BytesUtils.xor(value, mask[payloadIndex][batchIndex]));
-//                                } else {
-//                                    Payload currentPayload = payloads[payloadIndex];
-//                                    BigInteger res = currentPayload.getZlPayload().getZl().sub(
-//                                        BigIntegerUtils.byteArrayToNonNegBigInteger(value),
-//                                        currentPayload.getZlPayload().getZlVector().getElement(batchIndex));
-//                                    onePayload.put(BigIntegerUtils.nonNegBigIntegerToByteArray(res, payloadByteLs[payloadIndex]));
-//                                }
-//                            }
-//                        } else {
-//                            for (int payloadIndex = 0; payloadIndex < serverPayloadBitLs.length; payloadIndex++){
-//                                onePayload.put(BytesUtils.randomByteArray(payloadByteLs[payloadIndex], serverPayloadBitLs[payloadIndex], secureRandom));
-//                            }
-//                        }
-//                        return onePayload.array();
-//                    })
-//                    .toArray(byte[][]::new);
-//            })
-//            .toArray(byte[][][]::new);
-//    }
+    private Payload[] generateBopprfInputsWithPayload(int l) {
+        int byteL = CommonUtils.getByteLength(l);
+        int payloadTotalByteL = Arrays.stream(payloadByteLs).sum();
+        int[] andIndex = new int[payloadByteLs.length];
+        andIndex[0] = byteL;
+        for (int i = 1; i < payloadByteLs.length; i++) {
+            andIndex[i] = andIndex[i - 1] + payloadByteLs[i - 1];
+        }
+        // generates the input arrays
+        generateInputArrays();
+        // P1 samples uniformly random and independent target values t_1, ..., t_β ∈ {0,1}^κ
+        int eachByteL = byteL + payloadTotalByteL;
+        IntStream intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
+        targetArray = intStream.mapToObj(batchIndex ->
+            BytesUtils.randomByteArray(byteL, l, secureRandom)).toArray(byte[][]::new);
+        // 得到payload
+        byte[][][] maskBytes = new byte[payloadByteLs.length][][];
+        byte[] andNum = new byte[payloadByteLs.length];
+        Payload[] payloadRes = IntStream.range(0, payloadByteLs.length).mapToObj(i -> {
+            andNum[i] = (byte) ((1 << (payloadBitLs[i] & 7)) - 1);
+            maskBytes[i] = new byte[beta][payloadByteLs[i]];
+            Arrays.stream(maskBytes[i]).forEach(x -> {
+                secureRandom.nextBytes(x);
+                x[0] &= andNum[i];
+            });
+            return new Payload(envType, parallel, maskBytes[i], payloadBitLs[i], isBinaryShare[i]);
+        }).toArray(Payload[]::new);
+        // 生成opprf对应的value
+        intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
+        targetArrays = intStream.mapToObj(batchIndex -> {
+                ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));
+                return bin.stream()
+                    .map(entry -> {
+                        T item = entry.getItem();
+                        byte[] tmpRes = new byte[eachByteL];
+                        System.arraycopy(targetArray[batchIndex], 0, tmpRes, 0, byteL);
+                        if (hashMap.containsKey(item)) {
+                            int index = hashMap.get(item);
+                            byte[][] payloadValues = payloadBytes[index];
+                            for (int i = 0; i < payloadBitLs.length; i++) {
+                                byte[] one;
+                                if (isBinaryShare[i]) {
+                                    one = BytesUtils.xor(payloadValues[i], maskBytes[i][batchIndex]);
+                                } else {
+                                    BigInteger res = payloadRes[i].getZlPayload().getZl().sub(
+                                        BigIntegerUtils.byteArrayToNonNegBigInteger(payloadValues[i]),
+                                        payloadRes[i].getZlPayload().getZlVector().getElement(batchIndex));
+                                    one = BigIntegerUtils.nonNegBigIntegerToByteArray(res, payloadByteLs[i]);
+                                }
+                                System.arraycopy(one, 0, tmpRes, andIndex[i], payloadByteLs[i]);
+                            }
+                        } else {
+                            byte[] tmpRand = new byte[payloadTotalByteL];
+                            secureRandom.nextBytes(tmpRand);
+                            System.arraycopy(tmpRand, 0, tmpRes, byteL, payloadTotalByteL);
+                            for (int i = 0; i < payloadBitLs.length; i++) {
+                                tmpRes[andIndex[i]] &= andNum[i];
+                            }
+                        }
+                        return tmpRes;
+                    })
+                    .toArray(byte[][]::new);
+            })
+            .toArray(byte[][][]::new);
+        return payloadRes;
+    }
 }

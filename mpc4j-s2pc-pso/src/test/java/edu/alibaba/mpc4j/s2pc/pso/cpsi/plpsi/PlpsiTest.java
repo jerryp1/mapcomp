@@ -35,7 +35,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
     /**
      * default payload bit length
      */
-    private static final int[] PAYLOAD_BIT_LENS = new int[]{55, 23, 47};
+    private static final int[] PAYLOAD_BIT_LENS = new int[]{55, 41, 47};
     private static final boolean[] IS_BINARY = new boolean[]{true, false, true};
     /**
      * default size

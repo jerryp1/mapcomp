@@ -34,10 +34,22 @@ public interface PlpsiClient<T> extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param payloadBitL the bit length of server payload
+     * @param payloadBitL   the bit length of server payload
      * @param isBinaryShare whether binary sharing or not
-     * @return the shared output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Payload intersectPayload(int payloadBitL, boolean isBinaryShare) throws MpcAbortException;
+    void intersectPayload(int payloadBitL, boolean isBinaryShare) throws MpcAbortException;
+
+    /**
+     * Executes the circuit psi with payload.
+     *
+     * @param clientElementList client element list.
+     * @param serverElementSize server element size.
+     * @param payloadBitLs   the bit length of server payload
+     * @param isBinaryShare whether binary sharing or not
+     * @return the client output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    PlpsiClientOutput<T> psiWithPayload(List<T> clientElementList, int serverElementSize,
+                                        int[] payloadBitLs, boolean[] isBinaryShare) throws MpcAbortException;
 }
