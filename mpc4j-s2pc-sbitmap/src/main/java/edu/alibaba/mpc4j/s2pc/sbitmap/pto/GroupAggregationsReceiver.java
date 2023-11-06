@@ -6,6 +6,14 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
@@ -13,9 +21,11 @@ import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
  * Sbitmap group aggregations protocol.
@@ -28,6 +38,10 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
     public GroupAggregationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
         super(ownRpc, otherParty);
         pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
+        z2cParty= Z2cFactory.createReceiver(ownRpc, otherParty,sbitmapConfig.getZ2cConfig());
+        zlcParty = ZlcFactory.createReceiver(ownRpc,otherParty,sbitmapConfig.getZlcConfig());
+        zlMuxParty = ZlMuxFactory.createReceiver(ownRpc,otherParty,sbitmapConfig.getZlMuxConfig());
+        zlMaxParty = ZlMaxFactory.createReceiver(ownRpc, otherParty, sbitmapConfig.getZlMaxConfig());
     }
 
     /**
@@ -83,45 +97,76 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
         // generate bitmap
         stopWatch.start();
         bitmapData = SbitmapUtils.createBitmapForNominals(dataFrame);
-//        slaveLdpDataFrame = SbitmapUtils.ldpDataFrame(dataFrame, config.getLdpConfigMap());
         stopWatch.stop();
         long ldpTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 5, ldpTime);
 
-        // TODO 加入聚合算子操作（count/sum）@风笛
-
-
+        // secret share aggregation field
         stopWatch.start();
-//        List<byte[]> slaveDataPayload = generateSlaveDataPayload();
-        DataPacketHeader slaveDataHeader = new DataPacketHeader(
+        if (hasField(dataFrame.schema(), aggregationField)) {
+            aggreSs = zlcParty.shareOwn(ZlVector.createEmpty(zl));
+        } else {
+            aggreSs = zlcParty.shareOther(rows);
+        }
+
+        // secret share group indicator,  and exchange plain grouping keys
+        stopWatch.start();
+        // secret share
+        BitVector[] ownInput = null;
+        SquareZ2Vector[] senderAggSs = z2cParty.shareOther(IntStream.range(0, ownInput.length).map(i -> rows).toArray());
+        SquareZ2Vector[] receiverAggSs = z2cParty.shareOwn(ownInput);
+        senderGroupSize = senderAggSs.length;
+        receiverGroupSize = receiverAggSs.length;
+
+        // exchange grouping keys
+        DataPacketHeader senderGroupingKeyHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()
         );
-//        rpc.send(DataPacket.fromByteArrayList(slaveDataHeader, slaveDataPayload));
-        stopWatch.stop();
-        long slaveDataTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 5, slaveDataTime);
+        List<byte[]> senderGroupingKeyPayload = rpc.receive(senderGroupingKeyHeader).getPayload();
 
-        stopWatch.start();
-        DataPacketHeader slaveOrderSplitsHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
-            otherParties()[0].getPartyId(), ownParty().getPartyId()
-        );
-//        List<byte[]> slaveOrderSplitsPayload = rpc.receive(slaveOrderSplitsHeader).getPayload();
-        stopWatch.stop();
-        long orderSplitsTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 4, 5, orderSplitsTime);
-
-        stopWatch.start();
-//        List<byte[]> slaveSplitsPayload = generateSplitsNodes(slaveOrderSplitsPayload);
-        DataPacketHeader slaveSplitsHeader = new DataPacketHeader(
+        List<byte[]> receiverGroupingKeyBytes = null;
+        DataPacketHeader receiverGroupingKeyHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.AND.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()
         );
-//        rpc.send(DataPacket.fromByteArrayList(slaveSplitsHeader, slaveSplitsPayload));
+        rpc.send(DataPacket.fromByteArrayList(receiverGroupingKeyHeader, receiverGroupingKeyBytes));
+
+        // assemble plain grouping keys
+        List<byte[]> assembledGroupKeys = new ArrayList<>(senderGroupSize * receiverGroupSize);
+        for (int i = 0; i < senderGroupSize;i++) {
+            for (int j = 0; j < receiverGroupSize;j++) {
+                assembledGroupKeys.add(ByteBuffer.allocate((senderGroupNum + receiverGroupNum) * groupKeyByteLength)
+                    .put(receiverGroupingKeyBytes.get(i)).put(senderGroupingKeyPayload.get(j)).array());
+            }
+        }
+
+        // and 没有merge
+        SquareZ2Vector[] wholeGroupSs = new SquareZ2Vector[senderGroupSize * receiverGroupSize];
+        for (int i = 0; i < senderGroupSize; i++) {
+            for (int j = 0; j < receiverGroupSize; j++) {
+                wholeGroupSs[i*senderGroupSize + j] = z2cParty.and(senderAggSs[i], receiverAggSs[j]);
+            }
+        }
+
+        // mux 没有merge
+        SquareZlVector[] muxResult = new SquareZlVector[senderGroupSize * receiverGroupSize];
+        for (int i = 0; i < senderGroupSize; i++) {
+            for (int j = 0; j < receiverGroupSize; j++) {
+                muxResult[i*senderGroupSize+j] = zlMuxParty.mux(wholeGroupSs[i*senderGroupSize+j], aggreSs);
+            }
+        }
+
+        // aggregation ,目前是sum，max
+        stopWatch.start();
+        SquareZlVector[] maxResult = new SquareZlVector[senderGroupSize * receiverGroupSize];
+        for (int i = 0; i < senderGroupSize; i ++) {
+            for (int j = 0 ; j < receiverGroupSize; j++) {
+                maxResult[i*senderGroupSize+j] = zlMaxParty.max(muxResult[i*senderGroupSize+j]);
+            }
+        }
+
         stopWatch.stop();
         long splitNodeTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

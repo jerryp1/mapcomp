@@ -42,6 +42,10 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
      * party id, 0 for sender, 1 for receiver.
      */
     private final int partyId;
+    /**
+     * privacy budget
+     */
+    private double epsilon;
 
     private SecureBitmapConfig(SecureBitmapConfig.Builder builder) {
         this.z2cConfig = builder.z2cConfig;
@@ -50,6 +54,7 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
         this.securityMode = builder.securityMode;
         this.totalBitNum = builder.totalBitNum;
         this.partyId = builder.partyId;
+        this.epsilon = builder.epsilon;
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -74,6 +79,10 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
 
     public int getPartyId() {
         return partyId;
+    }
+
+    public double getEpsilon() {
+        return epsilon;
     }
 
     @Override
@@ -116,14 +125,19 @@ public class SecureBitmapConfig implements MultiPartyPtoConfig {
          * party id, 0 for sender, 1 for receiver.
          */
         private final int partyId;
+        /**
+         * privacy budget
+         */
+        private double epsilon;
 
-        public Builder(int containerSize, int containerNum, int totalBitNum, int partyId) {
+        public Builder(int containerSize, int containerNum, int totalBitNum, int partyId, double epsilon) {
             this.containerSize = containerSize;
             this.containerNum = containerNum;
             this.totalBitNum = totalBitNum;
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             this.partyId = partyId;
             this.securityMode = SbitmapSecurityMode.FULL_SECURE;
+            this.epsilon = epsilon;
         }
 
         public SecureBitmapConfig.Builder setZ2cConfig(Z2cConfig z2cConfig) {

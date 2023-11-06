@@ -12,24 +12,24 @@ import java.math.BigInteger;
  */
 public class PrefixAggNode implements PrefixNode {
     /**
-     * Secret shares of grouping fields.
-     */
-    private final byte[] groupShare;
-    /**
      * Secret shares of aggregation fields.
      */
     private final BigInteger aggShare;
+    /**
+     * Secret shares of group indicator
+     */
+    private final boolean groupIndicator;
 
-    public PrefixAggNode(byte[] groupShare, BigInteger aggShare) {
-        this.groupShare = groupShare;
+    public PrefixAggNode(BigInteger aggShare, boolean groupIndicator) {
         this.aggShare = aggShare;
-    }
-
-    public byte[] getGroupShare() {
-        return groupShare;
+        this.groupIndicator = groupIndicator;
     }
 
     public BigInteger getAggShare() {
         return aggShare;
+    }
+
+    public boolean isGroupIndicator() {
+        return groupIndicator;
     }
 }

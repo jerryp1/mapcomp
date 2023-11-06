@@ -91,16 +91,16 @@ public class SbitmapUtils {
                     }
                 }
                 // wrap to PlainBitmap
-                PlainBitmap[] bitmaps = Arrays.stream(bitmapBitVectors)
-                    .map(RoaringBitmapUtils::toRoaringBitmap)
-                    .map(b -> RoaringPlainBitmap.fromBitmap(nRows, b)).toArray(PlainBitmap[]::new);
+//                PlainBitmap[] bitmaps = Arrays.stream(bitmapBitVectors)
+//                    .map(RoaringBitmapUtils::toRoaringBitmap)
+//                    .map(b -> RoaringPlainBitmap.fromBitmap(nRows, b)).toArray(PlainBitmap[]::new);
                 // assemble the bitmaps to dataframe table
                 for (int valueIndex = 0; valueIndex < distinctValues.length; valueIndex++) {
                     Tuple bitmapTuple = Tuple.of(
                         new Object[]{structField.name,
                             distinctValues[valueIndex],
                             // encode
-                            Converter.serializeToBase64(bitmaps[valueIndex])
+                            Converter.encodeBinaryString(bitmapBitVectors[valueIndex].getBytes())
                         },
                         bitmapSchema);
                     bitmapTuples.add(bitmapTuple);

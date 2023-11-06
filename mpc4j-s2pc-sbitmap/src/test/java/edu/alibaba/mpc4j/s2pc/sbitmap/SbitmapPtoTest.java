@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.sbitmap;
 import edu.alibaba.mpc4j.common.data.DatasetManager;
 import edu.alibaba.mpc4j.common.data.classification.Weather;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
@@ -19,6 +22,8 @@ import smile.data.DataFrame;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
+
 /**
  * Sbitmap protocol test.
  *
@@ -28,6 +33,8 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapPtoTest.class);
+
+    private static Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
 
     static {
         DatasetManager.setPathPrefix("../data/");
@@ -77,8 +84,8 @@ public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {
         super(name);
         this.name = name;
         // set parties
-        sender = SbitmapMainUtils.createParty(taskType, secondRpc, firstRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema()).build());
-        receiver = SbitmapMainUtils.createParty(taskType, firstRpc, secondRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema()).build());
+        sender = SbitmapMainUtils.createParty(taskType, secondRpc, firstRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
+        receiver = SbitmapMainUtils.createParty(taskType, firstRpc, secondRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
         // set data
         setData(dataframe, senderColumns, receiverColumns);
    }
@@ -130,9 +137,9 @@ public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {
 
         // 执行协议
         SbitmapPartyThread senderThread = new SbitmapPartyThread(sender, senderDataFrame,
-            new SbitmapConfig.Builder(senderDataFrame.schema()).build(), receiverDataFrame.size());
+            new SbitmapConfig.Builder(senderDataFrame.schema(), DEFAULT_ZL).build(), receiverDataFrame.size());
         SbitmapPartyThread receiverThread = new SbitmapPartyThread(receiver, receiverDataFrame,
-            new SbitmapConfig.Builder(receiverDataFrame.schema()).build(), senderDataFrame.size());
+            new SbitmapConfig.Builder(receiverDataFrame.schema(), DEFAULT_ZL).build(), senderDataFrame.size());
 
         // 等待线程停止
         try {
