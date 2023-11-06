@@ -101,8 +101,9 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         // 1. 先进行第一次 plpsi
         stopWatch.start();
-        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(serverElementList, clientElementSize);
-        plpsiClient.intersectPayload(bitLen, true);
+        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psiWithPayload(serverElementList, clientElementSize, new int[]{bitLen}, new boolean[]{true});
+//        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(serverElementList, clientElementSize);
+//        plpsiClient.intersectPayload(bitLen, true);
         logStepInfo(PtoState.PTO_STEP, 1, stepSteps, resetAndGetTime());
 
         // 2. 再进行第二次plpsi
@@ -151,7 +152,10 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         // 7. compute permutation
         stopWatch.start();
-        SquareZlVector sigma1 = smallFieldPermGenSender.sort(secondBeta > serverElementSize ? new SquareZ2Vector[]{shuffleRes[0][0], shuffleRes[1][0]} : new SquareZ2Vector[]{shuffleRes[0][0]});
+        SquareZlVector sigma1 = smallFieldPermGenSender.sort(
+            secondBeta > serverElementSize
+                ? new SquareZ2Vector[]{shuffleRes[0][0], shuffleRes[1][0]}
+                : new SquareZ2Vector[]{shuffleRes[0][0]});
         logStepInfo(PtoState.PTO_STEP, 7, stepSteps, resetAndGetTime());
 
         // 8. 进行第一次invp

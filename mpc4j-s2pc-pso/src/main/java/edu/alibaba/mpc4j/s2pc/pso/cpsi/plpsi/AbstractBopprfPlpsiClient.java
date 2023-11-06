@@ -242,18 +242,21 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
         byte[][] targetArray;
         if (withPayload) {
             int payloadTotalByteL = Arrays.stream(payloadByteLs).sum();
-            byte[][] opprfRes = bopprfReceiver.opprf(payloadTotalByteL, inputArray, pointNum);
+            byte[][] opprfRes = bopprfReceiver.opprf((payloadTotalByteL<<3) + opprfL, inputArray, pointNum);
             byte[][][] maskPayload = new byte[payloadBitLs.length][beta][];
+            byte[] andNum = new byte[payloadBitLs.length];
+            IntStream.range(0, payloadBitLs.length).forEach(i -> andNum[i] = (byte) ((1<<(payloadBitLs[i] & 7)) - 1));
             int[] copyIndex = new int[payloadBitLs.length];
-            copyIndex[0] = opprfL;
+            copyIndex[0] = opprfByteL;
             for (int i = 1; i < payloadByteLs.length; i++) {
                 copyIndex[i] = copyIndex[i - 1] + payloadByteLs[i - 1];
             }
             targetArray = IntStream.range(0, beta).mapToObj(i -> {
                 for (int j = 0; j < payloadByteLs.length; j++) {
                     maskPayload[j][i] = Arrays.copyOfRange(opprfRes[i], copyIndex[j], copyIndex[j] + payloadByteLs[j]);
+                    maskPayload[j][i][0] &= andNum[j];
                 }
-                return Arrays.copyOf(opprfRes[i], opprfL);
+                return Arrays.copyOf(opprfRes[i], opprfByteL);
             }).toArray(byte[][]::new);
             payloadRes = IntStream.range(0, payloadBitLs.length).mapToObj(i ->
                 new Payload(envType, parallel, maskPayload[i], payloadBitLs[i], isBinaryShare[i])).toArray(Payload[]::new);

@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.util.Arrays;
 
@@ -37,12 +38,12 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             return new SquareZ2Vector[0];
         }
         // merge
-        BitVector mergeX = BitVectorFactory.merge(xiArray);
+        BitVector mergeX = BitVectorFactory.mergeWithPadding(xiArray);
         // share
         SquareZ2Vector mergeShareXi = shareOwn(mergeX);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).toArray();
-        return Arrays.stream(split(mergeShareXi, bitNums))
+        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
             .map(vector -> (SquareZ2Vector) vector)
             .toArray(SquareZ2Vector[]::new);
     }
@@ -70,10 +71,10 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             return new SquareZ2Vector[0];
         }
         // share
-        int totalBitNum = Arrays.stream(bitNums).sum();
-        SquareZ2Vector mergeShareXi = shareOther(totalBitNum);
+        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
+        SquareZ2Vector mergeShareXi = shareOther(totalByteNum << 3);
         // split
-        return Arrays.stream(split(mergeShareXi, bitNums))
+        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
             .map(vector -> (SquareZ2Vector) vector)
             .toArray(SquareZ2Vector[]::new);
     }

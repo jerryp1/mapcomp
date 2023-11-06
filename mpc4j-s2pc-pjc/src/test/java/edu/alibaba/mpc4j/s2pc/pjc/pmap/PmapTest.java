@@ -25,7 +25,7 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * bitLen
      */
-    private static final int[] bitLens = new int[]{40, 43};
+    private static final int[] bitLens = new int[]{20, 15};
     /**
      * default small size
      */
@@ -47,16 +47,6 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
-        configurations.add(new Object[]{
-            PmapType.HPL24.name() + "_silent",
-            new Hpl24PmapConfig.Builder(true).build(),
-        });
-
-        configurations.add(new Object[]{
-            PmapType.HPL24.name(),
-            new Hpl24PmapConfig.Builder(false).build(),
-        });
-
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
                 PmapType.HPL24.name() + "_silent_bitLen_" + bitLen,

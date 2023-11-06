@@ -5,9 +5,6 @@ import edu.alibaba.mpc4j.common.circuit.z2.psorter.PSorterUtils;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -160,5 +157,21 @@ public class PlainZ2Vector implements MpcZ2Vector {
     public MpcZ2Vector[] getBitsWithSkip(int totalBitNum, int skipLen) {
         byte[][] res = PSorterUtils.getBitsWithSkip(this, totalBitNum, skipLen);
         return Arrays.stream(res).map(x -> PlainZ2Vector.create(totalBitNum, x)).toArray(PlainZ2Vector[]::new);
+    }
+
+    @Override
+    public MpcZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
+        MathPreconditions.checkNonNegative("startPos", startPos);
+        MathPreconditions.checkPositive("num", num);
+        MathPreconditions.checkPositive("skipLen", skipLen);
+//        MathPreconditions.checkGreater("bitNum() > startPos + (num - 1) * skipLen", bitNum(), startPos + (num - 1) * skipLen);
+        PlainZ2Vector res = PlainZ2Vector.createZeros(num);
+        for(int i = 0, pos = startPos; i < num; i++, pos += skipLen){
+            pos = (i == num - 1 && pos >= bitNum()) ? bitNum() - 1 : pos;
+            if(bitVector.get(pos)){
+                res.bitVector.set(i, true);
+            }
+        }
+        return res;
     }
 }

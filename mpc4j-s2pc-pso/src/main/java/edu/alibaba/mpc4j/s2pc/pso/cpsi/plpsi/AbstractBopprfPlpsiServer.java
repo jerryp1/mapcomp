@@ -219,7 +219,7 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
         setPtoInput(serverElementList, clientElementSize);
         if (serverPayloadLists == null || serverPayloadLists.isEmpty()) {
             return psiCommonPart(false);
-        }else{
+        } else {
             setPayload(serverPayloadLists, payloadBitLs, isBinaryShare);
             return psiCommonPart(true);
         }
@@ -254,12 +254,13 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
         // The parties invoke a batched OPPRF.
         // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
         Payload[] payloadRes = null;
-        if(withPayload){
+        if (withPayload) {
             payloadRes = generateBopprfInputsWithPayload(opprfL);
-        }else{
+            bopprfSender.opprf(opprfL + (Arrays.stream(payloadByteLs).sum() << 3), inputArrays, targetArrays);
+        } else {
             generateBopprfInputs(opprfL);
+            bopprfSender.opprf(opprfL, inputArrays, targetArrays);
         }
-        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
         targetArrays = null;
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime());
 
@@ -277,8 +278,8 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
         SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
         targetArray = null;
         plpsiShareOutput = new PlpsiShareOutput(z0);
-        if(withPayload){
-            for(Payload payload : payloadRes){
+        if (withPayload) {
+            for (Payload payload : payloadRes) {
                 plpsiShareOutput.addPayload(payload);
             }
         }
