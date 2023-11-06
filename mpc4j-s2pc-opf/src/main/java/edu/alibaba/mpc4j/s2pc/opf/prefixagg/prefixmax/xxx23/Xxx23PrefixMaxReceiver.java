@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxAggregatorPrefix;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.AbstractPrefixMaxAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 
 import java.util.concurrent.TimeUnit;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/11/1
  */
-public class Xxx23PrefixMaxReceiver extends PrefixMaxAggregatorPrefix {
+public class Xxx23PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
 
     public Xxx23PrefixMaxReceiver(Rpc receiverRpc, Party senderParty, Xxx23PrefixMaxConfig config) {
         super(Xxx23PrefixMaxPtoDesc.getInstance(), receiverRpc, senderParty, config);
