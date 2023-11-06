@@ -38,7 +38,6 @@ public enum SchemeType {
     }
 
     public static SchemeType getByValue(int value) {
-
         switch (value) {
             case 0:
                 return NONE;
@@ -51,12 +50,5 @@ public enum SchemeType {
             default:
                 throw new IllegalArgumentException("no match scheme for given value");
         }
-//        for (SchemeType scheme: SchemeType.values()) {
-//            if (scheme.getValue() == value) {
-//                return scheme;
-//            }
-//        }
-//        throw new IllegalArgumentException("no match scheme for given value");
     }
-
 }

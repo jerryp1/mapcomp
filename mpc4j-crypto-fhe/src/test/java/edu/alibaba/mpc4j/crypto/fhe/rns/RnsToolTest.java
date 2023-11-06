@@ -5,51 +5,44 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Numth;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
+ * Rns Tool Test.
+ *
  * @author Qixian Zhou
  * @date 2023/8/22
  */
 public class RnsToolTest {
 
-    private static final int MAX_LOOP_NUM = 1000;
-
+    private static final int MAX_LOOP_NUM = 10;
 
     @Test
     public void initialize() {
-
         int polyModulusDegree = 32;
         int coeffBaseCount = 4;
-        int primeBitCout = 20;
+        int primeBitCount = 20;
         Modulus plainT = new Modulus(65537);
         // q_i mod 2N = 1
-        RnsBase coeffBase = new RnsBase(Numth.getPrimes(polyModulusDegree * 2, primeBitCout, coeffBaseCount));
-        // no assert throw
+        RnsBase coeffBase = new RnsBase(Numth.getPrimes(polyModulusDegree * 2, primeBitCount, coeffBaseCount));
+        // create successfully
         RnsTool rnsTool = new RnsTool(polyModulusDegree, coeffBase, plainT);
-
-        // Succeeds with 0 plain_modulus (case of CKKS) omitted this test case
-//        rnsTool = new RnsTool(polyModulusDegree, coeffBase, 0);
-
+        // throw exception
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsTool(1, coeffBase, plainT));
     }
 
-
     @Test
-    public void exactSacleAndRound() {
+    public void exactScaleAndRound() {
         // This function computes [round(t/q * |input|_q)]_t exactly using the gamma-correction technique.
-
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
             int polyModulusDegree = 2;
             Modulus plainT = new Modulus(3);
             RnsTool rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{5, 7}), plainT);
-
             long[] in = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-
             RnsIter inIter = new RnsIter(in, polyModulusDegree);
             long[] outIter = new long[polyModulusDegree];
-
             // 0 ---> sacle and round must be 0
             rnsTool.decryptScaleAndRound(inIter, outIter);
             for (long o : outIter) {
@@ -57,7 +50,6 @@ public class RnsToolTest {
             }
             // baseQSize = 2, {5, 7}, coeff count = 2
             // mod q is zero
-
             // inIter.coeffIter will be changed
             in[0] = 35;
             in[1] = 70;
