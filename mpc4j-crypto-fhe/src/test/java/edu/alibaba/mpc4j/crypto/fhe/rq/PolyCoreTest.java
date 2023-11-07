@@ -4,15 +4,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * polynomial cort test.
+ * polynomial core test.
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/29
  */
 public class PolyCoreTest {
 
     @Test
-    public void setZeroPoly() {
+    public void testSetZeroPoly() {
         long[] ptr = PolyCore.allocateZeroPoly(1, 1);
         ptr[0] = 0x1234567812345678L;
         PolyCore.setZeroPoly(1, 1, ptr);
@@ -30,8 +30,7 @@ public class PolyCoreTest {
     }
 
     @Test
-    public void allocateZeroPoly() {
-
+    public void testAllocateZeroPoly() {
         long[] ptr = PolyCore.allocateZeroPoly(1, 1);
         Assert.assertEquals(0, ptr[0]);
 
@@ -42,8 +41,7 @@ public class PolyCoreTest {
     }
 
     @Test
-    public void allocatePolyArray() {
-
+    public void testAllocateZeroPolyArray() {
         long[] ptr = PolyCore.allocateZeroPolyArray(1, 1, 1);
         Assert.assertEquals(0, ptr[0]);
 
@@ -53,7 +51,7 @@ public class PolyCoreTest {
     }
 
     @Test
-    public void setZeroPolyArray() {
+    public void testSetZeroPolyArray() {
         long[] ptr = PolyCore.allocateZeroPolyArray(1, 1, 1);
         ptr[0] = 0x1234567812345678L;
         PolyCore.setZeroPolyArray(1, 1, 1, ptr);
@@ -71,7 +69,7 @@ public class PolyCoreTest {
     }
 
     @Test
-    public void setPoly() {
+    public void testSetPoly() {
         long[] ptr1 = PolyCore.allocateZeroPoly(2, 3);
         long[] ptr2 = PolyCore.allocateZeroPoly(2, 3);
         for (int i = 0; i < 6; i++) {
@@ -90,7 +88,7 @@ public class PolyCoreTest {
     }
 
     @Test
-    public void setPolyArray() {
+    public void testSetPolyArray() {
         long[] ptr1 = PolyCore.allocateZeroPolyArray(1, 2, 3);
         long[] ptr2 = PolyCore.allocateZeroPolyArray(1, 2, 3);
         for (int i = 0; i < 6; i++) {

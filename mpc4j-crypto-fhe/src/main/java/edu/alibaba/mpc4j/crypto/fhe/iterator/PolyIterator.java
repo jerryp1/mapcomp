@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.iterator;
 
+import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -48,11 +49,11 @@ public class PolyIterator {
      * @param k     number of RNS bases.
      * @return an 1D-array Poly-RNS representations with all coefficients initialized as 0.
      */
-    public static long[] createPolyFromZero(int m, int n, int k) {
+    public static long[] allocateZeroPoly(int m, int n, int k) {
         assert m > 0;
         assert n > 0;
         assert k > 0;
-        return new long[m * n * k];
+        return PolyCore.allocateZeroPolyArray(m * k, n, 1);
     }
 
     /**
