@@ -1,5 +1,7 @@
 package edu.alibaba.mpc4j.common.tool.bitvector;
 
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+
 import java.math.BigInteger;
 
 /**
@@ -169,4 +171,42 @@ public interface BitVector {
     void extendLength(int targetBitLength);
 
     BitVector[] splitWithPadding(int[] bitNums);
+
+    /**
+     * 基于一定间隔，得到部分bit的数据，如果最后一个超出了范围，则取最后一个bit
+     * @param startPos 从哪一个位置开始取
+     * @param num 取多少个bit
+     * @param skipLen 取位的间隔是多少个bit
+     */
+    default BitVector getPointsWithFixedSpace(int startPos, int num, int skipLen){
+        MathPreconditions.checkNonNegative("startPos", startPos);
+        MathPreconditions.checkPositive("num", num);
+        MathPreconditions.checkPositive("skipLen", skipLen);
+        MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), startPos + (num - 2) * skipLen);
+        BitVector res = BitVectorFactory.createZeros(num);
+        for(int i = 0, pos = startPos; i < num; i++, pos += skipLen){
+            pos = (i == num - 1 && pos >= bitNum()) ? bitNum() - 1 : pos;
+            if(get(pos)){
+                res.set(i, true);
+            }
+        }
+        return res;
+    }
+    /**
+     * 基于一定间隔，设置部分bit的数据，如果最后一个超出了范围，则设置最后一个bit
+     * @param source 从哪一个wire取数据
+     * @param startPos 从哪一个位置开始置位
+     * @param num 设置多少个bit
+     * @param skipLen 置位的间隔是多少个bit
+     */
+    default void setPointsWithFixedSpace(BitVector source, int startPos, int num, int skipLen){
+        MathPreconditions.checkNonNegative("startPos", startPos);
+        MathPreconditions.checkPositive("num", num);
+        MathPreconditions.checkPositive("skipLen", skipLen);
+        MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), startPos + (num - 2) * skipLen);
+        for(int i = 0, targetIndex = startPos; i < num; i++, targetIndex += skipLen){
+            targetIndex = (i == num - 1 && targetIndex >= bitNum()) ? bitNum() - 1 : targetIndex;
+            set(targetIndex, source.get(i));
+        }
+    }
 }

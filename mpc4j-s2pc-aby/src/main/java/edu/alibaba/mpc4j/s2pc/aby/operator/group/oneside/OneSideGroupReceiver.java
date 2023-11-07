@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.AggTypes;
 
@@ -34,7 +35,7 @@ public interface OneSideGroupReceiver extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, boolean[] groupFlag) throws MpcAbortException;
+    SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, BitVector groupFlag) throws MpcAbortException;
 
     /**
      * Executes the protocol.

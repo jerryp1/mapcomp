@@ -12,7 +12,9 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.AbstractPlainBitMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxPtoDesc.PtoStep;
@@ -43,14 +45,6 @@ public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
      * COT receiver
      */
     private final CotReceiver cotReceiver;
-    /**
-     * -s0 vector
-     */
-    private ZlVector negS0ZlVector;
-    /**
-     * t0 vector
-     */
-    private ZlVector t0ZlVector;
 
     public Xxx23PlainBitMuxSender(Rpc senderRpc, Party receiverParty, Xxx23PlainBitMuxConfig config) {
         super(Xxx23PlainBitMuxPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -88,18 +82,32 @@ public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
         // cot
         stopWatch.start();
         CotSenderOutput cotSenderOutput = cotSender.send(num);
-        stopWatch.stop();
-        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime());
 
         // send payload
         stopWatch.start();
         SquareZlVector r = t0t1(cotSenderOutput);
-        stopWatch.stop();
-        long delta0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, delta0Time);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime());
+        logPhaseInfo(PtoState.PTO_END);
+
+        return r;
+    }
+
+    @Override
+    public SquareZ2Vector[] mux(BitVector xi, SquareZ2Vector[] yi) throws MpcAbortException {
+        assert xi == null;
+        setPtoInput(xi, yi);
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        // cot
+        stopWatch.start();
+        CotSenderOutput cotSenderOutput = cotSender.send(num);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime());
+
+        // send payload
+        stopWatch.start();
+        SquareZ2Vector[] r = t0t1ForZ2(cotSenderOutput);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime());
         logPhaseInfo(PtoState.PTO_END);
 
         return r;
@@ -113,9 +121,27 @@ public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
         byte[][] r1s = IntStream.range(0, num)
-            .mapToObj(i -> zl.add(rs[i], inputPayloads.getZlVector().getElement(i)))
+            .mapToObj(i -> zl.add(rs[i], inputZlValues.getZlVector().getElement(i)))
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
+        t0t1CommonPart(cotSenderOutput, r0s, r1s);
+        // -r as output
+        return SquareZlVector.create(zl, Arrays.stream(rs).map(r -> zl.neg(r)).toArray(BigInteger[]::new), false);
+    }
+
+    private SquareZ2Vector[] t0t1ForZ2(CotSenderOutput cotSenderOutput){
+        byte[][] r0s = IntStream.range(0, num).mapToObj(i ->
+            BytesUtils.randomByteArray(byteL, bitL, secureRandom)).toArray(byte[][]::new);
+        byte[][] r1s = IntStream.range(0, num)
+            .mapToObj(i -> BytesUtils.xor(r0s[i], inputZ2Values[i].getBitVector().getBytes()))
+            .toArray(byte[][]::new);
+        t0t1CommonPart(cotSenderOutput, r0s, r1s);
+        BitVector[] bitVectors = ZlDatabase.create(bitL, r0s).bitPartition(envType, parallel);
+        return Arrays.stream(bitVectors).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+    }
+
+    private void t0t1CommonPart(CotSenderOutput cotSenderOutput, byte[][] r0s, byte[][] r1s) {
+        Prg prg = PrgFactory.createInstance(envType, byteL);
         // P1 creates t0
         IntStream t0IntStream = IntStream.range(0, num);
         t0IntStream = parallel ? t0IntStream.parallel() : t0IntStream;
@@ -146,7 +172,7 @@ public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(t0t1Header, t0t1Payload));
-        // -r as output
-        return SquareZlVector.create(zl, Arrays.stream(rs).map(r -> zl.neg(r)).toArray(BigInteger[]::new), false);
     }
+
+
 }

@@ -102,13 +102,6 @@ public interface MpcZ2Vector extends MpcVector {
      */
     default void setPointsWithFixedSpace(MpcZ2Vector source, int startPos, int num, int skipLen){
         assert isPlain() == source.isPlain();
-        MathPreconditions.checkNonNegative("startPos", startPos);
-        MathPreconditions.checkPositive("num", num);
-        MathPreconditions.checkPositive("skipLen", skipLen);
-//        MathPreconditions.checkGreater("bitNum() > startPos + (num - 1) * skipLen", bitNum(), startPos + (num - 1) * skipLen);
-        for(int i = 0, targetIndex = startPos; i < num; i++, targetIndex += skipLen){
-            targetIndex = (i == num - 1 && targetIndex >= bitNum()) ? bitNum() - 1 : targetIndex;
-            getBitVector().set(targetIndex, source.getBitVector().get(i));
-        }
+        getBitVector().setPointsWithFixedSpace(source.getBitVector(), startPos, num, skipLen);
     }
 }

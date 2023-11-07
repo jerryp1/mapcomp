@@ -7,9 +7,14 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
 
 /**
  * abstract plain bit mux party.
@@ -36,13 +41,21 @@ public abstract class AbstractPlainBitMuxParty extends AbstractTwoPartyPto imple
      */
     protected int byteL;
     /**
+     * l in bit
+     */
+    protected int bitL;
+    /**
      * input bits
      */
     protected BitVector inputBits;
     /**
      * input
      */
-    protected SquareZlVector inputPayloads;
+    protected SquareZlVector inputZlValues;
+    /**
+     * input
+     */
+    protected SquareZ2Vector[] inputZ2Values;
 
     public AbstractPlainBitMuxParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, PlainBitMuxConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
@@ -62,6 +75,21 @@ public abstract class AbstractPlainBitMuxParty extends AbstractTwoPartyPto imple
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         byteL = zl.getByteL();
         inputBits = xi;
-        inputPayloads = yi;
+        inputZlValues = yi;
+    }
+
+    protected void setPtoInput(BitVector xi, SquareZ2Vector[] yi) {
+        if (xi != null) {
+            MathPreconditions.checkEqual("xi.num", "yi.num", xi.bitNum(), yi[0].getNum());
+        }
+        num = yi[0].getNum();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        byteL = CommonUtils.getByteLength(yi.length);
+        bitL = yi.length;
+        inputBits = xi;
+        ZlDatabase zlDatabase = ZlDatabase.create(envType, parallel,
+            Arrays.stream(yi).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        inputZ2Values = Arrays.stream(zlDatabase.getBytesData()).map(x ->
+            SquareZ2Vector.create(yi.length, x, false)).toArray(SquareZ2Vector[]::new);
     }
 }
