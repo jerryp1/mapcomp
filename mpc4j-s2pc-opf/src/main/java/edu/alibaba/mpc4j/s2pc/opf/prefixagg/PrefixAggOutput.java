@@ -18,7 +18,7 @@ public class PrefixAggOutput {
     /**
      * secret shares of aggregation fields.
      */
-    private final SquareZlVector aggs;
+    private SquareZlVector aggs;
 
     public PrefixAggOutput(Vector<byte[]> groupings, SquareZlVector aggs) {
         this.groupings = groupings;
@@ -31,5 +31,9 @@ public class PrefixAggOutput {
 
     public SquareZlVector getAggs() {
         return aggs;
+    }
+
+    public void setAggs(SquareZlVector aggs) {
+        this.aggs = aggs;
     }
 }

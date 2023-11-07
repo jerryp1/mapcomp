@@ -2,6 +2,8 @@ package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxSender;
@@ -59,6 +61,25 @@ public class PrefixMaxFactory {
                 return new Xxx23PrefixMaxReceiver(receiverRpc, senderParty, (Xxx23PrefixMaxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixMaxTypes.class.getSimpleName() + ": " + type.name());
+        }
+    }
+
+    /**
+     * Creates a default prefix-max config.
+     *
+     * @param securityModel the security model.
+     * @param silent        if using a silent config.
+     * @return a default config.
+     */
+    public static PrefixMaxConfig createDefaultPrefixMaxConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new Xxx23PrefixMaxConfig.Builder(zl, silent).build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
 }

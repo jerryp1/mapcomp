@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
@@ -82,6 +83,11 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
     @Override
     public boolean needShuffle() {
         return needShuffle;
+    }
+
+    @Override
+    public PrefixAggTypes getPrefixType() {
+        return PrefixAggTypes.SUM;
     }
 
     public PrefixTreeTypes getPrefixTreeType() {

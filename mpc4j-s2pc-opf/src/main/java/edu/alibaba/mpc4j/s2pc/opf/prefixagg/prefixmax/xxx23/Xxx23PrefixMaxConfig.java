@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
@@ -89,6 +90,11 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
     @Override
     public boolean needShuffle() {
         return needShuffle;
+    }
+
+    @Override
+    public PrefixAggTypes getPrefixType() {
+        return PrefixAggTypes.MAX;
     }
 
     public PrefixTreeTypes getPrefixTreeType() {
