@@ -17,9 +17,10 @@ import java.util.Arrays;
  */
 public class ParmsIdType implements Cloneable, Serializable {
 
+    /**
+     * parms id
+     */
     public long[] value;
-
-
     /**
      * return a zero parms id
      */
@@ -27,10 +28,8 @@ public class ParmsIdType implements Cloneable, Serializable {
         value = new long[HashFunction.HASH_BLOCK_UINT64_COUNT];
     }
 
-
     public ParmsIdType(long[] value) {
         assert value.length == HashFunction.HASH_BLOCK_UINT64_COUNT;
-
         this.value = new long[HashFunction.HASH_BLOCK_UINT64_COUNT];
         System.arraycopy(value, 0, this.value, 0, HashFunction.HASH_BLOCK_UINT64_COUNT);
     }
@@ -45,28 +44,33 @@ public class ParmsIdType implements Cloneable, Serializable {
      * @param other another ParamsIdType object
      */
     public ParmsIdType(ParmsIdType other) {
-
         this.value = new long[other.value.length];
-
         System.arraycopy(other.value, 0, value, 0, value.length);
     }
 
+    /**
+     * set parms id to given value.
+     *
+     * @param value parms id.
+     */
     public void set(long[] value) {
-
         assert value.length == HashFunction.HASH_BLOCK_UINT64_COUNT;
         this.value = value;
     }
 
     /**
-     * set the parmsId to zero
+     * set the parms id to zero.
      */
     public void setZero() {
         Arrays.fill(value, 0);
     }
 
-
+    /**
+     * whether the parms id is zero.
+     *
+     * @return return true if the parms id is zer0, otherwise false.
+     */
     public boolean isZero() {
-        // value 长度是固定的, 所以直接这样判断
         return (value[0] == 0) && (value[1] == 0) && (value[2] == 0) && (value[3] == 0);
     }
 
@@ -80,7 +84,6 @@ public class ParmsIdType implements Cloneable, Serializable {
             return true;
         }
         ParmsIdType that = (ParmsIdType) obj;
-
         return new EqualsBuilder().append(this.value, that.value).isEquals();
     }
 
@@ -91,28 +94,23 @@ public class ParmsIdType implements Cloneable, Serializable {
      */
     @Override
     public int hashCode() {
-
         long result = 17;
         result = 31 * result + value[0];
         result = 31 * result + value[1];
         result = 31 * result + value[2];
         result = 31 * result + value[3];
-
         return (int) result;
     }
 
     @Override
     public String toString() {
-        return "{" +
-                "value=" + value[0] +
-                '}';
+        return "{" + "value=" + value[0] + '}';
     }
 
     @Override
     public ParmsIdType clone() {
         try {
             ParmsIdType clone = (ParmsIdType) super.clone();
-
             clone.value = new long[this.value.length];
             System.arraycopy(this.value, 0, clone.value, 0, this.value.length);
             return clone;
