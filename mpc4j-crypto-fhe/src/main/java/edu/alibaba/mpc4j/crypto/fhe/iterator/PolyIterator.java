@@ -21,7 +21,7 @@ public class PolyIterator {
      * @param data an 3D-array Poly-RNS representation.
      * @return an an 1D-array Poly-RNS representation.
      */
-    public static long[] from3dArray(long[][][] data) {
+    public static long[] createPolyFrom3dArray(long[][][] data) {
         int m = data.length;
         assert m > 0;
         int k = data[0].length;
@@ -48,7 +48,7 @@ public class PolyIterator {
      * @param k     number of RNS bases.
      * @return an 1D-array Poly-RNS representations with all coefficients initialized as 0.
      */
-    public static long[] createZero(int m, int n, int k) {
+    public static long[] createPolyFromZero(int m, int n, int k) {
         assert m > 0;
         assert n > 0;
         assert k > 0;
@@ -64,7 +64,7 @@ public class PolyIterator {
      * @param k     number of RNS bases.
      * @return an 3D-array Poly-RNS representation.
      */
-    public static long[][][] to3dArray(long[] coeff, int m, int n, int k) {
+    public static long[][][] polyTo3dArray(long[] coeff, int m, int n, int k) {
         assert m > 0;
         assert n > 0;
         assert k > 0;
@@ -123,8 +123,8 @@ public class PolyIterator {
         this.k = k;
         rnsIterators = new RnsIterator[m];
         for (int r = 0; r < m; r++) {
-            int subOffset = offset + r * n * k;
-            rnsIterators[r] = new RnsIterator(coeff, subOffset, n, k);
+            int rOffset = offset + r * n * k;
+            rnsIterators[r] = new RnsIterator(coeff, rOffset, n, k);
         }
     }
 

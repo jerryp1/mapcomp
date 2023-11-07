@@ -33,7 +33,7 @@ public class RnsIterator {
      * @param data an 2D-array RNS representation.
      * @return an 1D-array RNS representation.
      */
-    public static long[] from2dArray(long[][] data) {
+    public static long[] createRnsFrom2dArray(long[][] data) {
         int k = data.length;
         assert k > 0;
         int n = data[0].length;
@@ -54,7 +54,7 @@ public class RnsIterator {
      * @param k     number of RNS bases.
      * @return an 1D-array RNS representations with all coefficients initialized as 0.
      */
-    public static long[] createZero(int n, int k) {
+    public static long[] createRnsFromZero(int n, int k) {
         assert n > 0;
         assert k > 0;
         return new long[n * k];
@@ -68,7 +68,7 @@ public class RnsIterator {
      * @param k     number of RNS bases.
      * @return an 2D-array RNS representation.
      */
-    public static long[][] to2dArray(long[] coeff, int n, int k) {
+    public static long[][] rnsTo2dArray(long[] coeff, int n, int k) {
         assert n > 0;
         assert k > 0;
         assert n * k == coeff.length;
@@ -118,8 +118,8 @@ public class RnsIterator {
         this.k = k;
         coeffIterators = new CoeffIterator[k];
         for (int j = 0; j < k; j++) {
-            int subOffset = offset + j * n;
-            coeffIterators[j] = new CoeffIterator(coeff, subOffset, n);
+            int jOffset = offset + j * n;
+            coeffIterators[j] = new CoeffIterator(coeff, jOffset, n);
         }
     }
 

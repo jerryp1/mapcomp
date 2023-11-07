@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.rq;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.PolyIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.PolyIterator;
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import org.junit.Assert;
@@ -35,13 +33,13 @@ public class PolyArithmeticSmallModTest {
                 {2, 15, 77}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{15, 3});
-            long[] rns = RnsIterator.from2dArray(data);
+            long[] rns = RnsIterator.createRnsFrom2dArray(data);
             PolyArithmeticSmallMod.moduloPolyCoeffRns(rns, n, k, modulus, rns, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {2, 0, 2},
                     {2, 0, 2}},
-                RnsIterator.to2dArray(rns, n, k)
+                RnsIterator.rnsTo2dArray(rns, n, k)
             );
         }
         // Poly-RNS representation
@@ -60,7 +58,7 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{15, 3});
-            long[] poly = PolyIterator.from3dArray(data);
+            long[] poly = PolyIterator.createPolyFrom3dArray(data);
             PolyArithmeticSmallMod.moduloPolyCoeffPoly(poly, n, k, m, modulus, poly, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -73,7 +71,7 @@ public class PolyArithmeticSmallModTest {
                         {2, 0, 2},
                     }
                 },
-                PolyIterator.to3dArray(poly, m, n, k)
+                PolyIterator.polyTo3dArray(poly, m, n, k)
             );
         }
     }
@@ -102,13 +100,13 @@ public class PolyArithmeticSmallModTest {
                 {2, 0, 1}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{15, 3});
-            long[] rns = RnsIterator.from2dArray(data);
+            long[] rns = RnsIterator.createRnsFrom2dArray(data);
             PolyArithmeticSmallMod.negatePolyCoeffModRns(rns, n, k, modulus, rns, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {13, 12, 11},
                     {1, 0, 2}},
-                RnsIterator.to2dArray(rns, n, k)
+                RnsIterator.rnsTo2dArray(rns, n, k)
             );
         }
         // Poly-RNS representation
@@ -127,7 +125,7 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{15, 3});
-            long[] poly = PolyIterator.from3dArray(data);
+            long[] poly = PolyIterator.createPolyFrom3dArray(data);
             PolyArithmeticSmallMod.negatePolyCoeffModPoly(poly, n, k, m, modulus, poly, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -140,7 +138,7 @@ public class PolyArithmeticSmallModTest {
                         {1, 0, 2}
                     }
                 },
-                PolyIterator.to3dArray(poly, m, n, k)
+                PolyIterator.polyTo3dArray(poly, m, n, k)
             );
         }
     }
@@ -169,15 +167,15 @@ public class PolyArithmeticSmallModTest {
                 {2, 1, 0}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] rns1 = RnsIterator.from2dArray(data1);
-            long[] rns2 = RnsIterator.from2dArray(data2);
+            long[] rns1 = RnsIterator.createRnsFrom2dArray(data1);
+            long[] rns2 = RnsIterator.createRnsFrom2dArray(data2);
             PolyArithmeticSmallMod.addPolyCoeffModRns(rns1, n, k, rns2, n, k, modulus, rns1, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {2, 0, 3},
                     {2, 2, 2}
                 },
-                RnsIterator.to2dArray(rns1, n, k)
+                RnsIterator.rnsTo2dArray(rns1, n, k)
             );
         }
         // Poly-RNS representation
@@ -206,8 +204,8 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] poly1 = PolyIterator.from3dArray(data1);
-            long[] poly2 = PolyIterator.from3dArray(data2);
+            long[] poly1 = PolyIterator.createPolyFrom3dArray(data1);
+            long[] poly2 = PolyIterator.createPolyFrom3dArray(data2);
             PolyArithmeticSmallMod.addPolyCoeffModPoly(poly1, n, k, poly2, n, k, m, modulus, poly1, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -220,7 +218,7 @@ public class PolyArithmeticSmallModTest {
                         {1, 1, 1}
                     }
                 },
-                PolyIterator.to3dArray(poly1, m, n, k)
+                PolyIterator.polyTo3dArray(poly1, m, n, k)
             );
         }
     }
@@ -249,15 +247,15 @@ public class PolyArithmeticSmallModTest {
                 {2, 1, 0}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] rns1 = RnsIterator.from2dArray(data1);
-            long[] rns2 = RnsIterator.from2dArray(data2);
+            long[] rns1 = RnsIterator.createRnsFrom2dArray(data1);
+            long[] rns2 = RnsIterator.createRnsFrom2dArray(data2);
             PolyArithmeticSmallMod.subPolyCoeffModRns(rns1, n, k, rns2, n, k, modulus, rns1, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {0, 1, 0},
                     {1, 0, 2}
                 },
-                RnsIterator.to2dArray(rns1, n, k)
+                RnsIterator.rnsTo2dArray(rns1, n, k)
             );
         }
         // Poly-RNS representation
@@ -286,8 +284,8 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] poly1 = PolyIterator.from3dArray(data1);
-            long[] poly2 = PolyIterator.from3dArray(data2);
+            long[] poly1 = PolyIterator.createPolyFrom3dArray(data1);
+            long[] poly2 = PolyIterator.createPolyFrom3dArray(data2);
             PolyArithmeticSmallMod.subPolyCoeffModPoly(poly1, n, k, poly2, n, k, m, modulus, poly1, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -300,7 +298,7 @@ public class PolyArithmeticSmallModTest {
                         {1, 0, 2}
                     }
                 },
-                PolyIterator.to3dArray(poly1, m, n, k)
+                PolyIterator.polyTo3dArray(poly1, m, n, k)
             );
         }
     }
@@ -326,7 +324,7 @@ public class PolyArithmeticSmallModTest {
                 {1, 0, 2}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] rns = RnsIterator.from2dArray(data);
+            long[] rns = RnsIterator.createRnsFrom2dArray(data);
             long scalar = 2;
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(rns, n, k,scalar, modulus, rns, n, k);
             Assert.assertArrayEquals(
@@ -334,7 +332,7 @@ public class PolyArithmeticSmallModTest {
                     {2, 1, 3},
                     {2, 0, 1}
                 },
-                RnsIterator.to2dArray(rns, n, k)
+                RnsIterator.rnsTo2dArray(rns, n, k)
             );
         }
         {
@@ -352,7 +350,7 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{5, 3});
-            long[] poly = PolyIterator.from3dArray(data);
+            long[] poly = PolyIterator.createPolyFrom3dArray(data);
             long scalar = 2;
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(poly, n, k, m, scalar, modulus, poly, n, k);
             Assert.assertArrayEquals(
@@ -366,7 +364,7 @@ public class PolyArithmeticSmallModTest {
                         {2, 0, 1}
                     }
                 },
-                PolyIterator.to3dArray(poly, m, n, k)
+                PolyIterator.polyTo3dArray(poly, m, n, k)
             );
         }
     }
@@ -396,16 +394,16 @@ public class PolyArithmeticSmallModTest {
                 {2, 3, 4}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{13, 7});
-            long[] rns1 = RnsIterator.from2dArray(data1);
-            long[] rns2 = RnsIterator.from2dArray(data2);
-            long[] rnsR = RnsIterator.createZero(n, k);
+            long[] rns1 = RnsIterator.createRnsFrom2dArray(data1);
+            long[] rns2 = RnsIterator.createRnsFrom2dArray(data2);
+            long[] rnsR = RnsIterator.createRnsFromZero(n, k);
             PolyArithmeticSmallMod.dyadicProductCoeffModRns(rns1, n, k, rns2, n, k, modulus, rnsR, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {2, 6, 4},
                     {4, 3, 1}
                 },
-                RnsIterator.to2dArray(rnsR, n, k)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
         }
         // Poly-RNS representation
@@ -434,9 +432,9 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{13, 7});
-            long[] poly1 = PolyIterator.from3dArray(data1);
-            long[] poly2 = PolyIterator.from3dArray(data2);
-            long[] polyR = PolyIterator.createZero(m, n, k);
+            long[] poly1 = PolyIterator.createPolyFrom3dArray(data1);
+            long[] poly2 = PolyIterator.createPolyFrom3dArray(data2);
+            long[] polyR = PolyIterator.createPolyFromZero(m, n, k);
             PolyArithmeticSmallMod.dyadicProductCoeffModPoly(poly1, n, k, poly2, n, k, m, modulus, polyR, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -449,7 +447,7 @@ public class PolyArithmeticSmallModTest {
                         {4, 3, 1}
                     }
                 },
-                PolyIterator.to3dArray(polyR, m, n, k)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
         }
     }
@@ -509,15 +507,15 @@ public class PolyArithmeticSmallModTest {
                 {1, 2, 3, 4}
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{10, 11});
-            long[] rns = RnsIterator.from2dArray(data);
-            long[] rnsR = RnsIterator.createZero(n, k);
+            long[] rns = RnsIterator.createRnsFrom2dArray(data);
+            long[] rnsR = RnsIterator.createRnsFromZero(n, k);
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModRns(rns, n, k, 0, modulus, rnsR, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {1, 2, 3, 4},
                     {1, 2, 3, 4}
                 },
-                RnsIterator.to2dArray(rnsR, n, k)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModRns(rns, n, k, 1, modulus, rnsR, n, k);
@@ -526,7 +524,7 @@ public class PolyArithmeticSmallModTest {
                     {6, 1, 2, 3},
                     {7, 1, 2, 3}
                 },
-                RnsIterator.to2dArray(rnsR, n, k)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModRns(rns, n, k, 2, modulus, rnsR, n, k);
@@ -535,7 +533,7 @@ public class PolyArithmeticSmallModTest {
                     {7, 6, 1, 2},
                     {8, 7, 1, 2}
                 },
-                RnsIterator.to2dArray(rnsR, n, k)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModRns(rns, n, k, 3, modulus, rnsR, n, k);
@@ -544,7 +542,7 @@ public class PolyArithmeticSmallModTest {
                     {8, 7, 6, 1},
                     {9, 8, 7, 1}
                 },
-                RnsIterator.to2dArray(rnsR, n, k)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
         }
         // Poly-RNS representation
@@ -563,8 +561,8 @@ public class PolyArithmeticSmallModTest {
                 }
             };
             Modulus[] modulus = Modulus.createModulus(new long[]{10, 11});
-            long[] poly = PolyIterator.from3dArray(data);
-            long[] polyR = PolyIterator.createZero(m, n, k);
+            long[] poly = PolyIterator.createPolyFrom3dArray(data);
+            long[] polyR = PolyIterator.createPolyFromZero(m, n, k);
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModPoly(poly, n, k, m, 0, modulus, polyR, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
@@ -577,7 +575,7 @@ public class PolyArithmeticSmallModTest {
                         {1, 2, 3, 4}
                     }
                 },
-                PolyIterator.to3dArray(polyR, m, n, k)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModPoly(poly, n, k, m, 1, modulus, polyR, n, k);
@@ -592,7 +590,7 @@ public class PolyArithmeticSmallModTest {
                         {7, 1, 2, 3}
                     }
                 },
-                PolyIterator.to3dArray(polyR, m, n, k)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModPoly(poly, n, k, m, 2, modulus, polyR, n, k);
@@ -607,7 +605,7 @@ public class PolyArithmeticSmallModTest {
                         {8, 7, 1, 2}
                     }
                 },
-                PolyIterator.to3dArray(polyR, m, n, k)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
 
             PolyArithmeticSmallMod.negacyclicShiftPolyCoeffModPoly(poly, n, k, m, 3, modulus, polyR, n, k);
@@ -622,95 +620,82 @@ public class PolyArithmeticSmallModTest {
                         {9, 8, 7, 1}
                     }
                 },
-                PolyIterator.to3dArray(polyR, m, n, k)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
         }
     }
 
     @Test
     public void multiplyPolyMonoCoeffMod() {
-
+        // Coeff representation.
         {
-            long[] poly = new long[]{1, 3, 4, 2};
+            int n = 4;
+            long[] coeff = new long[]{1, 3, 4, 2};
+            Modulus modulus = new Modulus(5);
+            long[] result = new long[n];
             long monoCoeff = 3;
-            Modulus mod = new Modulus(5);
-            long[] result = new long[4];
 
             int monoExponent = 0;
-            // poly * 3 mod 5
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 1, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{3, 0, 0, 0},
-                result
-            );
-
-
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 2, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{3, 4, 0, 0},
-                result
-            );
+            // n = 1, 1 * 3 mod 5 = 3
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 1, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{3, 0, 0, 0}, result);
+            // n = 2, (1 + 3x) * 3 mod 5 = 3 + 4x
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 2, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{3, 4, 0, 0}, result);
 
             monoExponent = 1;
-
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 2, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{1, 3, 0, 0},
-                result
-            );
-
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 4, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{4, 3, 4, 2},
-                result
-            );
+            // n = 2, (1 + 3x) * 3x mod 5 = (3x - 9) mod 5 = 1 + 3x
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 2, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{1, 3, 0, 0}, result);
+            // n = 4, (1 + 3x + 4x^2 + 2x^3) * (3x) = (3x + 9x^2 + 12x^3 - 6) mod 5 = 4 + 3x + 3x^2 + 2x^3
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 4, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{4, 3, 4, 2}, result);
 
             monoCoeff = 1;
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 4, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{3, 1, 3, 4},
-                result
-            );
+            // n = 4, (1 + 3x + 4x^2 + 2x^3) * (x) mod 5 = (x + 3x^2 + 4x^3 - 2) mod 5 = 3 + x + 3x^2 + 4x^3
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 4, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{3, 1, 3, 4}, result);
 
             monoCoeff = 4;
             monoExponent = 3;
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 4, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{3, 4, 2, 4},
-                result
-            );
+            // n = 4, (1 + 3x + 4x^2 + 2x^3) * (4x^3) mod 5 = (4x^3 - 12 - 16x - 8x^2) mod 5 = 3 + 4x + 2x^2 + 4x^3
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 4, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{3, 4, 2, 4}, result);
 
             monoCoeff = 1;
             monoExponent = 0;
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 4, monoCoeff, monoExponent, mod, result);
-            Assert.assertArrayEquals(
-                new long[]{1, 3, 4, 2},
-                result
-            );
+            // n = 4, (1 + 3x + 4x^2 + 2x^3) * (1) mod 5 = 1 + 3x + 4x^2 + 2x^3
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(coeff, 4, monoCoeff, monoExponent, modulus, result);
+            Assert.assertArrayEquals(new long[]{1, 3, 4, 2}, result);
         }
+        // RNS representation
         {
+            int n = 4;
+            int k = 2;
             long[][] data = new long[][]{
                 {1, 3, 4, 2},
                 {1, 3, 4, 2}
             };
-
-            RnsIter poly = RnsIter.from2dArray(data);
-            RnsIter result = new RnsIter(2, 4);
-            Modulus[] mod = Modulus.createModulus(new long[]{5, 7});
+            Modulus[] modulus = Modulus.createModulus(new long[]{5, 7});
+            long[] rns = RnsIterator.createRnsFrom2dArray(data);
+            long[] rnsR = RnsIterator.createRnsFromZero(n, k);
 
             long monoCoeff = 4;
             int monoExponent = 2;
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 2, monoCoeff, monoExponent, mod, result);
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffModRns(rns, n, k, monoCoeff, monoExponent, modulus, rnsR, n, k);
             Assert.assertArrayEquals(
                 new long[][]{
                     {4, 2, 4, 2},
                     {5, 6, 4, 5}
                 },
-                RnsIter.to2dArray(result)
+                RnsIterator.rnsTo2dArray(rnsR, n, k)
             );
         }
-
+        // Poly-RNS representation
         {
+            int m = 2;
+            int n = 4;
+            int k = 2;
             long[][][] data = new long[][][]{
                 {
                     {1, 3, 4, 2},
@@ -721,15 +706,12 @@ public class PolyArithmeticSmallModTest {
                     {1, 3, 4, 2},
                 }
             };
-
-            PolyIter poly = PolyIter.from3dArray(data);
-            PolyIter result = new PolyIter(2, 2, 4);
-            Modulus[] mod = Modulus.createModulus(new long[]{5, 7});
+            Modulus[] modolus = Modulus.createModulus(new long[]{5, 7});
+            long[] poly = PolyIterator.createPolyFrom3dArray(data);
+            long[] polyR = PolyIterator.createPolyFromZero(m, n, k);
             long monoCoeff = 4;
             int monoExponent = 2;
-
-            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffMod(poly, 2, monoCoeff, monoExponent, mod, result);
-
+            PolyArithmeticSmallMod.negacyclicMultiplyPolyMonoCoeffModPoly(poly, n, k, m, monoCoeff, monoExponent, modolus, polyR, n, k);
             Assert.assertArrayEquals(
                 new long[][][]{
                     {
@@ -741,7 +723,7 @@ public class PolyArithmeticSmallModTest {
                         {5, 6, 4, 5}
                     }
                 },
-                PolyIter.to3dArray(result)
+                PolyIterator.polyTo3dArray(polyR, m, n, k)
             );
         }
     }

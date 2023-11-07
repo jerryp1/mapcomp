@@ -1,12 +1,8 @@
 package edu.alibaba.mpc4j.crypto.fhe.rq;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.PolyIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
-
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 /**
  * This class provides modular arithmetic for polynomials.
@@ -924,35 +920,6 @@ public class PolyArithmeticSmallMod {
         }
     }
 
-    public static void negacyclicShiftPolyCoeffMod(RnsIter poly, int coeffModulusSize, int shift, Modulus[] modulus, RnsIter result) {
-        assert coeffModulusSize > 0;
-        assert poly.getPolyModulusDegree() == result.getPolyModulusDegree();
-
-        // nothing to do, just copy
-        if (shift == 0) {
-            System.arraycopy(poly.coeffIter, 0, result.coeffIter, 0, poly.coeffIter.length);
-            return;
-        }
-        int polyModulusDegree = poly.getPolyModulusDegree();
-//        long indexRaw = shift;
-        long coeffCountModMask = (long) (polyModulusDegree) - 1L;
-
-        for (int i = 0; i < coeffModulusSize; i++) {
-            assert !modulus[i].isZero();
-            // handle each range: [i * N , (i + 1) * N)
-            long indexRaw = shift;
-            for (int j = 0; j < polyModulusDegree; j++, indexRaw++) {
-                long index = indexRaw & coeffCountModMask;
-                if ((indexRaw & (long) polyModulusDegree) == 0 || poly.coeffIter[i * polyModulusDegree + j] == 0) {
-                    // index + current range startPoint
-                    result.coeffIter[(int) index + i * polyModulusDegree] = poly.coeffIter[i * polyModulusDegree + j];
-                } else {
-                    result.coeffIter[(int) index + i * polyModulusDegree] = modulus[i].getValue() - poly.coeffIter[i * polyModulusDegree + j];
-                }
-            }
-        }
-    }
-
     /**
      * Multiplies c * x^e to the Coeff representation.
      *
@@ -992,6 +959,56 @@ public class PolyArithmeticSmallMod {
     }
 
     /**
+     * Multiplies c * x^e to the first RNS representation.
+     *
+     * @param rns          the RNS representation.
+     * @param n            the modulus polynomial degree.
+     * @param k            the number of RNS bases.
+     * @param monoCoeff    the monotonic coefficient c.
+     * @param monoExponent the monotonic exponent e.
+     * @param modulus      modulus.
+     * @param rnsR         the result NS representation.
+     * @param nR           the result modulus polynomial degree.
+     * @param kR           the result number of RNS bases.
+     */
+    public static void negacyclicMultiplyPolyMonoCoeffModRns(long[] rns, int n, int k,
+                                                             long monoCoeff, int monoExponent, Modulus[] modulus,
+                                                             long[] rnsR, int nR, int kR) {
+        negacyclicMultiplyPolyMonoCoeffModRns(rns, 0, n, k, monoCoeff, monoExponent, modulus, rnsR, 0, nR, kR);
+    }
+
+    /**
+     * Multiplies c * x^e to the first RNS representation.
+     *
+     * @param rns          the RNS representation.
+     * @param pos          the start position.
+     * @param n            the modulus polynomial degree.
+     * @param k            the number of RNS bases.
+     * @param monoCoeff    the monotonic coefficient c.
+     * @param monoExponent the monotonic exponent e.
+     * @param modulus      modulus.
+     * @param rnsR         the result NS representation.
+     * @param nR           the result modulus polynomial degree.
+     * @param kR           the result number of RNS bases.
+     * @param posR         the result start position.
+     */
+    public static void negacyclicMultiplyPolyMonoCoeffModRns(long[] rns, int pos, int n, int k,
+                                                             long monoCoeff, int monoExponent, Modulus[] modulus,
+                                                             long[] rnsR, int posR, int nR, int kR) {
+        assert n == nR;
+        assert k == kR && k == modulus.length;
+
+        long[] temp = new long[n];
+        MultiplyUintModOperand tempScalar = new MultiplyUintModOperand();
+        for (int j = 0; j < k; j++) {
+            int jOffset = j * n;
+            tempScalar.set(UintArithmeticSmallMod.barrettReduce64(monoCoeff, modulus[j]), modulus[j]);
+            multiplyPolyScalarCoeffMod(rns, pos + jOffset, n, tempScalar, modulus[j], temp, 0);
+            negacyclicShiftPolyCoeffMod(temp, 0, n, monoExponent, modulus[j], rnsR, posR + jOffset);
+        }
+    }
+
+    /**
      * Multiplies c * x^e to the first m RNS representations in the Poly-RNS representation.
      *
      * @param poly         the Poly-RNS representation.
@@ -1022,32 +1039,6 @@ public class PolyArithmeticSmallMod {
                 multiplyPolyScalarCoeffMod(poly, jOffset, n, tempScalar, modulus[j], temp, 0);
                 negacyclicShiftPolyCoeffMod(temp, 0, n, monoExponent, modulus[j], polyR, jOffset);
             }
-        }
-    }
-
-    public static void negacyclicMultiplyPolyMonoCoeffMod(RnsIter poly, int coeffModulusSize, long monoCoeff, int monoExponent, Modulus[] modulus, RnsIter result) {
-        assert coeffModulusSize > 0;
-        assert poly.getPolyModulusDegree() == result.getPolyModulusDegree();
-
-        RnsIter temp = new RnsIter(poly.getCoeffModulusSize(), poly.getPolyModulusDegree());
-        multiplyPolyScalarCoeffMod(poly, coeffModulusSize, monoCoeff, modulus, temp);
-        negacyclicShiftPolyCoeffMod(temp, coeffModulusSize, monoExponent, modulus, result);
-    }
-
-    public static void negacyclicMultiplyPolyMonoCoeffMod(PolyIter polyArray, int size, long monoCoeff, int monoExponent, Modulus[] modulus, PolyIter result) {
-        assert size > 0;
-        assert polyArray.getCoeffModulusSize() == result.getCoeffModulusSize();
-
-        int coeffModulusSize = result.getCoeffModulusSize();
-        for (int i = 0; i < size; i++) {
-            negacyclicMultiplyPolyMonoCoeffMod(
-                polyArray.getRnsIter(i),
-                coeffModulusSize,
-                monoCoeff,
-                monoExponent,
-                modulus,
-                result.getRnsIter(i)
-            );
         }
     }
 
@@ -1085,70 +1076,43 @@ public class PolyArithmeticSmallMod {
         }
     }
 
-    public static void negacyclicMultiplyPolyMonoCoeffMod(RnsIter poly, int coeffModulusSize, long[] monoCoeff, int monoExponent, Modulus[] modulus, RnsIter result) {
-        assert coeffModulusSize > 0;
-        assert poly.getPolyModulusDegree() == result.getPolyModulusDegree();
-
-        int polyModulusDegree = result.getPolyModulusDegree();
-        // first mul
-        RnsIter temp = new RnsIter(poly.getCoeffModulusSize(), poly.getPolyModulusDegree());
-
-        for (int i = 0; i < coeffModulusSize; i++) {
-            assert !modulus[i].isZero();
-            MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
-            curScalar.set(UintArithmeticSmallMod.barrettReduce64(monoCoeff[i], modulus[i]), modulus[i]);
-
-            for (int j = 0; j < polyModulusDegree; j++) {
-                assert poly.coeffIter[i * polyModulusDegree + j] < modulus[i].getValue();
-
-                temp.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.multiplyUintMod(
-                    poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i]);
-            }
-        }
-
-        // then neg acyclic
-        negacyclicShiftPolyCoeffMod(temp, coeffModulusSize, monoExponent, modulus, result);
-
-    }
-
-    public static void negacyclicMultiplyPolyMonoCoeffMod(PolyIter polyArray, int size, long[] monoCoeff, int monoExponent, Modulus[] modulus, PolyIter result) {
-        assert size > 0;
-        assert polyArray.getCoeffModulusSize() == result.getCoeffModulusSize();
-
-        int coeffModulusSize = result.getCoeffModulusSize();
-        IntStream.range(0, size).forEach(
-            i -> {
-                negacyclicMultiplyPolyMonoCoeffMod(
-                    polyArray.getRnsIter(i),
-                    coeffModulusSize,
-                    monoCoeff,
-                    monoExponent,
-                    modulus,
-                    result.getRnsIter(i)
-                );
-            }
-        );
+    /**
+     * Computes the infinity norm of the Coeff representation.
+     *
+     * @param coeff   the Coeff representation.
+     * @param n       the modulus polynomial degree.
+     * @param modulus modulus.
+     * @return the infinity norm of the Coeff representation.
+     */
+    public static long polyInftyNormCoeffMod(long[] coeff, int n, Modulus modulus) {
+        return polyInftyNormCoeffMod(coeff, 0, n, modulus);
     }
 
     /**
-     * @param operand    a poly
-     * @param coeffCount N
-     * @param modulus    modulus
-     * @return
+     * Computes the infinity norm of the Coeff representation.
+     *
+     * @param coeff   the Coeff representation.
+     * @param pos     the start position.
+     * @param n       the modulus polynomial degree.
+     * @param modulus modulus.
+     * @return the infinity norm of the Coeff representation.
      */
-    public static long polyInftyNormCoeffMod(long[] operand, int coeffCount, Modulus modulus) {
-
-        assert coeffCount > 0;
+    public static long polyInftyNormCoeffMod(long[] coeff, int pos, int n, Modulus modulus) {
+        assert n > 0;
         assert !modulus.isZero();
         // Construct negative threshold (first negative modulus value) to compute absolute values of coeffs.
         long modulusNegThreshold = (modulus.getValue() + 1) >>> 1;
 
-
-        return Arrays.stream(operand)
-            .map(n -> UintArithmeticSmallMod.barrettReduce64(n, modulus))
-            .map(n -> n >= modulusNegThreshold ? modulus.getValue() - n : n)
-            .max().orElseThrow(() -> new IllegalArgumentException("operand is empty"));
+        // Mod out the poly coefficients and choose a symmetric representative from [-modulus, modulus).
+        // Keep track of the max.
+        long result = 0;
+        for (int i = 0; i < n; i++) {
+            long polyCoeff = UintArithmeticSmallMod.barrettReduce64(coeff[pos + i], modulus);
+            polyCoeff = polyCoeff >= modulusNegThreshold ? modulus.getValue() - polyCoeff : polyCoeff;
+            if (polyCoeff > result) {
+                result = polyCoeff;
+            }
+        }
+        return result;
     }
-
-
 }
