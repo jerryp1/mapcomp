@@ -21,7 +21,7 @@ public class BfvBasics_1 {
         int polyModulusDegree = 4096;
         parms.setPolyModulusDegree(polyModulusDegree);
 
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(polyModulusDegree));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(polyModulusDegree));
 
         parms.setPlainModulus(1024);
 

@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.crypto.fhe.keys.GaloisKeys;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
-import edu.alibaba.mpc4j.crypto.fhe.modulus.PlainModulus;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
@@ -77,7 +76,7 @@ public class SerializationTest {
         Modulus plainModulus = new Modulus(1 << 6);
         parms.setPlainModulus(plainModulus);
         parms.setPolyModulusDegree(1024);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(1024));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(1024));
         Context context = new Context(parms, true, CoeffModulus.SecurityLevelType.NONE);
 
         KeyGenerator keyGenerator = new KeyGenerator(context);
@@ -106,7 +105,7 @@ public class SerializationTest {
         Modulus plainModulus = new Modulus(1 << 6);
         parms.setPlainModulus(plainModulus);
         parms.setPolyModulusDegree(1024);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(1024));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(1024));
         Context context = new Context(parms, true, CoeffModulus.SecurityLevelType.NONE);
 
         KeyGenerator keyGenerator = new KeyGenerator(context);

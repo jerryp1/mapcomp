@@ -1,27 +1,36 @@
 package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 /**
- * Largest allowed bit counts for coeff_modulus based on the security estimates from
- * HomomorphicEncryption.org security standard. We refer Microsoft SEAL samples the
- * secret key from a ternary {-1, 0, 1} distribution. The implementation is from:
+ * Largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the security estimates from
+ * homomorphicencryption.org security standard. Microsoft SEAL samples the secret key from a ternary {-1, 0, 1}
+ * distribution.
  * <p>
- * https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hestdparms.h
+ * The implementation is from: https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/hestdparms.h
+ * </p>
+ * The standard can be found at:
+ * <p>
+ * https://homomorphicencryption.org/wp-content/uploads/2018/11/HomomorphicEncryptionStandardv1.1.pdf
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/29
  */
 public class HeStdParms {
     /**
-     * Standard deviation for error distribution.
+     * Standard deviation for error distribution, 𝜎 = 8 / √(2π) ≈ 3.2. See Section 8.3 of the following paper:
+     * <p>
+     * https://www.microsoft.com/en-us/research/uploads/prod/2017/11/sealmanual-2-3-1.pdf
+     * </p>
      */
     public final static double HE_STD_PARMS_ERROR_STD_DEV = 3.2;
 
     /**
-     * Ternary secret; 128 bits classical security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 128-bit
+     * security estimates from homomorphicencryption.org security standard, where the secret key is from a ternary
+     * {-1, 0, 1} distribution. See P27 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 128-bit security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms128Tc(int polyModulusDegree) {
         switch (polyModulusDegree) {
@@ -43,10 +52,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 192 bits classical security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 192-bit
+     * security estimates from homomorphicencryption.org security standard, where the secret key is from a ternary
+     * {-1, 0, 1} distribution. See P27 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 192-bit security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms192Tc(int polyModulusDegree) {
         switch (polyModulusDegree) {
@@ -68,10 +79,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 256 bits classical security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 256-bit
+     * security estimates from homomorphicencryption.org security standard, where the secret key is from a ternary
+     * {-1, 0, 1} distribution. See P27 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 256-bit security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms256Tc(int polyModulusDegree) {
         switch (polyModulusDegree) {
@@ -93,10 +106,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 128 bits quantum security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 128-bit
+     * quantum security estimates from homomorphicencryption.org security standard, where the secret key is from a
+     * ternary {-1, 0, 1} distribution. See P28 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 128 bits quantum security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms128Tq(int polyModulusDegree) {
         switch (polyModulusDegree) {
@@ -118,10 +133,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 192 bits quantum security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 192-bit
+     * quantum security estimates from homomorphicencryption.org security standard, where the secret key is from a
+     * ternary {-1, 0, 1} distribution. See P28-P29 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 192 bits quantum security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms192Tq(int polyModulusDegree) {
         switch (polyModulusDegree) {
@@ -143,10 +160,12 @@ public class HeStdParms {
     }
 
     /**
-     * Ternary secret; 256 bits quantum security.
+     * Gets the largest allowed bit counts for coeff_modulus (modulus in the ciphertext space) based on the 256-bit
+     * quantum security estimates from homomorphicencryption.org security standard, where the secret key is from a
+     * ternary {-1, 0, 1} distribution. See P28-P29 of the standard. Returns 0 for invalid polynomial modulus degree.
      *
      * @param polyModulusDegree N.
-     * @return Largest allowed bit counts for coeff_modulus under 256 bits quantum security.
+     * @return the largest allowed bit counts for coeff_modulus.
      */
     public static int heStdParms256Tq(int polyModulusDegree) {
         switch (polyModulusDegree) {

@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.PlainModulus;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -29,7 +28,7 @@ public class Encoders_2 {
         EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
         int polyModulusDegree = 8192;
         parms.setPolyModulusDegree(polyModulusDegree);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(polyModulusDegree));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(polyModulusDegree));
         parms.setPlainModulus(PlainModulus.batching(polyModulusDegree, 20));
 
         Context context = new Context(parms);

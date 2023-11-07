@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.crypto.fhe.examples;
 
 import edu.alibaba.mpc4j.crypto.fhe.*;
 import edu.alibaba.mpc4j.crypto.fhe.context.Context;
-import edu.alibaba.mpc4j.crypto.fhe.context.EncryptionParameterQualifiers;
 import edu.alibaba.mpc4j.crypto.fhe.keys.GaloisKeys;
 import edu.alibaba.mpc4j.crypto.fhe.keys.PublicKey;
 import edu.alibaba.mpc4j.crypto.fhe.keys.RelinKeys;
@@ -29,7 +28,7 @@ public class Roatation_6 {
         EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
         int polyModulusDegree = 8192;
         parms.setPolyModulusDegree(polyModulusDegree);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(polyModulusDegree));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(polyModulusDegree));
         parms.setPlainModulus(PlainModulus.batching(polyModulusDegree, 20));
 
 

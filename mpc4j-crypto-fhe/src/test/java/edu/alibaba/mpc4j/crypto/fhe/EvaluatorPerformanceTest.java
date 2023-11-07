@@ -64,7 +64,7 @@ public class EvaluatorPerformanceTest {
         Modulus plainModulus = PlainModulus.batching(N, 20);
         parms.setPolyModulusDegree(N);
         parms.setPlainModulus(plainModulus);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(N));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(N));
 
         Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
         KeyGenerator keyGenerator = new KeyGenerator(context);

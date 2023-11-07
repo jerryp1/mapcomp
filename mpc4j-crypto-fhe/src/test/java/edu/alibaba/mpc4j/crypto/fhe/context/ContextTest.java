@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.CoeffModulus.SecurityLevelType;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
-import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGenerator;
 
 import edu.alibaba.mpc4j.crypto.fhe.rand.UniformRandomGeneratorFactory;
 import org.junit.Assert;
@@ -272,7 +271,7 @@ public class ContextTest {
 
         // Parameters not OK due to too large coeff_modulus and enforce_hes
         parms.setPolyModulusDegree(2048);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(4096, SecurityLevelType.TC128));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(4096, SecurityLevelType.TC128));
         parms.setPlainModulus(73);
         parms.setRandomGeneratorFactory(new UniformRandomGeneratorFactory());
         {

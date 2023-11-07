@@ -68,7 +68,7 @@ public class Acls18SingleIndexPirPureJavaUtils {
         EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
         parms.setPolyModulusDegree(polyModulusDegree);
         parms.setPlainModulus(plainModulus);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(polyModulusDegree, CoeffModulus.SecurityLevelType.TC128));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(polyModulusDegree, CoeffModulus.SecurityLevelType.TC128));
 
         return parms;
     }

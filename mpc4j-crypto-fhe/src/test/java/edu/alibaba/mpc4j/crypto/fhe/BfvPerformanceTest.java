@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.crypto.fhe.modulus.PlainModulus;
 import edu.alibaba.mpc4j.crypto.fhe.params.EncryptionParams;
 import edu.alibaba.mpc4j.crypto.fhe.params.SchemeType;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallModEfficiencyTest;
-import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmetic;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 /**
  * @author Qixian Zhou
@@ -80,7 +78,7 @@ public class BfvPerformanceTest {
 
         parms = new EncryptionParams(SchemeType.BFV);
         parms.setPolyModulusDegree(N);
-        parms.setCoeffModulus(CoeffModulus.BfvDefault(N));
+        parms.setCoeffModulus(CoeffModulus.bfvDefault(N));
         parms.setPlainModulus(PlainModulus.batching(N, 20));
         context = new Context(parms);
 

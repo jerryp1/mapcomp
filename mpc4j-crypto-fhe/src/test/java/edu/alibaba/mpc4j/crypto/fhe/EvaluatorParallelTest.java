@@ -861,7 +861,7 @@ public class EvaluatorParallelTest {
             Modulus plainModulus = new Modulus(786433);
             parms.setPolyModulusDegree(8192);
             parms.setPlainModulus(plainModulus);
-            parms.setCoeffModulus(CoeffModulus.BfvDefault(8192));
+            parms.setCoeffModulus(CoeffModulus.bfvDefault(8192));
 
             Context context = new Context(parms, true, CoeffModulus.SecurityLevelType.TC128);
             KeyGenerator keyGenerator = new KeyGenerator(context);
