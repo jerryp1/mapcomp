@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -96,60 +93,77 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
             dir = PlainZ2Vector.createOnes(xiArrays.length);
         }
         MathPreconditions.checkEqual("xiArrays.length", "dir.bitNum", xiArrays.length, dir.bitNum());
-        xls = Arrays.stream(xiArrays).mapToInt(xiArray -> xiArray.length).toArray();
-        yls = payloadArrays == null ? null : Arrays.stream(payloadArrays).mapToInt(payloadArray -> payloadArray.length).toArray();
         this.needPermutation = needPermutation;
         this.dir = dir;
         initMask();
-
-        MathPreconditions.checkEqual("xiArrays.length", "1", xiArrays.length, 1);
-        assert dir.getBitVector().get(0);
-        this.xiArray = xiArrays[0];
-        getPayload(payloadArrays);
+        dealInput(xiArrays, payloadArrays);
 
         StopWatch s = new StopWatch();
         s.start();
         bitonicSort();
         s.stop();
-
-        xiArrays[0] = this.xiArray;
-
         LOGGER.info("sort time:{}, bit time:{}, compare time:{}", s.getTime(TimeUnit.MILLISECONDS), getBitTime, compareTime);
 
-        return recoverPayload(payloadArrays);
+        return recoverOutput(xiArrays, payloadArrays);
     }
 
-    private void initMask(){
+    private void initMask() {
         compareMask = PSorterUtils.returnCompareResultMask(LongUtils.ceilLog2(sortedNum));
-        for(int level = 0; level < LongUtils.ceilLog2(sortedNum) - 1; level++){
-            int validMaskBit = (1<<level) * (sortedNum / (1<<(level+1)));
+        for (int level = 0; level < LongUtils.ceilLog2(sortedNum) - 1; level++) {
+            int validMaskBit = (1 << level) * (sortedNum / (1 << (level + 1)));
             BytesUtils.reduceByteArray(compareMask[level], validMaskBit);
         }
     }
 
-    private void getPayload(MpcZ2Vector[][] payloadArrays) {
-        List<MpcZ2Vector> all = new LinkedList<>();
-        if (payloadArrays != null) {
-            all.addAll(Arrays.stream(payloadArrays).map(payloadArray ->
-                    Arrays.copyOf(payloadArray, payloadArray.length))
-                .flatMap(Arrays::stream).collect(Collectors.toList()));
-        }
-        if (needPermutation) {
-            BitVector[] indexes = PSorterUtils.getBinaryIndex(sortedNum);
-            all.addAll(Arrays.stream(party.setPublicValues(indexes)).collect(Collectors.toList()));
-        }
-        this.payloadArrays = all.isEmpty() ? null : all.toArray(new MpcZ2Vector[0]);
+    private void dealInput(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays) {
+        MathPreconditions.checkEqual("xiArrays.length", "1", xiArrays.length, 1);
+        assert dir.getBitVector().get(0);
+
+        xls = Arrays.stream(xiArrays).mapToInt(xiArray -> xiArray.length).toArray();
+        yls = payloadArrays == null ? null : Arrays.stream(payloadArrays).mapToInt(payloadArray -> payloadArray.length).toArray();
+        BitVector[] indexes = PSorterUtils.getBinaryIndex(sortedNum);
+        this.xiArray = new MpcZ2Vector[xiArrays[0].length + indexes.length];
+        System.arraycopy(xiArrays[0], 0, this.xiArray, 0, xiArrays[0].length);
+        System.arraycopy(party.setPublicValues(indexes), 0, this.xiArray, xiArrays[0].length, indexes.length);
+        this.payloadArrays = payloadArrays == null ? null
+            : Arrays.stream(payloadArrays).map(payloadArray -> Arrays.copyOf(payloadArray, payloadArray.length))
+            .flatMap(Arrays::stream).toArray(MpcZ2Vector[]::new);
     }
 
-    private MpcZ2Vector[] recoverPayload(MpcZ2Vector[][] payloadArrays) {
-        int index = 0;
+    private MpcZ2Vector[] recoverOutput(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays) {
+        xiArrays[0] = Arrays.copyOf(xiArray, xls[0]);
         if (yls != null) {
+            int index = 0;
             for (int i = 0; i < yls.length; index += yls[i++]) {
                 System.arraycopy(this.payloadArrays, index, payloadArrays[i], 0, yls[i]);
             }
         }
-        return needPermutation ? Arrays.copyOfRange(this.payloadArrays, index, this.payloadArrays.length) : null;
+        return needPermutation ? Arrays.copyOfRange(xiArray, xls[0], xiArray.length) : null;
     }
+
+//    private void getPayload(MpcZ2Vector[][] payloadArrays) {
+//        List<MpcZ2Vector> all = new LinkedList<>();
+//        if (payloadArrays != null) {
+//            all.addAll(Arrays.stream(payloadArrays).map(payloadArray ->
+//                    Arrays.copyOf(payloadArray, payloadArray.length))
+//                .flatMap(Arrays::stream).collect(Collectors.toList()));
+//        }
+//        if (needPermutation) {
+//            BitVector[] indexes = PSorterUtils.getBinaryIndex(sortedNum);
+//            all.addAll(Arrays.stream(party.setPublicValues(indexes)).collect(Collectors.toList()));
+//        }
+//        this.payloadArrays = all.isEmpty() ? null : all.toArray(new MpcZ2Vector[0]);
+//    }
+//
+//    private MpcZ2Vector[] recoverPayload(MpcZ2Vector[][] payloadArrays) {
+//        int index = 0;
+//        if (yls != null) {
+//            for (int i = 0; i < yls.length; index += yls[i++]) {
+//                System.arraycopy(this.payloadArrays, index, payloadArrays[i], 0, yls[i]);
+//            }
+//        }
+//        return needPermutation ? Arrays.copyOfRange(this.payloadArrays, index, this.payloadArrays.length) : null;
+//    }
 
     private void bitonicSort() throws MpcAbortException {
         for (int i = 0; i < LongUtils.ceilLog2(sortedNum); i++) {
