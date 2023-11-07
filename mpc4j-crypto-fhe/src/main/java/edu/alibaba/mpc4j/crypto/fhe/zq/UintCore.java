@@ -506,7 +506,18 @@ public class UintCore {
      * @param value       the value.
      */
     public static void setZeroUint(int uint64Count, long[] value) {
-        Arrays.fill(value, 0, uint64Count, 0);
+        setZeroUint(uint64Count, value, 0);
+    }
+
+    /**
+     * Sets value = 0.
+     *
+     * @param uint64Count number of uint64 in the value.
+     * @param value       the value.
+     * @param pos         the start position.
+     */
+    public static void setZeroUint(int uint64Count, long[] value, int pos) {
+        Arrays.fill(value, pos, uint64Count, 0);
     }
 
     /**

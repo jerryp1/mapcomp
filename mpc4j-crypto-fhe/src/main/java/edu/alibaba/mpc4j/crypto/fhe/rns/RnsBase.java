@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
  * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
  * <p/>
  * <p>
- * The implementation is from: https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/util/rns.h#L22
+ * The implementation is from: https://github.com/microsoft/SEAL/blob/main/native/src/seal/util/rns.h#L22
  * </p>
  *
  * @author Qixian Zhou

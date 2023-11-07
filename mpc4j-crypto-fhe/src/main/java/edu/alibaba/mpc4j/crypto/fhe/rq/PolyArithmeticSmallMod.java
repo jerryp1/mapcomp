@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.*;
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/polyarithsmallmod.h
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/20
  */
 public class PolyArithmeticSmallMod {
