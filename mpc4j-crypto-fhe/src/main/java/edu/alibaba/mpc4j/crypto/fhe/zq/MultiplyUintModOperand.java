@@ -1,7 +1,8 @@
 package edu.alibaba.mpc4j.crypto.fhe.zq;
 
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 /**
  * This struct contains an operand and a precomputed quotient: (2^64 * operand) / modulus, for a specific modulus.
@@ -62,10 +63,7 @@ public class MultiplyUintModOperand implements Cloneable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-            .append("operand", operand)
-            .append("quotient", quotient)
-            .build();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 
     @Override

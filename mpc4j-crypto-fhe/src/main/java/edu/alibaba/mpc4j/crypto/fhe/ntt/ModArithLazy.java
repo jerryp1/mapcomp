@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.crypto.fhe.ntt;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.MultiplyUintModOperand;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 /**
  * lazy modulo arithmetic operations. Lazy means the modulo operation returns the result in [0, 2 * modulus - 1) rather
@@ -105,9 +106,6 @@ class ModArithLazy {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-            .append("modulus", modulus)
-            .append("twoTimesModulus", twoTimesModulus)
-            .build();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 }

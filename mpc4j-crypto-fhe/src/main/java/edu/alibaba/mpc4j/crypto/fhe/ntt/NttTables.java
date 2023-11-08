@@ -3,7 +3,8 @@ package edu.alibaba.mpc4j.crypto.fhe.ntt;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 /**
  * NTT tables used for fast polynomial multiplication in the ring Z[x] / (x^n + 1), where n = 2^k is a power of 2.
@@ -278,15 +279,6 @@ public class NttTables {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-            .append("root", root)
-            .append("invRoot", invRoot)
-            .append("coeffCountPower", coeffCountPower)
-            .append("coeffCount", coeffCount)
-            .append("modulus", modulus)
-            .append("invDegreeModulo", invDegreeModulo)
-            .append("rootPowers", rootPowers)
-            .append("invRootPowers", invRootPowers)
-            .build();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 }

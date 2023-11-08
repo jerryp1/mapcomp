@@ -4,19 +4,21 @@ import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
- * This class used for converting x value in RNS-Base Q = [q1, q2, ..., qk] into another RNS-Base M = [m1, m2, ..., mn].
- * The scheme comes from:
+ * This class used for converting x in RNS-Base Q = [q1, q2, ..., qk] into another RNS-Base M = [m1, m2, ..., mn].
+ * The scheme comes from Section 3.1, equation (2) in the following paper:
  * <p>
- * Section 3.1, equation (2) in the following paper:
- * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * Bajard, Jean-Claude, Julien Eynard, M. Anwar Hasan, and Vincent Zucca. A full RNS variant of FV like somewhat
+ * homomorphic encryption schemes. SAC 2016, pp. 423-442, https://eprint.iacr.org/2016/510.
  * <p/>
  * <p>
- * The implementation is from https://github.com/microsoft/SEAL/blob/a0fc0b732f44fa5242593ab488c8b2b3076a5f76/native/src/seal/util/rns.h#L129
+ * The implementation is from https://github.com/microsoft/SEAL/blob/main/native/src/seal/util/rns.h#L129
  * </p>
  *
  * @author Qixian Zhou
@@ -28,7 +30,7 @@ public class BaseConverter {
      */
     private final RnsBase inBase;
     /**
-     * output base, size of n: m1, m2, ...., mk, prod is m
+     * output base, size of n: m1, m2, ...., mn, prod is m
      */
     private final RnsBase outBase;
     /**
@@ -328,13 +330,6 @@ public class BaseConverter {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("BaseConverter{" + "inBase=").append(inBase).append(", outBase=").append(outBase);
-        sb.append(", baseChangeMatrix=");
-        for (long[] changeMatrix : baseChangeMatrix) {
-            sb.append(Arrays.toString(changeMatrix));
-        }
-        sb.append("}");
-        return sb.toString();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 }

@@ -2,16 +2,21 @@ package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * RNS Base Class. Represents a group of co-prime moduli(Modulus objects): [q1, q2, ..., qk], q or Q = \prod q_i
- * providing decompose(convert x in Z_q to Z_{q_i} ) and compose (convert x_i \in Z_{q_i} to x \in Z_q)
- * functions. The scheme comes from:
+ * RNS Base Class, representing a group of co-prime moduli: [q1, q2, ..., qk] with q = Π_{i = 1}^{k} q_i.
+ * It provides decompose (converting x in Z_q to Z_{q_i}) and compose (converting {x_i ∈ Z_{q_i}} to x ∈ Z_q) functions.
+ * The scheme comes from:
  * <p>
- * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * Bajard, Jean-Claude, Julien Eynard, M. Anwar Hasan, and Vincent Zucca. A full RNS variant of FV like somewhat
+ * homomorphic encryption schemes. SAC 2016, pp. 423-442, https://eprint.iacr.org/2016/510.
  * <p/>
  * <p>
  * The implementation is from: https://github.com/microsoft/SEAL/blob/main/native/src/seal/util/rns.h#L22
@@ -30,54 +35,39 @@ public class RnsBase implements Cloneable {
      */
     private Modulus[] base;
     /**
-     * q = \prod q_i, note that this is a base-2^64 number, just represented by long[]
+     * q = Π_{i = 1}^{k} q_i. This is a base-2^64 number represented by long[].
      */
     private long[] baseProd;
     /**
-     * q_i^* = q/q_i, note that each q^* is a base-2^64 number, just represented by long[], there are k q_i^*, so use 2-d array.
+     * q_i^* = q / q_i. Each q^* is a base-2^64 number represented by long[]. There are total number of k q_i^*.
      */
     private long[][] puncturedProdArray;
     /**
-     * \tilde{q_i} = (q_i^*)^{-1} mod base, because single base's max bit is 61-bit,
-     * so we can use long represents \tilde{q_i}, total k, so use 1-D array
-     * note that we use MultiplyUintModOperand for faster modular multiplication.
+     * ~{q_i} = (q_i^*)^{-1} mod q_i.
+     * Each q_i is at most 61-bit length, so do ~{q_i}, represented by long. There are total number of k ~{q_i}.
      */
     private MultiplyUintModOperand[] invPuncturedProdModBaseArray;
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RnsBase{" + "size=")
-            .append(size)
-            .append(", base=")
-            .append(Arrays.toString(base))
-            .append(", baseProd=")
-            .append(Arrays.toString(baseProd))
-            .append(", puncturedProdArray= ");
-        for (long[] longs : puncturedProdArray) {
-            sb.append(Arrays.toString(longs));
-        }
-        sb.append(", invPuncturedProdModBaseArray= ");
-        sb.append(Arrays.toString(invPuncturedProdModBaseArray));
-        return sb.toString();
-    }
-
+    /**
+     * Creates an RNS-base.
+     *
+     * @param rnsBase a group of moduli represented by Modulus[].
+     */
     public RnsBase(Modulus[] rnsBase) {
         assert rnsBase.length > 0;
-        this.size = rnsBase.length;
+        size = rnsBase.length;
         // co-prime check
         for (int i = 0; i < size; i++) {
+            // in our implementation, a valid modulus must not be zero.
             if (rnsBase[i].isZero()) {
                 throw new IllegalArgumentException("rns base is invalid, modulus can not be zero");
             }
-            // in our implementation, a valid modulus must not be zero, so omit this check.
             for (int j = 0; j < i; j++) {
                 if (Numth.gcd(rnsBase[i].getValue(), rnsBase[j].getValue()) > 1) {
                     throw new IllegalArgumentException("rns base is invalid, each moduli must be co-prime.");
                 }
             }
         }
-        // should consider deep copy?
         base = rnsBase;
         if (!initialize()) {
             throw new IllegalArgumentException("rns base is invalid.");
@@ -85,18 +75,13 @@ public class RnsBase implements Cloneable {
     }
 
     /**
-     * an empty constructor
-     */
-    public RnsBase() {
-
-    }
-
-    /**
-     * @param rnsBase a long[], each element a moduli q_i,
+     * Creates an RNS-base.
+     *
+     * @param rnsBase a group of moduli represented by long[].
      */
     public RnsBase(long[] rnsBase) {
         assert rnsBase.length > 0;
-        this.size = rnsBase.length;
+        size = rnsBase.length;
         // co-prime check
         for (int i = 0; i < size; i++) {
             if (rnsBase[i] == 0) {
@@ -108,146 +93,46 @@ public class RnsBase implements Cloneable {
                 }
             }
         }
-        this.base = Arrays.stream(rnsBase).parallel().mapToObj(Modulus::new).toArray(Modulus[]::new);
+        base = Arrays.stream(rnsBase).mapToObj(Modulus::new).toArray(Modulus[]::new);
         if (!initialize()) {
             throw new IllegalArgumentException("rns base is invalid.");
         }
     }
 
     /**
-     * @param copy RnsBase.
+     * Creates a copied RNS-base.
+     *
+     * @param copy the other RNS-base.
      */
     public RnsBase(RnsBase copy) {
-        this.size = copy.size;
+        size = copy.size;
+        // deep copy base
         long[] baseValues = IntStream.range(0, size).mapToLong(i -> copy.base[i].getValue()).toArray();
-        this.base = Arrays.stream(baseValues).parallel().mapToObj(Modulus::new).toArray(Modulus[]::new);
-        this.baseProd = new long[size];
+        base = Arrays.stream(baseValues).mapToObj(Modulus::new).toArray(Modulus[]::new);
+        // deep copy base products
+        baseProd = new long[size];
         System.arraycopy(copy.baseProd, 0, baseProd, 0, size);
-        // just shallow copy
-        this.invPuncturedProdModBaseArray = new MultiplyUintModOperand[size];
+        // shallow copy inverse punctured products
+        invPuncturedProdModBaseArray = new MultiplyUintModOperand[size];
         System.arraycopy(copy.invPuncturedProdModBaseArray, 0, invPuncturedProdModBaseArray, 0, size);
-        // 2-D array deepcopy
-        this.puncturedProdArray = new long[size][size];
+        // deep copy punctured products
+        puncturedProdArray = new long[size][size];
         for (int i = 0; i < size; i++) {
             System.arraycopy(copy.puncturedProdArray[i], 0, puncturedProdArray[i], 0, size);
         }
     }
 
     /**
-     * Decompose value in-place: [value mod q1, value mod q2, ...., value mod qk]
-     * Note that the implementation here implies that the length of the value is
-     * equal to the size of RnsBase. In fact, we have no limit to the length of the value,
-     * so in order to achieve this, we often add 0 to the high position of the value
-     * For example, the input value is 1, but my size is 3, then the input needs to be [1, 0, 0].
-     * I find this somewhat counter-intuitive, but for the sake of consistency with SEAL, stick with it for now.
-     *
-     * @param value a base-2^64 value.
+     * private constructor.
      */
-    public void decompose(long[] value) {
-        assert value.length == size;
-        if (size > 1) {
-            long[] valueCopy = new long[value.length];
-            System.arraycopy(value, 0, valueCopy, 0, value.length);
-            for (int i = 0; i < size; i++) {
-                value[i] = UintArithmeticSmallMod.moduloUint(valueCopy, size, this.base[i]);
-            }
-        }
+    private RnsBase() {
+        // empty
     }
 
     /**
-     * decompose k arrays, each with length N.
-     * <p>
-     * {1 0 0 2 0 0} count = 2   --->
-     * 1 0 0  ---> a base-2^64 value, is 1
-     * 2 0 0 ---> a base-2^64 value, is 2
-     * 2 values, each size is 3
-     * supposing that base is {3, 5, 7}, then result is
-     * {1, 2, 1, 2, 1, 2} --->
-     * (1 mod 3) (2 mod 3)  ---> 1 2
-     * (1 mod 5) (2 mod 5) ---> 1 2
-     * (1 mod 7) (2 mod 7) ---> 1 2
+     * Initialize with the given base by mainly computing qi^* = q / qi ∈ Z, and ~{qi} = (qi^*)^{-1} mod qi \in Z_{qi}.
      *
-     * @param values an array with length k * N, k is the RNS base size, N is the count.
-     *               can treat as a matrix with shape (k, N)
-     * @param count  N
-     */
-    public void decomposeArray(long[] values, int count) {
-        assert values.length == count * size;
-        if (size > 1) {
-            // now columns[i] represent a value, i \in [0, count)
-            // now value mod q_i, the result overwrite the values
-            //          c0              c1     ....    cn
-            //          |               |               |
-            //
-            //       [ c0 mod q_1, c1 mod q1, ...., cN mod q1]
-            //       [ c0 mod q_2, c1 mod q2, ...., cN mod q2]
-            //               ......
-            //       [ c0 mod qk, c1 mod qk, ....., cN mod qk]
-            long[] valuesCopy = new long[values.length];
-            System.arraycopy(values, 0, valuesCopy, 0, values.length);
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < count; j++) {
-                    values[i * count + j] = UintArithmeticSmallMod.moduloUint(valuesCopy, j * size, size, base[i]);
-                }
-            }
-        }
-    }
-
-    /**
-     * Compose value in-place: [v1 = value mod q1, v2 = value mod q2, ...., vk = value mod qk].
-     * the basic idea is: v = (\sum v_i * \tilde{q_i} * q_i^*) mod q
-     * specific: v = (\sum [v_i * \tilde{q_i}]_{q_i} * q_i^*) mod q
-     *
-     * @param value a base-2^64 value.
-     */
-    public void compose(long[] value) {
-        assert value.length == size;
-        if (size > 1) {
-            long[] tempValue = new long[size];
-            UintCore.setUint(value, size, tempValue);
-            // clear
-            UintCore.setZeroUint(size, value);
-            long[] tempMpi = new long[size];
-            // \sum x_i * \hat{q_i} * q_i^* mod Q
-            for (int i = 0; i < size; i++) {
-                // tmp = x_i * \hat{q_i} mod q_i \in Z_{q_i}
-                long tmpProd = UintArithmeticSmallMod.multiplyUintMod(tempValue[i], invPuncturedProdModBaseArray[i], base[i]);
-                // tmp * q_i^* \in Z_Q, because tmp \in  Z_{q_i}, q_i^* \in Z_{Q/q_i}
-                UintArithmetic.multiplyUint(puncturedProdArray[i], size - 1, tmpProd, size, tempMpi);
-                // sum(tmp * q_i^*) mod Q \in Z_Q
-                UintArithmeticMod.addUintUintMod(tempMpi, value, baseProd, size, value);
-            }
-        }
-    }
-
-    /**
-     * compose by columns in-place, since each column represents a value under RnsBase.
-     *
-     * @param values k * N matrix, each column represent a value under RnsBase.
-     */
-    public void composeArray(long[] values, int count) {
-        assert values.length == count * size;
-        if (size > 1) {
-            // {1 0 0 2 0 0 } ---> {1 2 1 2 1 2} ---> {1, 1, 1} and {2, 2, 2}
-            // {1, 1, 1} ---> {1, 0, 0} and {2, 2, 2} ----> {2, 0, 0}
-            long[][] decomposedValues = new long[count][size];
-            for (int i = 0; i < count; i++) {
-                for (int j = 0; j < size; j++) {
-                    decomposedValues[i][j] = values[i + j * count];
-                }
-            }
-            Arrays.stream(decomposedValues, 0, count).forEach(this::compose);
-            for (int i = 0; i < count; i++) {
-                System.arraycopy(decomposedValues[i], 0, values, i * size, size);
-            }
-        }
-    }
-
-    /**
-     * initialize CRT data by given base, mainly compute q_i^* = q/q_i \in Z,
-     * \tilde{q_i} = (q_i^*)^{-1}  mod q_i \in Z_{q_i}
-     *
-     * @return if initialize success return true, otherwise return false.
+     * @return true if initialization success; false otherwise.
      */
     private boolean initialize() {
         Common.mulSafe(size, size, false);
@@ -261,32 +146,153 @@ public class RnsBase implements Cloneable {
             long[] baseValues = IntStream.range(0, size).mapToLong(i -> base[i].getValue()).toArray();
             boolean invertible = true;
             for (int i = 0; i < size; i++) {
-                // q_i* = Q/qi = \prod q_j, j \ne i.
+                // qi^* = q / qi = Π_{j ∈ [1, k], j ≠ i} qj.
                 UintArithmetic.multiplyManyUint64Except(baseValues, size, i, puncturedProdArray[i]);
-                // \hat{q_i} = (Q/qi)^{-1} mod qi
-                // first reduce (Q/qi) to [0, qi), then compute inv
+                // ~{q_i} = (q / qi)^{-1} mod qi, first compute q / qi mod qi, then compute the inverse
                 long tmp = UintArithmeticSmallMod.moduloUint(puncturedProdArray[i], size - 1, base[i]);
                 long[] tmpInv = new long[1];
                 invertible = invertible && UintArithmeticSmallMod.tryInvertUintMod(tmp, base[i], tmpInv);
                 invPuncturedProdModBaseArray[i].set(tmpInv[0], base[i]);
             }
-            // Q = (Q/q0) * q0
+            // Q = (Q / q0) * q0
             UintArithmetic.multiplyUint(puncturedProdArray[0], size - 1, base[0].getValue(), size, baseProd);
             return invertible;
+        } else {
+            // size == 1
+            baseProd[0] = base[0].getValue();
+            // q = q1, q1^* = q / q1 = 1
+            puncturedProdArray[0] = new long[]{1L};
+            invPuncturedProdModBaseArray[0].set(1, base[0]);
+            return true;
         }
-        // only one q1, q = q1
-        baseProd[0] = base[0].getValue();
-        // \prod q_i = q1, q/q1 = 1
-        puncturedProdArray[0] = new long[]{1L};
-        invPuncturedProdModBaseArray[0].set(1, base[0]);
-        return true;
     }
 
     /**
-     * extend the original RnsBase with a given RnsBase.
+     * Decomposes value in-place, i.e., computes [value mod q1, value mod q2, ..., value mod qk]. The implementation
+     * here implies that the length of the value is equal to the size of RNS-base. In fact, we have no limit to the
+     * length of the value. In order to achieve this, we often add 0 to the high position of the value. For example,
+     * the input value is 1, but we need to decompose to RNS with 3 bases, then the input needs to be [1, 0, 0].
      *
-     * @param other other RnsBase.
-     * @return a new RnsBase object, which base is [this.base, other.base].
+     * @param value a base-2^64 value.
+     */
+    public void decompose(long[] value) {
+        assert value.length == size;
+        if (size > 1) {
+            long[] valueCopy = new long[value.length];
+            System.arraycopy(value, 0, valueCopy, 0, value.length);
+            for (int i = 0; i < size; i++) {
+                // x mod qi
+                value[i] = UintArithmeticSmallMod.moduloUint(valueCopy, size, base[i]);
+            }
+        } else {
+            // size == 1, q1 = q, x1 = x mod q1 = x
+        }
+    }
+
+    /**
+     * Decomposes n values [x1, ..., xk], i.e., computes [xi mod q1, xi mod q2, ..., xi mod qk] for i ∈ [1, k]. These
+     * k values are organized in an 1D-array. For example:
+     * <p>values = {1 0 0 2 0 0}, n = 2 --> we have n = 2 values {1 0 0}, {2 0 0}, each size is k = 3.</p>
+     * Suppose the RNS-base is {3, 5, 7}, then result is represented in the order of qi, that is,
+     * <p>[ x1 mod q1, x2 mod q1, ..., xn mod q1]</p>
+     * <p>[ x1 mod q2, x2 mod q2, ..., xn mod q2]</p>
+     * <p>...</p>
+     * <p>[ x1 mod qk, x2 mod qk, ..., xn mod qk]</p>
+     * For example, {1 0 0 2 0 0} --> {1, 2, 1, 2, 1, 2} = {1 mod 3, 2 mod 3, 1 mod 5, 2 mod 5, 1 mod 7, 2 mod 7}.
+     *
+     * @param values an array with length k * n, where k is the RNS-base size, n is the number of values.
+     * @param count  the number of values n.
+     */
+    public void decomposeArray(long[] values, int count) {
+        assert values.length == count * size;
+        if (size > 1) {
+            /*
+             * [ x1 mod q1, x2 mod q1, ..., xn mod q1]
+             * [ x1 mod q2, x2 mod q2, ..., xn mod q2]
+             *                   ...
+             * [ x1 mod qk, x2 mod qk, ..., xn mod qk]
+             */
+            long[] valuesCopy = new long[values.length];
+            System.arraycopy(values, 0, valuesCopy, 0, values.length);
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < count; j++) {
+                    values[i * count + j] = UintArithmeticSmallMod.moduloUint(valuesCopy, j * size, size, base[i]);
+                }
+            }
+        } else {
+            // size == 1, q1 = q, x1 = x mod q1 = x
+        }
+    }
+
+    /**
+     * Composes value in-place, i.e., computes x where [x1 = x mod q1, x2 = x mod q2, ..., xk = x mod qk].
+     * The basic idea is:
+     * <p>x = (Σ_{i = 1}^k xi * ~{qi} * qi^*) mod q</p>
+     * However, the above formula needs multi-precision arithmetic operations. Instead, we can use the following formula:
+     * <p>x = (Σ_{i = 1}^k [xi * ~{qi}]_{qi} * qi^*) mod q</p>
+     * where [·]_{qi} means modulus the input in range [0, qi).
+     *
+     * @param value a base-2^64 value.
+     */
+    public void compose(long[] value) {
+        assert value.length == size;
+        if (size > 1) {
+            long[] tempValue = new long[size];
+            UintCore.setUint(value, size, tempValue);
+            // clear
+            UintCore.setZeroUint(size, value);
+            long[] tempMpi = new long[size];
+            // x = (Σ_{i = 1}^k [xi * ~{qi}]_{qi} * qi^*) mod q
+            for (int i = 0; i < size; i++) {
+                // tmp = xi * ~{qi} mod q_i
+                long tmpProd = UintArithmeticSmallMod.multiplyUintMod(tempValue[i], invPuncturedProdModBaseArray[i], base[i]);
+                // tmp = tmp * qi^* mod q
+                UintArithmetic.multiplyUint(puncturedProdArray[i], size - 1, tmpProd, size, tempMpi);
+                // x = x + (tmp * qi^*) mod q
+                UintArithmeticMod.addUintUintMod(tempMpi, value, baseProd, size, value);
+            }
+        } else {
+            // size == 1, q1^* = q / q1 = 1, ~{q1} = q1 = 1, then x = x1.
+        }
+    }
+
+    /**
+     * Composes n value in-place: i.e., computes xi where [xi1 = x mod q1, xi2 = x mod q2, ..., xik = x mod qk].
+     * Note that the input is organized as:
+     * <p>[ x1 mod q1, x2 mod q1, ..., xn mod q1]</p>
+     * <p>[ x1 mod q2, x2 mod q2, ..., xn mod q2]</p>
+     * <p>...</p>
+     * <p>[ x1 mod qk, x2 mod qk, ..., xn mod qk]</p>
+     * We need to do operations under the correct order.
+     *
+     * @param values an array with length k * n, where each column represent a value under the RNS-base.
+     */
+    public void composeArray(long[] values, int count) {
+        assert values.length == count * size;
+        if (size > 1) {
+            // {1 0 0 2 0 0} --> {1 2 1 2 1 2} --> {1, 1, 1} and {2, 2, 2}
+            long[][] decomposedValues = new long[count][size];
+            for (int i = 0; i < count; i++) {
+                for (int j = 0; j < size; j++) {
+                    decomposedValues[i][j] = values[i + j * count];
+                }
+            }
+            // {1, 1, 1} --> {1, 0, 0} and {2, 2, 2} --> {2, 0, 0}
+            Arrays.stream(decomposedValues).forEach(this::compose);
+            for (int i = 0; i < count; i++) {
+                System.arraycopy(decomposedValues[i], 0, values, i * size, size);
+            }
+        } else {
+            // size == 1, q1^* = q / q1 = 1, ~{q1} = q1 = 1, then x = x1.
+        }
+    }
+
+    /**
+     * Extends the original RNS-base with a given RNS-base. Assume existing RNS-base is [q1, q2, ..., qk], by extending
+     * it with the other RNS-base [q'1, q'2, ..., q'm], we have a new RNS-base [q1, q2, ..., qk, q'1, q'2, ..., q'm].
+     *
+     * @param other the other RNS-base for [q'1, q'2, ..., q'm].
+     * @return a new RNS-base for [this.base, other.base] = [q1, q2, ..., qk, q'1, q'2, ..., q'm].
      */
     public RnsBase extend(RnsBase other) {
         for (int i = 0; i < size; i++) {
@@ -296,38 +302,40 @@ public class RnsBase implements Cloneable {
                 }
             }
         }
+
+        // Copy over this base
         RnsBase newBase = new RnsBase();
         newBase.size = Common.addSafe(size, other.size, false);
         newBase.base = new Modulus[newBase.size];
-        // copy this.base
         System.arraycopy(this.base, 0, newBase.base, 0, this.size);
-        // copy other.base
+        // Extend with other base
         System.arraycopy(other.base, 0, newBase.base, this.size, other.size);
+        // Initialize CRT data
         if (!newBase.initialize()) {
             throw new IllegalArgumentException("cannot extend by given value");
         }
         return newBase;
     }
 
-
     /**
-     * extend the original RnsBase with a given Modulus.
+     * Extends the original RNS-base with a given modulus. Assume existing RNS-base is [q1, q2, ..., qk], by extending
+     * it with the other modulus q', we have a new RNS-base [q1, q2, ..., qk, q'].
      *
-     * @param value a Modulus.
-     * @return a new RnsBase object, which base added a new Modulus value.
+     * @param value an extend modulus q'.
+     * @return a new RNS-base for [q1, q2, ..., qk, q'].
      */
     public RnsBase extend(Modulus value) {
-        // only one pair are not co-prime, then throw exception
         if (Arrays.stream(base).parallel().anyMatch(m -> !Numth.areCoPrime(m.getValue(), value.getValue()))) {
             throw new IllegalArgumentException("cannot extend by given value");
         }
+        // Copy over this base
         RnsBase newBase = new RnsBase();
         newBase.size = Common.addSafe(size, 1, false);
         newBase.base = new Modulus[newBase.size];
-        // note that this is a shallow copy
         System.arraycopy(this.base, 0, newBase.base, 0, this.size);
-        // extend
+        // Extend with value
         newBase.base[size] = value;
+        // Initialize CRT data
         if (!newBase.initialize()) {
             throw new IllegalArgumentException("cannot extend by given value");
         }
@@ -335,47 +343,49 @@ public class RnsBase implements Cloneable {
     }
 
     /**
-     * extend the original RnsBase with a given 64-bit value.
+     * Extends the original RNS-base with a given modulus. Assume existing RNS-base is [q1, q2, ..., qk], by extending
+     * it with the other modulus q', we have a new RNS-base [q1, q2, ..., qk, q'].
      *
-     * @param value a long value, represent a q_i.
-     * @return a new RnsBase object, which base added a new Modulus(value).
+     * @param value an extend modulus q'.
+     * @return a new RNS-base for [q1, q2, ..., qk, q'].
      */
     public RnsBase extend(long value) {
         return extend(new Modulus(value));
     }
 
     /**
-     * remove the last moduli in current base and return a new RnsBase object.
+     * Drops the last moduli qk in the current RNS-base [q1, q2, ..., q_{k-1}, qk] and returns the new RNS-base.
      *
-     * @return a new RnsBase object.
+     * @return a new RNS-base for [q1, q2, ..., q_{k-1}].
      */
     public RnsBase drop() {
-        if (this.size == 1) {
+        if (size == 1) {
             throw new RuntimeException("cannot drop from base of size 1");
         }
+        // Copy over this base
         RnsBase newBase = new RnsBase();
         newBase.size = this.size - 1;
         newBase.base = new Modulus[newBase.size];
-        // shallow copy
         System.arraycopy(this.base, 0, newBase.base, 0, newBase.size);
-        // initialize CRT data
+        // Initialize CRT data
         newBase.initialize();
         return newBase;
     }
 
     /**
-     * remove the given moduli from the RnsBase and return a new RnsBase object.
+     * Drops the given moduli qj from the current RNS-base [q1, q2, ..., qj, ..., qk] and return a new RNS-base.
      *
-     * @param value a moduli, needed to be removed.
-     * @return a new RnsBase object, which base removed given value.
+     * @param value the dropped moduli.
+     * @return a new RNS-base for [q1, q2, ..., q_{j - 1}, ..., q_{j + 1}, ..., qk].
      */
     public RnsBase drop(Modulus value) {
-        if (this.size == 1) {
+        if (size == 1) {
             throw new RuntimeException("cannot drop from base of size 1");
         }
         if (!contains(value)) {
             throw new IllegalArgumentException("base does not contain given value");
         }
+        // Copy over this base
         RnsBase newBase = new RnsBase();
         newBase.size = this.size - 1;
         newBase.base = new Modulus[newBase.size];
@@ -394,128 +404,135 @@ public class RnsBase implements Cloneable {
     }
 
     /**
-     * remove the given moduli from the RnsBase and return a new RnsBase object.
+     * Drops the given moduli qj from the current RNS-base [q1, q2, ..., qj, ..., qk] and return a new RNS-base.
      *
-     * @param value a moduli, needed to be removed.
-     * @return a new RnsBase object, which base removed given value.
+     * @param value the dropped moduli.
+     * @return a new RNS-base for [q1, q2, ..., q_{j - 1}, ..., q_{j + 1}, ..., qk].
      */
     public RnsBase drop(long value) {
         return drop(new Modulus(value));
     }
 
     /**
-     * whether the RnsBase contains the given moduli.
+     * Returns whether the RNS-base contains the given moduli.
      *
      * @param value moduli.
-     * @return true if the RnsBase contains the moduli, otherwise false.
+     * @return true if the RNS-base contains the moduli; false otherwise.
      */
     public boolean contains(Modulus value) {
         return Arrays.asList(base).contains(value);
     }
 
     /**
-     * whether the RnsBase is a sub base of the given superBase.
-     *
-     * @param superBase superBase.
-     * @return true if the superBase contains all the moduli of RnsBase, otherwise false.
-     */
-    public boolean isSubBaseOf(RnsBase superBase) {
-        return Arrays.stream(base).allMatch(superBase::contains);
-    }
-
-    /**
-     * whether the RnsBase is a super base of the given subBase.
-     *
-     * @param subBase superBase.
-     * @return true if RnsBase contains all the moduli of subBase, otherwise false.
-     */
-    public boolean isSuperBaseOf(RnsBase subBase) {
-        return subBase.isSubBaseOf(this);
-    }
-
-    /**
-     * whether the RnsBase contains the given moduli.
+     * Returns whether the RNS-base contains the given moduli.
      *
      * @param value 64-bit value.
-     * @return true if the RnsBase contains the moduli, otherwise false.
+     * @return true if the RNS-base contains the moduli; false otherwise.
      */
     public boolean contains(long value) {
         return Arrays.stream(base).map(Modulus::getValue).anyMatch(v -> v == value);
     }
 
     /**
-     * get q = \prod q_i, represented as base-2^64 form.
+     * Returns whether the RNS-base is a sub-base of the given super RNS-base.
      *
-     * @return return \prod q_i.
+     * @param superBase the super RNS-base.
+     * @return true if the super RNS-base contains all the moduli of the RNS-base; false otherwise.
+     */
+    public boolean isSubBaseOf(RnsBase superBase) {
+        // we use set to improve performance.
+        Set<Modulus> superBaseSet = Arrays.stream(superBase.base).collect(Collectors.toSet());
+        return Arrays.stream(base).allMatch(superBaseSet::contains);
+    }
+
+    /**
+     * Returns whether the RNS-base is a super-base of the given sub RNS-base.
+     *
+     * @param subBase the sub RNS-base.
+     * @return true if the RNS contains all the moduli of the sub RNS-base; false otherwise.
+     */
+    public boolean isSuperBaseOf(RnsBase subBase) {
+        return subBase.isSubBaseOf(this);
+    }
+
+    /**
+     * Gets q = Π_{i = 1}^k qi, represented as base-2^64 form.
+     *
+     * @return q = Π_{i = 1}^k qi.
      */
     public long[] getBaseProd() {
         return baseProd;
     }
 
     /**
-     * get \tilde{q_i} = (q_i^*)^{-1} mod base, i=1, ..., rnsbase.size. Each is represented as 64-bit value.
+     * Gets ~{qi} = (qi^*)^{-1} mod qi for all i ∈ [1, k]. Each ~{qi} is represented as a 64-bit value.
      *
-     * @return return \tilde{q_i} = (q_i^*)^{-1} mod base, i=1, ..., rnsbase.size.
+     * @return ~{qi} = (qi^*)^{-1} mod qi for all i ∈ [1, k].
      */
     public MultiplyUintModOperand[] getInvPuncturedProdModBaseArray() {
         return invPuncturedProdModBaseArray;
     }
 
     /**
-     * get \tilde{q_i} = (q_i^*)^{-1} mod base, represented as 64-bit value.
+     * Gets ~{qi} = (qi^*)^{-1} mod qi, represented as a 64-bit value.
      *
      * @param index index.
-     * @return return \tilde{q_i} = (q_i^*)^{-1} mod base.
+     * @return ~{qi} = (qi^*)^{-1} mod qi.
      */
     public MultiplyUintModOperand getInvPuncturedProdModBaseArray(int index) {
         return invPuncturedProdModBaseArray[index];
     }
 
     /**
-     * get q_i^* = q/q_i, i=1, ..., rnsbase.size. Each is represented as 64-bit value.
+     * Gets qi^* = q / qi for all i ∈ [1, k]. Each qi^* is represented as a 64-bit value.
      *
-     * @return return q_i^* = q/q_i, i=1, ..., rnsbase.size.
+     * @return qi^* = q / qi for all i ∈ [1, k].
      */
     public long[][] getPuncturedProdArray() {
         return puncturedProdArray;
     }
 
     /**
-     * get q_i^* = q/q_i, represented as 64-bit value.
+     * Gets qi^* = q / qi, represented as a 64-bit value.
      *
      * @param index index.
-     * @return return q_i^* = q/q_i.
+     * @return qi^* = q / qi.
      */
     public long[] getPuncturedProdArray(int index) {
         return puncturedProdArray[index];
     }
 
     /**
-     * get q_i, i=1, ..., rnsbase.size.
+     * Gets qi for all i ∈ [1, k].
      *
-     * @return return q_i, i=1, ..., rnsbase.size.
+     * @return qi for all i ∈ [1, k].
      */
     public Modulus[] getBase() {
         return base;
     }
 
     /**
-     * get q_i.
+     * Gets qi.
      *
      * @param index index.
-     * @return return q_i.
+     * @return qi.
      */
     public Modulus getBase(int index) {
         return base[index];
     }
 
     /**
-     * get size of base.
+     * Gets k, the size of base.
      *
-     * @return return size of base.
+     * @return k, the size of base.
      */
     public int getSize() {
         return size;
+    }
+
+    @Override
+    public String toString() {
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 
     @Override

@@ -2,9 +2,7 @@ package edu.alibaba.mpc4j.crypto.fhe.modulus;
 
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.*;
 
 import java.util.Arrays;
 
@@ -202,13 +200,7 @@ public class Modulus implements Cloneable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-            .append("value", value)
-            .append("bitCount", bitCount)
-            .append("uint64Count", uint64Count)
-            .append("constRatio", constRatio)
-            .append("isPrime", isPrime)
-            .build();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 
     @Override

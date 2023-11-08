@@ -2,7 +2,8 @@ package edu.alibaba.mpc4j.crypto.fhe.utils;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.MultilineRecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -391,10 +392,6 @@ public class DynArray implements Cloneable, Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-            .append("capacity", capacity)
-            .append("size", size)
-            .append("data", Arrays.toString(data))
-            .build();
+        return new ReflectionToStringBuilder(this, new MultilineRecursiveToStringStyle()).toString();
     }
 }
