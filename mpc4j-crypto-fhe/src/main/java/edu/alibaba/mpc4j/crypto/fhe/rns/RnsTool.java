@@ -1,10 +1,12 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
+import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
 import edu.alibaba.mpc4j.crypto.fhe.rq.PolyArithmeticSmallMod;
+import edu.alibaba.mpc4j.crypto.fhe.rq.PolyCore;
 import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
@@ -346,8 +348,7 @@ public class RnsTool {
         // Compute |gamma * t|_qi * ct(s), note that here is under RNS representation operation, |gamma*t|_{q_i} has been pre-computed, so has baseQSize
         // ct(s) is also a poly under RNS base Q, so has baseQSize fractions.
         // Algorithm 1 line-2, 的第一个输入, |gamma * t|_{q_i} is the scalar
-        // todo: remove RnsIter, just using long[]
-        RnsIter temp = new RnsIter(baseQSize, coeffCount);
+        long[] temp = PolyCore.allocateZeroPolyArray(baseQSize, coeffCount, 1);
         for (int i = 0; i < baseQSize; i++) {
             // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
             // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
@@ -358,23 +359,23 @@ public class RnsTool {
                 coeffCount,
                 prodTGammaModQ[i],
                 baseQ.getBase(i),
-                temp.coeffIter,
+                temp,
                 i * coeffCount);
         }
         // Make another temp destination to get the poly in mod {t, gamma}
-        RnsIter tempTGamma = new RnsIter(baseTGammaSize, coeffCount);
+        long[] tempTGammaRns = PolyCore.allocateZeroPolyArray(baseTGammaSize, coeffCount, 1);
         // Convert from q to {t, gamma}
-        baseQToTGammaConv.fastConvertArray(temp, tempTGamma);
+        baseQToTGammaConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempTGammaRns, 0, coeffCount, baseTGammaSize);
         // Multiply by -prod(q)^(-1) mod {t, gamma}
         // line-2
         for (int i = 0; i < baseTGammaSize; i++) {
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                tempTGamma.coeffIter,
+                tempTGammaRns,
                 i * coeffCount,
                 coeffCount,
                 negInvQModTGamma[i],
                 baseTGamma.getBase(i),
-                tempTGamma.coeffIter,
+                tempTGammaRns,
                 i * coeffCount);
         }
         // Need to correct values in temp_t_gamma (gamma component only) which are
@@ -385,18 +386,18 @@ public class RnsTool {
         // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
         for (int i = 0; i < coeffCount; i++) {
             // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
-            if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
+            if (tempTGammaRns[coeffCount + i] > gammaDiv2) {
                 // Compute -(gamma - a) instead of (a - gamma)
                 destination[i] = UintArithmeticSmallMod.addUintMod(
-                    tempTGamma.getCoeff(0, i),
-                    UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
+                    tempTGammaRns[i],
+                    UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGammaRns[coeffCount + i], t),
                     t
                 );
             } else {
                 // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
                 destination[i] = UintArithmeticSmallMod.subUintMod(
-                    tempTGamma.getCoeff(0, i),
-                    UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
+                    tempTGammaRns[i],
+                    UintArithmeticSmallMod.barrettReduce64(tempTGammaRns[coeffCount + i], t),
                     t
                 );
             }
