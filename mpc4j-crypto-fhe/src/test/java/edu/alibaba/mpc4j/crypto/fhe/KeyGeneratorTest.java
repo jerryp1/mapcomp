@@ -29,32 +29,25 @@ public class KeyGeneratorTest {
 
     @Test
     public void bfvKeyGeneration() {
-
         EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+
         {
             parms.setPolyModulusDegree(64);
             parms.setPlainModulus(65537);
             parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60}));
-
             Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
             KeyGenerator keyGenerator = new KeyGenerator(context);
-            // 这里可以进一步测试出 抛出的 异常提示信息吗？这样才能精确的测试出 这里预期应该是在哪里出的问题
-            Assert.assertThrows(IllegalArgumentException.class, () -> {
-                RelinKeys evk = keyGenerator.createRelinKeys();
-            });
-            Assert.assertThrows(IllegalArgumentException.class, () -> {
-                GaloisKeys galk = keyGenerator.createGaloisKeys();
-            });
+            // throw exception
+            Assert.assertThrows(IllegalArgumentException.class, keyGenerator::createRelinKeys);
+            Assert.assertThrows(IllegalArgumentException.class, keyGenerator::createGaloisKeys);
         }
-        {
 
+        {
             parms.setPolyModulusDegree(64);
             parms.setPlainModulus(65537);
             parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60, 60}));
             Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
-
             KeyGenerator keyGenerator = new KeyGenerator(context);
-
             RelinKeys evk = new RelinKeys();
             keyGenerator.createRelinKeys(evk);
             Assert.assertEquals(evk.parmsId(), context.getKeyParmsId());

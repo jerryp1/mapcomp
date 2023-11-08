@@ -28,7 +28,7 @@ public class RnsToolTest {
         // q_i mod 2N = 1
         RnsBase coeffBase = new RnsBase(Numth.getPrimes(polyModulusDegree * 2, primeBitCount, coeffBaseCount));
         // create successfully
-        RnsTool rnsTool = new RnsTool(polyModulusDegree, coeffBase, plainT);
+        new RnsTool(polyModulusDegree, coeffBase, plainT);
         // throw exception
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsTool(1, coeffBase, plainT));
     }
@@ -43,7 +43,7 @@ public class RnsToolTest {
             long[] in = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
             RnsIter inIter = new RnsIter(in, polyModulusDegree);
             long[] outIter = new long[polyModulusDegree];
-            // 0 ---> sacle and round must be 0
+            // 0 ---> scale and round must be 0
             rnsTool.decryptScaleAndRound(inIter, outIter);
             for (long o : outIter) {
                 Assert.assertEquals(0, o);
@@ -102,7 +102,7 @@ public class RnsToolTest {
             in[0] = 1;
             in[1] = 2;
             rnsTool.fastBConvMTilde(inIter, outIter);
-            // These are results for fase base conversion for a length-2 array ((m_tilde), (2*m_tilde))
+            // These are results for fast base conversion for a length-2 array ((m_tilde), (2*m_tilde))
             // before reduction to target base.
             long temp = rnsTool.getMTilde().getValue() % 3;
             long temp2 = (2 * rnsTool.getMTilde().getValue()) % 3;
@@ -161,7 +161,7 @@ public class RnsToolTest {
         // This function assumes the input is in base Bsk U {m_tilde}. If the input is
         // |[c*m_tilde]_q + qu|_m for m in Bsk U {m_tilde}, then the output is c' in Bsk
         // such that c' = c mod q. In other words, this function cancels the extra multiples
-        // of q in the Bsk U {m_tilde} representation. The functions works correctly for
+        // of q in the Bsk U {m_tilde} representation. The functions work correctly for
         // sufficiently small values of u.
 
         Modulus plainT = new Modulus(0);
@@ -298,12 +298,12 @@ public class RnsToolTest {
                 Assert.assertEquals(0, val);
             }
             // The size of q U Bsk is 3. We set the input to have values 15 and 5, and divide by 3 (i.e., q).
-            in[0] = 15;
-            in[1] = 3;
+            in[0] = 0;
+            in[1] = 2;
             in[2] = 15;
-            in[3] = 3;
+            in[3] = 5;
             in[4] = 15;
-            in[5] = 3;
+            in[5] = 5;
 
             // We get an exact result in this case since input base only has size 1
             rnsTool.fastFloor(inIter, outIter);
@@ -313,8 +313,8 @@ public class RnsToolTest {
             Assert.assertEquals(1, out[3]);
 
             // Now a case where the floor really shows up
-            in[0] = 17;
-            in[1] = 4;
+            in[0] = 2;
+            in[1] = 1;
             in[2] = 17;
             in[3] = 4;
             in[4] = 17;
@@ -339,19 +339,17 @@ public class RnsToolTest {
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
-            // The size of q U Bsk is 3. We set the input to have values 15 and 5, and divide by 3 (i.e., q).
-            in[0] = 15;
-            in[1] = 30;
-            in[2] = 15;
-            in[3] = 30;
+            // The size of q U Bsk is 3. We set the input to have values 30 and 15, and divide by 3 * 5.
+            in[0] = 0;
+            in[1] = 0;
+            in[2] = 0;
+            in[3] = 0;
             in[4] = 15;
             in[5] = 30;
             in[6] = 15;
             in[7] = 30;
             in[8] = 15;
             in[9] = 30;
-
-            // We get an exact result in this case since input base only has size 1
             rnsTool.fastFloor(inIter, outIter);
             Assert.assertEquals(1, out[0]);
             Assert.assertEquals(2, out[1]);
@@ -361,17 +359,16 @@ public class RnsToolTest {
             Assert.assertEquals(2, out[5]);
 
             // Now a case where the floor really shows up
-            in[0] = 21;
-            in[1] = 32;
-            in[2] = 21;
-            in[3] = 32;
+            in[0] = 0;
+            in[1] = 2;
+            in[2] = 1;
+            in[3] = 2;
             in[4] = 21;
             in[5] = 32;
             in[6] = 21;
             in[7] = 32;
             in[8] = 21;
             in[9] = 32;
-
             rnsTool.fastFloor(inIter, outIter);
             Assert.assertTrue(Math.abs(1L - out[0]) <= 1);
             Assert.assertTrue(Math.abs(2L - out[1]) <= 1);
@@ -402,13 +399,13 @@ public class RnsToolTest {
             }
 
             // The size of Bsk is 2
-            in[0] = 1;
-            in[1] = 2;
-            in[2] = 1;
-            in[3] = 2;
+            in[0] = 5;
+            in[1] = 6;
+            in[2] = 5;
+            in[3] = 6;
             rnsTool.fastBConvSk(inIter, outIter);
-            Assert.assertEquals(1, out[0]);
-            Assert.assertEquals(2, out[1]);
+            Assert.assertEquals(5 % 3, out[0]);
+            Assert.assertEquals(6 % 3, out[1]);
         }
         {
             // 1-th test

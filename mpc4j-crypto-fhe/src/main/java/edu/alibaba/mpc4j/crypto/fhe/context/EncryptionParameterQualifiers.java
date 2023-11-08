@@ -24,10 +24,9 @@ public class EncryptionParameterQualifiers {
      * The variable parameter_error is set to:
      * - none, if parameters are not validated;
      * - success, if parameters are considered valid;
-     * - other values, if parameters are validated and invalid.
+     * - other values.
      */
     ErrorType parameterError;
-
 
     /**
      * Tells whether FFT can be used for polynomial multiplication. If the
@@ -35,8 +34,7 @@ public class EncryptionParameterQualifiers {
      * FFT can be used for fast multiplication of polynomials modulo the polynomial
      * modulus. In this case the variable using_fft will be set to true. However,
      * currently Microsoft SEAL requires this to be the case for the parameters
-     * to be valid. Therefore, parameters_set can only be true if using_fft is
-     * true.
+     * to be valid. Therefore, parameters_set can only be true if using_fft is true.
      */
     boolean usingFft;
 
@@ -72,8 +70,6 @@ public class EncryptionParameterQualifiers {
      * element to NTT domain (Evaluator::transform_to_ntt) can be used when the
      * plaintext modulus is smaller than each prime in the coefficient modulus.
      * In this case the variable using_fast_plain_lift is set to true.
-     * <p>
-     * 明文模比任意的 单个密文模都要小时，就是 true
      */
     boolean usingFastPlainLift;
 
@@ -91,10 +87,9 @@ public class EncryptionParameterQualifiers {
     CoeffModulus.SecurityLevelType securityLevel;
 
     /**
-     * creat default EncryptionParameterQualifiers object
+     * create default EncryptionParameterQualifiers object
      */
     public EncryptionParameterQualifiers() {
-
         parameterError = ErrorType.NONE;
         usingFft = false;
         usingNtt = false;
@@ -121,56 +116,39 @@ public class EncryptionParameterQualifiers {
      * @return parameterError's name
      */
     public String parameterErrorName() {
-
         switch (parameterError) {
-
             case NONE:
                 return "none";
-
             case SUCCESS:
                 return "success";
-
             case INVALID_SCHEME:
                 return "invalid scheme";
-
             case INVALID_COEFF_MODULUS_SIZE:
                 return "invalid coeff modulus size";
-
             case INVALID_COEFF_MODULUS_BIT_COUNT:
                 return "invalid coeff modulus bit count";
-
             case INVALID_COEFF_MODULUS_NO_NTT:
                 return "invalid coeff modulus no Ntt";
-
             case INVALID_POLY_MODULUS_DEGREE:
                 return "invalid poly modulus degree";
-
             case INVALID_POLY_MODULUS_DEGREE_NON_POWER_OF_TWO:
                 return "invalid poly modulus degree non power of two";
-
             case INVALID_PARAMETERS_TOO_LARGE:
                 return "invalid parameters too large";
-
             case INVALID_PARAMETERS_INSECURE:
                 return "invalid parameters insecure";
-
             case FAILED_CREATING_RNS_BASE:
                 return "failed creating rns base";
-
             case INVALID_PLAIN_MODULUS_BIT_COUNT:
                 return "invalid plain modulus bit count";
-
             case INVALID_PLAIN_MODULUS_CO_PRIMALITY:
                 return "invalid plain modulus co-primality";
-
             case INVALID_PLAIN_MODULUS_TOO_LARGE:
                 return "invalid plain modulus too large";
             case INVALID_PLAIN_MODULUS_NONZERO:
                 return "invalid plain modulus nonzero";
-
             case FAILED_CREATING_RNS_TOOL:
                 return "failed creating rns tool";
-
             default:
                 return "invalid parameter_error";
         }
@@ -180,86 +158,94 @@ public class EncryptionParameterQualifiers {
      * @return message corresponding to parameterError
      */
     public String parameterErrorMessage() {
-
         switch (parameterError) {
-
             case NONE:
                 return "constructed but not yet validated";
-
             case SUCCESS:
                 return "valid";
-
             case INVALID_SCHEME:
                 return "scheme must be BFV or CKKS or BGV";
-
             case INVALID_COEFF_MODULUS_SIZE:
                 return "coeffModulus's primes' count is not bounded by COEFF_MOD_COUNT_MIN(MAX)";
-
             case INVALID_COEFF_MODULUS_BIT_COUNT:
                 return "coeffModulus's primes' bit counts are not bounded by USER_MOD_BIT_COUNT_MIN(MAX)";
-
             case INVALID_COEFF_MODULUS_NO_NTT:
                 return "coeffModulus's primes are not congruent to 1 modulo (2 * poly_modulus_degree)";
-
             case INVALID_POLY_MODULUS_DEGREE:
                 return "polyModulusDegree is not bounded by POLY_MOD_DEGREE_MIN(MAX)";
-
             case INVALID_POLY_MODULUS_DEGREE_NON_POWER_OF_TWO:
                 return "polyModulusDegree is not a power of two";
-
             case INVALID_PARAMETERS_TOO_LARGE:
                 return "parameters are too large to fit in size_t type";
-
             case INVALID_PARAMETERS_INSECURE:
                 return "parameters are not compliant with HomomorphicEncryption.org security standard";
-
             case FAILED_CREATING_RNS_BASE:
                 return "RNSBase cannot be constructed";
-
             case INVALID_PLAIN_MODULUS_BIT_COUNT:
                 return "coeffModulus's bit count is not bounded by PLAIN_MOD_BIT_COUNT_MIN(MAX)";
-
             case INVALID_PLAIN_MODULUS_CO_PRIMALITY:
                 return "plainModulus is not coprime to coeffModulus";
-
             case INVALID_PLAIN_MODULUS_TOO_LARGE:
                 return "plainModulus is not smaller than coeff_modulus";
-
             case INVALID_PLAIN_MODULUS_NONZERO:
                 return "plain_modulus is not zero";
-
             case FAILED_CREATING_RNS_TOOL:
                 return "RNSTool cannot be constructed";
-
             default:
                 return "invalid parameter_error";
         }
     }
 
-
     /**
-     * @return whether parameter_error is ErrorType.SUCCESS
+     * whether ErrorType of parameter_error is SUCCESS.
+     *
+     * @return true if the errorType is SUCCESS, otherwise false.
      */
     public boolean isParametersSet() {
         return parameterError == ErrorType.SUCCESS;
     }
 
+    /**
+     * whether usingDescendingModulusChain is true.
+     *
+     * @return true if usingDescendingModulusChain is true, otherwise false.
+     */
     public boolean isUsingDescendingModulusChain() {
         return usingDescendingModulusChain;
     }
 
+    /**
+     * whether usingFastPlainLift is true.
+     *
+     * @return true if usingFastPlainLift is true, otherwise false.
+     */
     public boolean isUsingFastPlainLift() {
         return usingFastPlainLift;
     }
 
+    /**
+     * whether usingFft is true.
+     *
+     * @return true if usingFft is true, otherwise false.
+     */
     public boolean isUsingFft() {
         return usingFft;
     }
 
+    /**
+     * whether usingNtt is true.
+     *
+     * @return true if usingNtt is true, otherwise false.
+     */
     public boolean isUsingNtt() {
         return usingNtt;
     }
 
+    /**
+     * whether usingBatching is true.
+     *
+     * @return true if usingBatching is true, otherwise false.
+     */
     public boolean isUsingBatching() {
         return usingBatching;
     }
