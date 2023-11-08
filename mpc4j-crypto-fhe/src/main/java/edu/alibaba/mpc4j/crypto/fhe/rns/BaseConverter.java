@@ -34,20 +34,21 @@ public class BaseConverter {
      */
     private final RnsBase outBase;
     /**
-     * baseChangeMatrix[i][j] = q_j^* mod m_i, q_j^* = q/q_j is a multi-precision integer,
-     * m_i is up to 61-bit, so use 2D-array is enough
-     * the matrix as follows:
-     *   [ q_1^* mod m_1, q_2^* mod m_1, ...,  q_k^* mod m_1]
-     *   [ q_1^* mod m_2, q_2^* mod m_2, ...,  q_k^* mod m_2]
-     *   ............
-     *   [ q_1^* mod m_n, q_2^* mod m_n, ...,  q_k^* mod m_n]
-     * the shape is: n * k, n is the size of outBase, k is the size of inBase
+     * baseChangeMatrix[i][j] = q_j^* mod m_i, q_j^* = q/q_j is a multi-precision integer, m_i is up to 61-bit, so use
+     * 2D-array is enough. It is an n * k matrix, where n is the size of outBase, k is the size of inBase, organized as
+     * follows:
+     * <p>[ q_1^* mod m_1, q_2^* mod m_1, ..., q_k^* mod m_1]</p>
+     * <p>[ q_1^* mod m_2, q_2^* mod m_2, ..., q_k^* mod m_2]</p>
+     * <p>...</p>
+     * <p>[ q_1^* mod m_n, q_2^* mod m_n, ...,  q_k^* mod m_n]</p>
      */
     private long[][] baseChangeMatrix;
 
     /**
-     * @param inBase  input RnsBase Q = [q1, q2, ..., qk]
-     * @param outBase output RnsBase M = [m1, m2, ..., mn].
+     * Creates a base converter.
+     *
+     * @param inBase  the input RNS-base Q = [q1, q2, ..., qk].
+     * @param outBase the output RNS-base M = [m1, m2, ..., mn].
      */
     public BaseConverter(RnsBase inBase, RnsBase outBase) {
         this.inBase = inBase;
@@ -56,14 +57,14 @@ public class BaseConverter {
     }
 
     /**
-     * initialize base converter.
+     * initialize the base converter.
      */
     private void initialize() {
         Common.mulSafe(inBase.getSize(), outBase.getSize(), false);
-        // n * k
         baseChangeMatrix = new long[outBase.getSize()][inBase.getSize()];
         for (int i = 0; i < outBase.getSize(); i++) {
             for (int j = 0; j < inBase.getSize(); j++) {
+                // q_ij = q_j^* mod m_i
                 baseChangeMatrix[i][j] = UintArithmeticSmallMod.moduloUint(
                     inBase.getPuncturedProdArray(j), inBase.getSize(), outBase.getBase(i)
                 );
@@ -72,15 +73,15 @@ public class BaseConverter {
     }
 
     /**
-     * fast base convert, Ref: Section 3.1, equation(2).
+     * Computes fast RNS-base conversion. Ref: Section 3.1, equation(2).
      *
-     * @param in  a value x in [0, q) under inBase: [x_1, x_2, ...,x_k]^T, x_j = [x] mod {q_j}.
-     * @param out the same x in [0, q) under outBase: [x_1, x_2, ..., x_n]^T x_i = [x] mod {m_i}.
+     * @param in  a value x in [0, q) under the input RNS-base: [x_1, x_2, ...,x_k]^T, x_j = [x] mod {q_j}.
+     * @param out the same x in [0, q) under the output RNS-base: [x_1, x_2, ..., x_n]^T x_i = [x] mod {m_i}.
      */
     public void fastConvert(long[] in, long[] out) {
         assert in.length == inBase.getSize();
         assert out.length == outBase.getSize();
-        // temp = x_i * \hat{q_i} mod q_i
+        // temp = x_i * ~{q_i} mod q_i
         long[] temp = IntStream.range(0, inBase.getSize())
             .mapToLong(i ->
                 UintArithmeticSmallMod.multiplyUintMod(
@@ -88,8 +89,7 @@ public class BaseConverter {
                 )
             )
             .toArray();
-        // \sum (x_i * \hat{q_i} mod q_i) * q_i^* mod m_j
-        // dot product: (n, k) * (k, 1) --> (n, 1)
+        // x'_i = Σ_{i = 1}^{k} (x_i * ~{q_i} mod q_i) * q_i^* mod m_j
         for (int i = 0; i < outBase.getSize(); i++) {
             out[i] = UintArithmeticSmallMod.dotProductMod(temp, baseChangeMatrix[i], inBase.getSize(), outBase.getBase(i));
         }

@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
  * The implementation is from: https://github.com/microsoft/SEAL/blob/main/native/src/seal/util/rns.h#L22
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/17
  */
 public class RnsBase implements Cloneable {
