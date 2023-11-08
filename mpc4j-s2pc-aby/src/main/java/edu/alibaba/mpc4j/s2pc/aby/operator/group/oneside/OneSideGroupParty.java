@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.AggTypes;
 
-public interface OneSideGroupReceiver extends TwoPartyPto {
+public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
@@ -23,7 +23,22 @@ public interface OneSideGroupReceiver extends TwoPartyPto {
      * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      */
-    boolean[] getResPosFlag(boolean[] groupFlag);
+    default boolean[] getResPosFlag(boolean[] groupFlag){
+        boolean[] res = new boolean[groupFlag.length];
+        int index = groupFlag.length - 1;
+        while (index >= 0) {
+            int curr = index - 1;
+            while (curr >= 0 && (!groupFlag[curr])) {
+                curr--;
+            }if(curr == -1){
+                res[0] = true;
+            }else{
+                res[OneSideGroupUtils.rightMostChildOfLeftSubTreeOfCommonAncestor(curr + 1, index)] = true;
+            }
+            index = curr;
+        }
+        return res;
+    }
 
     /**
      * Executes the protocol.

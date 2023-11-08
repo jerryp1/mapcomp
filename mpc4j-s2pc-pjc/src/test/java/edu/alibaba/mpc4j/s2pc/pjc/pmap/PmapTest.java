@@ -33,7 +33,7 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 12;
+    private static final int LARGE_SIZE = 1 << 14;
 
     /**
      * default middle size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y

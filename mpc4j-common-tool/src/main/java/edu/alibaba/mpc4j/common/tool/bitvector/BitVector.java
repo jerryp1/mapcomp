@@ -192,6 +192,25 @@ public interface BitVector {
         }
         return res;
     }
+    default BitVector[] getPointsWithFixedSpace(int[] startPos, int num, int skipLen){
+        for(int pos : startPos){
+            MathPreconditions.checkNonNegative("startPos", pos);
+            MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), pos + (num - 2) * skipLen);
+        }
+        MathPreconditions.checkPositive("num", num);
+        MathPreconditions.checkPositive("skipLen", skipLen);
+        BitVector[] res = new BitVector[startPos.length];
+        for(int curr = 0; curr < startPos.length; curr++){
+            res[curr] = BitVectorFactory.createZeros(num);
+            for(int i = 0, pos = startPos[curr]; i < num; i++, pos += skipLen){
+                pos = (i == num - 1 && pos >= bitNum()) ? bitNum() - 1 : pos;
+                if(get(pos)){
+                    res[curr].set(i, true);
+                }
+            }
+        }
+        return res;
+    }
     /**
      * 基于一定间隔，设置部分bit的数据，如果最后一个超出了范围，则设置最后一个bit
      * @param source 从哪一个wire取数据
@@ -203,6 +222,8 @@ public interface BitVector {
         MathPreconditions.checkNonNegative("startPos", startPos);
         MathPreconditions.checkPositive("num", num);
         MathPreconditions.checkPositive("skipLen", skipLen);
+        MathPreconditions.checkGreater("bitNum() > startPos", bitNum(), startPos);
+        MathPreconditions.checkGreaterOrEqual("source.bitNum() >= num", source.bitNum(), num);
         MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), startPos + (num - 2) * skipLen);
         for(int i = 0, targetIndex = startPos; i < num; i++, targetIndex += skipLen){
             targetIndex = (i == num - 1 && targetIndex >= bitNum()) ? bitNum() - 1 : targetIndex;

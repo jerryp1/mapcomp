@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.Agg
 
 import java.util.Arrays;
 
-public abstract class AbstractOneSideGroupReceiver extends AbstractTwoPartyPto implements OneSideGroupReceiver {
+public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
     protected int dataNum;
     protected SquareZ2Vector[] pValues, sValues;
     protected SquareZ2Vector[] resultData;
@@ -20,14 +20,14 @@ public abstract class AbstractOneSideGroupReceiver extends AbstractTwoPartyPto i
     protected BitVector gFlag;
 
 
-    protected AbstractOneSideGroupReceiver(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
+    protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
         super(ptoDesc, rpc, otherParty, config);
 
     }
 
     protected void setInputs(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggType, BitVector groupFlag){
         dataNum = xiArrays[0].bitNum();
-        int eachDimBitLen = xiArrays.length;
+        assert dataNum >= 2;
         MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
         MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags.bitNum());
         Arrays.stream(xiArrays).forEach(x -> MathPreconditions.checkEqual("dataNum", "xiArrays[i].bitNum()", dataNum, x.bitNum()));
