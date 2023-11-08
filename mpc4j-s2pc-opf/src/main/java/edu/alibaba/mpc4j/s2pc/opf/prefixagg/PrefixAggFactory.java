@@ -6,11 +6,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumConfig;
 
 /**
  * @author Li Peng
@@ -68,32 +66,12 @@ public class PrefixAggFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static PrefixSumConfig createDefaultPrefixSumConfig(SecurityModel securityModel, Zl zl, boolean silent) {
-        switch (securityModel) {
-            case IDEAL:
-            case SEMI_HONEST:
-                return new Xxx23PrefixSumConfig.Builder(zl, silent).build();
-            case COVERT:
-            case MALICIOUS:
-            default:
-                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
-        }
-    }
-
-    /**
-     * Creates a default prefix-max config.
-     *
-     * @param securityModel the security model.
-     * @param silent        if using a silent config.
-     * @return a default config.
-     */
-    public static PrefixMaxConfig createDefaultPrefixMaxConfig(SecurityModel securityModel, Zl zl, boolean silent) {
-        switch (securityModel) {
-            case IDEAL:
-            case SEMI_HONEST:
-                return new Xxx23PrefixMaxConfig.Builder(zl, silent).build();
-            case COVERT:
-            case MALICIOUS:
+    public static PrefixAggConfig createDefaultPrefixAggConfig(SecurityModel securityModel, Zl zl, boolean silent, PrefixAggTypes type) {
+        switch (type) {
+            case MAX:
+                return PrefixMaxFactory.createDefaultPrefixMaxConfig(securityModel, zl, silent);
+            case SUM:
+                return PrefixSumFactory.createDefaultPrefixSumConfig(securityModel, zl, silent);
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

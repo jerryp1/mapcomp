@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 
 /**
  * Group aggregation config.

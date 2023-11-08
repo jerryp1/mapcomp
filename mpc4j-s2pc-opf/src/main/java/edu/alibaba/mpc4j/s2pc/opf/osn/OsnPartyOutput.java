@@ -50,7 +50,7 @@ public class OsnPartyOutput {
      */
     public byte[][] getShareArray(int bitNum) {
         assert CommonUtils.getByteLength(bitNum) == shareVector.get(0).length;
-        if((bitNum & 7) > 0){
+        if ((bitNum & 7) > 0) {
             byte andNum = (byte) ((1 << (bitNum & 7)) - 1);
             shareVector.forEach(x -> x[0] &= andNum);
         }
@@ -73,5 +73,9 @@ public class OsnPartyOutput {
      */
     public int getN() {
         return shareVector.size();
+    }
+
+    public Vector<byte[]> getShare() {
+        return shareVector;
     }
 }

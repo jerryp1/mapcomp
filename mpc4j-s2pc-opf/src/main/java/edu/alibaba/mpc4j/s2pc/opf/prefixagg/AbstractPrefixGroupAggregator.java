@@ -10,15 +10,21 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxParty;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
 
 import java.math.BigInteger;
@@ -50,6 +56,10 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      */
     protected ZlMuxParty zlMuxParty;
     /**
+     * Plain bit mux party.
+     */
+    protected PlainBitMuxParty plainBitMuxParty;
+    /**
      * Z2 integer circuit.
      */
     protected Z2IntegerCircuit z2IntegerCircuit;
@@ -57,6 +67,7 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      * Shuffle party.
      */
     protected ShuffleParty shuffleParty;
+
     /**
      * Prefix sum tree used for addition.
      */
@@ -73,11 +84,22 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      * Zl
      */
     protected Zl zl;
-
     /**
      * whether need shuffle result before output.
      */
     protected boolean needShuffle;
+    /**
+     * whether group field is plain.
+     */
+    protected boolean plainGroupField;
+    /**
+     * has group field.
+     */
+    protected boolean hasGroupField;
+    /**
+     * is receiver.
+     */
+    protected boolean receiver;
 
     protected AbstractPrefixGroupAggregator(PtoDesc ptoDesc, Rpc rpc, Party otherParty, MultiPartyPtoConfig config) {
         super(ptoDesc, rpc, otherParty, config);
@@ -90,7 +112,7 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         SquareZ2Vector groupIndicator = obtainGroupIndicator1(groupField);
         SquareZ2Vector groupIndicator2 = obtainGroupIndicator2(groupField);
         // agg
-        SquareZlVector sums = agg(groupIndicator, groupIndicator2, aggField);
+        SquareZlVector sums = aggWithIndicators(groupIndicator, groupIndicator2, aggField);
         // shuffle
         if (needShuffle) {
             List<Vector<byte[]>> shuffledResult = shuffle(groupField, sums);
@@ -102,13 +124,79 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     @Override
-    public SquareZlVector agg(SquareZ2Vector groupIndicator1, SquareZ2Vector groupIndicator2, SquareZlVector aggField) throws MpcAbortException {
+    public PrefixAggOutput agg(String[] groupField, SquareZlVector aggField) throws MpcAbortException {
+        checkInputs(groupField, aggField);
+        // obtain group indicator
+        BitVector plainGroupIndicator = receiver ? obtainPlainGroupIndicator1(groupField) : null;
+        BitVector plainGroupIndicator2 = receiver ? obtainPlainGroupIndicator2(groupField) : null;
+        // agg
+        SquareZlVector sums = aggWithPlainIndicators(plainGroupIndicator, plainGroupIndicator2, aggField);
+        // share
+        Vector<byte[]> sharedGroup = receiver ? shareOwnGroup(groupField) : shareOtherGroup();
+
+        return new PrefixAggOutput(sharedGroup, sums);
+    }
+
+    private Vector<byte[]> shareOwnGroup(String[] groupField) {
+        List<byte[]> shareOwnGroupPayload = Arrays.stream(groupField).map(String::getBytes).collect(Collectors.toList());
+        Vector<byte[]> ownShare = IntStream.range(0, groupField.length).mapToObj(i -> {
+            byte[] bytes = new byte[shareOwnGroupPayload.get(0).length];
+            secureRandom.nextBytes(bytes);
+            return bytes;
+        }).collect(Collectors.toCollection(Vector::new));
+
+        List<byte[]> otherShare = IntStream.range(0, groupField.length).mapToObj(i -> BytesUtils.xor(ownShare.get(i), shareOwnGroupPayload.get(i))).collect(Collectors.toList());
+
+        DataPacketHeader groupShareHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), 0, extraInfo,
+            ownParty().getPartyId(), otherParties()[0].getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(groupShareHeader, otherShare));
+        return ownShare;
+    }
+
+    protected Vector<byte[]> shareOtherGroup() {
+        DataPacketHeader groupShareHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), 0, extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> groupSharesPayload = rpc.receive(groupShareHeader).getPayload();
+        return new Vector<>(groupSharesPayload);
+    }
+
+    /**
+     * Executes the protocol.
+     *
+     * @param groupIndicator1 (group_i != group_{i-1}), such as 10001000.
+     * @param groupIndicator2 (group_i == group_{i+1}), such as 11101110.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public SquareZlVector aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector groupIndicator2, SquareZlVector aggField) throws MpcAbortException {
         // generate prefix sum nodes.
         genNodes(aggField, groupIndicator2);
         // prefix-computation
         prefixTree.addPrefix(num);
         // obtain agg fields
         return zlMuxParty.mux(groupIndicator1, SquareZlVector.create(zl, Arrays.stream(nodes)
+            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new), false));
+    }
+
+    /**
+     * Executes the protocol.
+     *
+     * @param groupIndicator1 (group_i != group_{i-1}), such as 10001000.
+     * @param groupIndicator2 (group_i == group_{i+1}), such as 11101110.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    public SquareZlVector aggWithPlainIndicators(BitVector groupIndicator1, BitVector groupIndicator2, SquareZlVector aggField) throws MpcAbortException {
+        // generate prefix sum nodes.
+        genNodes(aggField, groupIndicator2);
+        // prefix-computation
+        prefixTree.addPrefix(num);
+        // obtain agg fields
+        return plainBitMuxParty.mux(groupIndicator1, SquareZlVector.create(zl, Arrays.stream(nodes)
             .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new), false));
     }
 
@@ -134,11 +222,23 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     /**
      * Generate prefix-sum nodes.
      *
-     * @param sumField sum field.
+     * @param sumField  sum field.
+     * @param indicator group indicator in secret shared form.
      */
     private void genNodes(SquareZlVector sumField, SquareZ2Vector indicator) {
         nodes = IntStream.range(0, num).mapToObj(i -> new PrefixAggNode(sumField.getZlVector().getElement(i),
             indicator.getBitVector().get(i))).toArray(PrefixAggNode[]::new);
+    }
+
+    /**
+     * Generate prefix-sum nodes with plain indicator.
+     *
+     * @param sumField  sum field.
+     * @param indicator plain group indicator
+     */
+    private void genNodes(SquareZlVector sumField, BitVector indicator) {
+        nodes = IntStream.range(0, num).mapToObj(i -> new PrefixAggNode(sumField.getZlVector().getElement(i),
+            indicator != null && indicator.get(i))).toArray(PrefixAggNode[]::new);
     }
 
     /**
@@ -171,7 +271,13 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
     }
 
-    @Override
+    /**
+     * obtain a boolean indicator to indicate whether (group_i != group_{i-1}), such as 10001000.
+     *
+     * @param groupField grouping field.
+     * @return a boolean indicator.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     public SquareZ2Vector obtainGroupIndicator1(Vector<byte[]> groupField) throws MpcAbortException {
         byte[][] groupFieldBytes = groupField.toArray(new byte[0][]);
         // pad in the first position with the non-equal value to ensure the indicator is ture (the equality test is false).
@@ -197,7 +303,13 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
 
-    @Override
+    /**
+     * obtain a boolean indicator to indicate whether (group_i == group_{i+1}), such as 11101110.
+     *
+     * @param groupField grouping field.
+     * @return a boolean indicator.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     public SquareZ2Vector obtainGroupIndicator2(Vector<byte[]> groupField) throws MpcAbortException {
         byte[][] groupFieldBytes = groupField.toArray(new byte[0][]);
         // pad in the first position with the non-equal value to ensure the indicator is ture (the equality test is false).
@@ -223,9 +335,52 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     private void checkInputs(Vector<byte[]> groupField, SquareZlVector sumField) {
-        num = groupField.size();
+        num = sumField.getNum();
+        plainGroupField = false;
+        hasGroupField = true;
         // check equal.
         MathPreconditions.checkEqual("size of groupField", "size of sumField", groupField.size(), sumField.getNum());
+    }
+
+    private void checkInputs(String[] groupField, SquareZlVector sumField) {
+        receiver = ownParty().getPartyId() == 0;
+        if (groupField == null && receiver || groupField != null && !receiver) {
+            throw new IllegalArgumentException("Wrong input field, receiver should input groupField, or sender should not input groupField");
+        }
+        num = sumField.getNum();
+        plainGroupField = true;
+        hasGroupField = groupField != null;
+        if (groupField != null) {
+            // check equal.
+            MathPreconditions.checkEqual("size of groupField", "size of sumField", groupField.length, sumField.getNum());
+        }
+    }
+
+    /**
+     * obtain a boolean indicator to indicate whether (group_i != group_{i-1}), such as 10001000.
+     *
+     * @param x grouping field.
+     * @return a boolean indicator.
+     */
+    protected BitVector obtainPlainGroupIndicator1(String[] x) {
+        BitVector indicator = BitVectorFactory.createZeros(x.length);
+        IntStream.range(0, x.length - 1).forEach(i -> indicator.set(i + 1, !x[i].equals(x[i + 1])));
+        indicator.set(0, true);
+        return indicator;
+    }
+
+    /**
+     * obtain a boolean indicator to indicate whether (group_i == group_{i+1}), such as 11101110.
+     *
+     * @param x grouping field.
+     * @return a boolean indicator.
+     */
+    protected BitVector obtainPlainGroupIndicator2(String[] x) {
+        BitVector indicator = BitVectorFactory.createZeros(x.length);
+        IntStream.range(0, x.length - 1).forEach(i -> indicator.set(i, !x[i].equals(x[i + 1])));
+        indicator.noti();
+        indicator.set(x.length - 1, false);
+        return indicator;
     }
 
     @Override

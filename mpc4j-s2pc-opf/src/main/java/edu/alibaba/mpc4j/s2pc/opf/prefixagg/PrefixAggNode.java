@@ -16,7 +16,7 @@ public class PrefixAggNode implements PrefixNode {
      */
     private final BigInteger aggShare;
     /**
-     * Secret shares of group indicator
+     * Secret shares of group indicator (group_i == group_{i+1}), such as 11101110.
      */
     private final boolean groupIndicator;
 

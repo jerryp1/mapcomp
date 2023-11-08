@@ -22,6 +22,10 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/11/1
  */
 public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
+//    /**
+//     * Osn sender.
+//     */
+//    private OsnSender osnSender;
 
     public Xxx23PrefixMaxSender(Rpc senderRpc, Party receiverParty, Xxx23PrefixMaxConfig config) {
         super(Xxx23PrefixMaxPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -29,6 +33,7 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zlcParty = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         zlGreaterParty = ZlGreaterFactory.createSender(senderRpc, receiverParty, config.getZlGreaterConfig());
+//        osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
@@ -45,6 +50,7 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zlcParty.init(maxNum);
         zlMuxParty.init(maxNum);
         zlGreaterParty.init(maxL, maxNum);
+//        osnSender.init(maxNum);
         shuffleParty.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -53,4 +59,9 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
         logPhaseInfo(PtoState.INIT_END);
     }
+
+//    @Override
+//    protected List<Vector<byte[]>> shuffle(String[] groupings, SquareZlVector aggs) throws MpcAbortException {
+//        return null;
+//    }
 }

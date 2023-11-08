@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
+package edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * @author Li Peng
  * @date 2023/11/3
  */
-public class MixGroupAggPtoDesc implements PtoDesc {
+public class SortingGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -19,25 +19,34 @@ public class MixGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_SHUFFLE";
+    private static final String PTO_NAME = "XXX23_SORTING_GROUP_AGG";
 
     /**
      * protocol step
      */
     enum PtoStep {
-        // send gruop NUM
-        SEND_GROUP_NUM
+        // sender send group byte length
+        SENDER_SEND_GROUP_BYTE_LENGTH,
+
+        // receiver send group byte length
+        RECEIVER_SEND_GROUP_BYTE_LENGTH,
+
+        SENDER_SEND_BETA,
+
+        SEND_SHARES,
+
+        REVEAL_OUTPUT,
     }
 
     /**
      * singleton mode
      */
-    private static final MixGroupAggPtoDesc INSTANCE = new MixGroupAggPtoDesc();
+    private static final SortingGroupAggPtoDesc INSTANCE = new SortingGroupAggPtoDesc();
 
     /**
      * private constructor.
      */
-    private MixGroupAggPtoDesc() {
+    private SortingGroupAggPtoDesc() {
         // empty
     }
 

@@ -12,18 +12,29 @@ import java.util.Vector;
  */
 public class PrefixAggOutput {
     /**
-     * secret shares of grouping fields.
+     * (secret shares) of grouping fields.
      */
     private final Vector<byte[]> groupings;
     /**
      * secret shares of aggregation fields.
      */
     private SquareZlVector aggs;
+    /**
+     * plain group.
+     */
+    private final String[] plainGroups;
 
     public PrefixAggOutput(Vector<byte[]> groupings, SquareZlVector aggs) {
         this.groupings = groupings;
         this.aggs = aggs;
+        plainGroups = null;
     }
+
+//    public PrefixAggOutput(String[] plainGroups, SquareZlVector aggs) {
+//        this.plainGroups = plainGroups;
+//        this.aggs = aggs;
+////        groupings = null;
+//    }
 
     public Vector<byte[]> getGroupings() {
         return groupings;
@@ -31,6 +42,10 @@ public class PrefixAggOutput {
 
     public SquareZlVector getAggs() {
         return aggs;
+    }
+
+    public String[] getPlainGroups() {
+        return plainGroups;
     }
 
     public void setAggs(SquareZlVector aggs) {

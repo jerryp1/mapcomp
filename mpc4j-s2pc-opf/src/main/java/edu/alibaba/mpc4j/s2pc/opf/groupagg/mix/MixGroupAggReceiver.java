@@ -4,17 +4,30 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.AbstractShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
-import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,11 +52,31 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      * Osn receiver.
      */
     private final OsnReceiver osnReceiver;
+    /**
+     * Plain payload mux receiver.
+     */
+    private final PlainPayloadMuxParty plainPayloadMuxReceiver;
+    /**
+     * Plain bit mux receiver.
+     */
+    private final PlainBitMuxParty plainBitMuxReceiver;
+    /**
+     * Zl mux receiver.
+     */
+    private final ZlMuxParty zlMuxReceiver;
+    /**
+     * Prefix aggregation party.
+     */
+    private final PrefixAggParty prefixAggReceiver;
 
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
+        plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
+        plainBitMuxReceiver = PlainBitMuxFactory.createReceiver(receiverRpc, senderParty, config.getPlainBitMuxConfig());
+        zlMuxReceiver = ZlMuxFactory.createReceiver(receiverRpc, senderParty, config.getZlMuxConfig());
+        prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         secureRandom = new SecureRandom();
     }
 
@@ -64,8 +97,35 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[][] groupField, long[]... aggField) {
+    public GroupAggOut groupAgg(String[][] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
+        // 假定receiver拥有agg
+        assert aggField != null;
         // obtain sorting permutation
+        String[] mergedGroup = mergeString(groupField);
+        int[] perms = obtainPerms(mergedGroup);
+        // apply perms to group and agg
+        String[] permutedGroup = applyPermutation(mergedGroup, perms);
+        if (aggField != null) {
+            aggField = applyPermutation(aggField, perms);
+        }
+        // osn
+        receiveGroupNum();
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(perms, CommonUtils.getByteLength(otherDistinctGroupNum + 1));
+        // transpose
+        SquareZ2Vector[] transposed = transposeOsnResult(osnPartyOutput, otherDistinctGroupNum + 1);
+        SquareZ2Vector[] bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
+        e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
+        // mul1
+        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, aggField);
+        // temporary array
+        PrefixAggOutput[] outputs = new PrefixAggOutput[ownDistinctGroup.size()];
+        for (int i = 0; i < ownDistinctGroup.size(); i++) {
+            SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);
+            // prefix agg
+            outputs[i] = prefixAggReceiver.agg(permutedGroup, mul);
+        }
+        // reveal
+
 
         return null;
     }
@@ -105,32 +165,12 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         return output;
     }
 
-     private int[] obtainPerms(String[] keys){
-         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(keys[j], j)).toArray(Tuple[]::new);
-         Arrays.sort(tuples);
-         return IntStream.range(0, num).map(j -> tuples[j].getValue()).toArray();
-     }
-
-    private static class Tuple implements Comparable<Tuple> {
-        private final String key;
-        private final int value;
-
-        public Tuple(String key, int value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        @Override
-        public int compareTo(Tuple o) {
-            return key.compareTo(o.getKey());
-        }
+    private void receiveGroupNum() {
+        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_GROUP_NUM.ordinal(), extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
+        otherDistinctGroupNum = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
     }
 }

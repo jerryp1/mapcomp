@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/5/30
  */
 public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
+//    /**
+//     * Osn sender.
+//     */
+//    private OsnSender osnSender;
 
     public Xxx23PrefixSumSender(Rpc senderRpc, Party receiverParty, Xxx23PrefixSumConfig config) {
         super(Xxx23PrefixSumPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -28,6 +32,7 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         zlcParty = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
+//        osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
@@ -43,6 +48,7 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         zlcParty.init(maxNum);
         zlMuxParty.init(maxNum);
         shuffleParty.init(maxNum);
+//        osnSender.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
