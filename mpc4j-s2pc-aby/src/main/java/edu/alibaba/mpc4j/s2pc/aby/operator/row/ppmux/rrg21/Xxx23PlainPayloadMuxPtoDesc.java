@@ -19,7 +19,7 @@ class Xxx23PlainPayloadMuxPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_PLAIN_MUX";
+    private static final String PTO_NAME = "XXX23_PLAIN_PAYLOAD_MUX";
 
     /**
      * protocol step

@@ -15,11 +15,11 @@ public class SortingGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 4005670455894029821L);
+    private static final int PTO_ID = Math.abs((int) -1861431552725647393L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_SORTING_GROUP_AGG";
+    private static final String PTO_NAME = "SORTING_GROUP_AGG";
 
     /**
      * protocol step

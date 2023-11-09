@@ -53,7 +53,7 @@ public class PrefixAggFactory {
             case SUM:
                 return PrefixSumFactory.createPrefixSumReceiver(receiverRpc, senderParty, (PrefixSumConfig) config);
             case MAX:
-                return PrefixSumFactory.createPrefixSumReceiver(receiverRpc, senderParty, (PrefixSumConfig) config);
+                return PrefixMaxFactory.createPrefixMaxReceiver(receiverRpc, senderParty, (PrefixMaxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixSumTypes.class.getSimpleName() + ": " + type.name());
         }

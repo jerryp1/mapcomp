@@ -74,6 +74,7 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(x0Header, x0Payload));
+        extraInfo++;
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -94,6 +95,7 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
+        extraInfo++;
         MpcAbortPreconditions.checkArgument(x1Payload.size() == 1);
         BitVector x1Vector = BitVectorFactory.create(bitNum, x1Payload.get(0));
         stopWatch.stop();
@@ -120,6 +122,7 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
+            extraInfo++;
             MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
             BitVector x0Vector = BitVectorFactory.create(bitNum, x0Payload.get(0));
             BitVector x1Vector = x1.getBitVector();
@@ -147,6 +150,7 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
+            extraInfo++;
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

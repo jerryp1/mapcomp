@@ -1,42 +1,43 @@
-package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
+package edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Mix group aggregation protocol description. The protocol comes from the following paper:
+ * Bitmap group aggregation protocol description. The protocol comes from the following paper:
  * <p>
  * </p>
  *
  * @author Li Peng
- * @date 2023/11/3
+ * @date 2023/11/8
  */
-public class MixGroupAggPtoDesc implements PtoDesc {
+public class BitmapGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -985239413597525368L);
+    private static final int PTO_ID = Math.abs((int) -6372870765708365521L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "MIX_GROUP_AGG";
+    private static final String PTO_NAME = "BITMAP_GROUP_AGG";
 
     /**
      * protocol step
      */
     enum PtoStep {
-        // empty
+        // send gruop NUM
+        SEND_GROUP_NUM
     }
 
     /**
      * singleton mode
      */
-    private static final MixGroupAggPtoDesc INSTANCE = new MixGroupAggPtoDesc();
+    private static final BitmapGroupAggPtoDesc INSTANCE = new BitmapGroupAggPtoDesc();
 
     /**
      * private constructor.
      */
-    private MixGroupAggPtoDesc() {
+    private BitmapGroupAggPtoDesc() {
         // empty
     }
 

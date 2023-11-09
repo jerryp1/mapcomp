@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
@@ -46,6 +49,8 @@ public class GroupAggFactory {
     public static GroupAggParty createSender(Rpc senderRpc, Party receiverParty, GroupAggConfig config) {
         GroupAggTypes type = config.getPtoType();
         switch (type) {
+            case BITMAP:
+                return new BitmapGroupAggSender(senderRpc, receiverParty, (BitmapGroupAggConfig) config);
             case MIX:
                 return new MixGroupAggSender(senderRpc, receiverParty, (MixGroupAggConfig) config);
             case SORTING:
@@ -66,6 +71,8 @@ public class GroupAggFactory {
     public static GroupAggParty createReceiver(Rpc receiverRpc, Party senderParty, GroupAggConfig config) {
         GroupAggTypes type = config.getPtoType();
         switch (type) {
+            case BITMAP:
+                return new BitmapGroupAggReceiver(receiverRpc, senderParty, (BitmapGroupAggConfig) config);
             case MIX:
                 return new MixGroupAggReceiver(receiverRpc, senderParty, (MixGroupAggConfig) config);
             case SORTING:

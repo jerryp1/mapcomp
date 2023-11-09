@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+import java.io.Serializable;
+
 /**
  * Plain bit mux protocol description. The protocol comes from Appendix A of the following paper:
  * <p>
@@ -15,11 +17,11 @@ class Xxx23PlainBitMuxPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -1299787225884780879L);
+    private static final int PTO_ID = Math.abs((int) 4075752027088262232L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_PLAIN_MUX";
+    private static final String PTO_NAME = "XXX23_PLAIN_BIT_MUX";
 
     /**
      * protocol step

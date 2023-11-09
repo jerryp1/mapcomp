@@ -20,7 +20,6 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory;
@@ -66,8 +65,12 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
      * Zl circuit config.
      */
     private final ZlcConfig zlcConfig;
-
+    /**
+     * B2a config.
+     */
     private final B2aConfig b2aConfig;
+
+    private final Zl zl;
 
     private SortingGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
@@ -82,6 +85,7 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
         this.z2cConfig = builder.z2cConfig;
         this.zlcConfig = builder.zlcConfig;
         this.b2aConfig = builder.b2aConfig;
+        this.zl = builder.zl;
     }
 
     @Override
@@ -130,6 +134,16 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
         return zlcConfig;
     }
 
+    @Override
+    public PrefixAggTypes getAggType() {
+        return prefixAggConfig.getPrefixType();
+    }
+
+    @Override
+    public Zl getZl() {
+        return zl;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<SortingGroupAggConfig> {
         /**
          * Osn config.
@@ -167,6 +181,10 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
          * B2a config.
          */
         private final B2aConfig b2aConfig;
+        /**
+         * Zl
+         */
+        private final Zl zl;
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
@@ -177,6 +195,7 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            this.zl = zl;
             switch (type) {
                 case SUM:
                     prefixAggConfig = PrefixSumFactory.createDefaultPrefixSumConfig(SecurityModel.SEMI_HONEST, zl, silent);

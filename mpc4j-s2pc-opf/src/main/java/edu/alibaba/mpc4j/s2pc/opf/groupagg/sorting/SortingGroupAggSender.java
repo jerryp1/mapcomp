@@ -28,6 +28,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -112,7 +113,8 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
+    public void init(Properties properties) throws MpcAbortException {
+        super.init(properties);
         setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -128,34 +130,31 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[][] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
+    public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
         assert aggField == null;
-        // TODO 可能需要一个将string映射为定长结果的
         // set input
-        //
-        // merge group
-        String[] mergedGroup = mergeString(groupField);
+        setPtoInput(groupField, aggField, e);
         // 包括了group和e
-        Vector<byte[]> mergedGroupAndEBytes = IntStream.range(0, num).mapToObj(i -> ByteBuffer.wrap(mergedGroup[i].getBytes())
+        Vector<byte[]> mergedGroupAndEBytes = IntStream.range(0, num).mapToObj(i -> ByteBuffer.wrap(groupField[i].getBytes())
             .put(e.getBitVector().get(i) ? 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
         // sigma_s
-        int[] sigmaSPerm = obtainPerms(mergedGroup);
-        receiveGroupByteLength();
-        sendGroupByteLength();
+        int[] sigmaSPerm = obtainPerms(groupField);
+//        receiveGroupByteLength();
+//        sendGroupByteLength();
         // apply
         Vector<byte[]> permutedGroupAndE = BenesNetworkUtils.permutation(sigmaSPerm, mergedGroupAndEBytes);
         // share
         Vector<byte[]> ownGroupAndE = shareOwn(permutedGroupAndE);
         // osn1, sender用sigma置换receiver的other group, long and bits
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaSPerm, otherGroupByteLength + Long.BYTES + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaSPerm, receiverGroupByteLength + Long.BYTES + 1).getShare();
         // pi 这里也要输入ei进行排序
         // split
-        List<Vector<byte[]>> splits = split(osnOutput1, new int[]{otherGroupByteLength, Long.BYTES, 1});
+        List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, Long.BYTES, 1});
         Vector<byte[]> splitGroup = splits.get(0);
         Vector<byte[]> splitLong = splits.get(1);
         Vector<byte[]> splitBit = splits.get(2);
         Vector<byte[]> mergedSortInput = merge(Arrays.asList(splitBit, splitGroup));
-        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (ownGroupByteLength + 1) * 8))
+        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (senderGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // 输入e和group进行排序
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
@@ -169,20 +168,20 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // 由psorterInput获得对方receiver的bit和group.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
 
-        List<Vector<byte[]>> splitOther = split(trans, new int[]{1, otherGroupByteLength});
+        List<Vector<byte[]>> splitOther = GroupAggUtils.split(trans, new int[]{1, receiverGroupByteLength});
         Vector<byte[]> otherGroup = splitOther.get(1);
         SquareZ2Vector otherBit = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> otherBit.getBitVector().set(i, splitOther.get(0).get(i)[0] == (byte) 1));
 
         // 需要拆解为group,bit
         Vector<byte[]> permutedOwnInfos = sharedPermutationSender.permute(piGi, ownGroupAndE);
-        List<Vector<byte[]>> splitOwn = split(permutedOwnInfos, new int[]{otherGroupByteLength, 1});
+        List<Vector<byte[]>> splitOwn = GroupAggUtils.split(permutedOwnInfos, new int[]{receiverGroupByteLength, 1});
         Vector<byte[]> ownGroup = splitOwn.get(0);
         SquareZ2Vector ownBit = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> ownBit.getBitVector().set(i, splitOwn.get(1).get(i)[0] == (byte) 1));
 
         // merge group
-        Vector<byte[]> mergedTwoGroup = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(ownGroupByteLength + otherGroupByteLength)
+        Vector<byte[]> mergedTwoGroup = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(ownGroup.get(i)).put(otherGroup.get(i)).array()).collect(Collectors.toCollection(Vector::new));
 
         // b2a
@@ -261,17 +260,17 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
 //        return null;
 //    }
 
-    protected void receiveGroupByteLength() {
-        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_GROUP_BYTE_LENGTH.ordinal(), extraInfo,
-            otherParties()[0].getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
-        otherGroupByteLength = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
-    }
+//    protected void receiveGroupByteLength() {
+//        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
+//            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_GROUP_BYTE_LENGTH.ordinal(), extraInfo,
+//            otherParties()[0].getPartyId(), ownParty().getPartyId()
+//        );
+//        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
+//        otherGroupByteLength = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
+//    }
 
     protected void sendGroupByteLength() {
-        List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(ownGroupByteLength).array());
+        List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(senderGroupByteLength).array());
         DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GROUP_BYTE_LENGTH.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()

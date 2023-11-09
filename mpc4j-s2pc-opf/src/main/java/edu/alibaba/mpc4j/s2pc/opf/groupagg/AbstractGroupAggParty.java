@@ -1,21 +1,20 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 
+import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -25,6 +24,10 @@ import java.util.stream.IntStream;
  * @date 2023/10/18
  */
 public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implements GroupAggParty {
+    /**
+     * max l.
+     */
+    protected int maxL;
     /**
      * max num
      */
@@ -38,15 +41,51 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
      */
     protected SquareZ2Vector[] inputs;
 
-    protected List<String> ownDistinctGroup;
+    protected List<String> senderDistinctGroup;
+    protected List<String> receiverDistinctGroup;
+    protected List<String> totalDistinctGroup;
 
-    protected int otherDistinctGroupNum;
+    protected int senderGroupBitLength;
+    protected int receiverGroupBitLength;
 
-    protected int ownGroupByteLength;
-    protected int otherGroupByteLength;
+    protected int senderGroupByteLength;
+    protected int receiverGroupByteLength;
+
+    protected int totalGroupBitLength;
+    protected int totalGroupByteLength;
+
+    protected int senderGroupNum;
+    protected int receiverGroupNum;
+    protected int totalGroupNum;
 
     protected AbstractGroupAggParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, GroupAggConfig config) {
         super(ptoDesc, rpc, otherParty, config);
+    }
+
+    @Override
+    public void init(Properties properties) throws MpcAbortException {
+        senderGroupBitLength = PropertiesUtils.readInt(properties, CommonConstants.SENDER_GROUP_BIT_LENGTH);
+        receiverGroupBitLength = PropertiesUtils.readInt(properties, CommonConstants.RECEIVER_GROUP_BIT_LENGTH);
+        totalGroupBitLength = senderGroupBitLength + receiverGroupBitLength;
+        senderGroupByteLength = CommonUtils.getByteLength(senderGroupBitLength);
+        receiverGroupByteLength = CommonUtils.getByteLength(receiverGroupBitLength);
+        totalGroupByteLength = senderGroupByteLength + receiverGroupByteLength;
+        senderGroupNum = 1 << senderGroupBitLength;
+        receiverGroupNum = 1 << receiverGroupBitLength;
+        totalGroupNum = senderGroupNum * receiverGroupNum;
+        maxL = PropertiesUtils.readInt(properties, CommonConstants.MAX_L);
+        maxNum = PropertiesUtils.readInt(properties, CommonConstants.MAX_NUM);
+
+        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
+        totalDistinctGroup = new ArrayList<>();
+        for (int i = 0; i < senderGroupNum; i++) {
+            for (int j = 0; j < receiverGroupNum; j++) {
+                totalDistinctGroup.add(senderDistinctGroup.get(i).concat(receiverDistinctGroup.get(j)));
+            }
+        }
+
+//        ownDistinctGroup = GroupAggUtils.genStringSetFromRange()
     }
 
     protected void setInitInput(int maxNum) {
@@ -55,9 +94,14 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         initState();
     }
 
-    protected void setPtoInput(List<Vector<byte[]>> x) {
-        num = x.get(0).size();
-        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+    protected void setPtoInput(String[] groupField, long[] aggField, SquareZ2Vector e) {
+        num = groupField.length;
+        Preconditions.checkArgument(e.bitNum() == num,
+            "number of elements not match");
+        if (aggField != null) {
+            Preconditions.checkArgument(aggField.length == num,
+                "number of elements not match");
+        }
     }
 
     /**
@@ -80,43 +124,6 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         return result;
     }
 
-    /**
-     * Split single vector into list of vectors.
-     *
-     * @param x           single vector.
-     * @param byteLengths each byte length in result list.
-     * @return list of vectors.
-     */
-    protected List<Vector<byte[]>> split(Vector<byte[]> x, int[] byteLengths) {
-        List<Vector<byte[]>> result = new ArrayList<>(byteLengths.length);
-        int[] startIndex = new int[byteLengths.length];
-        for (int i = 0; i < byteLengths.length; i++) {
-            result.add(new Vector<>());
-            if (i > 0) {
-                startIndex[i] = startIndex[i - 1] + byteLengths[i - 1];
-            }
-        }
-        for (int i = 0; i < num; i++) {
-            byte[] current = x.elementAt(i);
-            for (int j = 0; j < byteLengths.length; j++) {
-                byte[] temp = new byte[byteLengths[j]];
-                System.arraycopy(current, startIndex[j], temp, 0, byteLengths[j]);
-                result.get(j).add(temp);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * merge multiple grouping key into single one
-     *
-     * @param strs strings
-     * @return
-     */
-    protected String[] mergeString(String[][] strs) {
-        return IntStream.range(0, strs[0].length).mapToObj(i ->
-            Arrays.stream(strs).map(str -> str[i]).reduce("", String::concat)).toArray(String[]::new);
-    }
 
     protected int[] obtainPerms(String[] keys) {
         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(keys[j], j)).toArray(Tuple[]::new);
@@ -148,98 +155,14 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     }
 
     /**
-     * Apply permutation to inputs.
+     * Generate vertical bitmaps.
      *
-     * @param x    inputs.
-     * @param perm permutation.
-     * @return permuted inputs.
+     * @param group group.
+     * @return vertical bitmaps.
      */
-    protected long[] applyPermutation(long[] x, int[] perm) {
-        int num = perm.length;
-        long[] result = new long[num];
-        for (int i = 0; i < num; i++) {
-            result[i] = x[perm[i]];
-        }
-        return result;
-    }
-
-    /**
-     * Apply permutation to inputs.
-     *
-     * @param x    inputs.
-     * @param perm permutation.
-     * @return permuted inputs.
-     */
-    protected String[] applyPermutation(String[] x, int[] perm) {
-        int num = perm.length;
-        String[] result = new String[num];
-        for (int i = 0; i < num; i++) {
-            result[i] = x[perm[i]];
-        }
-        return result;
-    }
-
-    /**
-     * Obtain indicator of group.
-     *
-     * @param x input.
-     * @return indicator of group.
-     */
-    protected BitVector obtainGroupIndicator(String[] x) {
-        BitVector indicator = BitVectorFactory.createZeros(x.length);
-        IntStream.range(0, x.length - 1).forEach(i -> indicator.set(i, !x[i].equals(x[i + 1])));
-        indicator.set(x.length - 1, true);
-        return indicator;
-    }
-
-    protected SquareZ2Vector[] transposeOsnResult(OsnPartyOutput osnPartyOutput, int l) {
-        byte[][] osnBytes = IntStream.range(0, osnPartyOutput.getN())
-            .mapToObj(osnPartyOutput::getShare).toArray(byte[][]::new);
-        ZlDatabase zlDatabase = ZlDatabase.create(l, osnBytes);
-        return Arrays.stream(zlDatabase.bitPartition(EnvType.STANDARD, true))
-            .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-    }
-
-    protected SquareZlVector prefixAgg(SquareZlVector input) {
-        return null;
-    }
-
-    /**
-     * Generates random permutation.
-     *
-     * @param num the number of inputs.
-     * @return a random permutation of num.
-     */
-    protected int[] genRandomPerm(int num) {
-        // generate random permutation
-        List<Integer> randomPermList = IntStream.range(0, num)
-            .boxed()
-            .collect(Collectors.toList());
-        Collections.shuffle(randomPermList, secureRandom);
-        return randomPermList.stream().mapToInt(permutation -> permutation).toArray();
-    }
-
-    protected int[] combinePerm(int[] perm1, int[] perm2) {
-        MathPreconditions.checkEqual("perm1.length", "perm2.length", perm1.length, perm2.length);
-        int[] result = new int[perm1.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = perm2[perm1[i]];
-        }
-        return result;
-    }
-
-    List<Vector<byte[]>> splitBytes(Vector<byte[]> input, int[] nums) {
-        MathPreconditions.checkEqual("length of input", "nums", Arrays.stream(nums).sum(), input.get(0).length);
-        List<Vector<byte[]>> result = new ArrayList<>();
-        IntStream.range(0, nums.length).forEach(i -> result.add(new Vector<>()));
-        for (int i = 0; i < input.size(); i++) {
-            int start = 0;
-            for (int k : nums) {
-                byte[] bytes = new byte[k];
-                System.arraycopy(input.elementAt(i), start, bytes, 0, k);
-                start += k;
-            }
-        }
-        return result;
+    protected BitVector[] genVerticalBitmap(String[] group, List<String> distinctGroupSet) {
+        BitVector[] bitmaps = IntStream.range(0, distinctGroupSet.size()).mapToObj(i -> BitVectorFactory.createZeros(num)).toArray(BitVector[]::new);
+        IntStream.range(0, num).forEach(i -> bitmaps[distinctGroupSet.indexOf(group[i])].set(i, true));
+        return bitmaps;
     }
 }
