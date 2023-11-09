@@ -343,7 +343,7 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     private void checkInputs(String[] groupField, SquareZlVector sumField) {
-        receiver = ownParty().getPartyId() == 0;
+        receiver = ownParty().getPartyId() == 1;
         if (groupField == null && receiver || groupField != null && !receiver) {
             throw new IllegalArgumentException("Wrong input field, receiver should input groupField, or sender should not input groupField");
         }

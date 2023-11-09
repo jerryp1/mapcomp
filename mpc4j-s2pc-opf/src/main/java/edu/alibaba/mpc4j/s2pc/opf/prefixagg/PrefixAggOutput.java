@@ -30,12 +30,6 @@ public class PrefixAggOutput {
         plainGroups = null;
     }
 
-//    public PrefixAggOutput(String[] plainGroups, SquareZlVector aggs) {
-//        this.plainGroups = plainGroups;
-//        this.aggs = aggs;
-////        groupings = null;
-//    }
-
     public Vector<byte[]> getGroupings() {
         return groupings;
     }

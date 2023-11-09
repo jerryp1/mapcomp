@@ -12,6 +12,8 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
@@ -52,6 +54,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
      */
     private final ZlGreaterConfig zlGreaterConfig;
     /**
+     * Plain bit mux config
+     */
+    private final PlainBitMuxConfig plainBitMuxConfig;
+    /**
      * Prefix tree type.
      */
     private final PrefixTreeTypes prefixTreeType;
@@ -66,12 +72,13 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
 
     private Xxx23PrefixMaxConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.zlcConfig, builder.zlMuxConfig,
-            builder.zlGreaterConfig, builder.osnConfig);
+            builder.zlGreaterConfig, builder.osnConfig, builder.plainBitMuxConfig);
         z2cConfig = builder.z2cConfig;
         zlcConfig = builder.zlcConfig;
         zlMuxConfig = builder.zlMuxConfig;
         zlGreaterConfig = builder.zlGreaterConfig;
         shuffleConfig = builder.shuffleConfig;
+        plainBitMuxConfig = builder.plainBitMuxConfig;
         prefixTreeType = builder.prefixTreeType;
         needShuffle = builder.needShuffle;
         osnConfig = builder.osnConfig;
@@ -126,6 +133,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
         return osnConfig;
     }
 
+    public PlainBitMuxConfig getPlainBitMuxConfig() {
+        return plainBitMuxConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PrefixMaxConfig> {
         /**
          * Z2 circuit config.
@@ -152,6 +163,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
          */
         private final OsnConfig osnConfig;
         /**
+         * Plain bit mux config
+         */
+        private final PlainBitMuxConfig plainBitMuxConfig;
+        /**
          * Prefix tree type.
          */
         private final PrefixTreeTypes prefixTreeType;
@@ -169,6 +184,7 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
             zlGreaterConfig = ZlGreaterFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
             shuffleConfig = ShuffleFactory.createDefaultUnShuffleConfig(SecurityModel.SEMI_HONEST, silent);
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             prefixTreeType = PrefixTreeTypes.BRENT_KUNG;
             needShuffle = false;
             this.zl = zl;

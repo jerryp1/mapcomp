@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
@@ -68,6 +69,22 @@ public class GroupAggUtils {
     /**
      * Apply permutation to inputs.
      *
+     * @param e    inputs.
+     * @param perm permutation.
+     * @return permuted inputs.
+     */
+    public static SquareZ2Vector applyPermutation(SquareZ2Vector e, int[] perm) {
+        int num = perm.length;
+        BitVector result = BitVectorFactory.createZeros(num);
+        for (int i = 0; i < num;i++) {
+            result.set(i, e.getBitVector().get(perm[i]));
+        }
+        return SquareZ2Vector.create(result, false);
+    }
+
+    /**
+     * Apply permutation to inputs.
+     *
      * @param x    inputs.
      * @param perm permutation.
      * @return permuted inputs.
@@ -95,11 +112,12 @@ public class GroupAggUtils {
     }
 
     public static SquareZ2Vector[] transposeOsnResult(OsnPartyOutput osnPartyOutput, int l) {
+        int fullL = CommonUtils.getByteLength(l) * Byte.SIZE;
         byte[][] osnBytes = IntStream.range(0, osnPartyOutput.getN())
             .mapToObj(osnPartyOutput::getShare).toArray(byte[][]::new);
-        ZlDatabase zlDatabase = ZlDatabase.create(l, osnBytes);
-        return Arrays.stream(zlDatabase.bitPartition(EnvType.STANDARD, true))
+        SquareZ2Vector[] transpose = Arrays.stream(ZlDatabase.create(fullL, osnBytes).bitPartition(EnvType.STANDARD, true))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+        return IntStream.range(0, l).mapToObj(i -> transpose[i]).toArray(SquareZ2Vector[]::new);
     }
 
     /**

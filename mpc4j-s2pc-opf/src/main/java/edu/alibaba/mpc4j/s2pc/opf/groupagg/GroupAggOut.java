@@ -10,11 +10,11 @@ public class GroupAggOut {
     /**
      * group field.
      */
-    private String[] groupField;
+    private final String[] groupField;
     /**
      * aggregation result.
      */
-    private BigInteger[] aggregationResult;
+    private final BigInteger[] aggregationResult;
 
     public GroupAggOut(String[] groupField, BigInteger[] aggregationResult) {
         this.groupField = groupField;

@@ -33,29 +33,13 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
  */
 public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**
-     * Osn config.
-     */
-    private final OsnConfig osnConfig;
-    /**
      * Zl mux config.
      */
     private final ZlMuxConfig zlMuxConfig;
     /**
-     * Plain payload mux config.
-     */
-    private final PlainPayloadMuxConfig plainPayloadMuxConfig;
-    /**
-     * Plain bit mux config.
-     */
-    private final PlainBitMuxConfig plainBitMuxConfig;
-    /**
      * Prefix aggregate config.
      */
     private final PrefixAggConfig prefixAggConfig;
-    /**
-     * Z2 circuit config.
-     */
-    private final Z2cConfig z2cConfig;
     /**
      * Zl circuit config.
      */
@@ -71,19 +55,14 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
     /**
      * Zl
      */
-    private Zl zl;
+    private final Zl zl;
 
     private BitmapGroupAggConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
-            builder.plainPayloadMuxConfig, builder.plainBitMuxConfig,
-            builder.prefixAggConfig, builder.z2cConfig, builder.zlcConfig,
+        super(SecurityModel.SEMI_HONEST, builder.zlMuxConfig,
+            builder.prefixAggConfig, builder.zlcConfig,
             builder.plainAndConfig, builder.zlMaxConfig);
-        this.osnConfig = builder.osnConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
-        this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
-        this.plainBitMuxConfig = builder.plainBitMuxConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
-        this.z2cConfig = builder.z2cConfig;
         this.zlcConfig = builder.zlcConfig;
         this.plainAndConfig = builder.plainAndConfig;
         this.zlMaxConfig = builder.zlMaxConfig;
@@ -110,28 +89,12 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         return prefixAggConfig.getPrefixType();
     }
 
-    public PlainBitMuxConfig getPlainBitMuxConfig() {
-        return plainBitMuxConfig;
-    }
-
-    public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
-        return plainPayloadMuxConfig;
-    }
-
     public ZlMuxConfig getZlMuxConfig() {
         return zlMuxConfig;
     }
 
-    public OsnConfig getOsnConfig() {
-        return osnConfig;
-    }
-
     public PrefixAggConfig getPrefixAggConfig() {
         return prefixAggConfig;
-    }
-
-    public Z2cConfig getZ2cConfig() {
-        return z2cConfig;
     }
 
     public ZlcConfig getZlcConfig() {
@@ -146,32 +109,15 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         return zlMaxConfig;
     }
 
-
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BitmapGroupAggConfig> {
-        /**
-         * Osn config.
-         */
-        private final OsnConfig osnConfig;
         /**
          * Zl mux config.
          */
         private final ZlMuxConfig zlMuxConfig;
         /**
-         * Plain mux config.
-         */
-        private final PlainPayloadMuxConfig plainPayloadMuxConfig;
-        /**
-         * Plain bit mux config.
-         */
-        private final PlainBitMuxConfig plainBitMuxConfig;
-        /**
          * Prefix aggregate config.
          */
         private final PrefixAggConfig prefixAggConfig;
-        /**
-         * Z2 circuit config.
-         */
-        private final Z2cConfig z2cConfig;
         /**
          * Zl circuit config.
          */
@@ -190,12 +136,8 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         private final Zl zl;
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
-            plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type);
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             plainAndConfig = PlainAndFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMaxConfig = ZlMaxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);

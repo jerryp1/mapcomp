@@ -4,10 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -17,7 +19,6 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
@@ -42,17 +43,17 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      */
     private final OsnSender osnSender;
     /**
-     * Osn receiver.
-     */
-    private final OsnReceiver osnReceiver;
-    /**
      * Plain payload mux sender.
      */
-    private final PlainPayloadMuxParty plainPayloadMuxSender;
+    private final PlainPayloadMuxParty plainPayloadMuxReceiver;
     /**
      * Zl mux party.
      */
     private final ZlMuxParty zlMuxSender;
+    /**
+     * Zl circuit party.
+     */
+    private final ZlcParty zlcSender;
     /**
      * prefix aggregate sender
      */
@@ -61,11 +62,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     public MixGroupAggSender(Rpc senderRpc, Party receiverParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
-        osnReceiver = OsnFactory.createReceiver(senderRpc, receiverParty, config.getOsnConfig());
-        plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(senderRpc, receiverParty, config.getPlainPayloadMuxConfig());
+        plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(senderRpc, receiverParty, config.getPlainPayloadMuxConfig());
         zlMuxSender = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
+        zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         prefixAggSender = PrefixAggFactory.createPrefixAggSender(senderRpc, receiverParty, config.getPrefixAggConfig());
-
     }
 
     @Override
@@ -75,8 +75,13 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
+
         osnSender.init(maxNum);
-        osnReceiver.init(maxNum);
+        plainPayloadMuxReceiver.init(maxNum * senderGroupNum);
+        zlMuxSender.init(maxNum * senderGroupNum);
+        zlcSender.init(1);
+        prefixAggSender.init(maxL, maxNum*senderGroupNum);
+
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -87,29 +92,29 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
-        // 假定receiver拥有agg
         assert aggField == null;
         setPtoInput(groupField, aggField, e);
         // gen bitmap
         Vector<byte[]> bitmaps = genBitmap(groupField, e);
         // osn
-//        sendGroupNum(ownDistinctGroup.size());
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
         SquareZ2Vector[] bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
         e = transposed[transposed.length - 1];
         // mul1
-        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, null);
+        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null);
         // temporary array
         PrefixAggOutput[] outputs = new PrefixAggOutput[senderGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
             SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], mul1);
             // prefix agg
-            outputs[i] = prefixAggSender.agg(groupField, mul);
+            outputs[i] = prefixAggSender.agg((String[])null, mul);
         }
         // reveal
-
+        for (int i = 0; i < senderGroupNum; i++) {
+            zlcSender.revealOther(outputs[i].getAggs());
+        }
         return null;
     }
 
@@ -121,10 +126,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      */
     private Vector<byte[]> genBitmap(String[] group, SquareZ2Vector e) {
         return IntStream.range(0, group.length).mapToObj(i -> {
-            BitVector bitVector = BitVectorFactory.createZeros(senderGroupNum + 1);
-            bitVector.set(senderDistinctGroup.indexOf(group[i]), true);
-            bitVector.set(senderGroupNum, e.getBitVector().get(i));
-            return bitVector.getBytes();
+            byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
+            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]),true);
+            BinaryUtils.setBoolean(bytes,senderGroupNum,  e.getBitVector().get(i));
+            return bytes;
         }).collect(Collectors.toCollection(Vector::new));
     }
 }

@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
@@ -37,9 +40,9 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
      */
     private final PlainPayloadMuxConfig plainPayloadMuxConfig;
     /**
-     * Plain bit mux config.
+     * Zl circuit config.
      */
-    private final PlainBitMuxConfig plainBitMuxConfig;
+    private final ZlcConfig zlcConfig;
     /**
      * Prefix aggregate config.
      */
@@ -51,13 +54,13 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
 
     private MixGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
-            builder.plainPayloadMuxConfig, builder.plainBitMuxConfig,
-            builder.prefixAggConfig);
+            builder.plainPayloadMuxConfig, builder.prefixAggConfig,
+            builder.zlcConfig);
         this.osnConfig = builder.osnConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
         this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
-        this.plainBitMuxConfig = builder.plainBitMuxConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
+        this.zlcConfig = builder.zlcConfig;
         this.zl = builder.zl;
     }
 
@@ -69,10 +72,6 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
     @Override
     public boolean isReverse() {
         return false;
-    }
-
-    public PlainBitMuxConfig getPlainBitMuxConfig() {
-        return plainBitMuxConfig;
     }
 
     public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
@@ -89,6 +88,10 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
 
     public PrefixAggConfig getPrefixAggConfig() {
         return prefixAggConfig;
+    }
+
+    public ZlcConfig getZlcConfig() {
+        return zlcConfig;
     }
 
     @Override
@@ -115,9 +118,9 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
          */
         private final PlainPayloadMuxConfig plainPayloadMuxConfig;
         /**
-         * Plain bit mux config.
+         * Zl circuit config.
          */
-        private final PlainBitMuxConfig plainBitMuxConfig;
+        private final ZlcConfig zlcConfig;
         /**
          * Prefix aggregate config.
          */
@@ -130,9 +133,9 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
-            plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type);
+            zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             this.zl = zl;
         }
 

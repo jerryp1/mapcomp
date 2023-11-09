@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.AbstractPrefixMaxAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 
@@ -22,10 +23,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/11/1
  */
 public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
-//    /**
-//     * Osn sender.
-//     */
-//    private OsnSender osnSender;
 
     public Xxx23PrefixMaxSender(Rpc senderRpc, Party receiverParty, Xxx23PrefixMaxConfig config) {
         super(Xxx23PrefixMaxPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -33,8 +30,8 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zlcParty = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         zlGreaterParty = ZlGreaterFactory.createSender(senderRpc, receiverParty, config.getZlGreaterConfig());
-//        osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
+        plainBitMuxParty = PlainBitMuxFactory.createSender(senderRpc, receiverParty, config.getPlainBitMuxConfig());
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
@@ -47,10 +44,10 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
         stopWatch.start();
         z2cParty.init(maxL * maxNum);
-        zlcParty.init(maxNum);
+        zlcParty.init(1);
         zlMuxParty.init(maxNum);
         zlGreaterParty.init(maxL, maxNum);
-//        osnSender.init(maxNum);
+        plainBitMuxParty.init(maxNum);
         shuffleParty.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -59,9 +56,4 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
         logPhaseInfo(PtoState.INIT_END);
     }
-
-//    @Override
-//    protected List<Vector<byte[]>> shuffle(String[] groupings, SquareZlVector aggs) throws MpcAbortException {
-//        return null;
-//    }
 }

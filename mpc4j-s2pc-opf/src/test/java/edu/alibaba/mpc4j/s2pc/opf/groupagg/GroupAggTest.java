@@ -3,10 +3,12 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -55,16 +57,28 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // sum
+        // bitmap && sum
+//        configurations.add(new Object[]{
+//            PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+//        });
+//
+//        // bitmap && max
+//        configurations.add(new Object[]{
+//            PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+//        });
+
+        // mix && sum
         configurations.add(new Object[]{
             PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
         });
 
-        // max
+        // mix && max
         configurations.add(new Object[]{
             PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
         });
 
         return configurations;
@@ -146,8 +160,8 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         String[] receiverGroup = genRandomInputGroup(groupBitLength, num);
         long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> SECURE_RANDOM.nextInt(32) + 1).toArray();
 
-        SquareZ2Vector e0 = SquareZ2Vector.createRandom(num, SECURE_RANDOM);
-        SquareZ2Vector e1 = SquareZ2Vector.createRandom(num, SECURE_RANDOM);
+        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
+        SquareZ2Vector e1 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
         BitVector e = e0.getBitVector().xor(e1.getBitVector());
 
         Properties properties = genProperties(num, groupBitLength, groupBitLength);
