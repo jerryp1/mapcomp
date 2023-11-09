@@ -13,6 +13,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
+ * Key Generator Test.
+ *
  * @author Qixian Zhou
  * @date 2023/9/22
  */
@@ -52,7 +54,6 @@ public class KeyGeneratorTest {
             keyGenerator.createRelinKeys(evk);
             Assert.assertEquals(evk.parmsId(), context.getKeyParmsId());
             Assert.assertEquals(1, evk.key(2).length);
-
             for (PublicKey[] a : evk.data()) {
                 for (PublicKey b : a) {
                     Assert.assertFalse(b.data().isTransparent());
