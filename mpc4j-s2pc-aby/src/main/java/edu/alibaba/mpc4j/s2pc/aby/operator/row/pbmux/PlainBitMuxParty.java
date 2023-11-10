@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
@@ -29,4 +30,14 @@ public interface PlainBitMuxParty extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZlVector mux(BitVector xi, SquareZlVector yi) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param xi the binary xi.
+     * @param yi the arithmetic share yi.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    SquareZ2Vector[] mux(BitVector xi, SquareZ2Vector[] yi) throws MpcAbortException;
 }

@@ -35,9 +35,13 @@ public class PlpsiClientThread extends Thread {
      * client output
      */
     private PlpsiClientOutput<ByteBuffer> clientOutput;
+    /**
+     * whether deal all payload with flag together
+     */
+    private final boolean dealTogether;
 
     PlpsiClientThread(PlpsiClient<ByteBuffer> client, List<ByteBuffer> clientElementList, int serverElementSize,
-                      int[] serverPayloadBitLs, boolean[] isBinaryShares) {
+                      int[] serverPayloadBitLs, boolean[] isBinaryShares, boolean dealTogether) {
         this.client = client;
         this.clientElementList = clientElementList;
         this.serverElementSize = serverElementSize;
@@ -46,6 +50,7 @@ public class PlpsiClientThread extends Thread {
         }
         this.serverPayloadBitLs = serverPayloadBitLs;
         this.isBinaryShares = isBinaryShares;
+        this.dealTogether = dealTogether;
     }
 
     PlpsiClientOutput<ByteBuffer> getClientOutput() {
@@ -56,10 +61,14 @@ public class PlpsiClientThread extends Thread {
     public void run() {
         try {
             client.init(clientElementList.size(), serverElementSize);
-            clientOutput = client.psi(clientElementList, serverElementSize);
-            if(serverPayloadBitLs != null){
-                for(int i = 0; i < serverPayloadBitLs.length; i++){
-                    client.intersectPayload(serverPayloadBitLs[i], isBinaryShares[i]);
+            if(dealTogether){
+                clientOutput = client.psiWithPayload(clientElementList, serverElementSize, serverPayloadBitLs, isBinaryShares);
+            }else{
+                clientOutput = client.psi(clientElementList, serverElementSize);
+                if(serverPayloadBitLs != null){
+                    for(int i = 0; i < serverPayloadBitLs.length; i++){
+                        client.intersectPayload(serverPayloadBitLs[i], isBinaryShares[i]);
+                    }
                 }
             }
         } catch (MpcAbortException e) {

@@ -84,4 +84,24 @@ public interface MpcZ2Vector extends MpcVector {
         MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
         getBitVector().setValues(startByteIndex, data);
     }
+
+    /**
+     * 基于一定间隔，得到部分bit的数据
+     * @param startPos 从哪一个位置开始取
+     * @param num 取多少个bit
+     * @param skipLen 取位的间隔是多少个bit
+     */
+    MpcZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen);
+
+    /**
+     * 基于一定间隔，设置部分bit的数据
+     * @param source 从哪一个wire取数据
+     * @param startPos 从哪一个位置开始置位
+     * @param num 设置多少个bit
+     * @param skipLen 置位的间隔是多少个bit
+     */
+    default void setPointsWithFixedSpace(MpcZ2Vector source, int startPos, int num, int skipLen){
+        assert isPlain() == source.isPlain();
+        getBitVector().setPointsWithFixedSpace(source.getBitVector(), startPos, num, skipLen);
+    }
 }

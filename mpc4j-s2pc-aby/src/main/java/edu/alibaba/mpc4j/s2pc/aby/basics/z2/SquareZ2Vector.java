@@ -3,12 +3,8 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.z2;
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
 import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.circuit.z2.psorter.PSorterUtils;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -227,5 +223,10 @@ public class SquareZ2Vector implements MpcZ2Vector {
     public MpcZ2Vector[] getBitsWithSkip(int totalBitNum, int skipLen) {
         byte[][] res = PSorterUtils.getBitsWithSkip(this, totalBitNum, skipLen);
         return Arrays.stream(res).map(x -> SquareZ2Vector.create(totalBitNum, x, this.isPlain())).toArray(SquareZ2Vector[]::new);
+    }
+
+    @Override
+    public MpcZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
+        return SquareZ2Vector.create(bitVector.getPointsWithFixedSpace(startPos, num, skipLen), isPlain());
     }
 }

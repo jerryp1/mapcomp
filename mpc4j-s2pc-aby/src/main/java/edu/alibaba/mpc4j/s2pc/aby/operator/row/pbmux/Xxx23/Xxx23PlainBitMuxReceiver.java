@@ -9,7 +9,9 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.AbstractPlainBitMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxPtoDesc.PtoStep;
@@ -19,6 +21,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotSender;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -77,10 +80,7 @@ public class Xxx23PlainBitMuxReceiver extends AbstractPlainBitMuxParty {
         byte[] x0Bytes = x1.getBytes();
         boolean[] x0Binary = BinaryUtils.byteArrayToBinary(x0Bytes, num);
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x0Binary);
-        stopWatch.stop();
-        long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, ptoTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime());
 
         // receive payload and decrypt
         stopWatch.start();
@@ -90,11 +90,34 @@ public class Xxx23PlainBitMuxReceiver extends AbstractPlainBitMuxParty {
         );
         List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
         SquareZlVector result = t0t1(cotReceiverOutput, t0t1Payload);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime());
 
-        stopWatch.stop();
-        ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, ptoTime);
+        logPhaseInfo(PtoState.PTO_END);
+        return result;
+    }
+
+    @Override
+    public SquareZ2Vector[] mux(BitVector xi, SquareZ2Vector[] yi) throws MpcAbortException {
+        assert xi != null;
+        setPtoInput(xi, yi);
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        // cot
+        stopWatch.start();
+        byte[] x0Bytes = xi.getBytes();
+        boolean[] x0Binary = BinaryUtils.byteArrayToBinary(x0Bytes, num);
+        CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x0Binary);
+        logStepInfo(PtoState.PTO_STEP, 1, 2, resetAndGetTime());
+
+        // receive payload and decrypt
+        stopWatch.start();
+        DataPacketHeader t0t1Header = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_PAYLOADS.ordinal(), extraInfo,
+            otherParty().getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
+        SquareZ2Vector[] result = t0t1ForZ2(cotReceiverOutput, t0t1Payload);
+        logStepInfo(PtoState.PTO_STEP, 2, 2, resetAndGetTime());
 
         logPhaseInfo(PtoState.PTO_END);
         return result;
@@ -117,11 +140,36 @@ public class Xxx23PlainBitMuxReceiver extends AbstractPlainBitMuxParty {
                     return BigIntegerUtils.byteArrayToNonNegBigInteger(a0);
                 } else {
                     BytesUtils.xori(a0, t1s[index]);
-                    return zl.add(BigIntegerUtils.byteArrayToNonNegBigInteger(a0), inputPayloads.getZlVector().getElement(index));
+                    return zl.add(BigIntegerUtils.byteArrayToNonNegBigInteger(a0), inputZlValues.getZlVector().getElement(index));
                 }
             })
             .toArray(BigInteger[]::new);
         ZlVector z0ZlVector = ZlVector.create(zl, a0s);
         return SquareZlVector.create(z0ZlVector, false);
+    }
+
+    private SquareZ2Vector[] t0t1ForZ2(CotReceiverOutput cotReceiverOutput, List<byte[]> t0t1Payload) throws MpcAbortException {
+        MpcAbortPreconditions.checkArgument(t0t1Payload.size() == num * 2);
+        byte[][] t0s = t0t1Payload.subList(0, num).toArray(new byte[0][]);
+        byte[][] t1s = t0t1Payload.subList(num, num * 2).toArray(new byte[0][]);
+        Prg prg = PrgFactory.createInstance(envType, byteL);
+        // Let P0's output be a0
+        IntStream t0IntStream = IntStream.range(0, num);
+        t0IntStream = parallel ? t0IntStream.parallel() : t0IntStream;
+        byte[][] a0s = t0IntStream
+            .mapToObj(index -> {
+                boolean x0 = cotReceiverOutput.getChoice(index);
+                byte[] a0 = prg.extendToBytes(cotReceiverOutput.getRb(index));
+                if (!x0) {
+                    BytesUtils.xori(a0, t0s[index]);
+                } else {
+                    BytesUtils.xori(a0, t1s[index]);
+                    BytesUtils.xori(a0, inputZ2Values[index].getBitVector().getBytes());
+                }
+                return a0;
+            })
+            .toArray(byte[][]::new);
+        BitVector[] bitVectors = ZlDatabase.create(bitL, a0s).bitPartition(envType, parallel);
+        return Arrays.stream(bitVectors).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
     }
 }

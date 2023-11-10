@@ -23,6 +23,7 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationParty;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.AbstractPmapServer;
@@ -101,8 +102,9 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         // 1. 先进行第一次 plpsi
         stopWatch.start();
-        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(serverElementList, clientElementSize);
-        plpsiClient.intersectPayload(bitLen, true);
+        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psiWithPayload(serverElementList, clientElementSize, new int[]{bitLen}, new boolean[]{true});
+//        PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(serverElementList, clientElementSize);
+//        plpsiClient.intersectPayload(bitLen, true);
         logStepInfo(PtoState.PTO_STEP, 1, stepSteps, resetAndGetTime());
 
         // 2. 再进行第二次plpsi
@@ -115,7 +117,7 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         stopWatch.start();
         int osnBitLen = 1 + bitLen;
         int osnByteL = CommonUtils.getByteLength(osnBitLen);
-        getOsnMap(plpsiClientOutput);
+        int[] paiS = getOsnMap(plpsiClientOutput);
         OsnPartyOutput osnRes = osnReceiver.osn(osnMap, osnByteL);
         BitVector[] shareRes = getShareSwitchRes(osnRes, plpsiClientOutput);
         logStepInfo(PtoState.PTO_STEP, 3, stepSteps, resetAndGetTime());
@@ -151,7 +153,10 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         // 7. compute permutation
         stopWatch.start();
-        SquareZlVector sigma1 = smallFieldPermGenSender.sort(secondBeta > serverElementSize ? new SquareZ2Vector[]{shuffleRes[0][0], shuffleRes[1][0]} : new SquareZ2Vector[]{shuffleRes[0][0]});
+        SquareZlVector sigma1 = smallFieldPermGenSender.sort(
+            secondBeta > serverElementSize
+                ? new SquareZ2Vector[]{shuffleRes[0][0], shuffleRes[1][0]}
+                : new SquareZ2Vector[]{shuffleRes[0][0]});
         logStepInfo(PtoState.PTO_STEP, 7, stepSteps, resetAndGetTime());
 
         // 8. 进行第一次invp
@@ -176,7 +181,7 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         // 拼装得到最终的结果
         Map<Integer, T> indexMap = new HashMap<>();
         for (int i = 0; i < serverElementList.size(); i++) {
-            indexMap.put(i, serverElementList.get(i));
+            indexMap.put(i, serverElementList.get(paiS[i]));
         }
         PmapPartyOutput<T> res = new PmapPartyOutput<>(MapType.MAP, serverElementArrayList, indexMap, serverEqualFlag);
         logStepInfo(PtoState.PTO_STEP, 10, stepSteps, resetAndGetTime());
@@ -184,24 +189,28 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         return res;
     }
 
-    private void getOsnMap(PlpsiClientOutput<T> plpsiClientOutput) {
+    private int[] getOsnMap(PlpsiClientOutput<T> plpsiClientOutput) {
         List<Integer> nullPos = new LinkedList<>();
         List<T> allElements = plpsiClientOutput.getTable();
         osnMap = new int[allElements.size()];
+        int[] validPos = new int[serverElementSize];
         for (int i = 0; i < allElements.size(); i++) {
             T element = allElements.get(i);
             if (element == null) {
                 nullPos.add(i);
             } else {
                 int pos = serverElementArrayList.indexOf(element);
-                osnMap[pos] = i;
+                validPos[pos] = i;
             }
         }
         assert nullPos.size() == allElements.size() - serverElementSize;
+        int[] paiS = ShuffleUtils.generateRandomPerm(serverElementSize);
+        System.arraycopy(ShuffleUtils.composePerms(validPos, paiS), 0, osnMap, 0, serverElementSize);
         Collections.shuffle(nullPos, secureRandom);
         for (int i = 0, j = serverElementSize; i < nullPos.size(); i++, j++) {
             osnMap[j] = nullPos.get(i);
         }
+        return paiS;
     }
 
     private BitVector[] getShareSwitchRes(OsnPartyOutput osnRes, PlpsiClientOutput<T> plpsiClientOutput) {

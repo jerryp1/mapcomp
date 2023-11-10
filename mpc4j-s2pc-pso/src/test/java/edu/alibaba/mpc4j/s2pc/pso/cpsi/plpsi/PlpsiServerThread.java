@@ -41,9 +41,13 @@ public class PlpsiServerThread extends Thread {
      * server output
      */
     private PlpsiShareOutput serverOutput;
+    /**
+     * whether deal all payload with flag together
+     */
+    private final boolean dealTogether;
 
     PlpsiServerThread(PlpsiServer<ByteBuffer, ByteBuffer> server, List<ByteBuffer> serverElementList, int clientElementSize,
-                      List<List<ByteBuffer>> serverPayloadLists, int[] serverPayloadBitLs, boolean[] isBinaryShares) {
+                      List<List<ByteBuffer>> serverPayloadLists, int[] serverPayloadBitLs, boolean[] isBinaryShares, boolean dealTogether) {
         this.server = server;
         this.serverElementList = serverElementList;
         this.clientElementSize = clientElementSize;
@@ -54,6 +58,7 @@ public class PlpsiServerThread extends Thread {
         this.serverPayloadLists = serverPayloadLists;
         this.serverPayloadBitLs = serverPayloadBitLs;
         this.isBinaryShares = isBinaryShares;
+        this.dealTogether = dealTogether;
     }
 
     PlpsiShareOutput getServerOutput() {
@@ -64,10 +69,14 @@ public class PlpsiServerThread extends Thread {
     public void run() {
         try {
             server.init(serverElementList.size(), clientElementSize);
-            serverOutput = server.psi(serverElementList, clientElementSize);
-            if(serverPayloadLists != null){
-                for(int i = 0; i < serverPayloadBitLs.length; i++){
-                    server.intersectPayload(serverPayloadLists.get(i), serverPayloadBitLs[i], isBinaryShares[i]);
+            if(dealTogether){
+                serverOutput = server.psiWithPayload(serverElementList, clientElementSize, serverPayloadLists, serverPayloadBitLs, isBinaryShares);
+            }else{
+                serverOutput = server.psi(serverElementList, clientElementSize);
+                if(serverPayloadLists != null){
+                    for(int i = 0; i < serverPayloadBitLs.length; i++){
+                        server.intersectPayload(serverPayloadLists.get(i), serverPayloadBitLs[i], isBinaryShares[i]);
+                    }
                 }
             }
         } catch (MpcAbortException e) {
