@@ -280,10 +280,11 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      */
     public SquareZ2Vector obtainGroupIndicator1(Vector<byte[]> groupField) throws MpcAbortException {
         byte[][] groupFieldBytes = groupField.toArray(new byte[0][]);
+        int byteLength = groupFieldBytes[0].length;
         // pad in the first position with the non-equal value to ensure the indicator is ture (the equality test is false).
-        byte[] padding0 = new byte[groupFieldBytes[0].length];
+        byte[] padding0 = new byte[byteLength];
         secureRandom.nextBytes(padding0);
-        byte[] padding1 = new byte[groupFieldBytes[0].length];
+        byte[] padding1 = new byte[byteLength];
         secureRandom.nextBytes(padding1);
         // shift right
         byte[][] groupShiftRight = new byte[groupField.size()][];
@@ -294,9 +295,9 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         groupShiftLeft[0] = padding1;
         System.arraycopy(groupFieldBytes, 1, groupShiftLeft, 1, groupField.size() - 1);
         // create z2 shares of grouping
-        SquareZ2Vector[] groupShiftRightBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftRight, zl.getL()))
+        SquareZ2Vector[] groupShiftRightBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftRight, byteLength * Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        SquareZ2Vector[] groupShiftLeftBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftLeft, zl.getL()))
+        SquareZ2Vector[] groupShiftLeftBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftLeft, byteLength * Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // equality test and reverse
         return z2cParty.not(z2IntegerCircuit.eq(groupShiftLeftBc, groupShiftRightBc));
@@ -312,10 +313,11 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      */
     public SquareZ2Vector obtainGroupIndicator2(Vector<byte[]> groupField) throws MpcAbortException {
         byte[][] groupFieldBytes = groupField.toArray(new byte[0][]);
+        int byteLength = groupFieldBytes[0].length;
         // pad in the first position with the non-equal value to ensure the indicator is ture (the equality test is false).
-        byte[] padding0 = new byte[groupFieldBytes[0].length];
+        byte[] padding0 = new byte[byteLength];
         secureRandom.nextBytes(padding0);
-        byte[] padding1 = new byte[groupFieldBytes[0].length];
+        byte[] padding1 = new byte[byteLength];
         secureRandom.nextBytes(padding1);
         // shift right
         byte[][] groupShiftRight = new byte[groupField.size()][];
@@ -326,9 +328,9 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         groupShiftLeft[groupField.size() - 1] = padding1;
         System.arraycopy(groupFieldBytes, 1, groupShiftLeft, 0, groupField.size() - 1);
         // create z2 shares of grouping
-        SquareZ2Vector[] groupShiftRightBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftRight, zl.getL()))
+        SquareZ2Vector[] groupShiftRightBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftRight, byteLength* Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        SquareZ2Vector[] groupShiftLeftBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftLeft, zl.getL()))
+        SquareZ2Vector[] groupShiftLeftBc = Arrays.stream(TransposeUtils.transposeSplit(groupShiftLeft, byteLength* Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // equality test and reverse
         return (SquareZ2Vector) z2IntegerCircuit.eq(groupShiftLeftBc, groupShiftRightBc);

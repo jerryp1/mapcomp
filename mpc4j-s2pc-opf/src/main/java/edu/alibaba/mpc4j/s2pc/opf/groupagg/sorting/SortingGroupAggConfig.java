@@ -11,10 +11,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
@@ -42,14 +38,6 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
      */
     private final ZlMuxConfig zlMuxConfig;
     /**
-     * Plain payload mux config.
-     */
-    private final PlainPayloadMuxConfig plainPayloadMuxConfig;
-    /**
-     * Plain bit mux config.
-     */
-    private final PlainBitMuxConfig plainBitMuxConfig;
-    /**
      * Shared permutation config.
      */
     private final SharedPermutationConfig sharedPermutationConfig;
@@ -74,12 +62,10 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
 
     private SortingGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
-            builder.plainPayloadMuxConfig, builder.plainBitMuxConfig, builder.sharedPermutationConfig,
-            builder.z2cConfig, builder.zlcConfig, builder.b2aConfig);
+            builder.sharedPermutationConfig, builder.z2cConfig,
+            builder.zlcConfig, builder.b2aConfig);
         this.osnConfig = builder.osnConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
-        this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
-        this.plainBitMuxConfig = builder.plainBitMuxConfig;
         this.sharedPermutationConfig = builder.sharedPermutationConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
         this.z2cConfig = builder.z2cConfig;
@@ -90,20 +76,12 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
 
     @Override
     public GroupAggTypes getPtoType() {
-        return GroupAggTypes.MIX;
+        return GroupAggTypes.SORTING;
     }
 
     @Override
     public boolean isReverse() {
         return false;
-    }
-
-    public PlainBitMuxConfig getPlainBitMuxConfig() {
-        return plainBitMuxConfig;
-    }
-
-    public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
-        return plainPayloadMuxConfig;
     }
 
     public ZlMuxConfig getZlMuxConfig() {
@@ -154,14 +132,6 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
          */
         private final ZlMuxConfig zlMuxConfig;
         /**
-         * Plain mux config.
-         */
-        private final PlainPayloadMuxConfig plainPayloadMuxConfig;
-        /**
-         * Plain bit mux config.
-         */
-        private final PlainBitMuxConfig plainBitMuxConfig;
-        /**
          * Shared permutation config.
          */
         private final SharedPermutationConfig sharedPermutationConfig;
@@ -188,8 +158,6 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
-            plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             sharedPermutationConfig = SharedPermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);

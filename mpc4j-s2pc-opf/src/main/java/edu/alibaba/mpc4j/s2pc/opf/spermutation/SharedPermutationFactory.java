@@ -3,7 +3,6 @@ package edu.alibaba.mpc4j.s2pc.opf.spermutation;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationSender;
@@ -90,7 +89,7 @@ public class SharedPermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bSharedPermutationConfig.Builder(silent).build();
+                return new Xxx23SharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -109,7 +108,7 @@ public class SharedPermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23SharedPermutationConfig.Builder(silent).build();
+                return new Xxx23bSharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

@@ -65,7 +65,7 @@ public class Dsz15B2aReceiver extends AbstractB2aParty {
 
         // cot
         stopWatch.start();
-        BitVector mergeBitVector = BitVectorFactory.merge(Arrays.stream(xi).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        BitVector mergeBitVector = BitVectorFactory.merge(Arrays.stream(input).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         byte[] x0Bytes = mergeBitVector.getBytes();
         boolean[] x0Binary = BinaryUtils.byteArrayToBinary(x0Bytes, num * l);
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x0Binary);

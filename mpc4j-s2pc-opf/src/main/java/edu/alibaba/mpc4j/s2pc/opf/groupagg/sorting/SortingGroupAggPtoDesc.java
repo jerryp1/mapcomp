@@ -36,6 +36,10 @@ public class SortingGroupAggPtoDesc implements PtoDesc {
         SEND_SHARES,
 
         REVEAL_OUTPUT,
+
+        TEST,
+
+        REVEAL_BIT,
     }
 
     /**

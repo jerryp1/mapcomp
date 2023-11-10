@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.opf.prefixagg;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 import java.util.Vector;
@@ -20,14 +21,15 @@ public class PrefixAggOutput {
      */
     private SquareZlVector aggs;
     /**
-     * plain group.
+     * number
      */
-    private final String[] plainGroups;
+    private final int num;
 
     public PrefixAggOutput(Vector<byte[]> groupings, SquareZlVector aggs) {
+        Preconditions.checkArgument(groupings.size() == aggs.getNum(), "size of input not match");
         this.groupings = groupings;
         this.aggs = aggs;
-        plainGroups = null;
+        this.num = aggs.getNum();
     }
 
     public Vector<byte[]> getGroupings() {
@@ -38,11 +40,13 @@ public class PrefixAggOutput {
         return aggs;
     }
 
-    public String[] getPlainGroups() {
-        return plainGroups;
-    }
 
     public void setAggs(SquareZlVector aggs) {
+        Preconditions.checkArgument(aggs.getNum()== num, "size of input not correct");
         this.aggs = aggs;
+    }
+
+    public int getNum() {
+        return num;
     }
 }
