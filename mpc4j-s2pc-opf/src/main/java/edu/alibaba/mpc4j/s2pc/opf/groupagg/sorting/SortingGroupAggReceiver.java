@@ -185,6 +185,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         SquareZ2Vector receiverBit = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> receiverBit.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
         List<byte[]> ownBit2 = revealOwnBit(splitOwn.get(0));
+        BitVector bit3 = z2cReceiver.revealOwn(receiverBit);
 
         // now apply piGi to sender's shared group
         Vector<byte[]> doubleSortedSenderGroup = sharedPermutationReceiver.permute(piGi, senderGroups);
@@ -204,7 +205,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         String[] groupResult = revealOwnGroup(mergedTwoGroup);
         ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // agg
-        PrefixAggOutput agg = prefixAggReceiver.agg(mergedTwoGroup, receiverAggAs);
+        PrefixAggOutput agg = prefixAggReceiver.agg(mergedTwoGroup, receiverAggAs, receiverBit);
         // reveal
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
@@ -246,38 +247,6 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         return IntStream.range(0, num).mapToLong(i -> LongUtils.byteArrayToLong(BytesUtils.xor(senderDataSizePayload.get(i), input.get(i)))).toArray();
     }
 
-//    protected void sendGroupByteLength() {
-//        List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(receiverGroupByteLength).array());
-//        DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(
-//            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_GROUP_BYTE_LENGTH.ordinal(), extraInfo,
-//            ownParty().getPartyId(), otherParties()[0].getPartyId()
-//        );
-//        rpc.send(DataPacket.fromByteArrayList(receiverDataSizeHeader, receiverDataSizePayload));
-//    }
-
-//    protected void receiveGroupByteLength() {
-//        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
-//            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_GROUP_BYTE_LENGTH.ordinal(), extraInfo,
-//            otherParties()[0].getPartyId(), ownParty().getPartyId()
-//        );
-//        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
-//        otherGroupByteLength = ByteBuffer.wrap(senderDataSizePayload.get(0)).getInt();
-//    }
-
-//    protected int[] receiveBeta() {
-//        DataPacketHeader senderDataSizeHeader = new DataPacketHeader(
-//            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_BETA.ordinal(), extraInfo,
-//            otherParties()[0].getPartyId(), ownParty().getPartyId()
-//        );
-//        List<byte[]> senderDataSizePayload = rpc.receive(senderDataSizeHeader).getPayload();
-//        ByteBuffer buffer = ByteBuffer.wrap(senderDataSizePayload.get(0));
-//        int[] result = new int[num];
-//        for (int i = 0; i < num; i++) {
-//            result[i] = buffer.getInt();
-//        }
-//        return result;
-//    }
-
     protected Vector<byte[]> shareOther() {
         DataPacketHeader receiveSharesHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_SHARES.ordinal(), extraInfo,
@@ -285,17 +254,5 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         );
         List<byte[]> receiveSharesPayload = rpc.receive(receiveSharesHeader).getPayload();
         return new Vector<>(receiveSharesPayload);
-    }
-
-    private GroupAggOut revealOwnOutput(PrefixAggOutput prefixAggOutput) throws MpcAbortException {
-        DataPacketHeader revealOutputHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_SHARES.ordinal(), extraInfo,
-            otherParties()[0].getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> revealOutputPayload = rpc.receive(revealOutputHeader).getPayload();
-        String[] group = IntStream.range(0, num).mapToObj(i ->
-            new String(BytesUtils.xor(revealOutputPayload.get(i), prefixAggOutput.getGroupings().get(i)))).toArray(String[]::new);
-        ZlVector agg = zlcReceiver.revealOwn(prefixAggOutput.getAggs());
-        return new GroupAggOut(group, agg.getElements());
     }
 }

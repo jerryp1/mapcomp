@@ -173,13 +173,13 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 
 //        long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> SECURE_RANDOM.nextInt(32) + 1).toArray();
 
-//        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-//        SquareZ2Vector e1 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-//        BitVector e = e0.getBitVector().xor(e1.getBitVector());
-
-        BitVector e = BitVectorFactory.createOnes(num);
         SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-        SquareZ2Vector e1 = SquareZ2Vector.create(e.xor(e0.getBitVector()), false);
+        SquareZ2Vector e1 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
+        BitVector e = e0.getBitVector().xor(e1.getBitVector());
+
+//        BitVector e = BitVectorFactory.createOnes(num);
+//        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
+//        SquareZ2Vector e1 = SquareZ2Vector.create(e.xor(e0.getBitVector()), false);
 
         Properties properties = genProperties(num, groupBitLength, groupBitLength);
 

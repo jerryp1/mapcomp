@@ -19,10 +19,15 @@ public class PrefixAggNode implements PrefixNode {
      * Secret shares of group indicator (group_i == group_{i+1}), such as 11101110.
      */
     private final boolean groupIndicator;
+    /**
+     * The flag of intersection.
+     */
+    private boolean intersFlag;
 
     public PrefixAggNode(BigInteger aggShare, boolean groupIndicator) {
         this.aggShare = aggShare;
         this.groupIndicator = groupIndicator;
+        intersFlag = false;
     }
 
     public BigInteger getAggShare() {
