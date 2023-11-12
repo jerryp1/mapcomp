@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import org.slf4j.Logger;
@@ -87,9 +87,8 @@ public abstract class AbstractPlainBitMuxParty extends AbstractTwoPartyPto imple
         byteL = CommonUtils.getByteLength(yi.length);
         bitL = yi.length;
         inputBits = xi;
-        ZlDatabase zlDatabase = ZlDatabase.create(envType, parallel,
-            Arrays.stream(yi).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
-        inputZ2Values = Arrays.stream(zlDatabase.getBytesData()).map(x ->
+
+        inputZ2Values = Arrays.stream(TransposeUtils.transposeMerge(Arrays.stream(yi).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))).map(x ->
             SquareZ2Vector.create(yi.length, x, false)).toArray(SquareZ2Vector[]::new);
     }
 }

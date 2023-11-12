@@ -8,6 +8,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
@@ -53,6 +55,10 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      */
     private final ZlMuxParty zlMuxReceiver;
     /**
+     * Z2 circuit receiver.
+     */
+    private final Z2cParty z2cReceiver;
+    /**
      * Zl circuit receiver.
      */
     private final ZlcParty zlcReceiver;
@@ -66,8 +72,16 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
         zlMuxReceiver = ZlMuxFactory.createReceiver(receiverRpc, senderParty, config.getZlMuxConfig());
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
+
+//        addMultipleSubPtos(osnReceiver);
+//        addMultipleSubPtos(plainPayloadMuxSender);
+//        addSubPtos(zlMuxReceiver);
+//        addSubPtos(z2cReceiver);
+//        addSubPtos(zlcReceiver);
+//        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
     }
 
@@ -80,10 +94,11 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         stopWatch.start();
 
         osnReceiver.init(maxNum);
-        plainPayloadMuxSender.init(maxNum * senderGroupNum);
-        zlMuxReceiver.init(maxNum * senderGroupNum);
+        plainPayloadMuxSender.init(maxNum);
+        zlMuxReceiver.init(maxNum);
+        z2cReceiver.init(maxNum);
         zlcReceiver.init(1);
-        prefixAggReceiver.init(maxL, maxNum*senderGroupNum);
+        prefixAggReceiver.init(maxL, maxNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -129,11 +144,11 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         List<Integer> groupIndex = getGroupIndexes(permutedGroup);
         BigInteger[] plainResult = new BigInteger[totalGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            for (int j = 0; j < receiverGroupNum;j++) {
+            for (int j = 0; j < receiverGroupNum; j++) {
                 if (j < groupIndex.size()) {
-                    plainResult[i*senderGroupNum+j] = plain[i].getElement(groupIndex.get(j));
+                    plainResult[i * senderGroupNum + j] = plain[i].getElement(groupIndex.get(j));
                 } else {
-                    plainResult[i*senderGroupNum+j] = BigInteger.ZERO;
+                    plainResult[i * senderGroupNum + j] = BigInteger.ZERO;
                 }
             }
         }

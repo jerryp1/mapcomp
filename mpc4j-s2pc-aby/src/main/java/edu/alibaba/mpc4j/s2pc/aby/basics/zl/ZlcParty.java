@@ -210,5 +210,5 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      * @param prefix the prefix value
      * @return a new vector: y[i] = \sum_0^i{x[i]} + prefix
      */
-    public SquareZlVector rowAdderWithPrefix(SquareZlVector x, SquareZlVector prefix);
+    SquareZlVector rowAdderWithPrefix(SquareZlVector x, SquareZlVector prefix);
 }

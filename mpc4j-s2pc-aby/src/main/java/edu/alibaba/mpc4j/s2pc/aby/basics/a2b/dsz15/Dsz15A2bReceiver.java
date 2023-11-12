@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.AbstractA2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -73,8 +74,7 @@ public class Dsz15A2bReceiver extends AbstractA2bParty {
 
         // transpose and re-share
         stopWatch.start();
-        ZlDatabase zlDatabase = ZlDatabase.create(l, xi.getZlVector().getElements());
-        BitVector[] bitVectors = zlDatabase.bitPartition(envType, parallel);
+        BitVector[] bitVectors = TransposeUtils.transposeSplit(xi.getZlVector().getElements(),l);
         int[] nums = IntStream.range(0, l).map(i -> num).toArray();
         SquareZ2Vector[] reSharedX0 = z2cReceiver.shareOther(nums);
         SquareZ2Vector[] reSharedX1 = z2cReceiver.shareOwn(bitVectors);
@@ -102,10 +102,9 @@ public class Dsz15A2bReceiver extends AbstractA2bParty {
         logPhaseInfo(PtoState.PTO_BEGIN);
         // transpose and re-share
         stopWatch.start();
-        BitVector[][] bitVectors = Arrays.stream(xi).map(x -> {
-            ZlDatabase zlDatabase = ZlDatabase.create(l, x.getZlVector().getElements());
-            return zlDatabase.bitPartition(envType, parallel);
-        }).toArray(BitVector[][]::new);
+        BitVector[][] bitVectors = Arrays.stream(xi).map(x ->
+             TransposeUtils.transposeSplit(x.getZlVector().getElements(),l)
+        ).toArray(BitVector[][]::new);
         // merge
         BitVector[] mergeRes = IntStream.range(0, bitVectors[0].length).mapToObj(i -> {
             BitVector[] tmp = Arrays.stream(bitVectors).map(x -> x[i]).toArray(BitVector[]::new);

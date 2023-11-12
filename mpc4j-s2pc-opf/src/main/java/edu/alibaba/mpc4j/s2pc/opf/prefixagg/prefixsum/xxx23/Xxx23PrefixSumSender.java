@@ -30,6 +30,12 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
         plainBitMuxParty = PlainBitMuxFactory.createSender(senderRpc, receiverParty, config.getPlainBitMuxConfig());
+
+//        addSubPtos(z2cParty);
+//        addSubPtos(zlcParty);
+//        addSubPtos(zlMuxParty);
+//        addSubPtos(shuffleParty);
+//        addSubPtos(plainBitMuxParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();

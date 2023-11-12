@@ -11,16 +11,10 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
@@ -45,6 +39,10 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
      */
     private final ZlcConfig zlcConfig;
     /**
+     * Z2 circuit party.
+     */
+    private final Z2cConfig z2cConfig;
+    /**
      * Plain and config.
      */
     private final PlainAndConfig plainAndConfig;
@@ -60,12 +58,14 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
     private BitmapGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.zlMuxConfig,
             builder.prefixAggConfig, builder.zlcConfig,
-            builder.plainAndConfig, builder.zlMaxConfig);
+            builder.plainAndConfig, builder.zlMaxConfig,
+            builder.z2cConfig);
         this.zlMuxConfig = builder.zlMuxConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
         this.zlcConfig = builder.zlcConfig;
         this.plainAndConfig = builder.plainAndConfig;
         this.zlMaxConfig = builder.zlMaxConfig;
+        this.z2cConfig = builder.z2cConfig;
         this.zl = builder.zl;
     }
 
@@ -109,6 +109,10 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         return zlMaxConfig;
     }
 
+    public Z2cConfig getZ2cConfig() {
+        return z2cConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BitmapGroupAggConfig> {
         /**
          * Zl mux config.
@@ -118,6 +122,10 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
          * Prefix aggregate config.
          */
         private final PrefixAggConfig prefixAggConfig;
+        /**
+         * Z2 circuit party.
+         */
+        private final Z2cConfig z2cConfig;
         /**
          * Zl circuit config.
          */
@@ -141,6 +149,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             plainAndConfig = PlainAndFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMaxConfig = ZlMaxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.zl = zl;
         }
 

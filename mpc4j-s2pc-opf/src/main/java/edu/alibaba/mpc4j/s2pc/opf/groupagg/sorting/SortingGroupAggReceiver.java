@@ -94,6 +94,14 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
+
+//        addSubPtos(osnSender);
+//        addSubPtos(zlMuxReceiver);
+//        addSubPtos(sharedPermutationReceiver);
+//        addSubPtos(prefixAggReceiver);
+//        addSubPtos(z2cReceiver);
+//        addSubPtos(zlcReceiver);
+//        addSubPtos(b2aReceiver);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cReceiver);
         secureRandom = new SecureRandom();
     }

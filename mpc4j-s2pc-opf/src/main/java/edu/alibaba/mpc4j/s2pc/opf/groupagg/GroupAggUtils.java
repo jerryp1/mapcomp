@@ -1,11 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 
@@ -76,7 +75,7 @@ public class GroupAggUtils {
     public static SquareZ2Vector applyPermutation(SquareZ2Vector e, int[] perm) {
         int num = perm.length;
         BitVector result = BitVectorFactory.createZeros(num);
-        for (int i = 0; i < num;i++) {
+        for (int i = 0; i < num; i++) {
             result.set(i, e.getBitVector().get(perm[i]));
         }
         return SquareZ2Vector.create(result, false);
@@ -113,11 +112,10 @@ public class GroupAggUtils {
 
     public static SquareZ2Vector[] transposeOsnResult(OsnPartyOutput osnPartyOutput, int l) {
         int fullL = CommonUtils.getByteLength(l) * Byte.SIZE;
-        byte[][] osnBytes = IntStream.range(0, osnPartyOutput.getN())
-            .mapToObj(osnPartyOutput::getShare).toArray(byte[][]::new);
-        SquareZ2Vector[] transpose = Arrays.stream(ZlDatabase.create(fullL, osnBytes).bitPartition(EnvType.STANDARD, true))
+        Vector<byte[]> osn = osnPartyOutput.getShare();
+        SquareZ2Vector[] transpose = Arrays.stream(TransposeUtils.transposeSplit(osn, fullL))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        return IntStream.range(0, l).mapToObj(i -> transpose[i]).toArray(SquareZ2Vector[]::new);
+        return Arrays.stream(transpose, 0, l).toArray(SquareZ2Vector[]::new);
     }
 
     /**
@@ -146,5 +144,14 @@ public class GroupAggUtils {
             }
         }
         return result;
+    }
+
+    public static SquareZ2Vector mergeZ2ShareWithPadding(SquareZ2Vector[] inputs) {
+        BitVector[] temp = Arrays.stream(inputs).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
+        return SquareZ2Vector.create(BitVectorFactory.mergeWithPadding(temp), false);
+    }
+
+    public static SquareZ2Vector[] splitZ2ShareWithPadding(SquareZ2Vector input, int[] nums) {
+        return Arrays.stream(input.getBitVector().splitWithPadding(nums)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
     }
 }

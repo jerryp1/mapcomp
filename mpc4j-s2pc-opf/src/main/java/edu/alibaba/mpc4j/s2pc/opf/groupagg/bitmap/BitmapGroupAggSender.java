@@ -7,6 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
@@ -37,6 +39,10 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
      */
     private final ZlMuxParty zlMuxSender;
     /**
+     * Z2 circuit sender.
+     */
+    private final Z2cParty z2cSender;
+    /**
      * Zl circuit sender.
      */
     private final ZlcParty zlcSender;
@@ -60,9 +66,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
     public BitmapGroupAggSender(Rpc senderRpc, Party receiverParty, BitmapGroupAggConfig config) {
         super(BitmapGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         zlMuxSender = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
+        z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         plainAndSender = PlainAndFactory.createSender(senderRpc, receiverParty, config.getPlainAndConfig());
         zlMaxSender = ZlMaxFactory.createSender(senderRpc, receiverParty, config.getZlMaxConfig());
+
+//        addMultipleSubPtos(zlMuxSender);
+//        addMultipleSubPtos(zlcSender);
+//        addSubPtos(plainAndSender);
+//        addSubPtos(zlMaxSender);
         prefixAggType = config.getPrefixAggConfig().getPrefixType();
         zl = config.getZl();
     }
@@ -75,11 +87,11 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
 
         stopWatch.start();
 
-        zlMuxSender.init(2 * maxNum * totalGroupNum);
-        plainAndSender.init(maxNum * totalGroupNum);
-
+        zlMuxSender.init(maxNum);
+        plainAndSender.init(maxNum);
+        z2cSender.init(maxNum);
         zlcSender.init(1);
-        zlMaxSender.init(maxL, maxNum * totalGroupNum);
+        zlMaxSender.init(maxL, maxNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -88,6 +100,8 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
+
+    public static int AGG_TIME = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
@@ -107,24 +121,29 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
             }
         }
 
+//        SquareZ2Vector[] es = IntStream.range(0, totalGroupNum).mapToObj(i->e).toArray(SquareZ2Vector[]::new);
+        //        SquareZ2Vector[] allBitmapShareWithE = z2cSender.and(allBitmapShare, es);
+        SquareZ2Vector[] allBitmapShareWithE = new SquareZ2Vector[totalGroupNum];
+        for (int i = 0; i < totalGroupNum; i++) {
+            allBitmapShareWithE[i] = z2cSender.and(allBitmapShare[i], e);
+        }
+
         // 和bitmap mux
         SquareZlVector[] bitmapWithAgg = new SquareZlVector[totalGroupNum];
         for (int i = 0; i < totalGroupNum; i++) {
-            bitmapWithAgg[i] = zlMuxSender.mux(allBitmapShare[i], aggShare);
+            bitmapWithAgg[i] = zlMuxSender.mux(allBitmapShareWithE[i], aggShare);
         }
 
-        // 和e mux TODO 这里可以复用上面的结果
-        SquareZlVector[] result = new SquareZlVector[totalGroupNum];
-        for (int i = 0; i < totalGroupNum; i++) {
-            result[i] = zlMuxSender.mux(e, bitmapWithAgg[i]);
-        }
-
+        stopWatch.start();
         // agg
-        agg(result);
+        agg(bitmapWithAgg);
+        stopWatch.stop();
+        AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
 
         // reveal
         for (int i = 0; i < totalGroupNum; i++) {
-            zlcSender.revealOther(result[i]);
+            zlcSender.revealOther(bitmapWithAgg[i]);
         }
         // sender
         return null;
@@ -137,7 +156,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
                     input[i] = localSum(input[i]);
                 }
                 break;
+
             case MAX:
+//                IntStream.range(0, totalGroupNum).parallel().forEach(i-> {
+//                    try {
+//                        input[i] = zlMaxSender.max(input[i]);
+//                    } catch (MpcAbortException e) {
+//                        e.printStackTrace();
+//                    }
+//                });
                 for (int i = 0; i < totalGroupNum; i++) {
                     input[i] = zlMaxSender.max(input[i]);
                 }

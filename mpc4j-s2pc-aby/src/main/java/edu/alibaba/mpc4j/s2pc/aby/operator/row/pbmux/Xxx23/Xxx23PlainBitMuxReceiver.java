@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -169,7 +169,7 @@ public class Xxx23PlainBitMuxReceiver extends AbstractPlainBitMuxParty {
                 return a0;
             })
             .toArray(byte[][]::new);
-        BitVector[] bitVectors = ZlDatabase.create(bitL, a0s).bitPartition(envType, parallel);
+        BitVector[] bitVectors = TransposeUtils.transposeSplit(a0s, bitL);
         return Arrays.stream(bitVectors).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
     }
 }

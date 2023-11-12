@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.opf.shuffle;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.security.SecureRandom;
@@ -63,18 +63,18 @@ public class ShuffleUtils {
             assert single.bitNum() == bitLength && (!single.isPlain());
             return single.getBitVector();
         }).collect(Collectors.toList())).flatMap(Collection::stream).toArray(BitVector[]::new);
-        return Arrays.stream(ZlDatabase.create(envType, parallel, allColumns).getBytesData()).collect(Collectors.toCollection(Vector::new));
+        return TransposeUtils.transposeMergeToVector(allColumns);
     }
 
     public static SquareZ2Vector[][] splitSecret(Vector<byte[]> input, int[] bitLength, EnvType envType, boolean parallel) {
         int totalBitLength = Arrays.stream(bitLength).sum();
         // 如果被shuffle的数据不满 8 bit，则需要进行截断
         assert CommonUtils.getByteLength(totalBitLength) == input.get(0).length;
-        if((totalBitLength & 7) > 0){
+        if ((totalBitLength & 7) > 0) {
             byte andNum = (byte) ((1 << (totalBitLength & 7)) - 1);
             input.forEach(x -> x[0] &= andNum);
         }
-        BitVector[] trans = ZlDatabase.create(totalBitLength, input.toArray(new byte[0][])).bitPartition(envType, parallel);
+        BitVector[] trans = TransposeUtils.transposeSplit(input.toArray(new byte[0][]), totalBitLength);
         SquareZ2Vector[][] res = new SquareZ2Vector[bitLength.length][];
         for (int i = 0, j = 0; i < bitLength.length; i++) {
             res[i] = new SquareZ2Vector[bitLength[i]];

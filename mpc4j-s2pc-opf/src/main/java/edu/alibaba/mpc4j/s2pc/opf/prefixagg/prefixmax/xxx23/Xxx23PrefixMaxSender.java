@@ -32,6 +32,11 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zlGreaterParty = ZlGreaterFactory.createSender(senderRpc, receiverParty, config.getZlGreaterConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
         plainBitMuxParty = PlainBitMuxFactory.createSender(senderRpc, receiverParty, config.getPlainBitMuxConfig());
+//        addSubPtos(zlcParty);
+//        addSubPtos(zlMuxParty);
+//        addSubPtos(zlGreaterParty);
+//        addSubPtos(shuffleParty);
+//        addSubPtos(plainBitMuxParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();

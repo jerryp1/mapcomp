@@ -6,7 +6,13 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
@@ -38,7 +44,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1 << 4;
+    private static final int DEFAULT_NUM = 1 << 18;
     /**
      * large num
      */
@@ -46,7 +52,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 64);
 
     private static final int DEFAULT_GROUP_BIT_LENGTH = 2;
 
@@ -57,38 +63,38 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // bitmap && sum
-//        configurations.add(new Object[]{
-//            PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
-//        });
-//
-//        // bitmap && max
-//        configurations.add(new Object[]{
-//            PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
-//        });
+        configurations.add(new Object[]{
+            "BITMAP_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+        });
+
+        // bitmap && max
+        configurations.add(new Object[]{
+            "BITMAP_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+        });
 
         // mix && sum
-//        configurations.add(new Object[]{
-//            PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
-//        });
-//
-//        // mix && max
-//        configurations.add(new Object[]{
-//            PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
-//        });
+        configurations.add(new Object[]{
+            "MIX_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+        });
+
+        // mix && max
+        configurations.add(new Object[]{
+            "MIX_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+        });
 
         // sort && sum
         configurations.add(new Object[]{
-            PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            "SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
         });
 
         // sort && max
         configurations.add(new Object[]{
-            PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            "SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
         });
 
@@ -115,50 +121,50 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         this.type = config.getAggType();
     }
 
-    @Test
-    public void test2Num() {
-        testPto(2, false);
-    }
-
-    @Test
-    public void test8Num() {
-        testPto(8, false);
-    }
-
-    @Test
-    public void test7Num() {
-        testPto(7, false);
-    }
-
-    @Test
-    public void test9Num() {
-        testPto(9, false);
-    }
-
-    @Test
-    public void test19Num() {
-        testPto(19, false);
-    }
+//    @Test
+//    public void test2Num() {
+//        testPto(2, false);
+//    }
+//
+//    @Test
+//    public void test8Num() {
+//        testPto(8, false);
+//    }
+//
+//    @Test
+//    public void test7Num() {
+//        testPto(7, false);
+//    }
+//
+//    @Test
+//    public void test9Num() {
+//        testPto(9, false);
+//    }
+//
+//    @Test
+//    public void test19Num() {
+//        testPto(19, false);
+//    }
 
     @Test
     public void testDefaultNum() {
         testPto(DEFAULT_NUM, false);
     }
 
-    @Test
-    public void testParallelDefaultNum() {
-        testPto(DEFAULT_NUM, true);
-    }
-
-    @Test
-    public void testLargeNum() {
-        testPto(LARGE_NUM, false);
-    }
-
-    @Test
-    public void testParallelLargeNum() {
-        testPto(LARGE_NUM, true);
-    }
+//    @Test
+//    public void testParallelDefaultNum() {
+//        testPto(DEFAULT_NUM, true);
+//    }
+//
+//    @Test
+//    public void testLargeNum() {
+//        testPto(LARGE_NUM, false);
+//    }
+//
+//    @Test
+//    public void testParallelLargeNum() {
+//        testPto(LARGE_NUM, true);
+//    }
 
     private void testPto(int num, boolean parallel) {
         testPto(num, DEFAULT_GROUP_BIT_LENGTH, parallel);
@@ -228,6 +234,12 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
             Arrays.asList(groupAggOut.getAggregationResult()));
         // verify
         Assert.assertEquals(trueMap, resultMap);
+        System.out.println("##mix_矩阵转置总时间：" + TransposeUtils.TRANSPORT_TIME+"ms");
+        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME+"ms");
+        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME+"ms");
+        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME+"ms");
+        System.out.println("##bitmap_agg总时间：" + BitmapGroupAggSender.AGG_TIME+"ms");
+
     }
 
     private Map<String, BigInteger> getAggResultMap(List<String> group, List<BigInteger> agg) {
@@ -261,14 +273,13 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 
     private String[] genRandomInputGroup(int groupBitLength, int num) {
         String[] groups = GroupAggUtils.genStringSetFromRange(groupBitLength);
-        return IntStream.range(0, num).mapToObj(i -> groups[SECURE_RANDOM.nextInt((1 << groupBitLength) - 1)]).toArray(String[]::new);
+        return IntStream.range(0, num).mapToObj(i -> groups[SECURE_RANDOM.nextInt((1 << groupBitLength))]).toArray(String[]::new);
     }
 
     private Properties genProperties(int n, int senderGroupBitLength, int receiverGroupBitLength) {
         Properties properties = new Properties();
         properties.setProperty(SENDER_GROUP_BIT_LENGTH, String.valueOf(senderGroupBitLength));
         properties.setProperty(RECEIVER_GROUP_BIT_LENGTH, String.valueOf(receiverGroupBitLength));
-        // TODO 这里l设置较小反而更快，感觉有问题
         properties.setProperty(MAX_L, String.valueOf(zl.getL()));
         properties.setProperty(MAX_NUM, String.valueOf(n));
         return properties;

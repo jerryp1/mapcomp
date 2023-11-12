@@ -32,6 +32,13 @@ public class Xxx23PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
         zlGreaterParty = ZlGreaterFactory.createReceiver(receiverRpc, senderParty, config.getZlGreaterConfig());
         plainBitMuxParty = PlainBitMuxFactory.createReceiver(receiverRpc, senderParty, config.getPlainBitMuxConfig());
         shuffleParty = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
+
+//        addSubPtos(z2cParty);
+//        addSubPtos(zlcParty);
+//        addSubPtos(zlMuxParty);
+//        addSubPtos(zlGreaterParty);
+//        addSubPtos(plainBitMuxParty);
+//        addSubPtos(shuffleParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
@@ -49,7 +56,6 @@ public class Xxx23PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
         zlGreaterParty.init(maxL, maxNum);
         plainBitMuxParty.init(maxNum);
         shuffleParty.init(maxNum);
-
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

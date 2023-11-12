@@ -90,6 +90,13 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
+//        addSubPtos(osnReceiver);
+//        addSubPtos(zlMuxSender);
+//        addSubPtos(sharedPermutationSender);
+//        addSubPtos(prefixAggSender);
+//        addSubPtos(z2cSender);
+//        addSubPtos(zlcSender);
+//        addSubPtos(b2aSender);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cSender);
     }
 
@@ -259,7 +266,6 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     protected void revealOtherLong(Vector<byte[]> input) {
 
         List<byte[]> otherShares = new ArrayList<>(input);
-
         DataPacketHeader sendSharesHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.TEST.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParties()[0].getPartyId()
