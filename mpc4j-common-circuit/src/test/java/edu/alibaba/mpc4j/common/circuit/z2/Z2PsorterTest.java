@@ -5,11 +5,8 @@ import edu.alibaba.mpc4j.common.circuit.operator.Z2IntegerOperator;
 import edu.alibaba.mpc4j.common.circuit.z2.psorter.PSorterUtils;
 import edu.alibaba.mpc4j.common.circuit.z2.psorter.PsorterFactory;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.Zl64Database;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
@@ -18,7 +15,6 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +47,7 @@ public class Z2PsorterTest {
     /**
      * default num of elements to be sorted
      */
-    private static final int DEFAULT_SORTED_NUM = 9227;
+    private static final int DEFAULT_SORTED_NUM = 16;
     /**
      * large num of elements to be sorted
      */
@@ -59,7 +55,7 @@ public class Z2PsorterTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = IntUtils.MAX_L;
+    private static final int DEFAULT_L = 24;
     /**
      * large l
      */

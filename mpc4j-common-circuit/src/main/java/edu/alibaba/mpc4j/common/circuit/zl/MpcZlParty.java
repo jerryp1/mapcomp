@@ -93,6 +93,14 @@ public interface MpcZlParty {
     void init(int updateNum) throws MpcAbortException;
 
     /**
+     * Shares public vector.
+     *
+     * @param xi public vector to be shared.
+     * @return the shared vector.
+     */
+    MpcZlVector setPublicValue(ZlVector xi);
+
+    /**
      * Shares its own vector.
      *
      * @param xi the vector to be shared.

@@ -60,6 +60,11 @@ public class PlainZlParty implements MpcZlParty {
     }
 
     @Override
+    public PlainZlVector setPublicValue(ZlVector xi){
+        return PlainZlVector.create(xi);
+    }
+
+    @Override
     public PlainZlVector shareOwn(ZlVector xi) {
         Preconditions.checkArgument(initialized);
         MathPreconditions.checkPositive("num", xi.getNum());

@@ -5,9 +5,12 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
@@ -17,6 +20,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 
 import java.math.BigInteger;
+import java.util.stream.IntStream;
 
 public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
@@ -29,6 +33,10 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
      */
     private final ZlcParty zlcParty;
     /**
+     * Z2 circuit sender.
+     */
+    private final Z2cParty z2cParty;
+    /**
      * Zl mux sender.
      */
     private final ZlMuxParty zlMuxParty;
@@ -37,10 +45,12 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         super(ptoDesc, rpc, otherParty, config);
         if (partyTypes.equals(PartyTypes.SENDER)) {
             bit2aParty = Bit2aFactory.createSender(rpc, otherParty, config.getBit2aConfig());
+            z2cParty = Z2cFactory.createSender(rpc, otherParty, config.getZ2cConfig());
             zlcParty = ZlcFactory.createSender(rpc, otherParty, config.getZlcConfig());
             zlMuxParty = ZlMuxFactory.createSender(rpc, otherParty, config.getZlMuxConfig());
         } else {
             bit2aParty = Bit2aFactory.createReceiver(rpc, otherParty, config.getBit2aConfig());
+            z2cParty = Z2cFactory.createReceiver(rpc, otherParty, config.getZ2cConfig());
             zlcParty = ZlcFactory.createReceiver(rpc, otherParty, config.getZlcConfig());
             zlMuxParty = ZlMuxFactory.createReceiver(rpc, otherParty, config.getZlMuxConfig());
         }
@@ -56,8 +66,9 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
         stopWatch.start();
         bit2aParty.init(maxL, maxNum * maxBitNum);
-        zlcParty.init(maxNum);
-        zlMuxParty.init(maxNum * maxBitNum);
+        z2cParty.init(1);
+        zlcParty.init(1);
+        zlMuxParty.init(maxNum * (maxBitNum + 1));
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);
@@ -69,7 +80,17 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        SquareZlVector[] bitA = bit2aParty.bit2a(xiArray);
+        SquareZlVector[] bitA = new SquareZlVector[xiArray.length + 1];
+        System.arraycopy(bit2aParty.bit2a(xiArray), 0, bitA, 0, xiArray.length);
+
+        SquareZlVector sumAll = bitA[0].copy();
+        IntStream.range(1, xiArray.length).forEach(i -> sumAll.getZlVector().addi(bitA[i].getZlVector()));
+        sumAll.getZlVector().negi();
+        ZlVector onesPlain = ZlVector.createOnes(zl, bitA[0].getNum());
+        SquareZlVector ones = zlcParty.setPublicValue(onesPlain);
+        sumAll.getZlVector().addi(ones.getZlVector());
+        bitA[xiArray.length] = sumAll;
+
         logStepInfo(PtoState.PTO_STEP, 1, 3, resetAndGetTime(), "transfer binary shares to arithmetic shares");
 
         // prefix sum
@@ -78,7 +99,13 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime(), "prefix sum");
 
         stopWatch.start();
-        SquareZlVector res = muxMultiIndex(xiArray, indexes);
+        SquareZ2Vector[] bits = new SquareZ2Vector[xiArray.length + 1];
+        System.arraycopy(xiArray, 0, bits, 0, xiArray.length);
+        SquareZ2Vector notXorAll = xiArray[0].copy();
+        IntStream.range(1, xiArray.length).forEach(i -> notXorAll.getBitVector().xori(bits[i].getBitVector()));
+        z2cParty.noti(notXorAll);
+        bits[xiArray.length] = notXorAll;
+        SquareZlVector res = muxMultiIndex(bits, indexes);
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime(), "compute permutation");
 
         logPhaseInfo(PtoState.PTO_END);

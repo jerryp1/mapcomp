@@ -16,6 +16,15 @@ import java.util.Arrays;
  */
 public interface ZlcParty extends TwoPartyPto, MpcZlParty {
     /**
+     * Shares public vector.
+     *
+     * @param xi public vector to be shared.
+     * @return the shared vector.
+     */
+    @Override
+    SquareZlVector setPublicValue(ZlVector xi);
+
+    /**
      * Shares its own vector.
      *
      * @param xi the vector to be shared.

@@ -25,7 +25,7 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * bitLen
      */
-    private static final int[] bitLens = new int[]{20, 15};
+    private static final int[] bitLens = new int[]{20, 17};
     /**
      * default small size
      */
@@ -33,7 +33,7 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 14;
+    private static final int LARGE_SIZE = 1 << 16;
 
     /**
      * default middle size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y

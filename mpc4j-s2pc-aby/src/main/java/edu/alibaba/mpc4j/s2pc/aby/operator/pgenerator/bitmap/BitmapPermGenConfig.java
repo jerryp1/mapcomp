@@ -4,6 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
@@ -22,6 +25,10 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
      */
     private final ZlcConfig zlcConfig;
     /**
+     * Zl circuit config.
+     */
+    private final Z2cConfig z2cConfig;
+    /**
      * Zl mux config.
      */
     private final ZlMuxConfig zlMuxConfig;
@@ -30,6 +37,7 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         super(SecurityModel.SEMI_HONEST, builder.bit2aConfig, builder.zlcConfig, builder.zlMuxConfig);
         bit2aConfig = builder.bit2aConfig;
         zlcConfig = builder.zlcConfig;
+        z2cConfig = builder.z2cConfig;
         zlMuxConfig = builder.zlMuxConfig;
     }
 
@@ -56,6 +64,10 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         return zlcConfig;
     }
 
+    public Z2cConfig getZ2cConfig() {
+        return z2cConfig;
+    }
+
     public ZlMuxConfig getZlMuxConfig() {
         return zlMuxConfig;
     }
@@ -70,13 +82,18 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
          */
         private ZlcConfig zlcConfig;
         /**
+         * Zl circuit config.
+         */
+        private Z2cConfig z2cConfig;
+        /**
          * Zl mux config.
          */
         private ZlMuxConfig zlMuxConfig;
 
-        public Builder(Bit2aConfig bit2aConfig) {
-            this.bit2aConfig = bit2aConfig;
-            zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, bit2aConfig.getZl());
+        public Builder(Zl zl) {
+            this.bit2aConfig = new Kvh21Bit2aConfig.Builder(zl).build();
+            zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
         }
 
@@ -87,6 +104,7 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
 
         public Builder setSilent(boolean silent){
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             return this;
         }
 
