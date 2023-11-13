@@ -73,9 +73,9 @@ public class BatchEncoder {
         this.context = context;
 
         slots = contextData.getParms().getPolyModulusDegree();
-        // Reserve space for all of the primitive roots
+        // Reserve space for all the primitive roots
         rootsOfUnity = new long[slots];
-        // Fill the vector of roots of unity with all distinct odd powers of generator.
+        // Fill the vector with roots of unity with all distinct odd powers of generator.
         // These are all the primitive (2*slots_)-th roots of unity in integers modulo
         // parms.plain_modulus().
         populateRootsOfUnityVector(contextData);

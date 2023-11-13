@@ -299,17 +299,8 @@ public class KeyGenerator {
             long factor = UintArithmeticSmallMod.barrettReduce64(keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
             // temp = key' * factor mod q_i
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(newKeys, i * coeffCount, coeffCount, factor, keyModulus[i], temp, 0);
-            // (c[0], c[1]) = ([-(as + e) + new_key * q_k]_q, a), represented in NTT form. RnsBase is q_1, ..., q_{k-1}, q_k
-            PolyArithmeticSmallMod.addPolyCoeffMod(
-                destinations[destinationIndex][i].data().getData(),
-                i * coeffCount, // 第 0个 RnsIter 中的 第 i 个 CoeffIter
-                temp,
-                0,
-                coeffCount,
-                keyModulus[i],
-                destinations[destinationIndex][i].data().getData(),
-                i * coeffCount
-            );
+            // ([-(as + e) + new_key * q_k]_q_i, a), only add to the q_i part
+            PolyArithmeticSmallMod.addPolyCoeffMod(destinations[destinationIndex][i].data().getData(), i * coeffCount, temp, 0, coeffCount, keyModulus[i], destinations[destinationIndex][i].data().getData(), i * coeffCount);
         }
     }
 
@@ -342,12 +333,12 @@ public class KeyGenerator {
         }
         for (int i = 0; i < decomposeModCount; i++) {
             long[] temp = new long[coeffCount];
-            // destination: (c[0], c[1]) = ([-(as + e)]_q, a)
+            // destination: (c[0], c[1]) = ([-(as + e)], a) in NTT form
             RingLwe.encryptZeroSymmetric(secretKey, context, keyContextData.getParmsId(), true, saveSeed, destinations[destinationIndex][i].data());
             long factor = UintArithmeticSmallMod.barrettReduce64(keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
             // new_keys * q_k mod q_i
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(newKeys, startIndex + i * coeffCount, coeffCount, factor, keyModulus[i], temp, 0);
-            // ([-(as + e) + new_keys * q_k]_q_i, a)
+            // ([-(as + e) + new_keys * q_k]_q_i, a), only add to the q_i part
             PolyArithmeticSmallMod.addPolyCoeffMod(destinations[destinationIndex][i].data().getData(), i * coeffCount, temp, 0, coeffCount, keyModulus[i], destinations[destinationIndex][i].data().getData(), i * coeffCount);
         }
     }
@@ -373,9 +364,9 @@ public class KeyGenerator {
         }
         assert newKeysCoeffCount == coeffCount;
         assert newKeysModulusSize == coeffModulusSize;
-        // destination本质上是 PublicKey[][], 之前new的时候还没有初始化这个数组，这里需要补上
+        // PublicKey[numKeys][firstContextData.coeffModulusSize]
         destination.resizeRows(numKeys);
-        // store Enc(newKey * q_k) with NTT form in destination
+        // store Enc(newKey * q_k) in destination
         for (int i = 0; i < numKeys; i++) {
             generateOneKeySwitchKey(newKeys, i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed);
         }
@@ -406,9 +397,9 @@ public class KeyGenerator {
         }
         assert newKeysCoeffCount == coeffCount;
         assert newKeysModulusSize == coeffModulusSize;
-        // resize the size of key-switch key
+        // resize the size of key-switch key, PublicKey[numKeys][firstContextData.coeffModulusSize]
         destination.resizeRows(numKeys);
-        // store Enc(newKey * q_k) with NTT form in destination
+        // store Enc(newKey * q_k) in destination
         for (int i = 0; i < numKeys; i++) {
             generateOneKeySwitchKey(newKeys, startIndex + i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed);
         }
@@ -440,8 +431,10 @@ public class KeyGenerator {
         // Make sure we have enough secret keys computed, sk^1, ..., sk^{count+1}
         computeSecretKeyArray(contextData, count + 1);
         // Assume the secret key is already transformed into NTT form.
-        // [(-(a*s + e) + q_k * s^2), a] in RNS form, RNS base is {q_1, ..., q_{k-1}, q_k}
-        // [(-(a*s + e) + q_k * s^2)_{q_1}, a_{q_1}], ..., [(-(a*s + e) + q_k * s^2)_{q_{k-1}}, a_{q_{k-1}}], [(-(a*s + e))_{q_k}, a_{q_{k}}]
+        // [(-(a*s + e) + q_k * s^2)_q1, a], [(-(a*s + e))_q2, a], ..., [(-(a*s + e))_qk, a]
+        // [(-(a*s + e))_q1, a], [(-(a*s + e) + q_k * s^2)_q2, a], ..., [(-(a*s + e))_qk, a]
+        // ...
+        // [(-(a*s + e))_q1, a], [(-(a*s + e))_q2, a], ..., [(-(a*s + e) + q_{k-1} * s^2)_q2, a], [(-(a*s + e))_qk, a]
         generateKeySwitchKeys(secretKeyArray, coeffCount * coeffModulusSize, coeffCount, coeffModulusSize, count, destination, saveSeed);
         // todo: really need deep-copy?
         destination.setParmsId(contextData.getParmsId().clone());

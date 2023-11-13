@@ -420,11 +420,11 @@ public class UintCore {
 
     /**
      * Gets the most significant uint64 count for the value. For example, given value = [1, 0, 2] and uint64Count = 2
-     * (which means that we consider value as [1, 0]), it returns 1 ince the significant Uint64Count for [1, 0] is 1.
+     * (which means that we consider value as [1, 0]), it returns 1 since the significant Uint64Count for [1, 0] is 1.
      *
      * @param value       the value.
      * @param uint64Count number of uint64 in the value.
-     * @return the most sigificant uint64 count for the value.
+     * @return the most significant uint64 count for the value.
      */
     public static int getSignificantUint64CountUint(long[] value, int uint64Count) {
         assert uint64Count > 0;

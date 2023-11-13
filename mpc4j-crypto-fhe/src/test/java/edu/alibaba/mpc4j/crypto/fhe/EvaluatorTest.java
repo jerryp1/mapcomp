@@ -16,6 +16,8 @@ import org.junit.Test;
 import java.util.Arrays;
 
 /**
+ * Evaluator Test.
+ *
  * @author Qixian Zhou
  * @date 2023/10/5
  */
@@ -32,7 +34,6 @@ public class EvaluatorTest {
         parms.setPolyModulusDegree(8);
         parms.setPlainModulus(plainModulus);
         parms.setCoeffModulus(CoeffModulus.create(8, new int[]{40, 40}));
-
 
         Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
         KeyGenerator keyGenerator = new KeyGenerator(context);

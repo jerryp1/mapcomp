@@ -1076,41 +1076,33 @@ public class RnsTool {
     }
 
     /**
-     * 输入是一个 polyIyer: size * k * N , 这个 function 处理其中的一个 RnsIter, startIndex 指定哪一个RnsIter
+     * compute round(poly * q'/q)
+     * 输入是一个 polyIter: size * k * N , 这个 function 处理其中的一个 RnsIter, startIndex 指定哪一个RnsIter
      *
-     * @param polyIter
-     * @param startIndex
-     * @param rnsNttTables
+     * @param polyIter                 poly iter.
+     * @param polyIterCoeffCount       coeff count,
+     * @param polyIterCoeffModulusSize coeff modulus size.
+     * @param startIndex               start index.
+     * @param rnsNttTables             NTT tables.
      */
     public void divideAndRoundQLastNttInplace(long[] polyIter, int polyIterCoeffCount, int polyIterCoeffModulusSize, int startIndex, NttTables[] rnsNttTables) {
-
         assert polyIter != null;
         assert polyIterCoeffCount == coeffCount;
         // todo: need this check and the in-parameter?
         assert polyIterCoeffModulusSize == rnsNttTables.length;
         assert rnsNttTables != null;
-
         int baseQSize = baseQ.getSize();
-        // 注意起点
+        // 注意起点, poly_{start_index} mod q_k
         int lastInputIndex = startIndex + (baseQSize - 1) * coeffCount;
-
-        // convert to non-NTT form
-        NttTool.inverseNttNegacyclicHarvey(
-            polyIter,
-            lastInputIndex,
-            rnsNttTables[baseQSize - 1]
-        );
-
-        // Add (qi-1)/2 to change from flooring to rounding
+        // convert to non-NTT form, modulus switching operation needs the ciphertext be in coefficient value
+        NttTool.inverseNttNegacyclicHarvey(polyIter, lastInputIndex, rnsNttTables[baseQSize - 1]);
+        // Add (qk-1)/2 to change from flooring to rounding
         Modulus lastModulus = baseQ.getBase(baseQSize - 1);
         long half = lastModulus.getValue() >>> 1;
-        // 注意这里的函数签名，利用 startIndex 避免 new array
-        // 这里本质上是在处理 lastInput
+        // c + (qk - 1)/2
         PolyArithmeticSmallMod.addPolyScalarCoeffMod(polyIter, lastInputIndex, coeffCount, half, lastModulus, polyIter, lastInputIndex);
-
         for (int i = 0; i < baseQSize - 1; i++) {
             long[] temp = new long[coeffCount];
-
             if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
                 PolyArithmeticSmallMod.moduloPolyCoeff(
                     polyIter,
@@ -1123,7 +1115,6 @@ public class RnsTool {
             } else {
                 System.arraycopy(polyIter, lastInputIndex, temp, 0, coeffCount);
             }
-
             // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
             long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
             for (int j = 0; j < coeffCount; j++) {
@@ -1133,17 +1124,15 @@ public class RnsTool {
             if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
                 // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
                 // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
-
                 qiLazy = baseQ.getBase(i).getValue() << 2;
                 // temp 就是 单个 CoeffIter， 直接调用
                 NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
             } else {
-                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
+                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perform one reduction
                 // from [0, 4*qi) to [0, 2*qi) after ntt.
                 qiLazy = baseQ.getBase(i).getValue() << 1;
                 // temp 就是 单个 CoeffIter， 直接调用
                 NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
-
                 // 对 temp 做第一次 reduce
                 for (int j = 0; j < coeffCount; j++) {
                     // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
@@ -1157,8 +1146,7 @@ public class RnsTool {
             for (int j = 0; j < coeffCount; j++) {
                 polyIter[startIndex + i * coeffCount + j] += (qiLazy - temp[j]);
             }
-
-            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
+            // qk^(-1) * ct' mod qi
             // 注意这里的函数签名
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
                 polyIter,

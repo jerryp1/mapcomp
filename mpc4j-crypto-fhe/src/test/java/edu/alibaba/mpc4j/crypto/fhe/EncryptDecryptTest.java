@@ -13,15 +13,14 @@ import org.junit.Test;
 
 
 /**
+ * Encrypt and Decrypt Test.
+ *
  * @author Qixian Zhou
  * @date 2023/9/27
  */
 public class EncryptDecryptTest {
 
     private static final int MAX_LOOP = 1;
-
-
-
 
     @Test
     public void bfvEncryptZeroDecryptRandom() {

@@ -27,51 +27,82 @@ import java.util.Arrays;
  */
 public class KeySwitchKeys implements Cloneable, Serializable {
 
-
+    /**
+     * key-switching keys
+     */
     private PublicKey[][] keys = new PublicKey[0][0];
-
+    /**
+     * parms ID
+     */
     ParmsIdType parmsId = ParmsIdType.parmsIdZero();
 
     public KeySwitchKeys() {
-
+        // empty
     }
 
+    /**
+     * resize key-switching keys.
+     *
+     * @param rows rows.
+     * @param cols cols.
+     */
     public void resize(int rows, int cols) {
         // 注意实例化对象数组的方式
         keys = new PublicKey[rows][cols];
     }
 
+    /**
+     * resize key-switching keys.
+     *
+     * @param rows rows.
+     */
     public void resizeRows(int rows) {
         keys = new PublicKey[rows][0];
     }
 
     /**
-     * @return current number of keyswitching keys. Only keys that are
-     * non-empty are counted.
+     * @return current number of key-switching keys. Only keys that are non-empty are counted.
      */
     public int size() {
         return Arrays.stream(keys).mapToInt(key -> key.length > 0 ? 1 : 0).sum();
     }
 
-
+    /**
+     * return key-switching keys.
+     *
+     * @return key-switching keys.
+     */
     public PublicKey[][] data() {
         return keys;
     }
 
+    /**
+     * return key-switching key.
+     *
+     * @param index index.
+     * @return key-switching key.
+     */
     public PublicKey[] data(int index) {
-
         if (index >= keys.length || keys[index].length == 0) {
             throw new IllegalArgumentException("key switching key does not exist");
         }
         return keys[index];
     }
 
-
+    /**
+     * return parms ID of key-switching key.
+     *
+     * @return parms ID.
+     */
     public ParmsIdType parmsId() {
         return parmsId;
     }
 
-
+    /**
+     * set parms ID.
+     *
+     * @param parmsId parms ID.
+     */
     public void setParmsId(ParmsIdType parmsId) {
         this.parmsId = parmsId;
     }
@@ -94,22 +125,21 @@ public class KeySwitchKeys implements Cloneable, Serializable {
                     clone.keys[i][j] = this.keys[i][j].clone();
                 }
             }
-
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-
-        if (!(o instanceof KeySwitchKeys)) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof KeySwitchKeys)) {
+            return false;
+        }
         KeySwitchKeys that = (KeySwitchKeys) o;
-
         return new EqualsBuilder().append(keys, that.keys).append(parmsId, that.parmsId).isEquals();
     }
 

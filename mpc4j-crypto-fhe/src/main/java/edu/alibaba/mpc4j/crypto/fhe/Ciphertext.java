@@ -35,20 +35,37 @@ import java.util.Arrays;
  */
 public class Ciphertext implements Cloneable, Serializable {
 
+    /**
+     * parms ID
+     */
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
-
+    /**
+     * is NTT form
+     */
     private boolean isNttForm = false;
-    // size 个 Poly， size >= 2, 总共需要 size * k * N 个 Slots
+    /**
+     * num of poly
+     */
     private int size = 0;
-
+    /**
+     * poly modulus degree
+     */
     private int polyModulusDegree = 0;
-
+    /**
+     * coeff modulus size
+     */
     private int coeffModulusSize = 0;
-
+    /**
+     * scale
+     */
     private double scale = 1.0;
-
+    /**
+     * correction factor
+     */
     private long correctionFactor = 1;
-
+    /**
+     * data
+     */
     private DynArray data = new DynArray();
 
     /**
@@ -65,7 +82,7 @@ public class Ciphertext implements Cloneable, Serializable {
      * highest-level parameters 是何意？
      * 2 应该就是容纳两个多项式
      *
-     * @param context
+     * @param context context.
      */
     public Ciphertext(Context context) {
         reserve(context, 2);
@@ -78,13 +95,22 @@ public class Ciphertext implements Cloneable, Serializable {
      * <p>
      * 一个 parmsId 对应一个 加密参数对象
      *
-     * @param context
-     * @param parmsId
+     * @param context context.
+     * @param parmsId parms ID.
      */
     public Ciphertext(Context context, ParmsIdType parmsId) {
         reserve(context, parmsId, 2);
     }
 
+    /**
+     * Constructs an empty ciphertext with given capacity. In addition to the
+     * capacity, the allocation size is determined by the encryption parameters
+     * with given parms_id.
+     *
+     * @param context      context.
+     * @param parmsId      parms ID.
+     * @param sizeCapacity capacity.
+     */
     public Ciphertext(Context context, ParmsIdType parmsId, int sizeCapacity) {
         reserve(context, parmsId, sizeCapacity);
     }
@@ -98,17 +124,14 @@ public class Ciphertext implements Cloneable, Serializable {
         if (this == assign) {
             return;
         }
-
         // copy over fields
         // todo: need deep copy?
         this.parmsId = assign.getParmsId().clone();
         this.isNttForm = assign.isNttForm();
         this.scale = assign.scale;
         this.correctionFactor = assign.correctionFactor;
-
         // Then resize
         resizeInternal(assign.size, assign.polyModulusDegree, assign.coeffModulusSize);
-
         // copy data, 注意这里长度的计算 是以 size 为准，而不是 capacity
         System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.size * assign.polyModulusDegree * assign.coeffModulusSize);
     }
@@ -120,7 +143,6 @@ public class Ciphertext implements Cloneable, Serializable {
      * encryption parameter specific size information to zero.
      */
     public void release() {
-
         parmsId = ParmsIdType.parmsIdZero();
         isNttForm = false;
         size = 0;
@@ -131,54 +153,62 @@ public class Ciphertext implements Cloneable, Serializable {
         data.release();
     }
 
-
+    /**
+     * reserve the capacity.
+     *
+     * @param context      context.
+     * @param sizeCapacity capacity.
+     */
     public void reserve(Context context, int sizeCapacity) {
-
         reserve(context, context.getFirstParmsId(), sizeCapacity);
     }
 
+    /**
+     * create data and reverse the data.
+     *
+     * @param sizeCapacity poly num.
+     */
     public void reserve(int sizeCapacity) {
         reserveInternal(sizeCapacity, polyModulusDegree, coeffModulusSize);
     }
 
-
+    /**
+     * create data and reverse the size.
+     *
+     * @param context      context.
+     * @param parmsId      parms ID.
+     * @param sizeCapacity poly num.
+     */
     public void reserve(Context context, ParmsIdType parmsId, int sizeCapacity) {
-
         if (!context.isParametersSet()) {
             throw new IllegalArgumentException("encryption parameters are not set correctly");
         }
-
         Context.ContextData contextData = context.getContextData(parmsId);
         if (contextData == null) {
             throw new IllegalArgumentException("parms_id is not valid for encryption parameters");
         }
-
         EncryptionParams parms = contextData.getParms();
         // note that parmsId must be cloned
         this.parmsId = contextData.getParmsId().clone();
-
         reserveInternal(sizeCapacity, parms.getPolyModulusDegree(), parms.getCoeffModulus().length);
     }
 
     /**
+     * create data with fixed size.
+     *
      * @param sizeCapacity      max number of ciphertext poly
      * @param polyModulusDegree N
      * @param coeffModulusSize  number of coeff moduli
      */
     private void reserveInternal(int sizeCapacity, int polyModulusDegree, int coeffModulusSize) {
-
         if (sizeCapacity < Constants.CIPHERTEXT_SIZE_MIN || sizeCapacity > Constants.CIPHERTEXT_SIZE_MAX) {
             throw new IllegalArgumentException("invalid size capacity");
         }
-
-
         // sizeCapacity * polyModulusDegree * coeffModulusSize is the total number of long type value needed by current ciphertext
         int newDataCapacity = Common.mulSafe(sizeCapacity, polyModulusDegree, false, coeffModulusSize);
         int newDataSize = Math.min(newDataCapacity, data.size());
-
         data.reserve(newDataCapacity);
         data.resize(newDataSize);
-
         size = Math.min(sizeCapacity, size);
         this.polyModulusDegree = polyModulusDegree;
         this.coeffModulusSize = coeffModulusSize;
@@ -193,27 +223,34 @@ public class Ciphertext implements Cloneable, Serializable {
         resizeInternal(size, polyModulusDegree, coeffModulusSize);
     }
 
-
+    /**
+     * resize poly num of ciphertext.
+     *
+     * @param context context.
+     * @param parmsId parms ID.
+     * @param size    poly num.
+     */
     public void resize(Context context, ParmsIdType parmsId, int size) {
-
         if (!context.isParametersSet()) {
             throw new IllegalArgumentException("encryption parameters are not set correctly");
         }
-
         Context.ContextData contextData = context.getContextData(parmsId);
         if (contextData == null) {
             throw new IllegalArgumentException("parms_id is not valid for encryption parameters");
         }
-
         EncryptionParams parms = contextData.getParms();
         // todo: need deep-copy?
         this.parmsId = contextData.getParmsId().clone();
-
         resizeInternal(size, parms.getPolyModulusDegree(), parms.getCoeffModulus().length);
     }
 
+    /**
+     * resize data of ciphertext.
+     * @param size              poly num.
+     * @param polyModulusDegree poly modulus degree.
+     * @param coeffModulusSize  coeff modulus size.
+     */
     private void resizeInternal(int size, int polyModulusDegree, int coeffModulusSize) {
-
         if (size < Constants.CIPHERTEXT_SIZE_MIN || size > Constants.CIPHERTEXT_SIZE_MAX) {
             throw new IllegalArgumentException("invalid size");
         }
@@ -221,7 +258,6 @@ public class Ciphertext implements Cloneable, Serializable {
         // todo: need mulSafe?
         int newDataSize = Common.mulSafe(size, polyModulusDegree, false, coeffModulusSize);
         data.resize(newDataSize);
-
         // setSize parameters
         this.size = size;
         this.polyModulusDegree = polyModulusDegree;
@@ -360,10 +396,9 @@ public class Ciphertext implements Cloneable, Serializable {
      * polynomial in the current ciphertext, this function returns true if all
      * following coefficients are identically zero. Otherwise, returns false.
      *
-     * @return
+     * @return true if the ciphertext is transparent, otherwise false.
      */
     public boolean isTransparent() {
-
         boolean b1 = data.size() == 0 || (size < Constants.CIPHERTEXT_SIZE_MIN);
         // 判断 第二个多项式的每一个值是否为 0, 全部为0 返回 true, 其余则返回 false
         boolean b2 = true;

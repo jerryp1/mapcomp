@@ -47,13 +47,13 @@ public class KeyGeneratorTest {
         {
             parms.setPolyModulusDegree(64);
             parms.setPlainModulus(65537);
-            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60, 60}));
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60, 60, 60}));
             Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
             KeyGenerator keyGenerator = new KeyGenerator(context);
             RelinKeys evk = new RelinKeys();
             keyGenerator.createRelinKeys(evk);
             Assert.assertEquals(evk.parmsId(), context.getKeyParmsId());
-            Assert.assertEquals(1, evk.key(2).length);
+            Assert.assertEquals(2, evk.key(2).length);
             for (PublicKey[] a : evk.data()) {
                 for (PublicKey b : a) {
                     Assert.assertFalse(b.data().isTransparent());
@@ -161,21 +161,4 @@ public class KeyGeneratorTest {
             Assert.assertEquals(1, galoisKeys.size());
         }
     }
-
-
-//    private void constructors(SchemeType scheme) {
-//
-//        EncryptionParams params = new EncryptionParams(scheme);
-//        params.setPolyModulusDegree(128);
-//        params.setPlainModulus(65537);
-//        params.setCoeffModulus(CoeffModulus.create(128, new int[] {60, 50, 40}));
-//
-//        Context context = new Context(params, false, CoeffModulus.SecurityLevelType.NONE);
-//
-//
-//
-//
-//
-//    }
-
 }

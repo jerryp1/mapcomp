@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintCore;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -25,64 +24,91 @@ import java.util.Arrays;
  */
 public class Plaintext implements Cloneable {
 
+    /**
+     * params ID
+     */
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
-
+    /**
+     * coeff count
+     */
     private int coeffCount = 0;
-
+    /**
+     * scale
+     */
     private double scale = 1.0;
 
+    /**
+     * data
+     */
     // todo: must use DynArray?
     // 始终只有 1个 Poly, 即 size = 1, 即使这个 poly 可能是 RNS base， 即 k * N
     private DynArray data;
-
 
     public Plaintext() {
         data = new DynArray();
     }
 
+    /**
+     * create plaintext zero with given coeff count.
+     *
+     * @param coeffCount coeff count.
+     */
     public Plaintext(int coeffCount) {
         this.coeffCount = coeffCount;
         this.data = new DynArray(coeffCount);
     }
 
+    /**
+     * create plaintext zero with given coeff count.
+     *
+     * @param capacity   capacity.
+     * @param coeffCount coeff count.
+     */
     public Plaintext(int capacity, int coeffCount) {
         this.coeffCount = coeffCount;
         this.data = new DynArray(capacity, coeffCount);
     }
 
+    /**
+     * create plaintext zero with given coefficients.
+     *
+     * @param coeffs   coefficients.
+     * @param capacity capacity.
+     */
     public Plaintext(long[] coeffs, int capacity) {
         this.coeffCount = coeffs.length;
         this.data = new DynArray(coeffs, capacity);
     }
 
+    /**
+     * create plaintext zero with given coefficients.
+     *
+     * @param coeffs coefficients.
+     */
     public Plaintext(long[] coeffs) {
         this.coeffCount = coeffs.length;
         this.data = new DynArray(coeffs);
     }
 
     /**
-     * 对标 operator=
+     * copy, (operator "=").
      *
-     * @param assign
+     * @param assign other plaintext.
      */
     public void copyFrom(Plaintext assign) {
-
         this.coeffCount = assign.coeffCount;
         this.scale = assign.scale;
         this.setParmsId(assign.getParmsId().clone());
-
         this.resize(assign.coeffCount);
         System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.coeffCount);
-
     }
 
     /**
-     * deep-copy a Plaintext object
+     * deep-copy a Plaintext object.
      *
-     * @param copy another Plaintext object
+     * @param copy another Plaintext object.
      */
     public Plaintext(Plaintext copy) {
-
         this.coeffCount = copy.coeffCount;
         this.parmsId = new ParmsIdType(copy.parmsId);
         this.scale = copy.scale;
@@ -110,7 +136,7 @@ public class Plaintext implements Cloneable {
      * allowed
      * 8. Other than the +, no other terms should have whitespace
      *
-     * @param hexPoly a poly in hex string
+     * @param hexPoly a poly in hex string.
      */
     public Plaintext(String hexPoly) {
         // first call new Plaintext()
@@ -118,22 +144,22 @@ public class Plaintext implements Cloneable {
         fromHexPoly(hexPoly);
     }
 
-
+    /**
+     * create plaintext from string.
+     *
+     * @param hexPoly a poly in hex string.
+     */
     public void fromHexPoly(String hexPoly) {
-
         if (isNttForm()) {
             throw new RuntimeException("cannot set an NTT transformed Plaintext");
         }
-
         if (Common.unsignedGt(hexPoly.length(), Integer.MAX_VALUE)) {
             throw new IllegalArgumentException("hex poly too long");
         }
-
         int length = hexPoly.length();
         // Determine size needed to store string coefficient.
         int assignCoeffCount = 0;
         int assignCoeffBitCount = 0;
-
         int pos = 0;
         // todo: need Math.min? here two value is equal.
         int lastPower = Math.min(data.maxSize(), Integer.MAX_VALUE);
@@ -147,7 +173,6 @@ public class Plaintext implements Cloneable {
             if (coeffLength == 0) {
                 throw new IllegalArgumentException("unable to parse hex poly, please check the format of the hex poly");
             }
-
             // Determine bit length of coefficient.
             // 迭代找出最大的  assignCoeffBitCount
             int coeffBitCount = Common.getHexStringBitCount(hexPoly, pos, coeffLength);
@@ -155,7 +180,6 @@ public class Plaintext implements Cloneable {
                 assignCoeffBitCount = coeffBitCount;
             }
             pos += coeffLength;
-
             // Extract power-term.
             // 这里是在计算 x^63 的长度，这里就是 4,  x^2 --> 3
             int[] powerLength = new int[1];
@@ -170,7 +194,6 @@ public class Plaintext implements Cloneable {
             }
             pos += powerLength[0];
             lastPower = power;
-
             // Extract plus (unless it is the end).
             // 获取 " + " 的长度，正常情况下 就是 3
             int plusLength = getPlus(hexPoly, pos);
@@ -184,14 +207,12 @@ public class Plaintext implements Cloneable {
             setZero();
             return;
         }
-
         // Resize polynomial.
         // 单个多项式系数至多 64-bit（实际上更少）
         if (assignCoeffBitCount > Common.BITS_PER_UINT64) {
             throw new IllegalArgumentException("hex poly has too large coefficients");
         }
         resize(assignCoeffCount);
-
         // Populate polynomial from string.
         pos = 0;
         lastPower = getCoeffCount();
@@ -202,21 +223,17 @@ public class Plaintext implements Cloneable {
         // 也就是 power = index(base-0)
         while (pos < length) {
             // Determine length of coefficient starting at pos.
-
             // 记录下系数 所在的 pos
             int coeffPos = pos;
             int coeffLength = getCoeffLength(hexPoly, pos);
             pos += coeffLength;
-
             // Extract power-term.
             int[] powerLength = new int[1];
             int power = getCoeffPower(hexPoly, pos, powerLength);
             pos += powerLength[0];
-
             // Extract plus (unless it is the end).
             int plusLength = getPlus(hexPoly, pos);
             pos += plusLength;
-
             // Zero coefficients not set by string.
             for (int zeroPower = lastPower - 1; zeroPower > power; --zeroPower) {
                 data.set(zeroPower, 0);
@@ -226,29 +243,38 @@ public class Plaintext implements Cloneable {
             UintCore.hexStringToUint(hexPoly, coeffPos, coeffLength, 1, power, getData());
             lastPower = power;
         }
-
         // Zero coefficients not set by string.
         for (int zeroPower = lastPower - 1; zeroPower >= 0; --zeroPower) {
             data.set(zeroPower, 0);
         }
     }
 
-
+    /**
+     * whether character is decimal.
+     *
+     * @param c character.
+     * @return return true if character is decimal, otherwise false.
+     */
     private boolean isDecimalChar(char c) {
-
         return c >= '0' && c <= '9';
     }
 
+    /**
+     * get decimal value from character.
+     *
+     * @param c character.
+     * @return decimal value.
+     */
     private int getDecimalValue(char c) {
         return c - '0';
     }
 
     /**
-     * 获取一个系数的长度,例如  1Fx^1 --> coeffLength = 2
+     * get coeff length, example 1Fx^1 --> coeffLength = 2
      *
-     * @param poly
-     * @param startIndex
-     * @return
+     * @param poly       poly.
+     * @param startIndex start index.
+     * @return coeff length.
      */
     private int getCoeffLength(String poly, int startIndex) {
         int length = 0;
@@ -261,20 +287,22 @@ public class Plaintext implements Cloneable {
         return length;
     }
 
+    /**
+     * get coeff power, example 1Fx^1 --> coeff power = 1
+     *
+     * @param poly        poly.
+     * @param startIndex  start index.
+     * @param powerLength power length.
+     * @return coeff power.
+     */
     private int getCoeffPower(String poly, int startIndex, int[] powerLength) {
         int length = 0;
         int polyIndex = startIndex;
-
-//        if (poly.charAt(polyIndex) == '\0') {
-//            powerLength[0] = 0;
-//            return 0;
-//        }
 
         if (poly.length() == startIndex) {
             powerLength[0] = 0;
             return 0;
         }
-
 
         if (poly.charAt(polyIndex) != 'x') {
             return -1;
@@ -299,12 +327,14 @@ public class Plaintext implements Cloneable {
         return power;
     }
 
+    /**
+     * get "+" symbol length.
+     * @param poly       poly.
+     * @param startIndex start index.
+     * @return "+" symbol length.
+     */
     private int getPlus(String poly, int startIndex) {
-
         int polyIndex = startIndex;
-//        if (poly.charAt(polyIndex) == '\0') {
-//            return 0;
-//        }
         if (poly.length() == startIndex) {
             return 0;
         }
@@ -323,32 +353,42 @@ public class Plaintext implements Cloneable {
         return 3;
     }
 
-
+    /**
+     * reserve the capacity of the plaintext data.
+     *
+     * @param capacity capacity.
+     */
     public void reserve(int capacity) {
-
         if (isNttForm()) {
             throw new RuntimeException("cannot reserve for an NTT transformed Plaintext");
         }
-
         data.reserve(capacity);
         coeffCount = data.size();
     }
 
+    /**
+     * reallocates the data so that its capacity exactly matches its size.
+     */
     public void shrinkToFit() {
         data.shrinkToFit();
     }
 
+    /**
+     * release the data.
+     */
     public void release() {
-
         parmsId = ParmsIdType.parmsIdZero();
         coeffCount = 0;
         scale = 1.0;
         data.release();
     }
 
-
+    /**
+     * resize the data.
+     *
+     * @param coeffCount coeff count.
+     */
     public void resize(int coeffCount) {
-
         if (isNttForm()) {
             throw new RuntimeException("cannot resize for an NTT transformed Plaintext");
         }
@@ -356,103 +396,170 @@ public class Plaintext implements Cloneable {
         this.coeffCount = coeffCount;
     }
 
-
-//    public void set(String hexPoly) {
-//
-//    }
-
-
+    /**
+     * set the coefficient of the plaintext.
+     *
+     * @param index index.
+     * @param coeff coefficient.
+     */
     public void set(int index, long coeff) {
         data.set(index, coeff);
     }
 
-
+    /**
+     * create a const plaintext.
+     *
+     * @param constCoeff const coefficient.
+     */
     public void set(long constCoeff) {
-
         data.resize(1);
         data.set(0, constCoeff);
         coeffCount = 1;
         parmsId = ParmsIdType.parmsIdZero();
     }
 
-
+    /**
+     * set the coefficients of the plaintext.
+     *
+     * @param coeffs coefficients.
+     */
     public void set(long[] coeffs) {
         data = new DynArray(coeffs);
         coeffCount = coeffs.length;
         parmsId = ParmsIdType.parmsIdZero();
     }
 
+    /**
+     * get the index-th coefficient.
+     *
+     * @param index index.
+     * @return the index-th coefficient.
+     */
     public long get(int index) {
         return data.at(index);
     }
 
+    /**
+     * get the index-th coefficient.
+     *
+     * @param index index.
+     * @return the index-th coefficient.
+     */
     public long at(int index) {
         return data.at(index);
     }
 
+    /**
+     * get the index-th coefficient.
+     *
+     * @param index index.
+     * @return the index-th coefficient.
+     */
     public long getValue(int index) {
         return data.at(index);
     }
 
+    /**
+     * get scale.
+     *
+     * @return scale.
+     */
     public double getScale() {
         return scale;
     }
 
+    /**
+     * set the coefficients from i-th to (i + length)-th as zero.
+     *
+     * @param startCoeff start coeff.
+     * @param length     length.
+     */
     public void setZero(int startCoeff, int length) {
-
         if (length <= 0) {
             return;
         }
-
         if (startCoeff + length - 1 >= coeffCount) {
             throw new IndexOutOfBoundsException("length must be non-negative and start_coeff + length - 1 must be within [0, coeff_count)");
         }
         data.setZero(startCoeff, length);
     }
 
+    /**
+     * set the coefficients i-th to the end as zero.
+     *
+     * @param startCoeff start coeff.
+     */
     public void setZero(int startCoeff) {
-
         if (startCoeff >= coeffCount) {
             throw new IndexOutOfBoundsException("start_coeff must be within [0, coeff_count)");
         }
-
         data.setZero(startCoeff);
     }
 
+    /**
+     * set plaintext as zero.
+     */
     public void setZero() {
         data.setZero();
     }
 
+    /**
+     * get plaintext data.
+     *
+     * @return plaintext data.
+     */
     public DynArray getDynArray() {
         return data;
     }
 
+    /**
+     * get plaintext data.
+     *
+     * @return plaintext data.
+     */
     public long[] getData() {
         return data.data();
     }
 
+    /**
+     * get the i-th coefficient of the polynomial.
+     *
+     * @param coeffIndex coeff index.
+     * @return i-th coefficient.
+     */
     public long getData(int coeffIndex) {
-
         if (coeffCount == 0) {
             throw new RuntimeException();
         }
-
         if (coeffIndex >= coeffCount) {
             throw new IndexOutOfBoundsException("coeff_index must be within [0, coeff_count)");
         }
-
         return data.at(coeffIndex);
     }
 
+    /**
+     * whether the plaintext is zero.
+     *
+     * @return ture if the plaintext is zero, otherwise false.
+     */
     public boolean isZero() {
         return (coeffCount == 0) || data.isZero();
     }
 
-
+    /**
+     * return capacity of the data.
+     *
+     * @return capacity of the data.
+     */
     public int getCapacity() {
         return data.capacity();
     }
 
+    /**
+     * return coeff count.
+     *
+     * @return coeff count.
+     */
     public int getCoeffCount() {
         return coeffCount;
     }
@@ -461,38 +568,57 @@ public class Plaintext implements Cloneable {
      * @return the significant coefficient count of the current plaintext polynomial.
      */
     public int significantCoeffCount() {
-
         if (coeffCount == 0) {
             return 0;
         }
         return UintCore.getSignificantUint64CountUint(data.data(), coeffCount);
     }
 
-
+    /**
+     * return the count of non-zero coefficients.
+     *
+     * @return the count of non-zero coefficients.
+     */
     public int nonZeroCoeffCount() {
-
         if (coeffCount == 0) {
             return 0;
         }
-
         return UintCore.getNonZeroUint64CountUint(data.data(), coeffCount);
     }
 
-
+    /**
+     * return parms ID.
+     *
+     * @return parms ID.
+     */
     public ParmsIdType getParmsId() {
         return parmsId;
     }
 
+    /**
+     * set parms ID to plaintext.
+     *
+     * @param parmsId parms ID.
+     */
     public void setParmsId(long[] parmsId) {
         this.parmsId.set(parmsId);
     }
 
+    /**
+     * set parms ID to plaintext.
+     *
+     * @param parmsId parms ID.
+     */
     public void setParmsId(ParmsIdType parmsId) {
         // todo: really need clone?
         this.parmsId = parmsId.clone();
     }
 
-
+    /**
+     * return scale.
+     *
+     * @return scale.
+     */
     public double scale() {
         return scale;
     }
@@ -502,10 +628,8 @@ public class Plaintext implements Cloneable {
      * @return Returns whether the plaintext is in NTT form.
      */
     public boolean isNttForm() {
-
         return !parmsId.isZero();
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -516,24 +640,18 @@ public class Plaintext implements Cloneable {
         if (!(o instanceof Plaintext)) {
             return false;
         }
-
         Plaintext that = (Plaintext) o;
-
         int sigCoeffCount = this.significantCoeffCount();
         int sigCoeffCountThat = that.significantCoeffCount();
-
         if (sigCoeffCount != sigCoeffCountThat) {
             return false;
         }
-
         // if both is ntt form, then compare parmsId
         boolean parmsIdCompare = (isNttForm() && that.isNttForm() && (parmsId.equals(that.parmsId))) || (
                 !isNttForm() && !that.isNttForm());
-
         if (!parmsIdCompare) {
             return false;
         }
-
         // data equal
         // 1. [0, sigCoeffCount) must be equal
         // 2. [sigCoeffCount, ..) should be zero
@@ -547,7 +665,6 @@ public class Plaintext implements Cloneable {
         //
         boolean b2 = Arrays.stream(Arrays.copyOfRange(this.data.data(), sigCoeffCount, this.data.size())).allMatch(n -> n == 0);
         boolean b3 = Arrays.stream(Arrays.copyOfRange(that.data.data(), sigCoeffCountThat, that.data.size())).allMatch(n -> n == 0);
-
         return b2 && b3;
     }
 
@@ -558,13 +675,10 @@ public class Plaintext implements Cloneable {
 
     @Override
     public String toString() {
-
         if (isNttForm()) {
             throw new IllegalArgumentException("cannot convert NTT transformed plaintext to string");
         }
-
         return PolyCore.polyToHexString(data.data(), coeffCount, 1);
-
     }
 
     @Override

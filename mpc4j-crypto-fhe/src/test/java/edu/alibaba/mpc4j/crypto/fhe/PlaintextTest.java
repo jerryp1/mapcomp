@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- *
+ * Plaintext Test.
  *
  * @author Qixian Zhou
  * @date 2023/9/10
@@ -87,32 +87,22 @@ public class PlaintextTest {
         plain2.setParmsId(ParmsIdType.parmsIdZero());
         Assert.assertFalse(plain2.isNttForm());
         plain2.setParmsId(new long[]{1, 2, 3, 5});
-        plain2.isNttForm();
         Assert.assertTrue(plain2.isNttForm());
     }
 
 
     @Test
     public void fromHexPoly() {
-
         Plaintext plain = new Plaintext();
-
         {
             EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
             parms.setPolyModulusDegree(64);
             parms.setCoeffModulus(CoeffModulus.create(64, new int[] {30, 30}));
             parms.setPlainModulus(65537);
-
-            Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
-
+            new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
             plain.setParmsId(ParmsIdType.parmsIdZero());
-
             plain.fromHexPoly("1x^63 + 2x^62 + Fx^32 + Ax^9 + 1x^1 + 1");
-
             Assert.assertFalse(plain.isNttForm());
         }
-
-
     }
-
 }
