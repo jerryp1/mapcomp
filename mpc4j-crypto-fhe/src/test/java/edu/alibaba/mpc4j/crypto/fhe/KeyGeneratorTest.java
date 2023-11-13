@@ -47,13 +47,13 @@ public class KeyGeneratorTest {
         {
             parms.setPolyModulusDegree(64);
             parms.setPlainModulus(65537);
-            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60, 60, 60}));
+            parms.setCoeffModulus(CoeffModulus.create(64, new int[]{60, 60}));
             Context context = new Context(parms, false, CoeffModulus.SecurityLevelType.NONE);
             KeyGenerator keyGenerator = new KeyGenerator(context);
             RelinKeys evk = new RelinKeys();
             keyGenerator.createRelinKeys(evk);
             Assert.assertEquals(evk.parmsId(), context.getKeyParmsId());
-            Assert.assertEquals(2, evk.key(2).length);
+            Assert.assertEquals(1, evk.key(2).length);
             for (PublicKey[] a : evk.data()) {
                 for (PublicKey b : a) {
                     Assert.assertFalse(b.data().isTransparent());
