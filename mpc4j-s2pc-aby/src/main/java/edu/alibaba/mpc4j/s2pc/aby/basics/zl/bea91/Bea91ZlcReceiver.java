@@ -66,6 +66,11 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
     }
 
     @Override
+    public SquareZlVector setPublicValue(ZlVector xi){
+        return SquareZlVector.create(xi, false);
+    }
+
+    @Override
     public SquareZlVector shareOwn(ZlVector x1) {
         setShareOwnInput(x1);
         logPhaseInfo(PtoState.PTO_BEGIN, "send share");

@@ -9,8 +9,6 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
@@ -56,14 +54,13 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
 
         for(int zl : ZLS) {
             Zl tmpZl = ZlFactory.createInstance(EnvType.STANDARD, zl);
-            Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(tmpZl).build();
             configurations.add(new Object[]{
-                PermGenTypes.AHI22_BITMAP.name(), new BitmapPermGenConfig.Builder(bit2aConfig).setSilent(false).build()
+                PermGenTypes.AHI22_BITMAP.name(), new BitmapPermGenConfig.Builder(tmpZl).setSilent(false).build()
             });
 
             // AHI+22 default zl
             configurations.add(new Object[]{
-                PermGenTypes.AHI22_BITMAP.name() + "_silent", new BitmapPermGenConfig.Builder(bit2aConfig).setSilent(true).build()
+                PermGenTypes.AHI22_BITMAP.name() + "_silent", new BitmapPermGenConfig.Builder(tmpZl).setSilent(true).build()
             });
         }
 
@@ -141,8 +138,10 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         // create inputs
         BitVector[] origin = IntStream.range(0, bitNum).mapToObj(i -> BitVectorFactory.createZeros(num)).toArray(BitVector[]::new);
         for(int i = 0; i < num; i++){
-            int index = SECURE_RANDOM.nextInt(bitNum);
-            origin[index].set(i, true);
+            int index = SECURE_RANDOM.nextInt(bitNum + 1);
+            if(index < bitNum){
+                origin[index].set(i, true);
+            }
         }
         BitVector[] randoms = IntStream.range(0, bitNum).mapToObj(i -> BitVectorFactory.createRandom(num, SECURE_RANDOM)).toArray(BitVector[]::new);
         SquareZ2Vector[] x0Share = Arrays.stream(randoms).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
@@ -190,6 +189,7 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         BigInteger[] elements0 = z0.getZlVector().getElements();
         BigInteger[] elements1 = z1.getZlVector().getElements();
         BigInteger[] resultOrder = IntStream.range(0, num).mapToObj(i -> config.getZl().add(elements0[i], (elements1[i]))).toArray(BigInteger[]::new);
+//        LOGGER.info(Arrays.toString(resultOrder));
 
         // obtain ture order
         ZlDatabase zl = ZlDatabase.create(EnvType.STANDARD, true, origin);

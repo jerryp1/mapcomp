@@ -123,7 +123,7 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
                 // ot key
                 byte[] rv = lnotReceiverOutputLt.getRb(index);
                 // decrypt
-                lts[j].set(index, evsLt[v].get(index) ^ ((rv[0] % 2) != 0));
+                lts[j].set(index, evsLt[v].get(index) ^ ((rv[0] & 1) != 0));
             }
             // for v ∈ [2^4], P1 receives eq_{0,j}_1
             DataPacketHeader eqsHeader = new DataPacketHeader(
@@ -142,7 +142,7 @@ public class Rrk20MillionaireReceiver extends AbstractMillionaireParty {
                 // ot key
                 byte[] rv = lnotReceiverOutputLt.getRb(index);
                 // decrypt
-                eqs[j].set(index, evsEq[v].get(index) ^ ((rv[0] % 2) != 0));
+                eqs[j].set(index, evsEq[v].get(index) ^ ((rv[0] & 1) != 0));
             }
         }
         SquareZ2Vector[] ltShare = Arrays.stream(lts).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
