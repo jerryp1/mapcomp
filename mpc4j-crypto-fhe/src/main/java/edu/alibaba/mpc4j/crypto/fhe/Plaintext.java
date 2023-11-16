@@ -29,19 +29,16 @@ public class Plaintext implements Cloneable {
      */
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
     /**
-     * coeff count
+     * the number of coefficients in the plaintext polynomial
      */
     private int coeffCount = 0;
     /**
-     * scale
+     * scale, only needed when using the CKKS encryption scheme
      */
     private double scale = 1.0;
-
     /**
-     * data
+     * data, todo: must use DynArray?
      */
-    // todo: must use DynArray?
-    // 始终只有 1个 Poly, 即 size = 1, 即使这个 poly 可能是 RNS base， 即 k * N
     private DynArray data;
 
     public Plaintext() {
@@ -49,9 +46,10 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * create plaintext zero with given coeff count.
+     * Constructs a plaintext representing a constant polynomial 0.
+     * The coefficient count of the polynomial is set to the given value. The capacity is set to the same value.
      *
-     * @param coeffCount coeff count.
+     * @param coeffCount the number of (zeroed) coefficients in the plaintext.
      */
     public Plaintext(int coeffCount) {
         this.coeffCount = coeffCount;
@@ -59,10 +57,11 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * create plaintext zero with given coeff count.
+     * Constructs a plaintext representing a constant polynomial 0.
+     * The coefficient count of the polynomial and the capacity are set to the given values.
      *
-     * @param capacity   capacity.
-     * @param coeffCount coeff count.
+     * @param capacity   the capacity.
+     * @param coeffCount the number of (zeroed) coefficients in the plaintext.
      */
     public Plaintext(int capacity, int coeffCount) {
         this.coeffCount = coeffCount;
@@ -70,10 +69,12 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * create plaintext zero with given coefficients.
+     * Constructs a plaintext representing a polynomial with given coefficient values.
+     * The coefficient count of the polynomial is set to the number of coefficient values provided,
+     * and the capacity is set to the given value.
      *
-     * @param coeffs   coefficients.
-     * @param capacity capacity.
+     * @param coeffs   the coefficient values.
+     * @param capacity the capacity.
      */
     public Plaintext(long[] coeffs, int capacity) {
         this.coeffCount = coeffs.length;
@@ -81,9 +82,11 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * create plaintext zero with given coefficients.
+     * Constructs a plaintext representing a polynomial with given coefficient values.
+     * The coefficient count of the polynomial is set to the number of coefficient values provided,
+     * and the capacity is set to the same value.
      *
-     * @param coeffs coefficients.
+     * @param coeffs the coefficient values.
      */
     public Plaintext(long[] coeffs) {
         this.coeffCount = coeffs.length;
@@ -91,9 +94,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * copy, (operator "=").
+     * Copies a given plaintext to the current one.
      *
-     * @param assign other plaintext.
+     * @param assign the plaintext to copy from.
      */
     public void copyFrom(Plaintext assign) {
         this.coeffCount = assign.coeffCount;
@@ -104,9 +107,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * deep-copy a Plaintext object.
+     * Creates a new plaintext by copying a given one.
      *
-     * @param copy another Plaintext object.
+     * @param copy the plaintext to copy from.
      */
     public Plaintext(Plaintext copy) {
         this.coeffCount = copy.coeffCount;
@@ -145,9 +148,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * create plaintext from string.
+     * Creates a new plaintext from a given hexadecimal string describing the plaintext polynomial.
      *
-     * @param hexPoly a poly in hex string.
+     * @param hexPoly the formatted polynomial string specifying the plaintext polynomial.
      */
     public void fromHexPoly(String hexPoly) {
         if (isNttForm()) {
@@ -250,31 +253,31 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * whether character is decimal.
+     * Returns whether the character is decimal.
      *
-     * @param c character.
-     * @return return true if character is decimal, otherwise false.
+     * @param c the character.
+     * @return whether the character is decimal.
      */
     private boolean isDecimalChar(char c) {
         return c >= '0' && c <= '9';
     }
 
     /**
-     * get decimal value from character.
+     * Gets the decimal value of the given character.
      *
-     * @param c character.
-     * @return decimal value.
+     * @param c the character.
+     * @return the decimal value.
      */
     private int getDecimalValue(char c) {
         return c - '0';
     }
 
     /**
-     * get coeff length, example 1Fx^1 --> coeffLength = 2
+     * Gets the coefficient values length of the polynomial, example 1Fx^1 --> coeffLength = 2
      *
-     * @param poly       poly.
+     * @param poly       the polynomial.
      * @param startIndex start index.
-     * @return coeff length.
+     * @return the coefficient values length.
      */
     private int getCoeffLength(String poly, int startIndex) {
         int length = 0;
@@ -288,26 +291,23 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * get coeff power, example 1Fx^1 --> coeff power = 1
+     * Gets the coefficient power, example 1Fx^1 --> coeff power = 1
      *
-     * @param poly        poly.
+     * @param poly        the polynomial.
      * @param startIndex  start index.
-     * @param powerLength power length.
+     * @param powerLength the power length.
      * @return coeff power.
      */
     private int getCoeffPower(String poly, int startIndex, int[] powerLength) {
         int length = 0;
         int polyIndex = startIndex;
-
         if (poly.length() == startIndex) {
             powerLength[0] = 0;
             return 0;
         }
-
         if (poly.charAt(polyIndex) != 'x') {
             return -1;
         }
-
         polyIndex++;
         length++;
         if (poly.charAt(polyIndex) != '^') {
@@ -328,8 +328,8 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * get "+" symbol length.
-     * @param poly       poly.
+     * Gets "+" symbol length.
+     * @param poly       the polynomial.
      * @param startIndex start index.
      * @return "+" symbol length.
      */
@@ -354,9 +354,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * reserve the capacity of the plaintext data.
+     * Allocates enough memory to accommodate the backing array of a plaintext with given capacity.
      *
-     * @param capacity capacity.
+     * @param capacity the capacity.
      */
     public void reserve(int capacity) {
         if (isNttForm()) {
@@ -367,14 +367,14 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * reallocates the data so that its capacity exactly matches its size.
+     * Reallocates the data so that its capacity exactly matches its size.
      */
     public void shrinkToFit() {
         data.shrinkToFit();
     }
 
     /**
-     * release the data.
+     * Releases the data.
      */
     public void release() {
         parmsId = ParmsIdType.parmsIdZero();
@@ -384,9 +384,10 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * resize the data.
+     * Resizes the plaintext to have a given coefficient count.
+     * The plaintext is automatically reallocated if the new coefficient count does not fit in the current capacity.
      *
-     * @param coeffCount coeff count.
+     * @param coeffCount the number of coefficients in the plaintext polynomial.
      */
     public void resize(int coeffCount) {
         if (isNttForm()) {
@@ -397,19 +398,20 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * set the coefficient of the plaintext.
+     * Sets a coefficient of the polynomial with the given value.
      *
-     * @param index index.
-     * @param coeff coefficient.
+     * @param index the index of the coefficient to set.
+     * @param coeff the given coefficient value.
      */
     public void set(int index, long coeff) {
         data.set(index, coeff);
     }
 
     /**
-     * create a const plaintext.
+     * Sets the value of the current plaintext to a given constant polynomial and sets the parms_id to parms_id_zero,
+     * effectively marking the plaintext as not NTT transformed. The coefficient count is set to one.
      *
-     * @param constCoeff const coefficient.
+     * @param constCoeff the constant coefficient.
      */
     public void set(long constCoeff) {
         data.resize(1);
@@ -419,9 +421,10 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * set the coefficients of the plaintext.
+     * Sets the coefficients of the current plaintext to given values and sets the parms_id to parms_id_zero,
+     * effectively marking the plaintext as not NTT transformed.
      *
-     * @param coeffs coefficients.
+     * @param coeffs desired values of the plaintext coefficients.
      */
     public void set(long[] coeffs) {
         data = new DynArray(coeffs);
@@ -430,49 +433,49 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * get the index-th coefficient.
+     * Returns the value of a given coefficient in the plaintext polynomial.
      *
-     * @param index index.
-     * @return the index-th coefficient.
+     * @param index the index of the coefficient in the plaintext polynomial.
+     * @return the value of a given coefficient in the plaintext polynomial.
      */
     public long get(int index) {
         return data.at(index);
     }
 
     /**
-     * get the index-th coefficient.
+     * Returns the value of a given coefficient in the plaintext polynomial.
      *
-     * @param index index.
-     * @return the index-th coefficient.
+     * @param index the index of the coefficient in the plaintext polynomial.
+     * @return the value of a given coefficient in the plaintext polynomial.
      */
     public long at(int index) {
         return data.at(index);
     }
 
     /**
-     * get the index-th coefficient.
+     * Returns the value of a given coefficient in the plaintext polynomial.
      *
-     * @param index index.
-     * @return the index-th coefficient.
+     * @param index the index of the coefficient in the plaintext polynomial.
+     * @return the value of a given coefficient in the plaintext polynomial.
      */
     public long getValue(int index) {
         return data.at(index);
     }
 
     /**
-     * get scale.
+     * Returns the scale of the plaintext.
      *
-     * @return scale.
+     * @return the scale of the plaintext.
      */
     public double getScale() {
         return scale;
     }
 
     /**
-     * set the coefficients from i-th to (i + length)-th as zero.
+     * Sets a given range of coefficients of a plaintext polynomial to zero; does nothing if length is zero.
      *
-     * @param startCoeff start coeff.
-     * @param length     length.
+     * @param startCoeff the index of the first coefficient to set to zero.
+     * @param length     the number of coefficients to set to zero.
      */
     public void setZero(int startCoeff, int length) {
         if (length <= 0) {
@@ -485,9 +488,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * set the coefficients i-th to the end as zero.
+     * Sets the plaintext polynomial coefficients to zero starting at a given index.
      *
-     * @param startCoeff start coeff.
+     * @param startCoeff the index of the first coefficient to set to zero.
      */
     public void setZero(int startCoeff) {
         if (startCoeff >= coeffCount) {
@@ -497,35 +500,35 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * set plaintext as zero.
+     * Sets the plaintext polynomial to zero.
      */
     public void setZero() {
         data.setZero();
     }
 
     /**
-     * get plaintext data.
+     * Gets the DynArray object of the plaintext.
      *
-     * @return plaintext data.
+     * @return the data of the plaintext.
      */
     public DynArray getDynArray() {
         return data;
     }
 
     /**
-     * get plaintext data.
+     * Gets the data of the plaintext.
      *
-     * @return plaintext data.
+     * @return the data of the plaintext.
      */
     public long[] getData() {
         return data.data();
     }
 
     /**
-     * get the i-th coefficient of the polynomial.
+     * Returns the value of a given coefficient in the plaintext polynomial.
      *
-     * @param coeffIndex coeff index.
-     * @return i-th coefficient.
+     * @param coeffIndex the index of the coefficient in the plaintext polynomial.
+     * @return the value of a given coefficient in the plaintext polynomial.
      */
     public long getData(int coeffIndex) {
         if (coeffCount == 0) {
@@ -538,27 +541,27 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * whether the plaintext is zero.
+     * Returns whether the current plaintext polynomial has all zero coefficients.
      *
-     * @return ture if the plaintext is zero, otherwise false.
+     * @return whether the current plaintext polynomial has all zero coefficients.
      */
     public boolean isZero() {
         return (coeffCount == 0) || data.isZero();
     }
 
     /**
-     * return capacity of the data.
+     * Returns the capacity of the current allocation.
      *
-     * @return capacity of the data.
+     * @return the capacity of the current allocation.
      */
     public int getCapacity() {
         return data.capacity();
     }
 
     /**
-     * return coeff count.
+     * Returns the coefficient count of the current plaintext polynomial.
      *
-     * @return coeff count.
+     * @return the coefficient count of the current plaintext polynomial.
      */
     public int getCoeffCount() {
         return coeffCount;
@@ -575,9 +578,9 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * return the count of non-zero coefficients.
+     * Returns the non-zero coefficient count of the current plaintext polynomial.
      *
-     * @return the count of non-zero coefficients.
+     * @return the non-zero coefficient count of the current plaintext polynomial.
      */
     public int nonZeroCoeffCount() {
         if (coeffCount == 0) {
@@ -587,27 +590,27 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * return parms ID.
+     * Returns the parms ID.
      *
-     * @return parms ID.
+     * @return the parms ID.
      */
     public ParmsIdType getParmsId() {
         return parmsId;
     }
 
     /**
-     * set parms ID to plaintext.
+     * Sets the given parms ID to current plaintext.
      *
-     * @param parmsId parms ID.
+     * @param parmsId the given parms ID.
      */
     public void setParmsId(long[] parmsId) {
         this.parmsId.set(parmsId);
     }
 
     /**
-     * set parms ID to plaintext.
+     * Sets the given parms ID to current plaintext.
      *
-     * @param parmsId parms ID.
+     * @param parmsId the given parms ID.
      */
     public void setParmsId(ParmsIdType parmsId) {
         // todo: really need clone?
@@ -615,14 +618,13 @@ public class Plaintext implements Cloneable {
     }
 
     /**
-     * return scale.
+     * Returns the scale of the plaintext.
      *
-     * @return scale.
+     * @return the scale of the plaintext..
      */
     public double scale() {
         return scale;
     }
-
 
     /**
      * @return Returns whether the plaintext is in NTT form.

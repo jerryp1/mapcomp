@@ -155,7 +155,7 @@ class NttHandler {
         int gap = 1;
         // m = n, but in the first loop, h = m / 2, so here h is m in Algorithm 2
         int m = n >>> 1;
-        // rootsIndex = (h + i) % n. The precomputed table Ψ^{-1}[0, ..., n) is well-organized to reduce comuptation.
+        // rootsIndex = (h + i) % n. The precomputed table Ψ^{-1}[0, ..., n) is well-organized to reduce computation.
         int rootsIndex = 0;
         // for (m = n; m > 1; m = m/2) do
         for (; m > 1; m >>= 1) {

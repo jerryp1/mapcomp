@@ -71,9 +71,10 @@ import java.util.Objects;
  */
 public class Evaluator {
 
-
+    /**
+     * context
+     */
     private final Context context;
-
 
     public Evaluator(Context context) {
         if (!context.isParametersSet()) {
@@ -83,7 +84,6 @@ public class Evaluator {
     }
 
     public void rotateColumns(Ciphertext encrypted, GaloisKeys galoisKeys, Ciphertext destination) {
-
         destination.copyFrom(encrypted);
         rotateColumnsInplace(destination, galoisKeys);
     }
@@ -543,11 +543,14 @@ public class Evaluator {
     }
 
 
-    private void modSwitchScaleToNext(
-        Ciphertext encrypted,
-        Ciphertext destination
-    ) {
-
+    /**
+     * modulus switch, the RNS base of original ciphertext is Q = {q_1, ..., q_{k-1}, q_k},
+     * the RNS base of result is Q'={q_1, ..., q_{k-1}}.
+     *
+     * @param encrypted   the ciphertext to modulus switch.
+     * @param destination the ciphertext to overwrite with round(ct * Q'/Q)
+     */
+    private void modSwitchScaleToNext(Ciphertext encrypted, Ciphertext destination) {
         Context.ContextData contextData = context.getContextData(encrypted.getParmsId());
         if (contextData.getParms().getScheme() == SchemeType.BFV && encrypted.isNttForm()) {
             throw new IllegalArgumentException("BFV encrypted cannot be in NTT form");
@@ -1452,11 +1455,10 @@ public class Evaluator {
      * Multiplies two ciphertexts. This functions computes the product of encrypted1 and encrypted2 and stores the
      * result in encrypted1.
      *
-     * @param encrypted1 The first ciphertext to multiply
-     * @param encrypted2 The second ciphertext to multiply
+     * @param encrypted1 the first ciphertext to multiply.
+     * @param encrypted2 the second ciphertext to multiply.
      */
     public void multiplyInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
-
         if (!ValueChecker.isMetaDataValidFor(encrypted1, context)
             || !ValueChecker.isBufferValid(encrypted1)
         ) {
@@ -1494,17 +1496,16 @@ public class Evaluator {
 
 
     /**
-     * 非常复杂，极易出错...
+     * BFV multiplication. This functions computes the product of encrypted1 and encrypted2 and stores the
+     * result in encrypted1.
      *
-     * @param encrypted1
-     * @param encrypted2
+     * @param encrypted1 the first ciphertext to multiply.
+     * @param encrypted2 the second ciphertext to multiply.
      */
     private void bfvMultiply(Ciphertext encrypted1, Ciphertext encrypted2) {
-
         if (encrypted1.isNttForm() || encrypted2.isNttForm()) {
             throw new IllegalArgumentException("encrypted1 or encrypted2 cannot be in NTT form");
         }
-
         Context.ContextData contextData = context.getContextData(encrypted1.getParmsId());
         EncryptionParams parms = contextData.getParms();
         int coeffCount = parms.getPolyModulusDegree();
@@ -1512,11 +1513,9 @@ public class Evaluator {
         int encrypted1Size = encrypted1.getSize();
         int encrypted2Size = encrypted2.getSize();
         long plainModulus = parms.getPlainModulus().getValue();
-
         RnsTool rnsTool = contextData.getRnsTool();
         int baseBskSize = rnsTool.getBaseBsk().getSize();
         int baseBskMTildeSize = rnsTool.getBaseBskMTilde().getSize();
-
         // Determine destination.size()
         // 每个密文包含2个多项式的情况下，乘法结果包含3个密文---> 2 + 2 - 1
         // todo: need subSafe?
@@ -2454,45 +2453,41 @@ public class Evaluator {
         addPlainInplace(destination, plain);
     }
 
+    /**
+     * add plaintext to ciphertext.
+     *
+     * @param encrypted the ciphertext to overwrite.
+     * @param plain     the plaintext to add.
+     */
     public void addPlainInplace(Ciphertext encrypted, Plaintext plain) {
-
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
             || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
         }
-
         if (!ValueChecker.isMetaDataValidFor(plain, context)
             || !ValueChecker.isBufferValid(plain)) {
             throw new IllegalArgumentException("plain is not valid for encryption parameters");
         }
-
         Context.ContextData contextData = context.getContextData(encrypted.getParmsId());
         EncryptionParams parms = contextData.getParms();
-
         if (parms.getScheme() == SchemeType.BFV && encrypted.isNttForm()) {
             throw new IllegalArgumentException("BFV encrypted cannot be in NTT form");
         }
-
         if (parms.getScheme() == SchemeType.CKKS && !encrypted.isNttForm()) {
             throw new IllegalArgumentException("CKKS encrypted must be in NTT form");
         }
-
         if (parms.getScheme() == SchemeType.BGV && encrypted.isNttForm()) {
             throw new IllegalArgumentException("BGV encrypted cannot be in NTT form");
         }
-
         if (plain.isNttForm() != encrypted.isNttForm()) {
             throw new IllegalArgumentException("NTT form mismatch");
         }
-
         if (encrypted.isNttForm() && (!encrypted.getParmsId().equals(plain.getParmsId()))) {
             throw new IllegalArgumentException("encrypted and plain parameter mismatch");
         }
-
         if (!areSameScale(encrypted, plain)) {
             throw new IllegalArgumentException("scale mismatch");
         }
-
         Modulus[] coeffModulus = parms.getCoeffModulus();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = coeffModulus.length;
@@ -2500,16 +2495,11 @@ public class Evaluator {
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize)) {
             throw new IllegalArgumentException("invalid parameters");
         }
-
         switch (parms.getScheme()) {
             case BFV:
                 // c0 + plain
                 ScalingVariant.multiplyAddPlainWithScalingVariant(
-                    plain,
-                    contextData,
-                    encrypted.getData(),
-                    coeffCount,
-                    encrypted.indexAt(0)
+                    plain, contextData, encrypted.getData(), coeffCount, encrypted.indexAt(0)
                 );
                 break;
             case CKKS:
@@ -2518,7 +2508,6 @@ public class Evaluator {
                 throw new IllegalArgumentException("now un-support BGV");
             default:
                 throw new IllegalArgumentException("unsupported scheme");
-
         }
         // check
         if (encrypted.isTransparent()) {
@@ -2533,7 +2522,6 @@ public class Evaluator {
      * @param encrypted The ciphertext to negate
      */
     public void negateInplace(Ciphertext encrypted) {
-
         if (!ValueChecker.isMetaDataValidFor(encrypted, context)
             || !ValueChecker.isBufferValid(encrypted)) {
             throw new IllegalArgumentException("encrypted is not valid for encryption parameters");
@@ -2543,7 +2531,6 @@ public class Evaluator {
         EncryptionParams parms = contextData.getParms();
         Modulus[] coeffModulus = parms.getCoeffModulus();
         int encryptedSize = encrypted.getSize();
-
         // 对密文中的每一个多项式取反， 这里就是在处理一个完整的PolyIter
         PolyArithmeticSmallMod.negatePolyCoeffModPoly(
             encrypted.getData(),
@@ -2570,6 +2557,13 @@ public class Evaluator {
         negateInplace(destination);
     }
 
+    /**
+     * compute destination = encrypted1 + encrypted2.
+     *
+     * @param encrypted1  the first ciphertext to add.
+     * @param encrypted2  the second ciphertext to add.
+     * @param destination the ciphertext to overwrite with encrypted1 + encrypted2.
+     */
     public void add(Ciphertext encrypted1, Ciphertext encrypted2, Ciphertext destination) {
         // 如果两个对象地址相同
         if (encrypted2 == destination) {
@@ -2580,51 +2574,50 @@ public class Evaluator {
         }
     }
 
+    /**
+     * compute encrypted1 = \sum encrypteds.
+     *
+     * @param encrypteds  the ciphertexts to add.
+     * @param destination the ciphertext to overwrite with \sum encrypteds.
+     */
     public void addMany(Ciphertext[] encrypteds, Ciphertext destination) {
-
         if (encrypteds == null || encrypteds.length == 0) {
             throw new IllegalArgumentException("encrypteds cannot be empty");
         }
-
-        for (int i = 0; i < encrypteds.length; i++) {
+        for (Ciphertext encrypted : encrypteds) {
             // 不能有地址相同的密文
-            if (encrypteds[i] == destination) {
+            if (encrypted == destination) {
                 throw new IllegalArgumentException("encrypteds must be different from destination");
             }
         }
-
         destination.copyFrom(encrypteds[0]);
         for (int i = 1; i < encrypteds.length; i++) {
             addInplace(destination, encrypteds[i]);
         }
     }
 
+    /**
+     * compute encrypted1 = encrypted1 + encrypted2.
+     *
+     * @param encrypted1  the first ciphertext to add and overwrite with the encrypted1 + encrypted2.
+     * @param encrypted2  the second ciphertext to add.
+     */
     public void addInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
-
-        if (!ValueChecker.isMetaDataValidFor(encrypted1, context) ||
-            !ValueChecker.isBufferValid(encrypted1)
-        ) {
+        if (!ValueChecker.isMetaDataValidFor(encrypted1, context) || !ValueChecker.isBufferValid(encrypted1)) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
-
-        if (!ValueChecker.isMetaDataValidFor(encrypted2, context) ||
-            !ValueChecker.isBufferValid(encrypted2)
-        ) {
+        if (!ValueChecker.isMetaDataValidFor(encrypted2, context) || !ValueChecker.isBufferValid(encrypted2)) {
             throw new IllegalArgumentException("encrypted2 is not valid for encryption parameters");
         }
-
         if (!encrypted1.getParmsId().equals(encrypted2.getParmsId())) {
             throw new IllegalArgumentException("encrypted1 and encrypted2 parameter mismatch");
         }
-
         if (encrypted1.isNttForm() != encrypted2.isNttForm()) {
             throw new IllegalArgumentException("NTT form mismatch");
         }
-
         if (!areSameScale(encrypted1, encrypted2)) {
             throw new IllegalArgumentException("scale mismatch");
         }
-
         Context.ContextData contextData = context.getContextData(encrypted1.getParmsId());
         EncryptionParams parms = contextData.getParms();
         Modulus[] coeffModulus = parms.getCoeffModulus();
@@ -2711,7 +2704,13 @@ public class Evaluator {
         }
     }
 
-
+    /**
+     * compute destination = encrypted1 - encrypted2.
+     *
+     * @param encrypted1  the first ciphertext to sub.
+     * @param encrypted2  the second ciphertext to sub.
+     * @param destination the ciphertext to overwrite with encrypted1 - encrypted2.
+     */
     public void sub(Ciphertext encrypted1, Ciphertext encrypted2, Ciphertext destination) {
         // 如果两个对象地址相同
         if (encrypted2 == destination) {
@@ -2726,33 +2725,28 @@ public class Evaluator {
         }
     }
 
-
+    /**
+     * compute encrypted1 = encrypted1 - encrypted2.
+     *
+     * @param encrypted1  the first ciphertext to sub and overwrite with the encrypted1 - encrypted2.
+     * @param encrypted2  the second ciphertext to sub.
+     */
     public void subInplace(Ciphertext encrypted1, Ciphertext encrypted2) {
-
-        if (!ValueChecker.isMetaDataValidFor(encrypted1, context) ||
-            !ValueChecker.isBufferValid(encrypted1)
-        ) {
+        if (!ValueChecker.isMetaDataValidFor(encrypted1, context) || !ValueChecker.isBufferValid(encrypted1)) {
             throw new IllegalArgumentException("encrypted1 is not valid for encryption parameters");
         }
-
-        if (!ValueChecker.isMetaDataValidFor(encrypted2, context) ||
-            !ValueChecker.isBufferValid(encrypted2)
-        ) {
+        if (!ValueChecker.isMetaDataValidFor(encrypted2, context) || !ValueChecker.isBufferValid(encrypted2)) {
             throw new IllegalArgumentException("encrypted2 is not valid for encryption parameters");
         }
-
         if (!encrypted1.getParmsId().equals(encrypted2.getParmsId())) {
             throw new IllegalArgumentException("encrypted1 and encrypted2 parameter mismatch");
         }
-
         if (encrypted1.isNttForm() != encrypted2.isNttForm()) {
             throw new IllegalArgumentException("NTT form mismatch");
         }
-
         if (!areSameScale(encrypted1, encrypted2)) {
             throw new IllegalArgumentException("scale mismatch");
         }
-
         Context.ContextData contextData = context.getContextData(encrypted1.getParmsId());
         EncryptionParams parms = contextData.getParms();
         Modulus[] coeffModulus = parms.getCoeffModulus();
@@ -2784,10 +2778,8 @@ public class Evaluator {
                 coeffCount,
                 coeffModulusSize
             );
-
             Ciphertext encrypted2Copy = new Ciphertext();
             encrypted2Copy.copyFrom(encrypted2);
-
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModPoly(
                 encrypted2.getData(),
                 coeffCount,
@@ -2826,7 +2818,6 @@ public class Evaluator {
             if (encrypted1Size < encrypted2Size) {
                 // 暂时弃用掉PolyCore提供的方法，因为存在一些错误，直接数组拷贝
                 // 此时 密文2 还有更多的 多项式，需要将其 取反，然后放置在 密文1 后面的位置
-
                 // 这里我目前的 多项式运算实现版本 写起来就有些复杂了，因为这里本质上还是 PolyIter，而且需要提供起点
                 // 暂时在这里写一个循环，来依次处理 每一个 RnsIter
                 // 多项式起点是 minCount，终点是 encrypted2Size - 1, 我们还需要处理 (encrypted2Size - minCount)

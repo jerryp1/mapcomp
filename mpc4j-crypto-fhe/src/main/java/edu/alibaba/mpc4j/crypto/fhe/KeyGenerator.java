@@ -28,30 +28,30 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
 public class KeyGenerator {
 
     /**
-     * context
+     * the context
      */
     private Context context;
     /**
-     * secret key
+     * the secret key
      */
     private SecretKey secretKey;
     /**
-     * secret key array size
+     * array size of secret keys
      */
     private int secretKeyArraySize = 0;
     /**
-     * secret key array
+     * the secret key array
      */
     private long[] secretKeyArray;
     /**
-     * is sk generated
+     * whether the secret key is generated
      */
     boolean skGenerated = false;
 
     /**
-     * constructor.
+     * Creates an KeyGenerator instance initialized with the specified context
      *
-     * @param context context.
+     * @param context the context.
      */
     public KeyGenerator(Context context) {
         if (!context.isParametersSet()) {
@@ -65,10 +65,12 @@ public class KeyGenerator {
     }
 
     /**
-     * constructor.
+     * Creates an KeyGenerator instance initialized with the specified context and specified previously secret key.
+     * This can e.g. be used to increase the number of relinearization keys from what had earlier been generated,
+     * or to generate Galois keys in case they had not been generated earlier.
      *
-     * @param context   context.
-     * @param secretKey secret key.
+     * @param context   the context.
+     * @param secretKey a previously generated secret key.
      */
     public KeyGenerator(Context context, SecretKey secretKey) {
         if (!context.isParametersSet()) {
@@ -84,18 +86,18 @@ public class KeyGenerator {
     }
 
     /**
-     * return secret key.
+     * Returns the secret key.
      *
-     * @return secret key.
+     * @return the secret key.
      */
     public SecretKey getSecretKey() {
         return secretKey;
     }
 
     /**
-     * create secret keys array.
+     * Generates new secret key.
      *
-     * @param isInitialized is secret key generated.
+     * @param isInitialized true if the secret key has already been.
      */
     private void generateSk(boolean isInitialized) {
         // Extract encryption parameters.
@@ -123,34 +125,33 @@ public class KeyGenerator {
         }
         // Set the secret_key_array to have size 1 (first power of secret)
         secretKeyArray = new long[coeffCount * coeffModulusSize];
-        // TODO: why need copy?
         System.arraycopy(secretKey.data().getData(), 0, secretKeyArray, 0, coeffCount * coeffModulusSize);
         secretKeyArraySize = 1;
         skGenerated = true;
     }
 
     /**
-     * create public key.
+     * Generates a public key and stores the result in destination.
      *
-     * @param destination store public key.
+     * @param destination the public key to overwrite with the generated public key.
      */
     public void createPublicKey(PublicKey destination) {
         generatePk(false, destination);
     }
 
     /**
-     * create relinearization keys.
+     * Generates relinearization keys and stores the result in destination.
      *
-     * @param destination store relinearization keys.
+     * @param destination the relinearization keys to overwrite with the generated public key.
      */
     public void createRelinKeys(RelinKeys destination) {
         createRelinKeys(1, false, destination);
     }
 
     /**
-     * create relinearization keys.
+     * Generates relinearization keys and returns the relinearization keys.
      *
-     * @return relinearization keys.
+     * @return the relinearization keys.
      */
     public RelinKeys createRelinKeys() {
         // todo: convert return type to Serializable<RelinKeys>
@@ -158,28 +159,47 @@ public class KeyGenerator {
     }
 
     /**
-     * create Galois keys.
+     * Generates Galois keys and stores the result in destination.
+     * This function creates specific Galois keys that can be used to apply specific Galois automorphisms on encrypted data.
+     * The user needs to give as input a vector of Galois elements corresponding to the keys that are to be created.
+     * The Galois elements are odd integers in the interval [1, M-1], where M = 2*N, and N = poly_modulus_degree.
+     * Used with batching, a Galois element 3^i % M corresponds to a cyclic row rotation i steps to the left, and
+     * a Galois element 3^(N/2-i) % M corresponds to a cyclic row rotation i steps to the right.
+     * The Galois element M-1 corresponds to a column rotation (row swap) in BFV, and complex conjugation in CKKS.
+     * In the polynomial view (not batching), a Galois automorphism by a Galois element p changes Enc(plain(x)) to Enc(plain(x^p)).
      *
-     * @param galoisElts  Galois elements.
-     * @param destination store Galois keys.
+     * @param galoisElts  the Galois elements for which to generate keys.
+     * @param destination the Galois keys to overwrite with the generated Galois keys.
      */
     public void createGaloisKeys(int[] galoisElts, GaloisKeys destination) {
         createGaloisKeys(galoisElts, false, destination);
     }
 
     /**
-     * create Galois keys with default Galois elements.
+     * Generates Galois keys and stores the result in destination.
+     * This function creates logarithmically many (in degree of the polynomial modulus) Galois keys that is sufficient
+     * to apply any Galois automorphism (e.g., rotations) on encrypted data.
+     * Most users will want to use this overload of the function.
+     * Precisely it generates 2*log(n)-1 number of Galois keys where n is the degree of the polynomial modulus.
+     * When used with batching, these keys support direct left and right rotations of power-of-2 steps of rows in BFV
+     * or vectors in CKKS and rotation of columns in BFV or conjugation in CKKS.
      *
-     * @param destination store Galois keys.
+     * @param destination the Galois keys to overwrite with the generated Galois keys.
      */
     public void createGaloisKeys(GaloisKeys destination) {
         createGaloisKeys(context.keyContextData().getGaloisTool().getEltsAll(), destination);
     }
 
     /**
-     * create Galois keys with default Galois elements.
+     * Generates Galois keys and returns the generated Galois keys.
+     * This function creates logarithmically many (in degree of the polynomial modulus) Galois keys that is sufficient
+     * to apply any Galois automorphism (e.g., rotations) on encrypted data.
+     * Most users will want to use this overload of the function.
+     * Precisely it generates 2*log(n)-1 number of Galois keys where n is the degree of the polynomial modulus.
+     * When used with batching, these keys support direct left and right rotations of power-of-2 steps of rows in BFV
+     * or vectors in CKKS and rotation of columns in BFV or conjugation in CKKS.
      *
-     * @return Galois keys
+     * @return the Galois keys.
      */
     public GaloisKeys createGaloisKeys() {
         // todo: convert return type to Serializable<RelinKeys>
@@ -187,10 +207,17 @@ public class KeyGenerator {
     }
 
     /**
-     * create Galois keys.
+     * Generates Galois keys and returns the generated Galois keys.
+     * This function creates specific Galois keys that can be used to apply specific Galois automorphisms on encrypted data.
+     * The user needs to give as input a vector of Galois elements corresponding to the keys that are to be created.
+     * The Galois elements are odd integers in the interval [1, M-1], where M = 2*N, and N = poly_modulus_degree.
+     * Used with batching, a Galois element 3^i % M corresponds to a cyclic row rotation i steps to the left, and
+     * a Galois element 3^(N/2-i) % M corresponds to a cyclic row rotation i steps to the right.
+     * The Galois element M-1 corresponds to a column rotation (row swap) in BFV, and complex conjugation in CKKS.
+     * In the polynomial view (not batching), a Galois automorphism by a Galois element p changes Enc(plain(x)) to Enc(plain(x^p)).
      *
-     * @param galoisElts Galois elements.
-     * @return Galois keys.
+     * @param galoisElts the Galois elements for which to generate keys.
+     * @return the Galois keys.
      */
     public GaloisKeys createGaloisKeys(int[] galoisElts) {
         // todo: convert return type to Serializable<RelinKeys>
@@ -210,10 +237,10 @@ public class KeyGenerator {
     }
 
     /**
-     * create public key.
+     * Generates new public key matching to existing secret key.
      *
-     * @param saveSeed save seed.
-     * @return public key.
+     * @param saveSeed if true, save seed instead of a polynomial.
+     * @return the generated public key.
      */
     private PublicKey generatePk(boolean saveSeed) {
         if (!skGenerated) {
@@ -224,7 +251,7 @@ public class KeyGenerator {
         Modulus[] coeffModulus = parms.getCoeffModulus();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = coeffModulus.length;
-        // size check , todo: can remove?
+        // size check
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize)) {
             throw new IllegalArgumentException("valid parameters");
         }
@@ -238,10 +265,10 @@ public class KeyGenerator {
     }
 
     /**
-     * create public key.
+     * Generates new public key matching to existing secret key.
      *
-     * @param saveSeed  save seed.
-     * @param publicKey store public key.
+     * @param saveSeed  if true, save seed instead of a polynomial.
+     * @param publicKey the public key to overwrite with the generated public key.
      */
     private void generatePk(boolean saveSeed, PublicKey publicKey) {
         if (!skGenerated) {
@@ -252,7 +279,7 @@ public class KeyGenerator {
         Modulus[] coeffModulus = parms.getCoeffModulus();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = coeffModulus.length;
-        // size check , todo: can remove?
+        // size check
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize)) {
             throw new IllegalArgumentException("valid parameters");
         }
@@ -264,12 +291,12 @@ public class KeyGenerator {
     }
 
     /**
-     * create one key-switch key.
+     * Generates one key switching key for a new key and stores the result in destination.
      *
-     * @param newKeys          new key.
-     * @param destinations     store key-switch key.
-     * @param destinationIndex destination index.
-     * @param saveSeed         save seed.
+     * @param newKeys          a new key.
+     * @param destinations     the key switching keys array to store the generated one key switching key.
+     * @param destinationIndex the destination index.
+     * @param saveSeed         if true, save seed instead of a polynomial.
      */
     private void generateOneKeySwitchKey(long[] newKeys, PublicKey[][] destinations, int destinationIndex, boolean saveSeed) {
         if (!context.isUsingKeySwitching()) {
@@ -305,13 +332,13 @@ public class KeyGenerator {
     }
 
     /**
-     * generate one key-switch keys.
+     * Generates one key switching key for a new key and stores the result in destination.
      *
-     * @param newKeys          new keys.
-     * @param startIndex       start index.
-     * @param destinations     store key-switch keys.
-     * @param destinationIndex destination index.
-     * @param saveSeed         save seed.
+     * @param newKeys          an array of new keys.
+     * @param startIndex       the index of new key.
+     * @param destinations     the key switching keys array to store the generated one key switching key.
+     * @param destinationIndex the destination index.
+     * @param saveSeed         if true, save seed instead of a polynomial.
      */
     private void generateOneKeySwitchKey(long[] newKeys, int startIndex, PublicKey[][] destinations, int destinationIndex,
                                          boolean saveSeed) {
@@ -344,16 +371,17 @@ public class KeyGenerator {
     }
 
     /**
-     * generate key-switch keys.
+     * Generates new key switching keys for an array of new keys.
      *
-     * @param newKeys            new keys.
+     * @param newKeys            an array of new keys.
      * @param newKeysCoeffCount  new keys' coeff count.
      * @param newKeysModulusSize new keys' modulus size.
-     * @param numKeys            keys num.
-     * @param destination        destination, store key-switch keys.
-     * @param saveSeed           save seed.
+     * @param numKeys            num of key switching keys.
+     * @param destination        the key switching keys array to store the generated one key switching key.
+     * @param saveSeed           if true, save seed instead of a polynomial.
      */
-    private void generateKeySwitchKeys(long[] newKeys, int newKeysCoeffCount, int newKeysModulusSize, int numKeys, KeySwitchKeys destination, boolean saveSeed) {
+    private void generateKeySwitchKeys(long[] newKeys, int newKeysCoeffCount, int newKeysModulusSize, int numKeys,
+                                       KeySwitchKeys destination, boolean saveSeed) {
         int coeffCount = context.keyContextData().getParms().getPolyModulusDegree();
         Context.ContextData keyContextData = context.keyContextData();
         EncryptionParams keyParms = keyContextData.getParms();
@@ -374,15 +402,15 @@ public class KeyGenerator {
 
 
     /**
-     * generate key-switch keys.
+     * Generates new key switching keys for an array of new keys.
      *
-     * @param newKeys            new keys.
-     * @param startIndex         start index.
+     * @param newKeys            an array of new keys.
+     * @param startIndex         start index of the array.
      * @param newKeysCoeffCount  new keys' coeff count.
      * @param newKeysModulusSize new keys' modulus size.
-     * @param numKeys            keys num.
-     * @param destination        destination, store key-switch keys.
-     * @param saveSeed           save seed.
+     * @param numKeys            num of key switching keys.
+     * @param destination        the key switching keys array to store the generated one key switching key.
+     * @param saveSeed           if true, save seed instead of a polynomial.
      */
     private void generateKeySwitchKeys(long[] newKeys, int startIndex, int newKeysCoeffCount, int newKeysModulusSize,
         int numKeys, KeySwitchKeys destination, boolean saveSeed) {
@@ -406,11 +434,11 @@ public class KeyGenerator {
     }
 
     /**
-     * create the specified number of relinearization keys.
+     * Generates the specified number of relinearization keys and stores the result in destination.
      *
-     * @param count       The number of relinearization keys to generate.
-     * @param saveSeed    If true, save seed instead of a polynomial.
-     * @param destination store relinearization keys.
+     * @param count       the number of relinearization keys to generate.
+     * @param saveSeed    if true, save seed instead of a polynomial.
+     * @param destination the relinearization keys to store the generated relinearization keys.
      */
     private void createRelinKeys(int count, boolean saveSeed, RelinKeys destination) {
         if (!skGenerated) {
@@ -441,11 +469,11 @@ public class KeyGenerator {
     }
 
     /**
-     * create the specified number of relinearization keys.
+     * Generates and returns the specified number of relinearization keys.
      *
-     * @param count    The number of relinearization keys to generate.
-     * @param saveSeed If true, save seed instead of a polynomial.
-     * @return relinearization keys.
+     * @param count    the number of relinearization keys to generate.
+     * @param saveSeed if true, save seed instead of a polynomial.
+     * @return the relinearization keys.
      */
     private RelinKeys createRelinKeys(int count, boolean saveSeed) {
         if (!skGenerated) {
@@ -477,11 +505,11 @@ public class KeyGenerator {
     }
 
     /**
-     * create Galois keys.
+     * Generates Galois keys and stores the result in destination.
      *
-     * @param galoisElts  Galois elements.
-     * @param saveSeed    save seed.
-     * @param destination store Galois keys.
+     * @param galoisElts  the Galois elements for which to generate keys.
+     * @param saveSeed    if true, save seed instead of a polynomial.
+     * @param destination the Galois keys to store the generated Galois keys.
      */
     private void createGaloisKeys(int[] galoisElts, boolean saveSeed, GaloisKeys destination) {
         if (!skGenerated) {
@@ -525,11 +553,11 @@ public class KeyGenerator {
     }
 
     /**
-     * create Galois keys.
+     * Generates and returns the specified number of Galois keys.
      *
-     * @param galoisElts  Galois elements.
-     * @param saveSeed    save seed.
-     * @return Galois keys.
+     * @param galoisElts the Galois elements for which to generate keys.
+     * @param saveSeed   if true, save seed instead of a polynomial.
+     * @return the Galois keys.
      */
     private GaloisKeys createGaloisKeys(int[] galoisElts, boolean saveSeed) {
         if (!skGenerated) {
@@ -573,10 +601,10 @@ public class KeyGenerator {
     }
 
     /**
-     * compute secret key array, s, s^2, s^3, ..., s^{max_power}.
+     * Computes secret key array, i.e., s, s^2, s^3, ..., s^{max_power}.
      *
-     * @param contextData context data.
-     * @param maxPower    max power.
+     * @param contextData the context data.
+     * @param maxPower    the max power.
      */
     private void computeSecretKeyArray(Context.ContextData contextData, int maxPower) {
         assert maxPower >= 1;

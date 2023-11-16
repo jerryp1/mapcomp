@@ -258,6 +258,7 @@ public class Context {
             return contextData;
         }
         // todo: Can we use NTT with coeff_modulus?
+        // create small NTT tables for coeff modulus
         contextData.qualifiers.usingNtt = true;
         try {
             NttTables.createNttTables(coeffCountPower, coeffModulus, contextData.smallNttTables);
@@ -282,8 +283,9 @@ public class Context {
                 }
             }
             // Check that plain_modulus is smaller than total coeff modulus
+            // todo: consider remove new Array?
             if (!UintCore.isLessThanUint(
-                new long[]{plainModulus.getValue()}, // todo: consider remove new Array?
+                new long[]{plainModulus.getValue()},
                 plainModulus.getUint64Count(),
                 contextData.totalCoeffModulus,
                 coeffModulusSize)
@@ -295,6 +297,7 @@ public class Context {
             // plainModulus is a prime and mod 2n = 1
             contextData.qualifiers.usingBatching = true;
             try {
+                // create small NTT table for plain modulus
                 contextData.plainNttTables = new NttTables(coeffCountPower, plainModulus);
             } catch (Exception e) {
                 contextData.qualifiers.usingBatching = false;
@@ -317,8 +320,9 @@ public class Context {
             // extend plainModulus's length to coeffModulusSize
             long[] widePlainModulus = UintCore.duplicateUintIfNeeded(new long[]{plainModulus.getValue()}, plainModulus.getUint64Count(), coeffModulusSize, false);
             // q/t , quotient stores in tempCoeffDivPlainModulus, remainder stores in contextData.upperHalfIncrement
-            UintArithmetic.divideUint(contextData.totalCoeffModulus, widePlainModulus, coeffModulusSize,
-                    tempCoeffDivPlainModulus, contextData.upperHalfIncrement);
+            UintArithmetic.divideUint(
+                contextData.totalCoeffModulus, widePlainModulus, coeffModulusSize, tempCoeffDivPlainModulus, contextData.upperHalfIncrement
+            );
 
             // Store the non-RNS form of upper_half_increment for BFV encryption
             contextData.coeffModulusModPlainModulus = contextData.upperHalfIncrement[0];

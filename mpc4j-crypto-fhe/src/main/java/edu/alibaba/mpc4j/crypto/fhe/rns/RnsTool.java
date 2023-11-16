@@ -351,16 +351,11 @@ public class RnsTool {
         long[] temp = PolyCore.allocateZeroPolyArray(baseQSize, coeffCount, 1);
         for (int i = 0; i < baseQSize; i++) {
             // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
-            // coeffIter[startIndex * coeffCount, (startIndx + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
+            // coeffIter[startIndex * coeffCount, (startIndex + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
             // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                input,
-                i * coeffCount,
-                coeffCount,
-                prodTGammaModQ[i],
-                baseQ.getBase(i),
-                temp,
-                i * coeffCount);
+                input, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), temp, i * coeffCount
+            );
         }
         // Make another temp destination to get the poly in mod {t, gamma}
         long[] tempTGammaRns = PolyCore.allocateZeroPolyArray(baseTGammaSize, coeffCount, 1);
@@ -386,15 +381,16 @@ public class RnsTool {
         // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
         for (int i = 0; i < coeffCount; i++) {
             // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
+            // [s^t - [s^gamma]_gamma], 第二项为中心化模数
             if (tempTGammaRns[coeffCount + i] > gammaDiv2) {
-                // Compute -(gamma - a) instead of (a - gamma)
+                // Compute |s^t + (gamma - |s^gamma|_gamma)|_t instead of |s^t - (|s^gamma|_gamma - gamma)|_t
                 destination[i] = UintArithmeticSmallMod.addUintMod(
                     tempTGammaRns[i],
                     UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGammaRns[coeffCount + i], t),
                     t
                 );
             } else {
-                // No correction needed, just no need gamma - a, directly use a, beacuse a \in [0, gamma/2)
+                // No correction needed, just no need gamma - a, directly use a, because a \in [0, gamma/2)
                 destination[i] = UintArithmeticSmallMod.subUintMod(
                     tempTGammaRns[i],
                     UintArithmeticSmallMod.barrettReduce64(tempTGammaRns[coeffCount + i], t),

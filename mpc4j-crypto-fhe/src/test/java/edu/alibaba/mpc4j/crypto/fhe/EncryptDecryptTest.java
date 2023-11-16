@@ -760,5 +760,35 @@ public class EncryptDecryptTest {
 
     }
 
+    @Test
+    public void myTest() {
+        EncryptionParams parms = new EncryptionParams(SchemeType.BFV);
+        Modulus plainModulus = new Modulus(1 << 6);
+        parms.setPlainModulus(plainModulus);
+        parms.setPolyModulusDegree(256);
+        parms.setCoeffModulus(CoeffModulus.create(256, new int[]{40, 40, 40, 40}));
+        Context context = new Context(parms, true, CoeffModulus.SecurityLevelType.NONE);
+        KeyGenerator keygen = new KeyGenerator(context);
+
+        PublicKey pk = new PublicKey();
+        keygen.createPublicKey(pk);
+        // 注意是用的 sk 实例化
+        Encryptor encryptor = new Encryptor(context, keygen.getSecretKey());
+        Decryptor decryptor = new Decryptor(context, keygen.getSecretKey());
+        Evaluator evaluator = new Evaluator(context);
+        Ciphertext encrypted = new Ciphertext();
+        Plaintext plain = new Plaintext();
+        String hexPoly;
+
+        hexPoly = "1x^28 + 1x^25 + 1x^23 + 1x^21 + 1x^20 + 1x^19 + 1x^16 + 1x^15 + 1x^13 + 1x^12 + 1x^7 + 1x^5 + 1";
+        plain.fromHexPoly(hexPoly);
+        // 对称加密
+        encryptor.encryptSymmetric(plain, encrypted);
+        evaluator.negateInplace(encrypted);
+        evaluator.negateInplace(encrypted);
+        decryptor.decrypt(encrypted, plain);
+        Assert.assertEquals(encrypted.getParmsId(), context.getFirstParmsId());
+        Assert.assertEquals(hexPoly, plain.toString());
+    }
 
 }

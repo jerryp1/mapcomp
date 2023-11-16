@@ -43,10 +43,10 @@ public class Encryptor {
     private SecretKey secretKey;
 
     /**
-     * create Encryptor from public key.
+     * Creates an Encryptor instance initialized with the specified context and public key.
      *
-     * @param context   context.
-     * @param publicKey public key.
+     * @param context   the context.
+     * @param publicKey the public key.
      */
     public Encryptor(Context context, PublicKey publicKey) {
         this.context = context;
@@ -58,17 +58,16 @@ public class Encryptor {
         Modulus[] coeffModulus = parms.getCoeffModulus();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = coeffModulus.length;
-        // todo: really need check?
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize, 2)) {
             throw new IllegalArgumentException("invalid parameters");
         }
     }
 
     /**
-     * create Encryptor from secret key.
+     * Creates an Encryptor instance initialized with the specified context and secret key.
      *
-     * @param context   context.
-     * @param secretKey secret key.
+     * @param context   the context.
+     * @param secretKey the secret key.
      */
     public Encryptor(Context context, SecretKey secretKey) {
         this.context = context;
@@ -87,11 +86,11 @@ public class Encryptor {
     }
 
     /**
-     * create Encryptor from public key and secret key.
+     * Creates an Encryptor instance initialized with the specified context, secret key, and public key.
      *
-     * @param context   context.
-     * @param publicKey public key.
-     * @param secretKey secret key.
+     * @param context   the context.
+     * @param publicKey the public key.
+     * @param secretKey the secret key.
      */
     public Encryptor(Context context, PublicKey publicKey, SecretKey secretKey) {
         if (!context.isParametersSet()) {
@@ -111,8 +110,8 @@ public class Encryptor {
     }
 
     /**
-     * encrypt a plaintext and store the ciphertext in destination.
-     * <p>
+     * Encrypts a plaintext with the public key and store the ciphertext in destination.
+     *
      * The encryption parameters for the resulting ciphertext correspond to:
      * 1) in BFV/BGV, the highest (data) level in the modulus switching chain,
      * 2) in CKKS, the encryption parameters of the plaintext.
@@ -127,9 +126,10 @@ public class Encryptor {
         encryptInternal(plain, true, false, destination);
     }
 
-
     /**
-     * encrypt a plaintext.
+     * Encrypts a plaintext with the public key and returns the ciphertext.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      *
      * @param plain the plaintext to encrypt.
      * @return the ciphertext.
@@ -142,8 +142,7 @@ public class Encryptor {
     }
 
     /**
-     * encrypt zero plaintext and store the ciphertext in destination.
-     * <p>
+     * Encrypts a zero plaintext with the public key and stores the result in destination.
      * The encryption parameters for the resulting ciphertext correspond to the
      * highest (data) level in the modulus switching chain.
      *
@@ -155,9 +154,9 @@ public class Encryptor {
     }
 
     /**
-     * encrypt zero plaintext.
-     *
-     * @return the ciphertext.
+     * Encrypts a zero plaintext with the public key and returns the ciphertext.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      */
     public Ciphertext encryptZero() {
         // todo: change the return value type to Serializable<Ciphertext>
@@ -167,11 +166,8 @@ public class Encryptor {
     }
 
     /**
-     * encrypt zero plaintext and store the ciphertext in destination.
-     * <p>
-     * The encryption parameters for the resulting ciphertext correspond to the
-     * given parms_id. Dynamic memory allocations in the process are allocated
-     * from the memory pool pointed to by the given MemoryPoolHandle.
+     * Encrypts a zero plaintext with the public key and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the given parms_id.
      *
      * @param parmsId     the parms_id for the resulting ciphertext.
      * @param destination the ciphertext to overwrite with the encrypted plaintext.
@@ -181,10 +177,10 @@ public class Encryptor {
     }
 
     /**
-     * encrypt zero plaintext.
+     * Encrypts a zero plaintext with the public key and returns the ciphertext.
+     * The encryption parameters for the resulting ciphertext correspond to the given parms_id.
      *
      * @param parmsId the parms_id for the resulting ciphertext.
-     * @return ciphertext.
      */
     public Ciphertext encryptZero(ParmsIdType parmsId) {
         // todo: change the return value type to Serializable<Ciphertext>
@@ -194,28 +190,25 @@ public class Encryptor {
     }
 
     /**
-     * Encrypts a plaintext with the secret key and stores the result in
-     * destination.
-     * <p>
+     * Encrypts a plaintext with the secret key and stores the result in destination.
      * The encryption parameters for the resulting ciphertext correspond to:
      * 1) in BFV/BGV, the highest (data) level in the modulus switching chain,
      * 2) in CKKS, the encryption parameters of the plaintext.
-     * Dynamic memory allocations in the process are allocated from the memory
-     * pool pointed to by the given MemoryPoolHandle.
      *
-     * @param plain       The plaintext to encrypt.
-     * @param destination The ciphertext to overwrite with the encrypted plaintext.
+     * @param plain       the plaintext to encrypt.
+     * @param destination the ciphertext to overwrite with the encrypted plaintext.
      */
     public void encryptSymmetric(Plaintext plain, Ciphertext destination) {
         encryptInternal(plain, false, false, destination);
     }
 
     /**
-     * Encrypts a plaintext with the secret key and stores the result in
-     * destination.
+     * Encrypts a plaintext with the secret key and returns the ciphertext.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      *
-     * @param plain The plaintext to encrypt.
-     * @return ciphertext.
+     * @param plain the plaintext to encrypt.
+     * @return the ciphertext.
      */
     public Ciphertext encryptSymmetric(Plaintext plain) {
         // todo: change the return value type to Serializable<Ciphertext>
@@ -224,28 +217,23 @@ public class Encryptor {
         return destination;
     }
 
-
     /**
-     * Encrypts a zero plaintext with the secret key and stores the result in
-     * destination.
-     * <p>
-     * The encryption parameters for the resulting ciphertext correspond to the
-     * given parms_id. Dynamic memory allocations in the process are allocated
-     * from the memory pool pointed to by the given MemoryPoolHandle.
+     * Encrypts a zero plaintext with the secret key and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the given parms_id.
      *
-     * @param parmsId     The parms_id for the resulting ciphertext
-     * @param destination The ciphertext to overwrite with the encrypted plaintext
+     * @param parmsId     the parms_id for the resulting ciphertext.
+     * @param destination the ciphertext to overwrite with the encrypted plaintext.
      */
     public void encryptZeroSymmetric(ParmsIdType parmsId, Ciphertext destination) {
         encryptZeroInternal(parmsId, false, false, destination);
     }
 
     /**
-     * Encrypts a zero plaintext with the secret key and stores the result in
-     * destination.
+     * Encrypts a zero plaintext with the secret key and returns the ciphertext.
+     * The encryption parameters for the resulting ciphertext correspond to the given parms_id.
      *
-     * @param parmsId The parms_id for the resulting ciphertext
-     * @return ciphertext.
+     * @param parmsId the parms_id for the resulting ciphertext.
+     * @return the ciphertext.
      */
     public Ciphertext encryptZeroSymmetric(ParmsIdType parmsId) {
         // todo: change the return value type to Serializable<Ciphertext>
@@ -255,28 +243,31 @@ public class Encryptor {
     }
 
     /**
-     * Encrypts a zero plaintext using the secret key with the first parms ID and stores the result in destination.
+     * Encrypts a zero plaintext using the secret key and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      *
-     * @param destination The ciphertext to overwrite with the encrypted plaintext
+     * @param destination the ciphertext to overwrite with the encrypted plaintext.
      */
     public void encryptZeroSymmetric(Ciphertext destination) {
         encryptZeroSymmetric(context.getFirstParmsId(), destination);
     }
 
     /**
-     * Encrypts a zero plaintext using the secret key with the first parms ID and stores the result in destination.
+     * Encrypts a zero plaintext using the secret key and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      *
-     * @return ciphertext.
+     * @return the ciphertext.
      */
     public Ciphertext encryptZeroSymmetric() {
         return encryptZeroSymmetric(context.getFirstParmsId());
     }
 
-
     /**
-     * set public key.
+     * Gives a new instance of public key, if it is valid.
      *
-     * @param publicKey The public key
+     * @param publicKey the public key.
      */
     public void setPublicKey(PublicKey publicKey) {
         if (!ValueChecker.isValidFor(publicKey, context)) {
@@ -286,9 +277,9 @@ public class Encryptor {
     }
 
     /**
-     * set secret key.
+     * Gives a new instance of secret key, if it is valid.
      *
-     * @param secretKey The secret key
+     * @param secretKey the secret key.
      */
     public void setSecretKey(SecretKey secretKey) {
         if (!ValueChecker.isValidFor(secretKey, context)) {
@@ -298,22 +289,24 @@ public class Encryptor {
     }
 
     /**
-     * encrypt plaintext and store ciphertext in destination.
+     * Encrypts a plaintext and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the
+     * highest (data) level in the modulus switching chain.
      *
-     * @param plain        plaintext.
-     * @param isAsymmetric is asymmetric.
-     * @param saveSeed     save seed.
-     * @param destination  destination.
+     * @param plain        the plaintext to encrypt.
+     * @param isAsymmetric whether the encryption is asymmetric.
+     * @param saveSeed     whether the seed is saved.
+     * @param destination  the ciphertext to overwrite with the encrypted plaintext.
      */
     private void encryptInternal(Plaintext plain, boolean isAsymmetric, boolean saveSeed, Ciphertext destination) {
         // Minimal verification that the keys are set
         if (isAsymmetric) {
-            // 非对称加密用 public key
+            // encrypts using public key
             if (!ValueChecker.isMetaDataValidFor(publicKey, context)) {
                 throw new IllegalArgumentException("public key is not set");
             }
         } else {
-            // 对称加密 用 secret key
+            // encrypts using secret key
             if (!ValueChecker.isMetaDataValidFor(secretKey, context)) {
                 throw new IllegalArgumentException("secret key is not set");
             }
@@ -330,16 +323,9 @@ public class Encryptor {
             encryptZeroInternal(context.getFirstParmsId(), isAsymmetric, saveSeed, destination);
             // Multiply plain by scalar coeff_div_plaintext and reposition if in upper-half.
             // Result gets added into the c_0 term of ciphertext (c_0,c_1).
-            // \Delta = q / t (coeff_div_plaintext), \Delta * m
-            // 这里只处理 c0, 注意函数签名和起点
-            // 这里就是计算 c0 + \Delta * m , 前面的 C0 是对 zero 的加密
-            // 到这里就是完整的加密
+            // (round(plain * q/t) + c0, c1)
             ScalingVariant.multiplyAddPlainWithScalingVariant(
-                    plain,
-                    context.firstContextData(),
-                    destination.getData(),
-                    destination.getPolyModulusDegree(),
-                    0
+                plain, context.firstContextData(), destination.getData(), destination.getPolyModulusDegree(), 0
             );
         } else if (scheme == SchemeType.CKKS) {
             // todo: implement CKKS
@@ -353,19 +339,20 @@ public class Encryptor {
     }
 
     /**
-     * encrypt zero and store ciphertext in destination.
+     * Encrypts a zero plaintext and stores the result in destination.
+     * The encryption parameters for the resulting ciphertext correspond to the given parms_id.
      *
-     * @param parmsId      parms ID.
-     * @param isAsymmetric is asymmetric.
-     * @param saveSeed     save seed.
-     * @param destination  destination.
+     * @param parmsId      the parms ID.
+     * @param isAsymmetric whether the encryption is asymmetric.
+     * @param saveSeed     whether the seed is saved.
+     * @param destination  the ciphertext to overwrite with the encrypted plaintext.
      */
-    private void encryptZeroInternal(ParmsIdType parmsId, boolean isAsymmetric, boolean saveSeed, Ciphertext destination) {
+    private void encryptZeroInternal(ParmsIdType parmsId, boolean isAsymmetric, boolean saveSeed,
+                                     Ciphertext destination) {
         Context.ContextData contextData = context.getContextData(parmsId);
         if (contextData == null) {
             throw new IllegalArgumentException("parmsId is not valid for encryption parameters");
         }
-        // ciphertext parms
         EncryptionParams parms = contextData.getParms();
         int coeffModulusSize = parms.getCoeffModulus().length;
         int coeffCount = parms.getPolyModulusDegree();
@@ -379,7 +366,6 @@ public class Encryptor {
         }
         // Resize destination and save results
         destination.resize(context, parmsId, 2);
-        // If asymmetric key encryption 非对称加密
         if (isAsymmetric) {
             // firstContext  前面是 keyContext
             Context.ContextData prevContextData = contextData.getPreContextData();
@@ -399,10 +385,18 @@ public class Encryptor {
                 for (int i = 0; i < temp.getSize(); i++) {
                     if (isNttForm) {
                         // temp in ciphertext RnsBase
-                        rnsTool.divideAndRoundQLastNttInplace(temp.getData(), temp.getPolyModulusDegree(), temp.getCoeffModulusSize(), temp.indexAt(i), prevContextData.getSmallNttTables());
+                        rnsTool.divideAndRoundQLastNttInplace(
+                            temp.getData(),
+                            temp.getPolyModulusDegree(),
+                            temp.getCoeffModulusSize(),
+                            temp.indexAt(i),
+                            prevContextData.getSmallNttTables()
+                        );
                     } else if (parms.getScheme() != SchemeType.BGV) {
                         // bfv switch-to-next
-                        rnsTool.divideAndRoundQLastInplace(temp.getData(), temp.getPolyModulusDegree(), temp.getCoeffModulusSize(), temp.indexAt(i));
+                        rnsTool.divideAndRoundQLastInplace(
+                            temp.getData(), temp.getPolyModulusDegree(), temp.getCoeffModulusSize(), temp.indexAt(i)
+                        );
                     } else {
                         // bgv switch-to-next
                         // todo: implement BGV
@@ -415,7 +409,13 @@ public class Encryptor {
                     // 这就导致二者的 coeffModulusSize 不一样，那么 Copy 的时候就不正确！
                     // 举个更具体的例子， temp: size = 2, k = 2, N = 8
                     //                 destination: size = 2, k = 1, N = 8
-                    System.arraycopy(temp.getData(), i * coeffCount * temp.getCoeffModulusSize(), destination.getData(), i * coeffCount * destination.getCoeffModulusSize(), coeffCount * destination.getCoeffModulusSize());
+                    System.arraycopy(
+                        temp.getData(),
+                        i * coeffCount * temp.getCoeffModulusSize(),
+                        destination.getData(),
+                        i * coeffCount * destination.getCoeffModulusSize(),
+                        coeffCount * destination.getCoeffModulusSize()
+                    );
                 }
                 destination.setParmsId(parmsId.clone());
                 destination.setIsNttForm(isNttForm);

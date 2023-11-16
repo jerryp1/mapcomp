@@ -254,8 +254,6 @@ public class BatchEncoder {
      * store the bit-reversed locations, isomorphic to Z_{n/2} * Z_2.
      */
     private void populateMatrixRepsIndexMap() {
-        // bitCount, 也就是 需要反转的 index 所在范围的最大比特数, 例如 N = 8, 那么只需要3个比特就可以表示
-        // 那么位置反转也就是在 3个比特上进行的
         int logN = UintCore.getPowerOfTwo(slots);
         matrixReversePositionIndexMap = new int[slots];
         // Copy from the matrix to the value vectors

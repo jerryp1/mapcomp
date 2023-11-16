@@ -10,7 +10,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 /**
  * Class to store a ciphertext element. The data for a ciphertext consists
@@ -40,31 +39,31 @@ public class Ciphertext implements Cloneable, Serializable {
      */
     private ParmsIdType parmsId = ParmsIdType.parmsIdZero();
     /**
-     * is NTT form
+     * whether the ciphertext is in NTT form.
      */
     private boolean isNttForm = false;
     /**
-     * num of poly
+     * the size of the ciphertext
      */
     private int size = 0;
     /**
-     * poly modulus degree
+     * the degree of the polynomial
      */
     private int polyModulusDegree = 0;
     /**
-     * coeff modulus size
+     * the number of primes in the coefficient modulus
      */
     private int coeffModulusSize = 0;
     /**
-     * scale
+     * scale, only needed when using the CKKS encryption scheme
      */
     private double scale = 1.0;
     /**
-     * correction factor
+     * correction factor, only needed when using the BGV encryption scheme
      */
     private long correctionFactor = 1;
     /**
-     * data
+     * ciphertext data
      */
     private DynArray data = new DynArray();
 
@@ -75,50 +74,42 @@ public class Ciphertext implements Cloneable, Serializable {
     }
 
     /**
-     * Constructs an empty ciphertext with capacity 2. In addition to the
-     * capacity, the allocation size is determined by the highest-level
-     * parameters associated to the given SEALContext.
-     * <p>
-     * highest-level parameters 是何意？
-     * 2 应该就是容纳两个多项式
+     * Constructs an empty ciphertext with capacity 2. In addition to the capacity,
+     * the allocation size is determined by the highest-level parameters associated to the given context.
      *
-     * @param context context.
+     * @param context the context.
      */
     public Ciphertext(Context context) {
         reserve(context, 2);
     }
 
     /**
-     * Constructs an empty ciphertext with capacity 2. In addition to the
-     * capacity, the allocation size is determined by the encryption parameters
-     * with given parms_id.
-     * <p>
-     * 一个 parmsId 对应一个 加密参数对象
+     * Constructs an empty ciphertext with capacity 2. In addition to the capacity,
+     * the allocation size is determined by the encryption parameters with given parms_id.
      *
-     * @param context context.
-     * @param parmsId parms ID.
+     * @param context the context.
+     * @param parmsId the parms_id corresponding to the encryption parameters to be used.
      */
     public Ciphertext(Context context, ParmsIdType parmsId) {
         reserve(context, parmsId, 2);
     }
 
     /**
-     * Constructs an empty ciphertext with given capacity. In addition to the
-     * capacity, the allocation size is determined by the encryption parameters
-     * with given parms_id.
+     * Constructs an empty ciphertext with given capacity. In addition to the capacity,
+     * the allocation size is determined by the encryption parameters with given parms_id.
      *
-     * @param context      context.
-     * @param parmsId      parms ID.
-     * @param sizeCapacity capacity.
+     * @param context      the context.
+     * @param parmsId      the parms_id corresponding to the encryption parameters to be used.
+     * @param sizeCapacity the capacity.
      */
     public Ciphertext(Context context, ParmsIdType parmsId, int sizeCapacity) {
         reserve(context, parmsId, sizeCapacity);
     }
 
     /**
-     * 对标 Ciphertext &Ciphertext::operator=(const Ciphertext &assign) 这个实现
+     * Copies a given ciphertext to the current one.
      *
-     * @param assign another Ciphertext Object
+     * @param assign the ciphertext to copy from.
      */
     public void copyFrom(Ciphertext assign) {
         if (this == assign) {
@@ -136,10 +127,8 @@ public class Ciphertext implements Cloneable, Serializable {
         System.arraycopy(assign.getData(), 0, this.getData(), 0, assign.size * assign.polyModulusDegree * assign.coeffModulusSize);
     }
 
-
     /**
-     * Resets the ciphertext. This function releases any memory allocated
-     * by the ciphertext, returning it to the memory pool. It also sets all
+     * Resets the ciphertext. This function releases any memory allocated by the ciphertext. It also sets all
      * encryption parameter specific size information to zero.
      */
     public void release() {
@@ -154,30 +143,35 @@ public class Ciphertext implements Cloneable, Serializable {
     }
 
     /**
-     * reserve the capacity.
+     * Allocates enough memory to accommodate the backing array of a ciphertext with given capacity.
+     * In addition to the capacity, the allocation size is determined by the highest-level parameters
+     * associated to the given context.
      *
-     * @param context      context.
-     * @param sizeCapacity capacity.
+     * @param context      the context.
+     * @param sizeCapacity the capacity.
      */
     public void reserve(Context context, int sizeCapacity) {
         reserve(context, context.getFirstParmsId(), sizeCapacity);
     }
 
     /**
-     * create data and reverse the data.
+     * Allocates enough memory to accommodate the backing array of a ciphertext with given capacity.
+     * In addition to the capacity, the allocation size is determined by the current encryption parameters.
      *
-     * @param sizeCapacity poly num.
+     * @param sizeCapacity the capacity.
      */
     public void reserve(int sizeCapacity) {
         reserveInternal(sizeCapacity, polyModulusDegree, coeffModulusSize);
     }
 
     /**
-     * create data and reverse the size.
+     *  Allocates enough memory to accommodate the backing array of a ciphertext with given capacity.
+     *  In addition to the capacity, the allocation size is determined by the encryption parameters corresponding
+     *  to the given parms_id.
      *
-     * @param context      context.
-     * @param parmsId      parms ID.
-     * @param sizeCapacity poly num.
+     * @param context      the context.
+     * @param parmsId      the parms_id corresponding to the encryption parameters to be used.
+     * @param sizeCapacity the capacity.
      */
     public void reserve(Context context, ParmsIdType parmsId, int sizeCapacity) {
         if (!context.isParametersSet()) {
@@ -194,11 +188,11 @@ public class Ciphertext implements Cloneable, Serializable {
     }
 
     /**
-     * create data with fixed size.
+     * Allocates enough memory to accommodate the backing array of a ciphertext with given parameters.
      *
-     * @param sizeCapacity      max number of ciphertext poly
-     * @param polyModulusDegree N
-     * @param coeffModulusSize  number of coeff moduli
+     * @param sizeCapacity      the max number of ciphertext poly.
+     * @param polyModulusDegree the degree of the polynomial.
+     * @param coeffModulusSize  the number of primes in the coefficient modulus.
      */
     private void reserveInternal(int sizeCapacity, int polyModulusDegree, int coeffModulusSize) {
         if (sizeCapacity < Constants.CIPHERTEXT_SIZE_MIN || sizeCapacity > Constants.CIPHERTEXT_SIZE_MAX) {
@@ -214,21 +208,34 @@ public class Ciphertext implements Cloneable, Serializable {
         this.coeffModulusSize = coeffModulusSize;
     }
 
-
+    /**
+     * Resizes the ciphertext to given size, reallocating if the capacity of the ciphertext is too small.
+     * The ciphertext parameters are determined by the highest-level parameters associated to the given context.
+     *
+     * @param context the context.
+     * @param size    the new size.
+     */
     public void resize(Context context, int size) {
         resize(context, context.getFirstParmsId(), size);
     }
 
+    /**
+     * Resizes the ciphertext to given size, reallocating if the capacity of the ciphertext is too small.
+     * The ciphertext parameters are determined by the current context.
+     *
+     * @param size the new size.
+     */
     public void resize(int size) {
         resizeInternal(size, polyModulusDegree, coeffModulusSize);
     }
 
     /**
-     * resize poly num of ciphertext.
+     * Resizes the ciphertext to given size, reallocating if the capacity of the ciphertext is too small.
+     * The ciphertext parameters are determined by the given context and parms ID.
      *
-     * @param context context.
-     * @param parmsId parms ID.
-     * @param size    poly num.
+     * @param context the context.
+     * @param parmsId the parms_id corresponding to the encryption parameters to be used.
+     * @param size    the new size.
      */
     public void resize(Context context, ParmsIdType parmsId, int size) {
         if (!context.isParametersSet()) {
@@ -245,10 +252,11 @@ public class Ciphertext implements Cloneable, Serializable {
     }
 
     /**
-     * resize data of ciphertext.
-     * @param size              poly num.
-     * @param polyModulusDegree poly modulus degree.
-     * @param coeffModulusSize  coeff modulus size.
+     * Resizes the ciphertext to given parameters.
+     *
+     * @param size              the size of the ciphertext.
+     * @param polyModulusDegree the degree of the polynomial.
+     * @param coeffModulusSize  the number of primes in the coefficient modulus.
      */
     private void resizeInternal(int size, int polyModulusDegree, int coeffModulusSize) {
         if (size < Constants.CIPHERTEXT_SIZE_MIN || size > Constants.CIPHERTEXT_SIZE_MAX) {
@@ -264,127 +272,185 @@ public class Ciphertext implements Cloneable, Serializable {
         this.coeffModulusSize = coeffModulusSize;
     }
 
-
+    /**
+     * Returns the backing DynArray object.
+     *
+     * @return the backing DynArray object.
+     */
     public DynArray getDynArray() {
         return data;
     }
 
+    /**
+     * Returns the ciphertext data.
+     *
+     * @return the ciphertext data.
+     */
     public long[] getData() {
         return data.data();
     }
 
     /**
-     * @param polyIndex
-     * @return 第 polyIndex 在 数组中的起始位置
+     * Returns the index of a particular polynomial in the ciphertext data.
+     * Note that Microsoft SEAL stores each polynomial in the ciphertext modulo all the K primes in the coefficient modulus.
+     * The index returned by this function is the beginning index (constant coefficient) of the first one of these K polynomials.
+     *
+     * @param polyIndex the index of the polynomial in the ciphertext.
+     * @return the beginning index of the particular polynomial.
      */
     public int getData(int polyIndex) {
         assert polyIndex >= 0 && polyIndex < size;
-
-        // 一个多项式 在 RNS 下被表示为 coeffModuluSize 个多项式
         int polyUint64Count = Common.mulSafe(polyModulusDegree, coeffModulusSize, false);
-
-        // 其实是返回这个多项式 在 DynArray 中的起点
-
         return Common.mulSafe(polyIndex, polyUint64Count, false);
     }
 
     /**
-     * 获取这个 polyIndex 的索引，例如 2 * 3 * 64, polyIndex = 1 ---> 3 * 64
+     * Returns the index of a particular polynomial in the ciphertext data.
+     * Note that Microsoft SEAL stores each polynomial in the ciphertext modulo all the K primes in the coefficient modulus.
+     * The index returned by this function is the beginning index (constant coefficient) of the first one of these K polynomials.
      *
-     * @param polyIndex 某个 poly 的 index
-     * @return
+     * @param polyIndex the index of the polynomial in the ciphertext.
+     * @return the beginning index of the particular polynomial.
      */
     public int indexAt(int polyIndex) {
         assert polyIndex >= 0 && polyIndex < size;
-
-        // 一个多项式 在 RNS 下被表示为 coeffModuluSize 个多项式
-        // todo: need mulSafe ?
         int polyUint64Count = Common.mulSafe(polyModulusDegree, coeffModulusSize, false);
-
-        // 其实是返回这个多项式 在 DynArray 中的起点
-
         return Common.mulSafe(polyIndex, polyUint64Count, false);
     }
 
-
+    /**
+     * Returns the data of a particular polynomial in the ciphertext data.
+     *
+     * @param polyIndex the index of the polynomial in the ciphertext.
+     * @return the data of the particular polynomial.
+     */
     public long[] getPoly(int polyIndex) {
-        // 一个多项式 在 RNS 下被表示为 coeffModuluSize 个多项式
         int polyUint64Count = Common.mulSafe(polyModulusDegree, coeffModulusSize, false);
-
-        // 其实是返回这个多项式 在 DynArray 中的起点
-
         int startIndex = Common.mulSafe(polyIndex, polyUint64Count, false);
         int endIndex = startIndex + polyUint64Count;
         return data.data(startIndex, endIndex);
     }
 
     /**
-     * Returns a reference to a polynomial coefficient at a particular
-     * index in the ciphertext data. If the polynomial modulus has degree N,
-     * and the number of primes in the coefficient modulus is K, then the
-     * ciphertext contains size*N*K coefficients. Thus, the coeff_index has
-     * a range of [0, size*N*K).
-     * <p>
-     * size 是密文中多项式的数量，一个多项式在 RNS 表示下 需要 N * k 个系数来表示
+     * Returns a reference to a polynomial coefficient at a particular index in the ciphertext data.
+     * If the polynomial modulus has degree N, and the number of primes in the coefficient modulus is K, then the
+     * ciphertext contains size*N*K coefficients. Thus, the coeff_index has a range of [0, size*N*K).
      *
-     * @param coeffIndex
-     * @return
+     * @param coeffIndex the index of the coefficient under RNS form.
+     * @return the coefficient.
      */
     public long getCoeff(int coeffIndex) {
-
         return data.at(coeffIndex);
     }
 
+    /**
+     * Returns the number of primes in the coefficient modulus of the associated encryption parameters.
+     * This directly affects the allocation size of the ciphertext.
+     *
+     * @return the number of primes in the coefficient modulus.
+     */
     public int getCoeffModulusSize() {
         return coeffModulusSize;
     }
 
+    /**
+     * Returns the degree of the polynomial modulus of the associated encryption parameters.
+     * This directly affects the allocation size of the ciphertext.
+     *
+     * @return the degree of the polynomial.
+     */
     public int getPolyModulusDegree() {
         return polyModulusDegree;
     }
 
     /**
-     * @return 密文中多项式的数量
+     * Returns the size of the ciphertext.
+     *
+     * @return the size of the ciphertext.
      */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Returns the parms ID.
+     *
+     * @return the parms ID.
+     */
     public ParmsIdType getParmsId() {
         return parmsId;
     }
 
+    /**
+     * Sets the parms ID.
+     *
+     * @param parmsId the parms ID.
+     */
     public void setParmsId(ParmsIdType parmsId) {
         this.parmsId = parmsId;
     }
 
+    /**
+     * Returns a reference to the scale. This is only needed when using the CKKS encryption scheme.
+     * The user should have little or no reason to ever change the scale by hand.
+     *
+     * @return the scale.
+     */
     public double getScale() {
         return scale;
     }
 
+    /**
+     * Sets the scale.
+     *
+     * @param scale the scale.
+     */
     public void setScale(double scale) {
         this.scale = scale;
     }
 
+    /**
+     * Returns a reference to the correction factor. This is only needed when using the BGV encryption scheme.
+     * The user should have little or no reason to ever change the correction factor by hand.
+     *
+     * @return the correction factor.
+     */
     public long getCorrectionFactor() {
         return correctionFactor;
     }
 
+    /**
+     * Sets the correction factor.
+     * @param correctionFactor correction factor.
+     */
     public void setCorrectionFactor(long correctionFactor) {
         this.correctionFactor = correctionFactor;
     }
 
+    /**
+     * Returns the size of ciphertext.
+     *
+     * @return the size of ciphertext.
+     */
     public int getSizeCapacity() {
-
         int polyUint64Count = polyModulusDegree * coeffModulusSize;
         return polyUint64Count > 0 ? data.capacity() / polyUint64Count : 0;
     }
 
-
+    /**
+     * Returns whether the ciphertext is in NTT form.
+     *
+     * @return whether the ciphertext is in NTT form.
+     */
     public boolean isNttForm() {
         return isNttForm;
     }
 
+    /**
+     * Sets the NTT form of the ciphertext.
+     *
+     * @param isNttForm the NTT form.
+     */
     public void setIsNttForm(boolean isNttForm) {
         this.isNttForm = isNttForm;
     }
@@ -433,19 +499,33 @@ public class Ciphertext implements Cloneable, Serializable {
         if (this == o) {
             return true;
         }
-
         if (!(o instanceof Ciphertext)) {
             return false;
         }
-
         Ciphertext that = (Ciphertext) o;
-
-        return new EqualsBuilder().append(isNttForm, that.isNttForm).append(size, that.size).append(polyModulusDegree, that.polyModulusDegree).append(coeffModulusSize, that.coeffModulusSize).append(scale, that.scale).append(correctionFactor, that.correctionFactor).append(parmsId, that.parmsId).append(data, that.data).isEquals();
+        return new EqualsBuilder()
+            .append(isNttForm, that.isNttForm)
+            .append(size, that.size)
+            .append(polyModulusDegree, that.polyModulusDegree)
+            .append(coeffModulusSize, that.coeffModulusSize)
+            .append(scale, that.scale)
+            .append(correctionFactor, that.correctionFactor)
+            .append(parmsId, that.parmsId)
+            .append(data, that.data)
+            .isEquals();
     }
-
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(parmsId).append(isNttForm).append(size).append(polyModulusDegree).append(coeffModulusSize).append(scale).append(correctionFactor).append(data).toHashCode();
+        return new HashCodeBuilder(17, 37)
+            .append(parmsId)
+            .append(isNttForm)
+            .append(size)
+            .append(polyModulusDegree)
+            .append(coeffModulusSize)
+            .append(scale)
+            .append(correctionFactor)
+            .append(data)
+            .toHashCode();
     }
 }
