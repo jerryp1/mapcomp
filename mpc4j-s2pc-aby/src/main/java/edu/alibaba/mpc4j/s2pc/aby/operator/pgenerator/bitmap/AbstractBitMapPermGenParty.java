@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
@@ -61,14 +62,15 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
     @Override
     public void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum, maxBitNum);
+        int maxFullNum = CommonUtils.getByteLength(maxNum)<<3;
+        setInitInput(maxL, maxFullNum, maxBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bit2aParty.init(maxL, maxNum * maxBitNum);
+        bit2aParty.init(maxL, maxFullNum * maxBitNum);
         z2cParty.init(1);
         zlcParty.init(1);
-        zlMuxParty.init(maxNum * (maxBitNum + 1));
+        zlMuxParty.init(maxFullNum * (maxBitNum + 1));
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);
@@ -106,7 +108,7 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         z2cParty.noti(notXorAll);
         bits[xiArray.length] = notXorAll;
         SquareZlVector res = muxMultiIndex(bits, indexes);
-        logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime(), "compute permutation");
+        logStepInfo(PtoState.PTO_STEP, 3, 3, resetAndGetTime(), "compute permutation");
 
         logPhaseInfo(PtoState.PTO_END);
         return res;

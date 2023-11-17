@@ -14,8 +14,6 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
@@ -46,10 +44,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
      */
     private final PermGenConfig smallFieldPermGenConfig;
     /**
-     * 生成稳定排序对应置换的配置
-     */
-    private final ShuffleConfig shuffleConfig;
-    /**
      * A2b config.
      */
     private final A2bConfig a2bConfig;
@@ -62,7 +56,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
         bitLen = builder.bitLen;
         smallFieldPermGenConfig = builder.smallFieldPermGenConfig;
         z2cConfig = builder.z2cConfig;
-        shuffleConfig = builder.shuffleConfig;
         permutationConfig = builder.permutationConfig;
         invPermutationConfig = builder.invPermutationConfig;
         a2bConfig = builder.a2bConfig;
@@ -91,10 +84,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
 
     public Z2cConfig getZ2cConfig() {
         return z2cConfig;
-    }
-
-    public ShuffleConfig getShuffleConfig() {
-        return shuffleConfig;
     }
 
     public SharedPermutationConfig getPermutationConfig() {
@@ -134,11 +123,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
          * 生成稳定排序对应置换的配置
          */
         private PermGenConfig smallFieldPermGenConfig;
-
-        /**
-         * 生成稳定排序对应置换的配置
-         */
-        private final ShuffleConfig shuffleConfig;
         /**
          * A2b config.
          */
@@ -153,7 +137,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
             bit2aConfig = new Kvh21Bit2aConfig.Builder(ZlFactory.createInstance(EnvType.STANDARD, bitLen)).build();
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build();
             z2cConfig = new Rrg21Z2cConfig.Builder().build();
-            shuffleConfig = new Xxx23ShuffleConfig.Builder(silent).build();
             permutationConfig = new Xxx23SharedPermutationConfig.Builder(silent).build();
             invPermutationConfig = new Xxx23bSharedPermutationConfig.Builder(silent).build();
             a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen));

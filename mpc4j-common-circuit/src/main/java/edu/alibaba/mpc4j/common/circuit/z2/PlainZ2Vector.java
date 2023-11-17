@@ -90,6 +90,18 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     /**
+     * merge inputs by padding zeros to make each input full
+     *
+     * @param vectors merge data
+     */
+    public static PlainZ2Vector mergeWithPadding(PlainZ2Vector[] vectors) {
+        assert vectors.length > 0 : "merged vector length must be greater than 0";
+        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors)
+            .map(PlainZ2Vector::getBitVector).toArray(BitVector[]::new));
+        return create(mergeBit);
+    }
+
+    /**
      * the bit vector
      */
     private BitVector bitVector;
@@ -144,6 +156,12 @@ public class PlainZ2Vector implements MpcZ2Vector {
     public void merge(MpcVector other) {
         PlainZ2Vector that = (PlainZ2Vector) other;
         bitVector.merge(that.getBitVector());
+    }
+
+    @Override
+    public PlainZ2Vector[] splitWithPadding(int[] bitLens) {
+        BitVector[] splitBitVectors = getBitVector().splitWithPadding(bitLens);
+        return Arrays.stream(splitBitVectors).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);
     }
 
     @Override

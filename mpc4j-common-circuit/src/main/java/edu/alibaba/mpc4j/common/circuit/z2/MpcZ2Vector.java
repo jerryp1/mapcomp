@@ -49,6 +49,13 @@ public interface MpcZ2Vector extends MpcVector {
     }
 
     /**
+     * split inputs with padding zeros into multiple vectors
+     *
+     * @param bitLens bit length of each vector
+     */
+    MpcZ2Vector[] splitWithPadding(int[] bitLens);
+
+    /**
      * extend the bits of specific positions with fixed skip length from the end to the front.
      * if destBitLen % skipLen > 0, then there are 0s in the first group.
      * For example, given data = abc, skipLen = 2 and destBitLen = 5

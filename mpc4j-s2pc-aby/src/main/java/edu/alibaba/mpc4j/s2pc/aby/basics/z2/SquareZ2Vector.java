@@ -134,6 +134,21 @@ public class SquareZ2Vector implements MpcZ2Vector {
         return squareShareBitVector;
     }
 
+    /**
+     * merge inputs by padding zeros to make each input full
+     *
+     * @param vectors merge data
+     */
+    public static SquareZ2Vector mergeWithPadding(SquareZ2Vector[] vectors) {
+        assert vectors.length > 0 : "merged vector length must be greater than 0";
+        boolean plain = vectors[0].isPlain();
+        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors).map(x -> {
+            assert x.isPlain() == plain;
+            return x.getBitVector();
+        }).toArray(BitVector[]::new));
+        return create(mergeBit, plain);
+    }
+
     private SquareZ2Vector() {
         // empty
     }
@@ -211,6 +226,12 @@ public class SquareZ2Vector implements MpcZ2Vector {
     @Override
     public String toString() {
         return String.format("%s: %s", plain ? "plain" : "secret", bitVector.toString());
+    }
+
+    @Override
+    public SquareZ2Vector[] splitWithPadding(int[] bitLens) {
+        BitVector[] splitBitVectors = getBitVector().splitWithPadding(bitLens);
+        return Arrays.stream(splitBitVectors).map(x -> create(x, this.isPlain())).toArray(SquareZ2Vector[]::new);
     }
 
     @Override

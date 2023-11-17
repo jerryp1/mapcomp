@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.MatrixUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -28,12 +29,21 @@ public class ZlVector implements RingVector {
      */
     public static ZlVector merge(ZlVector[] vectors) {
         MathPreconditions.checkPositive("vectors.length", vectors.length);
-        ZlVector mergeVector = ZlVector.createEmpty(vectors[0].getZl());
-        for (ZlVector vector : vectors) {
-            MathPreconditions.checkPositive("vector.num", vector.getNum());
-            mergeVector.merge(vector);
+        int len = Arrays.stream(vectors).mapToInt(ZlVector::getNum).sum();
+        BigInteger[] mergeElements = new BigInteger[len];
+        for (int i = 0, pos = 0; i < vectors.length; i++) {
+            Preconditions.checkArgument(vectors[i].zl.equals(vectors[0].getZl()));
+            MathPreconditions.checkPositive("vector.num", vectors[i].getNum());
+            System.arraycopy(vectors[i].elements, 0, mergeElements, pos, vectors[i].elements.length);
+            pos += vectors[i].elements.length;
         }
-        return mergeVector;
+        return ZlVector.create(vectors[0].getZl(), mergeElements);
+//        ZlVector mergeVector = ZlVector.createEmpty(vectors[0].getZl());
+//        for (ZlVector vector : vectors) {
+//            MathPreconditions.checkPositive("vector.num", vector.getNum());
+//            mergeVector.merge(vector);
+//        }
+//        return mergeVector;
     }
 
     /**
@@ -44,12 +54,73 @@ public class ZlVector implements RingVector {
      * @return the split vectors.
      */
     public static ZlVector[] split(ZlVector mergeVector, int[] nums) {
-        ZlVector[] vectors = new ZlVector[nums.length];
-        for (int index = 0; index < nums.length; index++) {
-            vectors[index] = mergeVector.split(nums[index]);
+        int num = mergeVector.getNum();
+        MathPreconditions.checkEqual("sum(nums)", "mergeVector.getNum()", Arrays.stream(nums).sum(), num);
+        BigInteger[][] spRes = new BigInteger[nums.length][];
+        for (int i = 0, startPos = 0; i < nums.length; i++) {
+            spRes[i] = Arrays.copyOfRange(mergeVector.elements, startPos, startPos + nums[i]);
+            startPos += nums[i];
         }
-        MathPreconditions.checkEqual("final mergeVector.num", "0", mergeVector.getNum(), 0);
-        return vectors;
+        return Arrays.stream(spRes).map(x -> ZlVector.create(mergeVector.getZl(), x)).toArray(ZlVector[]::new);
+//        BigInteger[] subElements = new BigInteger[splitNum];
+//        BigInteger[] remainElements = new BigInteger[num - splitNum];
+//        System.arraycopy(elements, 0, subElements, 0, splitNum);
+//        System.arraycopy(elements, splitNum, remainElements, 0, num - splitNum);
+//        elements = remainElements;
+//        return ZlVector.create(zl, subElements);
+//
+//        ZlVector[] vectors = new ZlVector[nums.length];
+//        for (int index = 0; index < nums.length; index++) {
+//            vectors[index] = mergeVector.split(nums[index]);
+//        }
+//        MathPreconditions.checkEqual("final mergeVector.num", "0", mergeVector.getNum(), 0);
+//        return vectors;
+    }
+
+    /**
+     * merges vectors.
+     *
+     * @param vectors vectors.
+     * @return the merged vector.
+     */
+    public static ZlVector mergeWithPadding(ZlVector[] vectors) {
+        MathPreconditions.checkPositive("vectors.length", vectors.length);
+        int len = Arrays.stream(vectors).mapToInt(x -> CommonUtils.getByteLength(x.getNum()) << 3).sum();
+        BigInteger[] mergeElements = new BigInteger[len];
+        for (int i = 0, pos = 0; i < vectors.length; i++) {
+            int partNum = vectors[i].elements.length & 7;
+            if(partNum > 0){
+                for(int j = 0; j < 8 - partNum; j++){
+                    mergeElements[pos++] = BigInteger.ZERO;
+                }
+            }
+            Preconditions.checkArgument(vectors[i].zl.equals(vectors[0].getZl()));
+            MathPreconditions.checkPositive("vector.num", vectors[i].getNum());
+            System.arraycopy(vectors[i].elements, 0, mergeElements, pos, vectors[i].elements.length);
+            pos += vectors[i].elements.length;
+        }
+        return ZlVector.create(vectors[0].getZl(), mergeElements);
+    }
+
+    /**
+     * splits the vector.
+     *
+     * @param mergeVector the merged vector.
+     * @param nums        nums for each of the split vector.
+     * @return the split vectors.
+     */
+    public static ZlVector[] splitWithPadding(ZlVector mergeVector, int[] nums) {
+        int num = mergeVector.getNum();
+        MathPreconditions.checkEqual("sum(nums)", "mergeVector.getNum()",
+            Arrays.stream(nums).map(x -> CommonUtils.getByteLength(x) << 3).sum(), num);
+        BigInteger[][] spRes = new BigInteger[nums.length][];
+        for (int i = 0, startPos = 0; i < nums.length; i++) {
+            int partNum = nums[i] & 7;
+            startPos += partNum > 0 ? 8 - partNum : 0;
+            spRes[i] = Arrays.copyOfRange(mergeVector.elements, startPos, startPos + nums[i]);
+            startPos += nums[i];
+        }
+        return Arrays.stream(spRes).map(x -> ZlVector.create(mergeVector.getZl(), x)).toArray(ZlVector[]::new);
     }
 
     /**

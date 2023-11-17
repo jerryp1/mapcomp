@@ -100,28 +100,31 @@ public class Kvh21Bit2aSender extends AbstractBit2aParty {
     @Override
     public SquareZlVector[] bit2a(SquareZ2Vector[] xiArray) throws MpcAbortException {
         // merge
-        SquareZ2Vector mergedXiArray = (SquareZ2Vector) z2cSender.merge(xiArray);
+        SquareZ2Vector mergedXiArray = SquareZ2Vector.mergeWithPadding(xiArray);
+//        SquareZ2Vector mergedXiArray = (SquareZ2Vector) z2cSender.merge(xiArray);
         // bit2a
         SquareZlVector mergedZiArray = bit2a(mergedXiArray);
         // split
         int[] nums = Arrays.stream(xiArray)
             .mapToInt(SquareZ2Vector::getNum).toArray();
 
-        return Arrays.stream(ZlVector.split(mergedZiArray.getZlVector(), nums))
+        return Arrays.stream(ZlVector.splitWithPadding(mergedZiArray.getZlVector(), nums))
             .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
+//        return Arrays.stream(ZlVector.split(mergedZiArray.getZlVector(), nums))
+//            .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
     }
 
     private SquareZlVector t0t1(CotSenderOutput cotSenderOutput) {
         Prg prg = PrgFactory.createInstance(envType, byteL);
         BitVector inputBits = input.getBitVector();
         // generate random rs
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
         BigInteger[] rs = ZlVector.createRandom(zl, num, secureRandom).getElements();
-        byte[][] r0s = IntStream.range(0, num)
-            .mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.ONE : BigInteger.ZERO))
+        byte[][] r0s = intStream.mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.ONE : BigInteger.ZERO))
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
-        byte[][] r1s = IntStream.range(0, num)
-            .mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.ZERO : BigInteger.ONE))
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][] r1s = intStream.mapToObj(i -> zl.add(rs[i], inputBits.get(i) ? BigInteger.ZERO : BigInteger.ONE))
             .map(r -> BigIntegerUtils.nonNegBigIntegerToByteArray(r, byteL))
             .toArray(byte[][]::new);
         // P1 creates t0
