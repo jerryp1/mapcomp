@@ -22,7 +22,13 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
 
     protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
         super(ptoDesc, rpc, otherParty, config);
+    }
 
+    protected void setInitInput(int attrNum, int maxNum, int maxBitNum) {
+        MathPreconditions.checkPositive("attrNum", attrNum);
+        MathPreconditions.checkPositive("maxNum", maxNum);
+        MathPreconditions.checkPositive("maxBitNum", maxBitNum);
+        initState();
     }
 
     protected void setInputs(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggType, BitVector groupFlag){

@@ -222,6 +222,11 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
     }
 
     private int[] getOsnMap(PlpsiClientOutput<T> plpsiClientOutput) {
+        HashMap<T, Integer> element2Pos = new HashMap<>();
+        for(int i = 0; i < serverElementArrayList.size(); i++){
+            element2Pos.put(serverElementArrayList.get(i), i);
+        }
+
         List<Integer> nullPos = new LinkedList<>();
         List<T> allElements = plpsiClientOutput.getTable();
         osnMap = new int[allElements.size()];
@@ -231,7 +236,7 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
             if (element == null) {
                 nullPos.add(i);
             } else {
-                int pos = serverElementArrayList.indexOf(element);
+                int pos = element2Pos.get(element);
                 validPos[pos] = i;
             }
         }

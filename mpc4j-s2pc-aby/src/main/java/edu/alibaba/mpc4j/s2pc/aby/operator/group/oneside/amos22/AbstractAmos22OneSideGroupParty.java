@@ -3,6 +3,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22;
 import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -20,6 +21,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxParty;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 
@@ -42,8 +44,17 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
     }
 
     @Override
-    public void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException {
+    public void init(int attrNum, int maxNum, int maxBitNum) throws MpcAbortException {
+        setInitInput(attrNum, maxNum, maxBitNum);
+        logPhaseInfo(PtoState.INIT_BEGIN);
 
+        stopWatch.start();
+        z2cParty.init(attrNum * maxBitNum * maxNum);
+        plainBitMuxParty.init(attrNum * maxBitNum * maxNum);
+
+        logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
+
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override

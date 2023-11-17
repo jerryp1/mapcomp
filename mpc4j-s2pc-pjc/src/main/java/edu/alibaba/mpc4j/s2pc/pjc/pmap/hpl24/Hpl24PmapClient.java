@@ -28,8 +28,10 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.AbstractPmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.*;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -113,6 +115,7 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         stopWatch.start();
         int osnBitLen = 1 + bitLen;
         int osnByteL = CommonUtils.getByteLength(osnBitLen);
+        int[][] rho1AndOsnMap = genRho1AndOsnMap(plpsiClientOutput);
         Vector<byte[]> osnInput = genOsnInput(plpsiServerOutput);
         OsnPartyOutput osnRes = osnSender.osn(osnInput, osnByteL);
         BitVector[] shareRes = ZlDatabase.create(bitLen + 1, Arrays.copyOf(osnRes.getShareArray(bitLen + 1), serverElementSize)).bitPartition(envType, parallel);
@@ -120,7 +123,6 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
 
         // 4. 发送用于osn的rho1来自client的数据，进行对client PSI数据的补齐和osn
         stopWatch.start();
-        int[][] rho1AndOsnMap = genRho1AndOsnMap(plpsiClientOutput);
         int indexByteNum = CommonUtils.getByteLength(bitLen);
         BitVector[] rho1 = Arrays.stream(rho1AndOsnMap[0]).mapToObj(x ->
             BitVectorFactory.create(bitLen, BytesUtils.fixedByteArrayLength(IntUtils.intToByteArray(x), indexByteNum)))
@@ -237,6 +239,14 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
     }
 
     private int[][] genRho1AndOsnMap(PlpsiClientOutput<T> plpsiClientOutput){
+        StopWatch s = new StopWatch();
+        s.start();
+
+        HashMap<T, Integer> element2Pos = new HashMap<>();
+        for(int i = 0; i < clientElementArrayList.size(); i++){
+            element2Pos.put(clientElementArrayList.get(i), i);
+        }
+
         int secondBeta = plpsiClientOutput.getBeta();
         int paddingLen = Math.max(serverElementSize - secondBeta, 0);
         List<Integer> nullPos = new LinkedList<>();
@@ -248,18 +258,21 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
             if (element == null) {
                 nullPos.add(i + paddingLen);
             } else {
-                int pos = clientElementArrayList.indexOf(element);
+                int pos = element2Pos.get(element);
                 validPos[pos] = i + paddingLen;
             }
         }
         assert nullPos.size() == allElements.size() - clientElementSize;
+        long tim1 = s.getTime(TimeUnit.MILLISECONDS);
 
         if (secondBeta < serverElementSize) {
             // 还需要将第二次circuit PSI的结果长度拉长
             plpsiClientOutput.getZ1().getBitVector().extendLength(serverElementSize);
             IntStream.range(0, paddingLen).forEach(nullPos::add);
         }
+        long tim2 = s.getTime(TimeUnit.MILLISECONDS);
         Collections.shuffle(nullPos, secureRandom);
+        long tim3 = s.getTime(TimeUnit.MILLISECONDS);
         System.arraycopy(validPos, 0, osnMap, 0, clientElementSize);
         for (int i = 0, j = clientElementSize; i < nullPos.size(); i++, j++) {
             osnMap[j] = nullPos.get(i);
