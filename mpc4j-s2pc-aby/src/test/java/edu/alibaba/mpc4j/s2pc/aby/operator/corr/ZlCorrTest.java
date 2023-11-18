@@ -49,7 +49,7 @@ public class ZlCorrTest extends AbstractTwoPartyPtoTest {
         // RRK+20
         configurations.add(new Object[]{
             ZlCorrFactory.ZlCorrType.RRK20.name(),
-            new Rrk20ZlCorrConfig.Builder(true).build()
+            new Rrk20ZlCorrConfig.Builder(DEFAULT_ZL,true).build()
         });
         // GP23
         configurations.add(new Object[]{

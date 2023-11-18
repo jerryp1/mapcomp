@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.corr.zl.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.corr.zl.ZlCorrConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.corr.zl.ZlCorrFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluConfig;
@@ -55,8 +56,8 @@ public class Rrk20ZlCorrConfig extends AbstractMultiPartyPtoConfig implements Zl
         private final LnotConfig lnotConfig;
 
 
-        public Builder(boolean silent) {
-            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+        public Builder(Zl zl, boolean silent) {
+            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl,silent);
             if (silent) {
                 lnotConfig = LnotFactory.createCacheConfig(SecurityModel.SEMI_HONEST);
             } else {
