@@ -10,7 +10,9 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.AbstractZlMaxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterParty;
 
+import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
  * RRK+20 Zl Max Receiver.
@@ -67,9 +69,12 @@ public class Rrk20ZlMaxReceiver extends AbstractZlMaxParty {
         int currentNodeNum = num / 2;
         int lastNodeNum = num;
         for (int i = 1; i <= logNum; i++) {
-            for (int j = 0; j < currentNodeNum; j++) {
-                inputs[j] = zlGreaterReceiver.gt(inputs[j * 2], inputs[j * 2 + 1]);
-            }
+            SquareZlVector temp1 = SquareZlVector.create(zl, IntStream.range(0, currentNodeNum)
+                .mapToObj(j -> inputs[j * 2]).toArray(BigInteger[]::new), false);
+            SquareZlVector temp2 = SquareZlVector.create(zl, IntStream.range(0, currentNodeNum)
+                .mapToObj(j -> inputs[j * 2 + 1]).toArray(BigInteger[]::new), false);
+            SquareZlVector gt = zlGreaterReceiver.gt(temp1, temp2);
+            IntStream.range(0,currentNodeNum).forEach(j -> inputs[j] = gt.getZlVector().getElement(j));
             if (lastNodeNum % 2 == 1) {
                 inputs[currentNodeNum] = inputs[lastNodeNum - 1];
                 currentNodeNum++;
@@ -77,6 +82,6 @@ public class Rrk20ZlMaxReceiver extends AbstractZlMaxParty {
             lastNodeNum = currentNodeNum;
             currentNodeNum = lastNodeNum / 2;
         }
-        return inputs[0];
+        return SquareZlVector.create(zl, new BigInteger[]{inputs[0]},false);
     }
 }

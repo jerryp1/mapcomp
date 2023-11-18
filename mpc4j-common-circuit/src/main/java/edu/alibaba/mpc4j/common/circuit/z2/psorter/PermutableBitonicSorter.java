@@ -131,7 +131,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
     }
 
     private MpcZ2Vector[] recoverOutput(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays) {
-        xiArrays[0] = Arrays.copyOf(xiArray, xls[0]);
+        System.arraycopy(xiArray, 0, xiArrays[0], 0,xls[0]);
         if (yls != null) {
             int index = 0;
             for (int i = 0; i < yls.length; index += yls[i++]) {

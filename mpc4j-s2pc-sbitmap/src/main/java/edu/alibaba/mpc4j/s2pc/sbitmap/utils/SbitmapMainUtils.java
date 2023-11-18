@@ -6,6 +6,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.DirectEncodeLdpConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapSecurityMode;
 import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapTaskType;
@@ -68,55 +70,61 @@ public class SbitmapMainUtils {
         return PropertiesUtils.readString(properties, "dataset_name");
     }
 
-    /**
-     * set metadata
-     *
-     * @param properties configurations.
-     * @return metadata
-     */
-    public static StructType setSchema(Properties properties) {
-        LOGGER.info("-----set whole schema-----");
-        String[] columnTypes = PropertiesUtils.readTrimStringArray(properties, "column_types");
-        String[] columnNames = PropertiesUtils.readTrimStringArray(properties, "column_names");
-        Preconditions.checkArgument(
-            Arrays.stream(columnNames).collect(Collectors.toSet()).size() == columnNames.length,
-            "column_names contains duplicated names"
-        );
-        Preconditions.checkArgument(
-            columnTypes.length == columnNames.length,
-            "# of column type = %s, # of column name = %s, must be the same",
-            columnTypes.length, columnNames.length
-        );
-        int ncols = columnTypes.length;
-        StructField[] structFields = IntStream.range(0, ncols)
-            .mapToObj(columnIndex -> {
-                String columnName = columnNames[columnIndex];
-                String columnType = columnTypes[columnIndex];
-                switch (columnType) {
-                    case "N":
-                        // nominal，枚举类，必须为one-hot格式
-                        return new StructField(columnName, DataTypes.ByteType, new NominalScale("0", "1"));
-                    case "I":
-                        // int，整数类
-                        return new StructField(columnName, DataTypes.IntegerType);
-                    case "F":
-                        // float，浮点数类
-                        return new StructField(columnName, DataTypes.FloatType);
-                    case "D":
-                        // double，双精度浮点数类
-                        return new StructField(columnName, DataTypes.DoubleType);
-                    case "C":
-                        // 分类任务的标签类型
-                        String[] classTypes = PropertiesUtils.readTrimStringArray(properties, "class_types");
-                        return new StructField(columnName, DataTypes.ByteType, new NominalScale(classTypes));
-                    default:
-                        throw new IllegalArgumentException("Invalid columnType: " + columnType);
-                }
-            })
-            .toArray(StructField[]::new);
-        StructType schema = DataTypes.struct(structFields);
-        return schema;
-    }
+
+
+//    public static int setMaxL(Properties properties) {
+//
+//    }
+
+//    /**
+//     * set metadata
+//     *
+//     * @param properties configurations.
+//     * @return metadata
+//     */
+//    public static StructType setSchema(Properties properties) {
+//        LOGGER.info("-----set whole schema-----");
+//        String[] columnTypes = PropertiesUtils.readTrimStringArray(properties, "column_types");
+//        String[] columnNames = PropertiesUtils.readTrimStringArray(properties, "column_names");
+//        Preconditions.checkArgument(
+//            Arrays.stream(columnNames).collect(Collectors.toSet()).size() == columnNames.length,
+//            "column_names contains duplicated names"
+//        );
+//        Preconditions.checkArgument(
+//            columnTypes.length == columnNames.length,
+//            "# of column type = %s, # of column name = %s, must be the same",
+//            columnTypes.length, columnNames.length
+//        );
+//        int ncols = columnTypes.length;
+//        StructField[] structFields = IntStream.range(0, ncols)
+//            .mapToObj(columnIndex -> {
+//                String columnName = columnNames[columnIndex];
+//                String columnType = columnTypes[columnIndex];
+//                switch (columnType) {
+//                    case "N":
+//                        // nominal，枚举类，必须为one-hot格式
+//                        return new StructField(columnName, DataTypes.ByteType, new NominalScale("0", "1"));
+//                    case "I":
+//                        // int，整数类
+//                        return new StructField(columnName, DataTypes.IntegerType);
+//                    case "F":
+//                        // float，浮点数类
+//                        return new StructField(columnName, DataTypes.FloatType);
+//                    case "D":
+//                        // double，双精度浮点数类
+//                        return new StructField(columnName, DataTypes.DoubleType);
+//                    case "C":
+//                        // 分类任务的标签类型
+//                        String[] classTypes = PropertiesUtils.readTrimStringArray(properties, "class_types");
+//                        return new StructField(columnName, DataTypes.ByteType, new NominalScale(classTypes));
+//                    default:
+//                        throw new IllegalArgumentException("Invalid columnType: " + columnType);
+//                }
+//            })
+//            .toArray(StructField[]::new);
+//        StructType schema = DataTypes.struct(structFields);
+//        return schema;
+//    }
 
     /**
      * 设置总测试轮数。
@@ -128,6 +136,16 @@ public class SbitmapMainUtils {
         int totalRound = PropertiesUtils.readInt(properties, "total_round");
         Preconditions.checkArgument(totalRound >= 1, "round must be greater than or equal to 1");
         return totalRound;
+    }
+
+    public static PrefixAggTypes setPrefixAggTypes(Properties properties) {
+        String prefixAggType = PropertiesUtils.readString(properties, "prefix_agg_type");
+        return PrefixAggTypes.valueOf(prefixAggType.toUpperCase());
+    }
+
+    public static GroupAggTypes setGroupAggTypes(Properties properties) {
+        String groupAggTypes = PropertiesUtils.readString(properties, "group_agg_type");
+        return GroupAggTypes.valueOf(groupAggTypes.toUpperCase());
     }
 
     /**
@@ -157,33 +175,23 @@ public class SbitmapMainUtils {
     }
 
     /**
-     * 设置ε。
-     *
-     * @param properties 配置项。
-     * @return ε。
-     */
-    public static double[] setEpsilons(Properties properties) {
-        return PropertiesUtils.readDoubleArray(properties, "epsilon");
-    }
-
-    /**
-     * 设置θ。
-     *
-     * @param properties 配置项。
-     * @return θ。
-     */
-    public static int[] setThetas(Properties properties) {
-        return PropertiesUtils.readIntArray(properties, "theta");
-    }
-
-    /**
-     * 设置α。
+     * 设置分组长度。
      *
      * @param properties 配置项。
      * @return α
      */
-    public static double[] setAlphas(Properties properties) {
-        return PropertiesUtils.readDoubleArray(properties, "alpha");
+    public static int setSenderGroupBitLength(Properties properties) {
+        return PropertiesUtils.readInt(properties, "sender_group_bit_length");
+    }
+
+    /**
+     * 设置分组长度。
+     *
+     * @param properties 配置项。
+     * @return α
+     */
+    public static int setReceiverGroupBitLength(Properties properties) {
+        return PropertiesUtils.readInt(properties, "receiver_group_bit_length");
     }
 
     /**
@@ -196,7 +204,7 @@ public class SbitmapMainUtils {
      * @throws URISyntaxException 如果文件路径有误。
      */
     public static DataFrame setDataFrame(Properties properties, StructType schema) throws IOException, URISyntaxException {
-        String trainDatasetPath = PropertiesUtils.readString(properties, "train_dataset_path");
+        String trainDatasetPath = PropertiesUtils.readString(properties, "input_dataset_path");
         return Read.csv(trainDatasetPath, DEFAULT_CSV_FORMAT, schema);
     }
 

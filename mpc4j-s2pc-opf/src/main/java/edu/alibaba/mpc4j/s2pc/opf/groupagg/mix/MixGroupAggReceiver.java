@@ -1,28 +1,39 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
-import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.AbstractShuffleParty;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Mix group aggregation receiver.
@@ -32,29 +43,63 @@ import java.util.stream.IntStream;
  */
 public class MixGroupAggReceiver extends AbstractGroupAggParty {
     /**
-     * Osn sender.
-     */
-    private final OsnSender osnSender;
-    /**
      * Osn receiver.
      */
     private final OsnReceiver osnReceiver;
+    /**
+     * Plain payload mux receiver.
+     */
+    private final PlainPayloadMuxParty plainPayloadMuxSender;
+    /**
+     * Zl mux receiver.
+     */
+    private final ZlMuxParty zlMuxReceiver;
+    /**
+     * Z2 circuit receiver.
+     */
+    private final Z2cParty z2cReceiver;
+    /**
+     * Zl circuit receiver.
+     */
+    private final ZlcParty zlcReceiver;
+    /**
+     * Prefix aggregation party.
+     */
+    private final PrefixAggParty prefixAggReceiver;
 
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
+        plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
+        zlMuxReceiver = ZlMuxFactory.createReceiver(receiverRpc, senderParty, config.getZlMuxConfig());
+        z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
+        zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
+        prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
+
+//        addMultipleSubPtos(osnReceiver);
+//        addMultipleSubPtos(plainPayloadMuxSender);
+//        addSubPtos(zlMuxReceiver);
+//        addSubPtos(z2cReceiver);
+//        addSubPtos(zlcReceiver);
+//        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
     }
 
     @Override
-    public void init(int maxL, int maxNum) throws MpcAbortException {
+    public void init(Properties properties) throws MpcAbortException {
+        super.init(properties);
         setInitInput(maxNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
+
         osnReceiver.init(maxNum);
-        osnSender.init(maxNum);
+        plainPayloadMuxSender.init(maxNum);
+        zlMuxReceiver.init(maxNum);
+        z2cReceiver.init(maxNum);
+        zlcReceiver.init(1);
+        prefixAggReceiver.init(maxL, maxNum);
+
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -64,73 +109,62 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[][] groupField, long[]... aggField) {
+    public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
+        // 假定receiver拥有agg
+        assert aggField != null;
+        setPtoInput(groupField, aggField, e);
         // obtain sorting permutation
-
-        return null;
+        int[] perms = obtainPerms(groupField);
+        // apply perms to group and agg
+        String[] permutedGroup = GroupAggUtils.applyPermutation(groupField, perms);
+        aggField = GroupAggUtils.applyPermutation(aggField, perms);
+        e = GroupAggUtils.applyPermutation(e, perms);
+        // osn
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(perms, CommonUtils.getByteLength(senderGroupNum + 1));
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        SquareZ2Vector[] bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
+        // xor own share to meet permutation
+        e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
+        // mul1
+        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField);
+        // temporary array
+        PrefixAggOutput[] outputs = new PrefixAggOutput[receiverGroupNum];
+        for (int i = 0; i < receiverGroupNum; i++) {
+            SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);
+            // prefix agg
+            outputs[i] = prefixAggReceiver.agg(permutedGroup, mul);
+        }
+        // reveal
+        ZlVector[] plain = new ZlVector[senderGroupNum];
+        for (int i = 0; i < senderGroupNum; i++) {
+            plain[i] = zlcReceiver.revealOwn(outputs[i].getAggs());
+        }
+        // arrange
+        List<Integer> groupIndex = getGroupIndexes(permutedGroup);
+        BigInteger[] plainResult = new BigInteger[totalGroupNum];
+        for (int i = 0; i < senderGroupNum; i++) {
+            for (int j = 0; j < receiverGroupNum; j++) {
+                if (j < groupIndex.size()) {
+                    plainResult[i * senderGroupNum + j] = plain[i].getElement(groupIndex.get(j));
+                } else {
+                    plainResult[i * senderGroupNum + j] = BigInteger.ZERO;
+                }
+            }
+        }
+        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), plainResult);
     }
 
-    public List<Vector<byte[]>> shuffle(List<Vector<byte[]>> x, int[] randomPerm) throws MpcAbortException {
-        setPtoInput(x);
-        logPhaseInfo(PtoState.PTO_BEGIN);
-        // merge
-        int[] originByteLen = x.stream().mapToInt(single -> single.elementAt(0).length).toArray();
-        Vector<byte[]> input = x.size() <= 1 ? x.get(0) : merge(x);
-        // osn1
-        stopWatch.start();
-        OsnPartyOutput osnOutput = osnReceiver.osn(randomPerm, input.elementAt(0).length);
-        Vector<byte[]> osnOutputBytes = IntStream.range(0, num)
-            .mapToObj(osnOutput::getShare).collect(Collectors.toCollection(Vector::new));
-        // permute local share and merge
-        Vector<byte[]> randomPermutedX = BenesNetworkUtils.permutation(randomPerm, input);
-        Vector<byte[]> mergedX = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(osnOutputBytes.elementAt(i), randomPermutedX.elementAt(i)))
-            .collect(Collectors.toCollection(Vector::new));
-        stopWatch.stop();
-        long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, ptoTime);
-
-        // osn2
-        stopWatch.start();
-        OsnPartyOutput osn2Output = osnSender.osn(mergedX, input.elementAt(0).length);
-        Vector<byte[]> osn2OutputBytes = IntStream.range(0, num)
-            .mapToObj(osn2Output::getShare).collect(Collectors.toCollection(Vector::new));
-        stopWatch.stop();
-        ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, ptoTime);
-        // split
-        List<Vector<byte[]>> output = x.size() <= 1 ? Collections.singletonList(osn2OutputBytes) : split(osn2OutputBytes, originByteLen);
-        logPhaseInfo(PtoState.PTO_END);
-        return output;
-    }
-
-     private int[] obtainPerms(String[] keys){
-         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(keys[j], j)).toArray(Tuple[]::new);
-         Arrays.sort(tuples);
-         return IntStream.range(0, num).map(j -> tuples[j].getValue()).toArray();
-     }
-
-    private static class Tuple implements Comparable<Tuple> {
-        private final String key;
-        private final int value;
-
-        public Tuple(String key, int value) {
-            this.key = key;
-            this.value = value;
+    private List<Integer> getGroupIndexes(String[] sortedGroups) {
+        List<Integer> groupIndexes = new ArrayList<>();
+        groupIndexes.add(0);
+        for (int i = 1; i < num; i++) {
+            if (!sortedGroups[i].equals(sortedGroups[i - 1])) {
+                groupIndexes.add(i);
+            }
         }
-
-        public String getKey() {
-            return key;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        @Override
-        public int compareTo(Tuple o) {
-            return key.compareTo(o.getKey());
-        }
+        Preconditions.checkArgument(groupIndexes.size() <= receiverGroupNum,
+            "wrong number of groups detected");
+        return groupIndexes;
     }
 }

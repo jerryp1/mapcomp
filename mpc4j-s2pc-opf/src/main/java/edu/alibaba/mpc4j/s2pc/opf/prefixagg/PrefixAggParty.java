@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.opf.prefixagg;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 import java.util.Vector;
@@ -25,8 +26,44 @@ public interface PrefixAggParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
+     * @param groupField the field of group by.
+     * @param aggField   the field of aggregatioin.
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector sumField) throws MpcAbortException;
+    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField) throws MpcAbortException;
+
+    /**
+     * Executes the protocol. Assume groupField is hold by receiver.
+     *
+     * @param groupField the field of group by.
+     * @param aggField   the field of aggregatioin.
+     * @param flag       the flag to indicate the validity of elements.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+
+
+    /**
+     * Executes the protocol. Assume groupField is hold by receiver.
+     *
+     * @param groupField the field of group by.
+     * @param aggField   the field of aggregatioin.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField) throws MpcAbortException;
+
+    /**
+     * Executes the protocol. Assume groupField is hold by receiver.
+     *
+     * @param groupField the field of group by.
+     * @param aggField   the field of aggregatioin.
+     * @param flag       the flag to indicate the validity of elements.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+
 }

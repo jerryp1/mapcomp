@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax;
 
-import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
 
 /**
@@ -10,21 +9,11 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMax
  * @author Li Peng
  * @date 2023/11/1
  */
-public interface PrefixMaxConfig extends MultiPartyPtoConfig {
+public interface PrefixMaxConfig extends PrefixAggConfig {
     /**
      * Gets the protocol type.
      *
      * @return the protocol type.
      */
     PrefixMaxTypes getPtoType();
-
-    /**
-     * Zl
-     */
-    Zl getZl();
-
-    /**
-     * whether need shuffle result before output.
-     */
-    boolean needShuffle();
 }

@@ -86,6 +86,7 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
             ownParty().getPartyId(), otherParty().getPartyId()
         );
         rpc.send(DataPacket.fromByteArrayList(x0Header, x0Payload));
+        extraInfo++;
         stopWatch.stop();
         long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -106,6 +107,7 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> x1Payload = rpc.receive(x1Header).getPayload();
+        extraInfo++;
         MpcAbortPreconditions.checkArgument(x1Payload.size() == num);
         BigInteger[] x1Array = x1Payload.stream()
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
@@ -135,6 +137,7 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
                 otherParty().getPartyId(), ownParty().getPartyId()
             );
             List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
+            extraInfo++;
             MpcAbortPreconditions.checkArgument(x0Payload.size() == num);
             BigInteger[] x0Array = x0Payload.stream()
                 .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
@@ -167,6 +170,7 @@ public class Bea91ZlcReceiver extends AbstractZlcParty {
                 ownParty().getPartyId(), otherParty().getPartyId()
             );
             rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
+            extraInfo++;
             stopWatch.stop();
             long revealTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

@@ -1,12 +1,31 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 
+import java.math.BigInteger;
+
 /**
  * @author Li Peng
  * @date 2023/11/3
  */
 public class GroupAggOut {
-    String[] groupField;
+    /**
+     * group field.
+     */
+    private final String[] groupField;
+    /**
+     * aggregation result.
+     */
+    private final BigInteger[] aggregationResult;
 
-    long[] aggregationResult;
+    public GroupAggOut(String[] groupField, BigInteger[] aggregationResult) {
+        this.groupField = groupField;
+        this.aggregationResult = aggregationResult;
+    }
 
+    public String[] getGroupField() {
+        return groupField;
+    }
+
+    public BigInteger[] getAggregationResult() {
+        return aggregationResult;
+    }
 }

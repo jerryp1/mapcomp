@@ -15,11 +15,11 @@ public class MixGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 4005670455894029821L);
+    private static final int PTO_ID = Math.abs((int) -985239413597525368L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "XXX23_SHUFFLE";
+    private static final String PTO_NAME = "MIX_GROUP_AGG";
 
     /**
      * protocol step

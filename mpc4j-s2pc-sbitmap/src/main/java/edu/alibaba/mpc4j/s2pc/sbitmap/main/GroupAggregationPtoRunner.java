@@ -2,11 +2,12 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.data.DataFrame;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,8 +17,8 @@ import java.util.concurrent.TimeUnit;
  * @author Li Peng
  * @date 2023/8/3
  */
-public class SbitmapPtoRunner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapPtoRunner.class);
+public class GroupAggregationPtoRunner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationPtoRunner.class);
     /**
      * timer
      */
@@ -25,7 +26,7 @@ public class SbitmapPtoRunner {
     /**
      * party
      */
-    private final SbitmapPtoParty slave;
+    private final GroupAggParty party;
     /**
      * rpc
      */
@@ -33,15 +34,11 @@ public class SbitmapPtoRunner {
     /**
      * config
      */
-    private final SbitmapConfig slaveConfig;
+    private final GroupAggConfig groupAggConfig;
     /**
      * total round
      */
     private final int totalRound;
-    /**
-     * dataset
-     */
-    private final DataFrame ownDataFrame;
     /**
      * total time
      */
@@ -59,14 +56,17 @@ public class SbitmapPtoRunner {
      */
     private long totalSendByteLength;
 
-    public SbitmapPtoRunner(SbitmapPtoParty slave, SbitmapConfig slaveConfig, int totalRound,
-                            DataFrame ownDataFrame) {
-        this.slave = slave;
-        slaveRpc = slave.getRpc();
-        this.slaveConfig = slaveConfig;
+    private GroupAggInputData groupAggInputData;
+
+    public GroupAggregationPtoRunner(GroupAggParty party, GroupAggConfig groupAggConfig, int totalRound,
+                                     GroupAggInputData groupAggInputData) {
+        this.party = party;
+        slaveRpc = party.getRpc();
+        this.groupAggConfig = groupAggConfig;
         stopWatch = new StopWatch();
         this.totalRound = totalRound;
-        this.ownDataFrame = ownDataFrame;
+//        this.ownDataFrame = ownDataFrame;
+        this.groupAggInputData = groupAggInputData;
     }
 
     public void init() throws MpcAbortException {
@@ -83,7 +83,7 @@ public class SbitmapPtoRunner {
         // 重复实验，记录数据
         for (int round = 1; round <= totalRound; round++) {
             stopWatch.start();
-            slave.run(ownDataFrame, slaveConfig);
+            party.groupAgg(groupAggInputData.getGroups(), groupAggInputData.getAggs(), groupAggInputData.getE());
             stopWatch.stop();
             // record time
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -98,7 +98,7 @@ public class SbitmapPtoRunner {
     }
 
     public void stop() {
-        this.slave.stop();
+//        this.party..stop();
     }
 
     public double getTime() {

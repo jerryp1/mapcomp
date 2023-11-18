@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
@@ -27,7 +27,6 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -101,8 +100,8 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // matrix transpose
         stopWatch.start();
-        Vector<byte[]> transposedPerm = Arrays.stream(ZlDatabase.create(envType, true, Arrays.stream(booleanPerm)
-            .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new)).getBytesData()).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> transposedPerm = TransposeUtils.transposeMergeToVector(Arrays.stream(booleanPerm)
+            .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -116,8 +115,7 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // matrix transpose
         stopWatch.start();
-        ZlDatabase database = ZlDatabase.create(l, permutedBytes);
-        SquareZ2Vector[] permutedZ2Shares = Arrays.stream(database.bitPartition(envType, true))
+        SquareZ2Vector[] permutedZ2Shares = Arrays.stream(TransposeUtils.transposeSplit(permutedBytes, l))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

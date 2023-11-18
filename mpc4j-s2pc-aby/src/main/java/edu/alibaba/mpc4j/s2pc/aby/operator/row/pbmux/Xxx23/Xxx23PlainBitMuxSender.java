@@ -12,7 +12,7 @@ import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.PrgFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -129,14 +129,14 @@ public class Xxx23PlainBitMuxSender extends AbstractPlainBitMuxParty {
         return SquareZlVector.create(zl, Arrays.stream(rs).map(r -> zl.neg(r)).toArray(BigInteger[]::new), false);
     }
 
-    private SquareZ2Vector[] t0t1ForZ2(CotSenderOutput cotSenderOutput){
+    private SquareZ2Vector[] t0t1ForZ2(CotSenderOutput cotSenderOutput) {
         byte[][] r0s = IntStream.range(0, num).mapToObj(i ->
             BytesUtils.randomByteArray(byteL, bitL, secureRandom)).toArray(byte[][]::new);
         byte[][] r1s = IntStream.range(0, num)
             .mapToObj(i -> BytesUtils.xor(r0s[i], inputZ2Values[i].getBitVector().getBytes()))
             .toArray(byte[][]::new);
         t0t1CommonPart(cotSenderOutput, r0s, r1s);
-        BitVector[] bitVectors = ZlDatabase.create(bitL, r0s).bitPartition(envType, parallel);
+        BitVector[] bitVectors = TransposeUtils.transposeSplit(r0s, bitL);
         return Arrays.stream(bitVectors).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
     }
 

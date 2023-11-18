@@ -1,26 +1,36 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
+import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -58,9 +68,18 @@ public class SbitmapStarter {
      */
     protected StructType schema;
     /**
-     * Whole Dataset.
+     * Mapping type.
      */
-    protected DataFrame wholeDataFrame;
+    protected String mappingType;
+    /**
+     * Group aggregation type.
+     */
+    protected GroupAggTypes groupAggType;
+
+    protected boolean receiver;
+
+    private DataFrame inputDataFrame;
+    private PrefixAggTypes prefixAggType;
     /**
      * Total round fo test.
      */
@@ -74,31 +93,26 @@ public class SbitmapStarter {
      */
     protected StructType ownSchema;
     /**
-     * Ldp columns map.
+     * default Zl
      */
-    protected Map<String, Boolean> ldpColumnsMap;
-    /**
-     * ε
-     */
-    protected double[] epsilons;
-    /**
-     * zl
-     */
-    protected Zl zl;
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+
+    private int num;
+    private GroupAggInputData groupAggInputData;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
     }
 
     public void start() throws IOException, MpcAbortException {
-        String filePath = taskType
+        String filePath =
             // dataset name
-            + "_" + datasetName
-            // total round of test
-            + "_" + totalRound
-            // party id
-            + "_" + ownRpc.ownParty().getPartyId()
-            + ".output";
+            datasetName
+                // total round of test
+                + "_" + totalRound
+                // party id
+                + "_" + ownRpc.ownParty().getPartyId()
+                + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
@@ -108,12 +122,8 @@ public class SbitmapStarter {
         printWriter.println(tab);
         // connect
         ownRpc.connect();
-        // plain mode
-        runPlainPto(printWriter);
         // Full secure
-        runFullSecurePto(printWriter, SbitmapSecurityMode.ULDP);
-//        // dp secure
-//        runDpPto(printWriter, SbitmapSecurityMode.ULDP);
+        runFullSecurePto(printWriter);
         // clean
         printWriter.close();
         fileWriter.close();
@@ -122,84 +132,62 @@ public class SbitmapStarter {
 
     public void init() throws IOException, URISyntaxException {
         // set rpc
-        ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "host", "slave");
+        ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "sender", "receiver");
         if (ownRpc.ownParty().getPartyId() == 0) {
+            receiver = false;
             otherParty = ownRpc.getParty(1);
         } else {
+            receiver = true;
             otherParty = ownRpc.getParty(0);
         }
         // set dataset name
         datasetName = SbitmapMainUtils.setDatasetName(properties);
-        // set metadata
-        schema = SbitmapMainUtils.setSchema(properties);
+        // set aggregation type
+        prefixAggType = SbitmapMainUtils.setPrefixAggTypes(properties);
+        // set protocol type
+        groupAggType = SbitmapMainUtils.setGroupAggTypes(properties);
         // set dataset
         setDataSet();
         // 设置总测试轮数
         totalRound = SbitmapMainUtils.setTotalRound(properties);
-        // 设置LDP列
-        ldpColumnsMap = SbitmapMainUtils.setLdpColumnsMap(properties, schema);
-        // 设置LDP参数
-        setLdpParameters();
-        taskType = SbitmapTaskType.valueOf(PropertiesUtils.readString(properties, "task_type"));
-
     }
 
     private void setDataSet() throws IOException, URISyntaxException {
-        LOGGER.info("-----set whole dataset-----");
-        int ncols = schema.length();
-        DataFrame readDataFrame = SbitmapMainUtils.setDataFrame(properties, schema);
-        LOGGER.info("-----add id column-----");
-        readDataFrame = SbitmapMainUtils.addIdColumn(readDataFrame);
-        LOGGER.info("-----set own dataframe-----");
-        int[] partyColumns = PropertiesUtils.readIntArray(properties, "party_columns");
-        Preconditions.checkArgument(partyColumns.length == ncols, "# of party_column must match column_num");
-        Arrays.stream(partyColumns).forEach(partyId ->
-            Preconditions.checkArgument(
-                partyId == 0 || partyId == 1,
-                "Invalid party_column: %s, party_colum must be 0 or 1", partyId)
-        );
-        int[] ownColumns = IntStream.range(0, ncols)
-            .filter(columnIndex -> partyColumns[columnIndex] == ownRpc.ownParty().getPartyId())
-            .toArray();
-        Preconditions.checkArgument(
-            ownColumns.length > 0,
-            "At least one column should belongs to party_id = %s", ownRpc.ownParty().getPartyId()
-        );
-        LOGGER.info("own_columns = {}", Arrays.toString(ownColumns));
-        ownDataFrame = readDataFrame.select(ownColumns);
-        LOGGER.info("-----select rows -----");
-        int[] ownRows = SbitmapMainUtils.selectRows(ownDataFrame.nrows(), ownRpc.ownParty().getPartyId());
-//        ownDataFrame = SbitmapMainUtils.selectRows(ownDataFrame, ownRpc.ownParty().getPartyId());
-        ownDataFrame = SbitmapMainUtils.setDataset(ownDataFrame, ownColumns, ownRows);
-        ownSchema = ownDataFrame.schema();
-        // 挑选列后，数据列会发生变化，因此也需要调整输入列
-//        wholeDataFrame = readDataFrame.select(ownColumns).merge(readDataFrame.drop(ownColumns));
+        if (receiver) {
+            StructField groupField = new StructField("group", DataTypes.StringType);
+            StructField aggField = new StructField("agg", DataTypes.IntegerType);
+            StructField eField = new StructField("e", DataTypes.IntegerType);
+            StructType structType = new StructType(groupField, aggField, eField);
+            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(properties, structType);
+            num = inputDataFrame.nrows();
+            String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
+            long[] agg = inputDataFrame.intVector("agg").stream().mapToLong(i -> i).toArray();
+            SquareZ2Vector e = genE(inputDataFrame);
+            groupAggInputData = new GroupAggInputData(groups, agg, e);
+        } else {
+            StructField groupField = new StructField("group", DataTypes.StringType);
+            StructField eField = new StructField("e", DataTypes.IntegerType);
+            StructType structType = new StructType(groupField, eField);
+            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(properties, structType);
+            num = inputDataFrame.nrows();
+            String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
+            SquareZ2Vector e = genE(inputDataFrame);
+            groupAggInputData = new GroupAggInputData(groups, null, e);
+        }
     }
 
-    protected void setLdpParameters() {
-        LOGGER.info("-----set LDP parameters-----");
-        // set ε
-        epsilons = SbitmapMainUtils.setEpsilons(properties);
-    }
-
-    /**
-     * Create ldp configs.
-     *
-     * @param ldpType LDP type.
-     * @param epsilon ε.
-     * @return ldp configs.
-     */
-    protected Map<String, LdpConfig> createLdpConfigs(SbitmapSecurityMode ldpType, double epsilon) {
-        return SbitmapMainUtils.createLdpConfigs(ownDataFrame, ldpColumnsMap, ldpType, epsilon);
+    private SquareZ2Vector genE(DataFrame dataFrame) {
+        int[] es = dataFrame.intVector("e").stream().toArray();
+        BitVector bitVector = BitVectorFactory.createZeros(num);
+        IntStream.range(0, num).forEach(i -> bitVector.set(i, es[i] == 1));
+        return SquareZ2Vector.create(bitVector, false);
     }
 
     protected void writeInfo(PrintWriter printWriter,
-                             String name, Double epsilon, Double time,
+                             Double time,
                              Double performanceMeasure,
                              long packetNum, long payloadByteLength, long sendByteLength) {
-        String information = name
-            // ε
-            + "\t" + (Objects.isNull(epsilon) ? "N/A" : epsilon)
+        String information = mappingType
             // time
             + "\t" + (Objects.isNull(time) ? "N/A" : time)
             // performance measure
@@ -213,67 +201,51 @@ public class SbitmapStarter {
         printWriter.println(information);
     }
 
-    /**
-     * Run plain protocol
-     *
-     * @param printWriter printWriter
-     */
-    protected void runPlainPto(PrintWriter printWriter) {
-        // empty
-    }
-
 
     /**
      * Run full secure protocol
      *
      * @param printWriter print writer.
-     * @param ldpType     ldp type.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void runFullSecurePto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
+    protected void runFullSecurePto(PrintWriter printWriter)
         throws MpcAbortException {
-        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
+        LOGGER.info("-----Pto aggregation for {}-----", groupAggType.name() + "_" + prefixAggType.name());
 
-        SbitmapConfig sbitmapConfig = new SbitmapConfig.Builder(ownSchema, zl)
-            .build();
-        SbitmapPtoRunner ptoRunner = createRunner(sbitmapConfig);
+
+        GroupAggConfig groupAggConfig = genGroupAggConfig();
+
+        GroupAggregationPtoRunner ptoRunner = createRunner(groupAggConfig);
         ptoRunner.init();
         ptoRunner.run();
         ptoRunner.stop();
-        writeInfo(printWriter, ldpType.name(), null, ptoRunner.getTime(),
+        writeInfo(printWriter, ptoRunner.getTime(),
             null,
             ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
         );
     }
 
-//    /**
-//     * Run dp protocol
-//     *
-//     * @param printWriter print writer.
-//     * @param ldpType     ldp type.
-//     * @throws MpcAbortException the protocol failure aborts.
-//     */
-//    protected void runDpPto(PrintWriter printWriter, SbitmapSecurityMode ldpType)
-//        throws MpcAbortException {
-//        LOGGER.info("-----Pto {} LDP training for {}-----", ldpType.name(), taskType);
-//        for (double epsilon : epsilons) {
-//            Map<String, LdpConfig> ldpConfigs = createLdpConfigs(ldpType, epsilon);
-//            SbitmapConfig slaveConfig = new SbitmapConfig.Builder(ownSchema,zl)
-//                .build();
-//            SbitmapPtoRunner ptoRunner = createRunner(slaveConfig);
-//            ptoRunner.init();
-//            ptoRunner.run();
-//            ptoRunner.stop();
-//            writeInfo(printWriter, ldpType.name(), epsilon, ptoRunner.getTime(),
-//                null,
-//                ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
-//            );
-//        }
-//    }
+    private GroupAggConfig genGroupAggConfig() {
+        switch (groupAggType) {
+            case BITMAP:
+                return new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+            case SORTING:
+                return new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+            case MIX:
+                return new MixGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+            default:
+                throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + groupAggType.name());
+        }
+    }
 
-    SbitmapPtoRunner createRunner(SbitmapConfig sbitmapConfig) {
-        SbitmapPtoParty party = SbitmapMainUtils.createParty(taskType, ownRpc, otherParty, sbitmapConfig);
-        return new SbitmapPtoRunner(party, sbitmapConfig, totalRound, ownDataFrame);
+    GroupAggregationPtoRunner createRunner(GroupAggConfig groupAggConfig) {
+        GroupAggParty party;
+        if (!receiver) {
+            party = GroupAggFactory.createSender(ownRpc, otherParty, groupAggConfig);
+        } else {
+            party = GroupAggFactory.createReceiver(ownRpc, otherParty, groupAggConfig);
+        }
+        return new GroupAggregationPtoRunner(party, groupAggConfig, totalRound, groupAggInputData);
     }
 
 

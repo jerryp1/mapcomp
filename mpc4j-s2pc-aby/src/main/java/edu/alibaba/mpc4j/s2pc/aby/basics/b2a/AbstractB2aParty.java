@@ -61,10 +61,18 @@ public abstract class AbstractB2aParty extends AbstractTwoPartyPto implements B2
     protected void setPtoInput(SquareZ2Vector[] xi) {
         l = zl.getL();
         num = xi[0].getNum();
-        MathPreconditions.checkEqual("l", "xi.length", l, xi.length);
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
         byteL = zl.getByteL();
-        input = xi;
+        if (xi.length < l) {
+            // fill top elements with zeros.
+            input = new SquareZ2Vector[l];
+            for (int i = 0; i < l;i++) {
+                input[i] = (i < l-xi.length) ? SquareZ2Vector.createZeros(num, false):xi[i -xi.length];
+            }
+            System.out.println();
+        } else {
+            input = xi;
+        }
     }
 }

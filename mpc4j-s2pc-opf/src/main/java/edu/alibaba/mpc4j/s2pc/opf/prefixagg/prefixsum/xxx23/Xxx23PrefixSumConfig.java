@@ -10,6 +10,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleConfig;
@@ -35,9 +40,17 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
      */
     private final ZlMuxConfig zlMuxConfig;
     /**
+     * Plain bit mux config.
+     */
+    private final PlainBitMuxConfig plainBitMuxConfig;
+    /**
      * Shuffle config
      */
     private final ShuffleConfig shuffleConfig;
+    /**
+     * Osn config.
+     */
+    private final OsnConfig osnConfig;
     /**
      * Prefix tree type.
      */
@@ -52,10 +65,13 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
     private final boolean needShuffle;
 
     private Xxx23PrefixSumConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.zlcConfig, builder.zlMuxConfig);
+        super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.zlcConfig, builder.zlMuxConfig,
+            builder.plainBitMuxConfig, builder.shuffleConfig, builder.osnConfig);
         z2cConfig = builder.z2cConfig;
         zlcConfig = builder.zlcConfig;
         zlMuxConfig = builder.zlMuxConfig;
+        plainBitMuxConfig = builder.plainBitMuxConfig;
+        osnConfig = builder.osnConfig;
         shuffleConfig = builder.shuffleConfig;
         prefixTreeType = builder.prefixTreeType;
         needShuffle = builder.needShuffle;
@@ -84,6 +100,11 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
         return needShuffle;
     }
 
+    @Override
+    public PrefixAggTypes getPrefixType() {
+        return PrefixAggTypes.SUM;
+    }
+
     public PrefixTreeTypes getPrefixTreeType() {
         return prefixTreeType;
     }
@@ -95,6 +116,14 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
 
     public ShuffleConfig getShuffleConfig() {
         return shuffleConfig;
+    }
+
+    public PlainBitMuxConfig getPlainBitMuxConfig() {
+        return plainBitMuxConfig;
+    }
+
+    public OsnConfig getOsnConfig() {
+        return osnConfig;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PrefixSumConfig> {
@@ -111,9 +140,17 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
          */
         private final ZlMuxConfig zlMuxConfig;
         /**
+         * Plain bit mux config.
+         */
+        private final PlainBitMuxConfig plainBitMuxConfig;
+        /**
          * Shuffle config
          */
         private final ShuffleConfig shuffleConfig;
+        /**
+         * Osn config.
+         */
+        private final OsnConfig osnConfig;
         /**
          * Prefix tree type.
          */
@@ -130,6 +167,8 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             shuffleConfig = ShuffleFactory.createDefaultUnShuffleConfig(SecurityModel.SEMI_HONEST, silent);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             prefixTreeType = PrefixTreeTypes.BRENT_KUNG;
             needShuffle = false;
             this.zl = zl;

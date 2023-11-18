@@ -45,7 +45,7 @@ public abstract class AbstractZlMaxParty extends AbstractTwoPartyPto implements 
     /**
      * inputs
      */
-    protected SquareZlVector[] inputs;
+    protected BigInteger[] inputs;
 
     public AbstractZlMaxParty(PtoDesc ptoDesc, Rpc ownRpc, Party otherParty, ZlMaxConfig config) {
         super(ptoDesc, ownRpc, otherParty, config);
@@ -67,7 +67,6 @@ public abstract class AbstractZlMaxParty extends AbstractTwoPartyPto implements 
         l = zl.getL();
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
         byteL = zl.getByteL();
-        inputs = Arrays.stream(xi.getZlVector().getElements())
-                .map(e -> SquareZlVector.create(zl, new BigInteger[]{e}, false)).toArray(SquareZlVector[]::new);
+        inputs = xi.getZlVector().getElements();
     }
 }

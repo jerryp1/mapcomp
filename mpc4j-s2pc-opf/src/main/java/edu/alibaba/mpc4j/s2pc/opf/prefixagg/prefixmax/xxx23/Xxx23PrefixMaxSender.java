@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.AbstractPrefixMaxAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 
@@ -30,6 +31,12 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         zlGreaterParty = ZlGreaterFactory.createSender(senderRpc, receiverParty, config.getZlGreaterConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
+        plainBitMuxParty = PlainBitMuxFactory.createSender(senderRpc, receiverParty, config.getPlainBitMuxConfig());
+//        addSubPtos(zlcParty);
+//        addSubPtos(zlMuxParty);
+//        addSubPtos(zlGreaterParty);
+//        addSubPtos(shuffleParty);
+//        addSubPtos(plainBitMuxParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
@@ -42,9 +49,10 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
         stopWatch.start();
         z2cParty.init(maxL * maxNum);
-        zlcParty.init(maxNum);
+        zlcParty.init(1);
         zlMuxParty.init(maxNum);
         zlGreaterParty.init(maxL, maxNum);
+        plainBitMuxParty.init(maxNum);
         shuffleParty.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
