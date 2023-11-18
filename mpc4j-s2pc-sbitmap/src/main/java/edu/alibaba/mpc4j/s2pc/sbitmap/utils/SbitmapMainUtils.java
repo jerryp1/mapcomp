@@ -23,12 +23,11 @@ import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.io.Read;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -69,62 +68,6 @@ public class SbitmapMainUtils {
         LOGGER.info("-----set dataset name-----");
         return PropertiesUtils.readString(properties, "dataset_name");
     }
-
-
-
-//    public static int setMaxL(Properties properties) {
-//
-//    }
-
-//    /**
-//     * set metadata
-//     *
-//     * @param properties configurations.
-//     * @return metadata
-//     */
-//    public static StructType setSchema(Properties properties) {
-//        LOGGER.info("-----set whole schema-----");
-//        String[] columnTypes = PropertiesUtils.readTrimStringArray(properties, "column_types");
-//        String[] columnNames = PropertiesUtils.readTrimStringArray(properties, "column_names");
-//        Preconditions.checkArgument(
-//            Arrays.stream(columnNames).collect(Collectors.toSet()).size() == columnNames.length,
-//            "column_names contains duplicated names"
-//        );
-//        Preconditions.checkArgument(
-//            columnTypes.length == columnNames.length,
-//            "# of column type = %s, # of column name = %s, must be the same",
-//            columnTypes.length, columnNames.length
-//        );
-//        int ncols = columnTypes.length;
-//        StructField[] structFields = IntStream.range(0, ncols)
-//            .mapToObj(columnIndex -> {
-//                String columnName = columnNames[columnIndex];
-//                String columnType = columnTypes[columnIndex];
-//                switch (columnType) {
-//                    case "N":
-//                        // nominal，枚举类，必须为one-hot格式
-//                        return new StructField(columnName, DataTypes.ByteType, new NominalScale("0", "1"));
-//                    case "I":
-//                        // int，整数类
-//                        return new StructField(columnName, DataTypes.IntegerType);
-//                    case "F":
-//                        // float，浮点数类
-//                        return new StructField(columnName, DataTypes.FloatType);
-//                    case "D":
-//                        // double，双精度浮点数类
-//                        return new StructField(columnName, DataTypes.DoubleType);
-//                    case "C":
-//                        // 分类任务的标签类型
-//                        String[] classTypes = PropertiesUtils.readTrimStringArray(properties, "class_types");
-//                        return new StructField(columnName, DataTypes.ByteType, new NominalScale(classTypes));
-//                    default:
-//                        throw new IllegalArgumentException("Invalid columnType: " + columnType);
-//                }
-//            })
-//            .toArray(StructField[]::new);
-//        StructType schema = DataTypes.struct(structFields);
-//        return schema;
-//    }
 
     /**
      * 设置总测试轮数。
@@ -184,6 +127,11 @@ public class SbitmapMainUtils {
         return PropertiesUtils.readInt(properties, "sender_group_bit_length");
     }
 
+    public static String getCurrentTime() {
+        return new SimpleDateFormat("MM-dd(HH:mm:ss)").format(Calendar.getInstance().getTime());
+
+    }
+
     /**
      * 设置分组长度。
      *
@@ -195,17 +143,28 @@ public class SbitmapMainUtils {
     }
 
     /**
-     * 设置训练数据集。
+     * 设置分组长度。
      *
      * @param properties 配置项。
+     * @return α
+     */
+    public static int[] setTestDataNums(Properties properties) {
+        return PropertiesUtils.readIntArray(properties, "test_data_nums");
+    }
+
+    /**
+     * 设置训练数据集。
+     *
      * @param schema     元数据信息。
      * @return 训练数据集。
      * @throws IOException        如果出现IO异常。
      * @throws URISyntaxException 如果文件路径有误。
      */
-    public static DataFrame setDataFrame(Properties properties, StructType schema) throws IOException, URISyntaxException {
-        String trainDatasetPath = PropertiesUtils.readString(properties, "input_dataset_path");
-        return Read.csv(trainDatasetPath, DEFAULT_CSV_FORMAT, schema);
+    public static DataFrame setDataFrame(StructType schema, String path) throws IOException, URISyntaxException {
+        if (!new File(path).exists()) {
+            LOGGER.info("Dataset file not exist, please generate data first.");
+        }
+        return Read.csv(path, DEFAULT_CSV_FORMAT, schema);
     }
 
     /**
@@ -237,224 +196,6 @@ public class SbitmapMainUtils {
         return DataFrame.of(Arrays.stream(rows).mapToObj(temp::get).collect(Collectors.toList()));
     }
 
-    /**
-     * 读取上下界。
-     *
-     * @param dataFrame   数据帧。
-     * @param structField 列信息。
-     * @return [下界, 上界]。
-     */
-    private static int[] readIntBounds(DataFrame dataFrame, StructField structField) {
-        int[] dataArray = dataFrame.column(structField.name).toIntArray();
-        int[] bounds = new int[2];
-        bounds[0] = Arrays.stream(dataArray).min().orElse(0);
-        bounds[1] = Arrays.stream(dataArray).max().orElse(0);
-        Preconditions.checkArgument(
-            bounds[0] < bounds[1],
-            "column %s: lowerBound (%s) must be less than upperBound (%s)",
-            structField.name, bounds[0], bounds[1]
-        );
-        return bounds;
-    }
-
-    /**
-     * 读取上下界。
-     *
-     * @param dataFrame   数据帧。
-     * @param structField 列信息。
-     * @return [下界, 上界]。
-     */
-    private static double[] readDoubleBounds(DataFrame dataFrame, StructField structField) {
-        double[] dataArray = dataFrame.column(structField.name).toDoubleArray();
-        double[] bounds = new double[2];
-        bounds[0] = Arrays.stream(dataArray).min().orElse(0);
-        bounds[1] = Arrays.stream(dataArray).max().orElse(0);
-        Preconditions.checkArgument(
-            bounds[0] < bounds[1],
-            "column %s: lowerBound (%s) must be less than upperBound (%s)",
-            structField.name, bounds[0], bounds[1]
-        );
-        return bounds;
-    }
-
-    /**
-     * 创建LDP配置项。
-     *
-     * @param dataFrame     数据帧。
-     * @param ldpColumnsMap LDP列映射。
-     * @param ldpType       LDP类型。
-     * @param epsilon       ε。
-     * @return LDP配置项。
-     */
-    public static Map<String, LdpConfig> createLdpConfigs(DataFrame dataFrame, Map<String, Boolean> ldpColumnsMap,
-                                                          SbitmapSecurityMode ldpType, double epsilon) {
-        StructType schema = dataFrame.schema();
-        Map<String, LdpConfig> ldpConfigMap = new HashMap<>(schema.length());
-        for (StructField structField : schema.fields()) {
-            boolean dp = ldpColumnsMap.get(structField.name);
-            if (dp) {
-                LdpConfig ldpConfig;
-                if (structField.measure instanceof NominalScale) {
-                    NominalScale nominalScale = (NominalScale) structField.measure;
-                    ldpConfig = new DirectEncodeLdpConfig
-                        .Builder(epsilon, Arrays.stream(nominalScale.levels()).collect(Collectors.toList()))
-                        .build();
-                } else if (structField.type.isIntegral()) {
-                    int[] bounds = readIntBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case PIECEWISE:
-//                            ldpConfig = new NaiveRangeIntegralLdpConfig
-//                                .Builder(new PiecewiseLdpConfig.Builder(epsilon).build(), bounds[0], bounds[1])
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else if (structField.type.isFloating()) {
-                    // 浮点数类型，创建浮点数LDP机制
-                    double[] bounds = readDoubleBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case PIECEWISE:
-//                            ldpConfig = new NaiveRangeRealLdpConfig
-//                                .Builder(new PiecewiseLdpConfig.Builder(epsilon).build(), bounds[0], bounds[1])
-//                                .build();
-//                            break;
-//                        case GLOBAL_MAP:
-//                        case GLOBAL_EXP_MAP:
-//                            ldpConfig = new GlobalMapRealLdpConfig
-//                                .Builder(epsilon, bounds[0], bounds[1])
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Invalid type: " + structField.type);
-                }
-                ldpConfigMap.put(structField.name, ldpConfig);
-            }
-        }
-        return ldpConfigMap;
-    }
-
-    /**
-     * 创建LDP配置项。
-     *
-     * @param dataFrame     数据帧。
-     * @param ldpColumnsMap LDP列映射。
-     * @param ldpType       LDP类型。
-     * @param epsilon       ε。
-     * @param theta         θ。
-     * @return LDP配置项。
-     */
-    public static Map<String, LdpConfig> createLdpConfigs(DataFrame dataFrame, Map<String, Boolean> ldpColumnsMap,
-                                                          SbitmapSecurityMode ldpType, double epsilon, int theta) {
-        StructType schema = dataFrame.schema();
-        Map<String, LdpConfig> ldpConfigMap = new HashMap<>(schema.length());
-        for (StructField structField : schema.fields()) {
-            boolean dp = ldpColumnsMap.get(structField.name);
-            if (dp) {
-                LdpConfig ldpConfig;
-                if (structField.measure instanceof NominalScale) {
-                    NominalScale nominalScale = (NominalScale) structField.measure;
-                    ldpConfig = new DirectEncodeLdpConfig
-                        .Builder(epsilon, Arrays.stream(nominalScale.levels()).collect(Collectors.toList()))
-                        .build();
-                } else if (structField.type.isIntegral()) {
-                    int[] bounds = readIntBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case LOCAL_MAP:
-//                            ldpConfig = new LocalMapIntegralLdpConfig
-//                                .Builder(epsilon, theta, bounds[0], bounds[1])
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else if (structField.type.isFloating()) {
-                    double[] bounds = readDoubleBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case LOCAL_MAP:
-//                        case LOCAL_EXP_MAP:
-//                            ldpConfig = new LocalMapRealLdpConfig
-//                                .Builder(epsilon, theta, bounds[0], bounds[1])
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Invalid type: " + structField.type);
-                }
-                ldpConfigMap.put(structField.name, ldpConfig);
-            }
-        }
-        return ldpConfigMap;
-    }
-
-    /**
-     * 创建调整映射LDP配置项。
-     *
-     * @param dataFrame     数据帧。
-     * @param ldpColumnsMap LDP列映射。
-     * @param ldpType       LDP类型。
-     * @param epsilon       ε。
-     * @param theta         θ。
-     * @param alpha         α。
-     * @return LDP配置项。
-     */
-    public static Map<String, LdpConfig> createLdpConfigs(DataFrame dataFrame, Map<String, Boolean> ldpColumnsMap,
-                                                          SbitmapSecurityMode ldpType, double epsilon, int theta, double alpha) {
-        StructType schema = dataFrame.schema();
-        Map<String, LdpConfig> ldpConfigMap = new HashMap<>(schema.length());
-        for (StructField structField : schema.fields()) {
-            boolean dp = ldpColumnsMap.get(structField.name);
-            if (dp) {
-                LdpConfig ldpConfig;
-                if (structField.measure instanceof NominalScale) {
-                    NominalScale nominalScale = (NominalScale) structField.measure;
-                    ldpConfig = new DirectEncodeLdpConfig
-                        .Builder(epsilon, Arrays.stream(nominalScale.levels()).collect(Collectors.toList()))
-                        .build();
-                } else if (structField.type.isIntegral()) {
-                    int[] bounds = readIntBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case ADJ_MAP:
-//                            ldpConfig = new AdjMapIntegralLdpConfig
-//                                .Builder(epsilon, theta, bounds[0], bounds[1])
-//                                .setAlpha(alpha)
-//                                .build();
-//                            break;
-//                        case ADJ_EXP_MAP:
-//                            ldpConfig = new AdjExpMapIntegralLdpConfig
-//                                .Builder(epsilon, theta, bounds[0], bounds[1])
-//                                .setAlpha(alpha)
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else if (structField.type.isFloating()) {
-                    double[] bounds = readDoubleBounds(dataFrame, structField);
-                    switch (ldpType) {
-//                        case ADJ_MAP:
-//                        case ADJ_EXP_MAP:
-//                            ldpConfig = new AdjMapRealLdpConfig
-//                                .Builder(epsilon, theta, bounds[0], bounds[1])
-//                                .setAlpha(alpha)
-//                                .build();
-//                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid LdpType: " + ldpType);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Invalid type: " + structField.type);
-                }
-                ldpConfigMap.put(structField.name, ldpConfig);
-            }
-        }
-        return ldpConfigMap;
-    }
 
     public static SbitmapPtoParty createParty(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
         SbitmapPtoParty party;

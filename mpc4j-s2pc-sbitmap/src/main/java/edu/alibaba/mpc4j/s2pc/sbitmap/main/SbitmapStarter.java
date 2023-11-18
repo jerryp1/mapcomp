@@ -67,10 +67,10 @@ public class SbitmapStarter {
      * Metadata of dataset.
      */
     protected StructType schema;
-    /**
-     * Mapping type.
-     */
-    protected String mappingType;
+//    /**
+//     * Mapping type.
+//     */
+//    protected String mappingType;
     /**
      * Group aggregation type.
      */
@@ -99,31 +99,39 @@ public class SbitmapStarter {
 
     private int num;
     private GroupAggInputData groupAggInputData;
+    private int senderGroupBitLength;
+    private int receiverGroupBitLength;
+
+    private StructType senderSchema;
+    private StructType receiverSchema;
+
+    private int[] testDataNums;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
+        setSchema();
     }
 
-    public void start() throws IOException, MpcAbortException {
-        String filePath =
-            // dataset name
-            datasetName
-                // total round of test
-                + "_" + totalRound
-                // party id
-                + "_" + ownRpc.ownParty().getPartyId()
-                + ".output";
+    public void start() throws IOException, MpcAbortException, URISyntaxException {
+        // output file format：bitmap_sum_s1_r2_s/r.output
+        String filePath = "./result/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
+            "s" + senderGroupBitLength + "_" + "r" + receiverGroupBitLength + "_" +
+            ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +"_"+ SbitmapMainUtils.getCurrentTime() +  ".out";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
-        String tab = "name\tε\tθ\tα\tTime(ms)\t" +
-            "Train Measure\tTest Measure\t" +
+        String tab = "Data Num(bits)\t" + "Time(ms)\t" +
             "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)";
         printWriter.println(tab);
         // connect
         ownRpc.connect();
         // Full secure
-        runFullSecurePto(printWriter);
+        for (int numBitLen:testDataNums) {
+            int num = 1 << numBitLen;
+            setDataSet(numBitLen);
+            properties.setProperty("max_num", String.valueOf(num));
+            runFullSecurePto(printWriter, numBitLen);
+        }
         // clean
         printWriter.close();
         fileWriter.close();
@@ -146,30 +154,25 @@ public class SbitmapStarter {
         prefixAggType = SbitmapMainUtils.setPrefixAggTypes(properties);
         // set protocol type
         groupAggType = SbitmapMainUtils.setGroupAggTypes(properties);
-        // set dataset
-        setDataSet();
+        // group bit length
+        senderGroupBitLength = SbitmapMainUtils.setSenderGroupBitLength(properties);
+        receiverGroupBitLength = SbitmapMainUtils.setReceiverGroupBitLength(properties);
+        // num
+        testDataNums = SbitmapMainUtils.setTestDataNums(properties);
         // 设置总测试轮数
         totalRound = SbitmapMainUtils.setTotalRound(properties);
     }
 
-    private void setDataSet() throws IOException, URISyntaxException {
+    private void setDataSet(int num) throws IOException, URISyntaxException {
+        String dataFileLength = "./dataset/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
         if (receiver) {
-            StructField groupField = new StructField("group", DataTypes.StringType);
-            StructField aggField = new StructField("agg", DataTypes.IntegerType);
-            StructField eField = new StructField("e", DataTypes.IntegerType);
-            StructType structType = new StructType(groupField, aggField, eField);
-            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(properties, structType);
-            num = inputDataFrame.nrows();
+            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(receiverSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
             long[] agg = inputDataFrame.intVector("agg").stream().mapToLong(i -> i).toArray();
             SquareZ2Vector e = genE(inputDataFrame);
             groupAggInputData = new GroupAggInputData(groups, agg, e);
         } else {
-            StructField groupField = new StructField("group", DataTypes.StringType);
-            StructField eField = new StructField("e", DataTypes.IntegerType);
-            StructType structType = new StructType(groupField, eField);
-            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(properties, structType);
-            num = inputDataFrame.nrows();
+            DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(senderSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
             SquareZ2Vector e = genE(inputDataFrame);
             groupAggInputData = new GroupAggInputData(groups, null, e);
@@ -178,20 +181,17 @@ public class SbitmapStarter {
 
     private SquareZ2Vector genE(DataFrame dataFrame) {
         int[] es = dataFrame.intVector("e").stream().toArray();
-        BitVector bitVector = BitVectorFactory.createZeros(num);
-        IntStream.range(0, num).forEach(i -> bitVector.set(i, es[i] == 1));
+        BitVector bitVector = BitVectorFactory.createZeros(dataFrame.nrows());
+        IntStream.range(0, dataFrame.nrows()).forEach(i -> bitVector.set(i, es[i] == 1));
         return SquareZ2Vector.create(bitVector, false);
     }
 
-    protected void writeInfo(PrintWriter printWriter,
+    protected void writeInfo(PrintWriter printWriter, int num,
                              Double time,
-                             Double performanceMeasure,
                              long packetNum, long payloadByteLength, long sendByteLength) {
-        String information = mappingType
+        String information = num + "\t" +
             // time
-            + "\t" + (Objects.isNull(time) ? "N/A" : time)
-            // performance measure
-            + "\t" + (Objects.isNull(performanceMeasure) ? "N/A" : performanceMeasure)
+             (Objects.isNull(time) ? "N/A" : time)
             // packet num
             + "\t" + packetNum
             // payload byte length
@@ -208,10 +208,9 @@ public class SbitmapStarter {
      * @param printWriter print writer.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void runFullSecurePto(PrintWriter printWriter)
+    protected void runFullSecurePto(PrintWriter printWriter, int num)
         throws MpcAbortException {
         LOGGER.info("-----Pto aggregation for {}-----", groupAggType.name() + "_" + prefixAggType.name());
-
 
         GroupAggConfig groupAggConfig = genGroupAggConfig();
 
@@ -219,9 +218,8 @@ public class SbitmapStarter {
         ptoRunner.init();
         ptoRunner.run();
         ptoRunner.stop();
-        writeInfo(printWriter, ptoRunner.getTime(),
-            null,
-            ptoRunner.getPacketNum(), ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
+        writeInfo(printWriter, num, ptoRunner.getTime(), ptoRunner.getPacketNum(),
+            ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
         );
     }
 
@@ -245,8 +243,15 @@ public class SbitmapStarter {
         } else {
             party = GroupAggFactory.createReceiver(ownRpc, otherParty, groupAggConfig);
         }
-        return new GroupAggregationPtoRunner(party, groupAggConfig, totalRound, groupAggInputData);
+        return new GroupAggregationPtoRunner(party, groupAggConfig, totalRound, groupAggInputData, properties);
     }
 
+    private void setSchema() {
+        StructField groupField = new StructField("group", DataTypes.StringType);
+        StructField aggField = new StructField("agg", DataTypes.IntegerType);
+        StructField eField = new StructField("e", DataTypes.IntegerType);
+        senderSchema = new StructType(groupField, eField);
+        receiverSchema = new StructType(groupField, aggField, eField);
+    }
 
 }

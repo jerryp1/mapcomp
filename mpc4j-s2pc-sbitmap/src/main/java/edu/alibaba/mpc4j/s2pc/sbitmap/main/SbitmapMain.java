@@ -25,6 +25,9 @@ public class SbitmapMain {
         LOGGER.info("read config file");
         Properties properties = PropertiesUtils.loadProperties(args[0]);
         SbitmapStarter fullSecureProtocol = new SbitmapStarter(properties);
+        // data number
+
+        // 这里应该设置测试不同的数据量
         fullSecureProtocol.init();
         fullSecureProtocol.start();
         System.exit(0);
