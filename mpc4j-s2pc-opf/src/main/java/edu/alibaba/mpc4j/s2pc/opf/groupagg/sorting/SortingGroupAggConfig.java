@@ -23,7 +23,7 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 
 /**
- * Mix group aggregation config.
+ * Sorting-based group aggregation config.
  *
  * @author Li Peng
  * @date 2023/11/3

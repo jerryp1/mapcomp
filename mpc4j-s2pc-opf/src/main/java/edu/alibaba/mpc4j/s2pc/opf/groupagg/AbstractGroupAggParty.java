@@ -36,10 +36,12 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
      * num of elements in single vector.
      */
     protected int num;
-    /**
-     * inputs
-     */
-    protected SquareZ2Vector[] inputs;
+
+    protected Vector<byte[]> aggShare;
+    protected Vector<byte[]> receiverGroupShare;
+    protected Vector<byte[]> senderGroupShare;
+
+    protected SquareZ2Vector e;
 
     protected List<String> senderDistinctGroup;
     protected List<String> receiverDistinctGroup;
@@ -102,6 +104,7 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
             Preconditions.checkArgument(aggField.length == num,
                 "number of elements not match");
         }
+        this.e = e;
     }
 
     /**

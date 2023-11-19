@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Mix group aggregation sender.
+ * Sorting-based group aggregation sender.
  *
  * @author Li Peng
  * @date 2023/11/3
@@ -80,6 +80,14 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
      * Z2 integer circuit.
      */
     private final Z2IntegerCircuit z2IntegerCircuit;
+    /**
+     * Own bit split.
+     */
+    private Vector<byte[]> eByte;
+    /**
+     * permutation of pSorter
+     */
+    private Vector<byte[]> piGi;
 
     public SortingGroupAggSender(Rpc senderRpc, Party receiverParty, SortingGroupAggConfig config) {
         super(SortingGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -126,38 +134,62 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
+    public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector interFlagE) throws MpcAbortException {
         assert aggField == null;
         // set input
-        setPtoInput(groupField, aggField, e);
-        // sigma_s
-        int[] sigmaSPerm = obtainPerms(groupField);
+        setPtoInput(groupField, aggField, interFlagE);
+        // osn1
+        osn1(groupField);
+        // pSorting using e and receiver's group
+        pSorter();
+        // apply piGi to receiver's agg and sender's group
+        applyPiGi();
+        // merge group
+        Vector<byte[]> mergedTwoGroup = mergeGroup();
+        // b2a
+        SquareZlVector otherAggB2a = b2a();
+        // ### test
+        zlcSender.revealOther(otherAggB2a);
+        revealOtherGroup(mergedTwoGroup);
+        // agg
+        aggregation(mergedTwoGroup, otherAggB2a, e);
+        return null;
+    }
+
+    private void osn1(String[] groupAttr) throws MpcAbortException {
+        // sigma_s permutation
+        int[] sigmaS = obtainPerms(groupAttr);
         // osn1, sender permute receiver's group, agg and e
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaSPerm, receiverGroupBitLength + Long.BYTES + 1).getShare();
-        // pi 这里也要输入e进行排序
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupBitLength + Long.BYTES + 1).getShare();
         // split
         List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupBitLength, Long.BYTES, 1});
-        Vector<byte[]> splitGroup = splits.get(0);
-        Vector<byte[]> splitLong = splits.get(1);
+        receiverGroupShare = splits.get(0);
+        aggShare = splits.get(1);
+        Vector<byte[]> receiverE = splits.get(2);
 
-        Vector<byte[]> splitBit = splits.get(2);
-
-        Vector<byte[]> senderE = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1).put((e.getBitVector().get(i) ? (byte) 1 : (byte) 0)).array()).collect(Collectors.toCollection(Vector::new));
-        Vector<byte[]> tempee = BenesNetworkUtils.permutation(sigmaSPerm, senderE);
-        senderE = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(splitBit.get(i), tempee.get(i))).collect(Collectors.toCollection(Vector::new));
-        Vector<byte[]> senderGroup = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(senderGroupBitLength).put(groupField[i].getBytes())
+        // e share in byte form
+        Vector<byte[]> tempE = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
+            .put((e.getBitVector().get(i) ? (byte) 1 : (byte) 0)).array()).collect(Collectors.toCollection(Vector::new));
+        // permute own e share
+        Vector<byte[]> tempE2 = BenesNetworkUtils.permutation(sigmaS, tempE);
+        // xor two e shares to get aligned e shares
+        eByte = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
+        // sender group
+        senderGroupShare = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(senderGroupBitLength).put(groupAttr[i].getBytes())
             .array()).collect(Collectors.toCollection(Vector::new));
-        senderGroup = BenesNetworkUtils.permutation(sigmaSPerm, senderGroup);
+        senderGroupShare = BenesNetworkUtils.permutation(sigmaS, senderGroupShare);
 
-        // test
-        revealOtherBit(senderE);
+        // ### test
+        revealOtherBit(eByte);
+        // share sender group
+        senderGroupShare = shareOwn(senderGroupShare);
+        // ### test
+        revealOtherGroup(senderGroupShare);
+    }
 
-        // share own group
-        Vector<byte[]> sortedSenderGroup = shareOwn(senderGroup);
-        revealOtherGroup(sortedSenderGroup);
-
-        // receiver方osn后的输出，组织为sorter的输入
-        Vector<byte[]> mergedSortInput = merge(Arrays.asList(senderE, splitGroup));
+    private void pSorter() throws MpcAbortException {
+        // obtain input of osn
+        Vector<byte[]> mergedSortInput = merge(Arrays.asList(eByte, receiverGroupShare));
 
         // prepare psorter input, with shared e and group of receiver
         SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (receiverGroupBitLength + 1) * 8))
@@ -165,60 +197,61 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // psorter
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
             null, PlainZ2Vector.createOnes(1), true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
-        // test
+        // ### test
         for (int i = 0; i < piGiVector.length; i++) {
             z2cSender.revealOther(piGiVector[i]);
         }
 
         // get vector form of piGi
-        Vector<byte[]> piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
 
-        // test
+        // ### test
         revealOtherLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
-
-
-        // now apply piGi to receiver's shared agg. the group and e of receiver have already been permuted
-        Vector<byte[]> permutedOtherLongs = sharedPermutationSender.permute(piGi, splitLong);
-        revealOtherLong(permutedOtherLongs);
 
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
 
         List<Vector<byte[]>> splitOther = GroupAggUtils.split(trans, new int[]{1, receiverGroupBitLength});
-        Vector<byte[]> otherGroup = splitOther.get(1);
-        // test
-        revealOtherGroup(otherGroup);
+        receiverGroupShare = splitOther.get(1);
+        // ### test
+        revealOtherGroup(senderGroupShare);
 
-        SquareZ2Vector otherBit = SquareZ2Vector.createZeros(num, false);
-        IntStream.range(0, num).forEach(i -> otherBit.getBitVector().set(i, (splitOther.get(0).get(i)[0] & 1) == 1));
-        revealOtherBit(splitOther.get(0));
-        z2cSender.revealOther(otherBit);
+        e = SquareZ2Vector.createZeros(num, false);
+        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOther.get(0).get(i)[0] & 1) == 1));
+        z2cSender.revealOther(e);
+    }
 
-        // 排序后的group
-        Vector<byte[]> doubleSortedSenderGroup = sharedPermutationSender.permute(piGi, sortedSenderGroup);
+    private void applyPiGi() throws MpcAbortException {
+        // now apply piGi to receiver's shared agg. The group and e of receiver have already been permuted
+        aggShare = sharedPermutationSender.permute(piGi, aggShare);
+        revealOtherLong(aggShare);
 
-        revealOtherGroup(doubleSortedSenderGroup);
+        // apply piGi to sender's group
+        senderGroupShare = sharedPermutationSender.permute(piGi, senderGroupShare);
 
+        // ### test
+        revealOtherGroup(senderGroupShare);
+    }
+
+    private Vector<byte[]> mergeGroup() {
         // merge group
-        Vector<byte[]> mergedTwoGroup = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
-            .put(doubleSortedSenderGroup.get(i)).put(otherGroup.get(i)).array()).collect(Collectors.toCollection(Vector::new));
+        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
+            .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
+    }
 
+    private SquareZlVector b2a() throws MpcAbortException {
         // b2a
-        SquareZ2Vector[] transposed = Arrays.stream(TransposeUtils.transposeSplit(permutedOtherLongs, Long.SIZE))
+        SquareZ2Vector[] transposed = Arrays.stream(TransposeUtils.transposeSplit(aggShare, Long.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        SquareZlVector otherAggB2a = b2aSender.b2a(transposed);
-        // mux with e
-//        otherAggB2a = zlMuxSender.mux(ownBit, otherAggB2a);
-        zlcSender.revealOther(otherAggB2a);
-        revealOtherGroup(mergedTwoGroup);
-        // agg
-        PrefixAggOutput agg = prefixAggSender.agg(mergedTwoGroup, otherAggB2a, otherBit);
+        return b2aSender.b2a(transposed);
+    }
+
+    private void aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+        PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, flag);
         revealOtherGroup(agg.getGroupings());
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         // reveal
         zlcSender.revealOther(agg.getAggs());
-
-        return null;
     }
 
     protected Vector<byte[]> shareOwn(Vector<byte[]> input) {
@@ -240,7 +273,6 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     protected void revealOtherGroup(Vector<byte[]> input) {
-
         List<byte[]> otherShares = new ArrayList<>(input);
 
         DataPacketHeader sendSharesHeader = new DataPacketHeader(

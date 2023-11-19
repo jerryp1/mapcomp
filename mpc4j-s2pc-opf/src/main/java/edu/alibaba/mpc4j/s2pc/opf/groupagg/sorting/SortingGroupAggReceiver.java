@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Mix group aggregation receiver.
+ * Sorting-based group aggregation receiver.
  *
  * @author Li Peng
  * @date 2023/11/3
@@ -84,6 +84,12 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
      * Z2 integer circuit.
      */
     private final Z2IntegerCircuit z2IntegerCircuit;
+    /**
+     * Own bit split.
+     */
+    private Vector<byte[]> eByte;
+
+    private Vector<byte[]> piGi;
 
     public SortingGroupAggReceiver(Rpc receiverRpc, Party senderParty, SortingGroupAggConfig config) {
         super(SortingGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -131,40 +137,63 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[] groupField, final long[] aggField, final SquareZ2Vector e) throws MpcAbortException {
-        assert aggField != null;
+    public GroupAggOut groupAgg(String[] groupAttr, final long[] aggAttr, final SquareZ2Vector interFlagE) throws MpcAbortException {
+        assert aggAttr != null;
         // set input
-        setPtoInput(groupField, aggField, e);
-        // merge group // 这里可以考虑写一个 string to bytes的encode和decode，减少通信量
-        Vector<byte[]> groupBytes = Arrays.stream(groupField).map(String::getBytes).collect(Collectors.toCollection(Vector::new));
+        setPtoInput(groupAttr, aggAttr, interFlagE);
+        // osn1
+        osn1(groupAttr, aggAttr);
+        // pSorter using e and receiver's group
+        pSorter();
+        // apply piGi to receiver's agg and sender's group
+        applyPiGi();
+        // merge group
+        Vector<byte[]> mergedTwoGroup = mergeGroup();
+        // b2a
+        SquareZlVector receiverAggAs = b2a();
+        // ### test
+        String[] groupResult = revealOwnGroup(mergedTwoGroup);
+        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+        // aggregation
+        return aggregation(mergedTwoGroup, receiverAggAs, e);
+    }
+
+    private void osn1(String[] groupAttr, long[] aggAttr) throws MpcAbortException {
+        // merge group // TODO 这里可以考虑写一个 string to bytes的encode和decode，减少通信量
+        Vector<byte[]> groupBytes = Arrays.stream(groupAttr).map(String::getBytes).collect(Collectors.toCollection(Vector::new));
         // osn1
         Vector<byte[]> osnInput1 = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupBitLength + Long.BYTES + 1)
-            .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggField[i]))
+            .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggAttr[i]))
             .put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
-//        BitVector ePlain = z2cReceiver.revealOwn(e);
 
         Vector<byte[]> osnOutput1 = osnSender.osn(osnInput1, receiverGroupBitLength + Long.BYTES + 1).getShare();
         // split
         List<Vector<byte[]>> splitOsn1 = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupBitLength, Long.BYTES, 1});
-        Vector<byte[]> ownGroupSplit = splitOsn1.get(0);
-        Vector<byte[]> ownPayloadSplit = splitOsn1.get(1);
-        Vector<byte[]> ownBitSplit = splitOsn1.get(2);
+        receiverGroupShare = splitOsn1.get(0);
+        aggShare = splitOsn1.get(1);
+        eByte = splitOsn1.get(2);
 
-        // test ownBit
-        List<byte[]> ownBit = revealOwnBit(ownBitSplit);
+        // ### test ownBit
+        List<byte[]> ownBit = revealOwnBit(eByte);
 
-        Vector<byte[]> mergedPsorterInput = merge(Arrays.asList(ownBitSplit, ownGroupSplit));
         // share
-        Vector<byte[]> senderGroups = shareOther();
-        String[] senderGroup = revealOwnGroup(senderGroups);
+        senderGroupShare = shareOther();
+        // ### test
+        String[] senderGroup = revealOwnGroup(senderGroupShare);
+    }
+
+    private void pSorter() throws MpcAbortException {
+        // generate input of psorter
+        Vector<byte[]> mergedPsorterInput = merge(Arrays.asList(eByte, receiverGroupShare));
         // prepare psorter input, with shared e and group of receiver
         SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedPsorterInput, (receiverGroupBitLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+
         // psorter
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
             null, PlainZ2Vector.createOnes(1), true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
 
-        // test
+        // ### test
         BitVector[] permVector = new BitVector[piGiVector.length];
         for (int i = 0; i < piGiVector.length; i++) {
             permVector[i] = z2cReceiver.revealOwn(piGiVector[i]);
@@ -173,47 +202,55 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         long[] perm = permBytes.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).mapToLong(LongUtils::byteArrayToLong).toArray();
 
         // get vector form of piGi
-        Vector<byte[]> piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
-        // test
+        piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        // ### test
         long[] perms2 = revealOwnLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
-
-
-        // now apply piGi to receiver's shared agg. the group and e of receiver have already been permuted
-        Vector<byte[]> permutedOwnPayload = sharedPermutationReceiver.permute(piGi, ownPayloadSplit);
-        long[] test = revealOwnLong(permutedOwnPayload);
 
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput)
             .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         List<Vector<byte[]>> splitOwn = GroupAggUtils.split(trans, new int[]{1, receiverGroupBitLength});
-        Vector<byte[]> doubleSortedReceiverGroup = splitOwn.get(1);
-        // test
-        String[] doubSortedReceiverGroup = revealOwnGroup(doubleSortedReceiverGroup);
+        receiverGroupShare = splitOwn.get(1);
 
-        SquareZ2Vector receiverBit = SquareZ2Vector.createZeros(num, false);
-        IntStream.range(0, num).forEach(i -> receiverBit.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
-        List<byte[]> ownBit2 = revealOwnBit(splitOwn.get(0));
-        BitVector bit3 = z2cReceiver.revealOwn(receiverBit);
+        // ### test
+        String[] doubSortedReceiverGroup = revealOwnGroup(receiverGroupShare);
+        e = SquareZ2Vector.createZeros(num, false);
+        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
-        // now apply piGi to sender's shared group
-        Vector<byte[]> doubleSortedSenderGroup = sharedPermutationReceiver.permute(piGi, senderGroups);
+        // ### test
+        BitVector bit3 = z2cReceiver.revealOwn(e);
+    }
 
-        String[] doubSortedSenderGroup = revealOwnGroup(doubleSortedSenderGroup);
+    private void applyPiGi() throws MpcAbortException {
+        // now apply piGi to receiver's shared agg. the group and e of receiver have already been permuted
+        aggShare = sharedPermutationReceiver.permute(piGi, aggShare);
+        // ### test
+        long[] test = revealOwnLong(aggShare);
 
-        // merge group
-        Vector<byte[]> mergedTwoGroup = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
-            .put(doubleSortedSenderGroup.get(i)).put(doubleSortedReceiverGroup.get(i)).array()).collect(Collectors.toCollection(Vector::new));
+        // now apply piGi to sender's shared group, after which will be double sorted
+        senderGroupShare = sharedPermutationReceiver.permute(piGi, senderGroupShare);
+
+        // ### test
+        String[] doubSortedSenderGroup = revealOwnGroup(senderGroupShare);
+        System.out.println(123);
+    }
+
+    private Vector<byte[]> mergeGroup() {
+        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
+            .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
+    }
+
+    private SquareZlVector b2a() throws MpcAbortException {
         // b2a, transfer agg to arithmetic share
-        SquareZ2Vector[] transposed = Arrays.stream(TransposeUtils.transposeSplit(permutedOwnPayload, Long.SIZE))
+        SquareZ2Vector[] transposed = Arrays.stream(TransposeUtils.transposeSplit(aggShare, Long.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
 
-        SquareZlVector receiverAggAs = b2aReceiver.b2a(transposed);
-        // mux with permuted e
-//        receiverAggAs = zlMuxReceiver.mux(receiverBit, receiverAggAs);
-        String[] groupResult = revealOwnGroup(mergedTwoGroup);
-        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+        return b2aReceiver.b2a(transposed);
+    }
+
+    private GroupAggOut aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
-        PrefixAggOutput agg = prefixAggReceiver.agg(mergedTwoGroup, receiverAggAs, receiverBit);
+        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
         // reveal
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
