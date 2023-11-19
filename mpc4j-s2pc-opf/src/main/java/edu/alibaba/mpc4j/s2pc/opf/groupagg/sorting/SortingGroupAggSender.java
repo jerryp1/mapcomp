@@ -166,9 +166,9 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // sigma_s permutation
         int[] sigmaS = obtainPerms(groupAttr);
         // osn1, sender permute receiver's group, agg and e
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupBitLength + Long.BYTES + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupByteLength + Long.BYTES + 1).getShare();
         // split
-        List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupBitLength, Long.BYTES, 1});
+        List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, Long.BYTES, 1});
         receiverGroupShare = splits.get(0);
         aggShare = splits.get(1);
         Vector<byte[]> receiverE = splits.get(2);
@@ -197,7 +197,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         Vector<byte[]> mergedSortInput = merge(Arrays.asList(eByte, receiverGroupShare));
 
         // prepare psorter input, with shared e and group of receiver
-        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (receiverGroupBitLength + 1) * 8))
+        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (receiverGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // psorter
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
@@ -216,7 +216,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
 
-        List<Vector<byte[]>> splitOther = GroupAggUtils.split(trans, new int[]{1, receiverGroupBitLength});
+        List<Vector<byte[]>> splitOther = GroupAggUtils.split(trans, new int[]{1, receiverGroupByteLength});
         receiverGroupShare = splitOther.get(1);
         // ### test
         revealOtherGroup(senderGroupShare);
@@ -240,7 +240,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
 
     private Vector<byte[]> mergeGroup() {
         // merge group
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
+        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 

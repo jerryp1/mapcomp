@@ -18,6 +18,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -26,14 +27,13 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxParty;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Vector;
+import java.security.acl.Group;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -177,9 +177,10 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     private Vector<byte[]> shareOwnGroup(String[] groupField) {
-        List<byte[]> shareOwnGroupPayload = Arrays.stream(groupField).map(String::getBytes).collect(Collectors.toList());
+        int bitLength = groupField[0].length();
+        List<byte[]> shareOwnGroupPayload = new ArrayList<>(GroupAggUtils.binaryStringToBytes(groupField));
         Vector<byte[]> ownShare = IntStream.range(0, groupField.length).mapToObj(i -> {
-            byte[] bytes = new byte[shareOwnGroupPayload.get(0).length];
+            byte[] bytes = new byte[CommonUtils.getByteLength(bitLength)];
             secureRandom.nextBytes(bytes);
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));

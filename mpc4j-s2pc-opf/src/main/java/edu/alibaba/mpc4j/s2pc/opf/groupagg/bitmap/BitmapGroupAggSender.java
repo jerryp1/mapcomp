@@ -20,10 +20,13 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +65,9 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
      * Zl
      */
     private final Zl zl;
+    protected List<String> senderDistinctGroup;
+    protected List<String> receiverDistinctGroup;
+    protected List<String> totalDistinctGroup;
 
     public BitmapGroupAggSender(Rpc senderRpc, Party receiverParty, BitmapGroupAggConfig config) {
         super(BitmapGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -92,6 +98,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         z2cSender.init(maxNum);
         zlcSender.init(1);
         zlMaxSender.init(maxL, maxNum);
+        // generate distinct group
+        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
+        totalDistinctGroup = new ArrayList<>();
+        for (int i = 0; i < senderGroupNum; i++) {
+            for (int j = 0; j < receiverGroupNum; j++) {
+                totalDistinctGroup.add(senderDistinctGroup.get(i).concat(receiverDistinctGroup.get(j)));
+            }
+        }
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);

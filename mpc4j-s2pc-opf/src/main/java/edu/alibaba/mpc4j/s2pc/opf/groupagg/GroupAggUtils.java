@@ -183,9 +183,9 @@ public class GroupAggUtils {
         return result;
     }
 
-    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int length1, int length2) {
-        int byteLength1 = CommonUtils.getByteLength(length1);
-        int byteLength2 = CommonUtils.getByteLength(length2);
+    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int bitLength1, int bitLength2) {
+        int byteLength1 = CommonUtils.getByteLength(bitLength1);
+        int byteLength2 = CommonUtils.getByteLength(bitLength2);
 
         MathPreconditions.checkEqual("bytes.get(0).length", "byteLength1+byteLength2",
             bytes.get(0).length, byteLength1 + byteLength2);
@@ -193,8 +193,8 @@ public class GroupAggUtils {
         for (int i = 0; i < bytes.size(); i++) {
             byte[] b = bytes.get(i);
             StringBuilder builder = new StringBuilder();
-            IntStream.range(0, length1).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
-            IntStream.range(0, length2).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j + byteLength1 * Byte.SIZE) ? "1" : "0"));
+            IntStream.range(0, bitLength1).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
+            IntStream.range(0, bitLength2).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j + byteLength1 * Byte.SIZE) ? "1" : "0"));
             result[i] = builder.toString();
         }
         return result;

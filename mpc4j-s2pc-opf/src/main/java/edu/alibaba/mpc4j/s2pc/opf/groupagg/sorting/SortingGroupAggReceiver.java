@@ -171,13 +171,13 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // merge group
         Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
         // osn1
-        Vector<byte[]> osnInput1 = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupBitLength + Long.BYTES + 1)
+        Vector<byte[]> osnInput1 = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Long.BYTES + 1)
             .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggAttr[i]))
             .put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
 
-        Vector<byte[]> osnOutput1 = osnSender.osn(osnInput1, receiverGroupBitLength + Long.BYTES + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnSender.osn(osnInput1, receiverGroupByteLength + Long.BYTES + 1).getShare();
         // split
-        List<Vector<byte[]>> splitOsn1 = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupBitLength, Long.BYTES, 1});
+        List<Vector<byte[]>> splitOsn1 = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, Long.BYTES, 1});
         receiverGroupShare = splitOsn1.get(0);
         aggShare = splitOsn1.get(1);
         eByte = splitOsn1.get(2);
@@ -188,14 +188,14 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // share
         senderGroupShare = shareOther();
         // ### test
-        String[] senderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
+        String[] senderGroup = revealGroup(senderGroupShare, senderGroupByteLength);
     }
 
     private void pSorter() throws MpcAbortException {
         // generate input of psorter
         Vector<byte[]> mergedPsorterInput = merge(Arrays.asList(eByte, receiverGroupShare));
         // prepare psorter input, with shared e and group of receiver
-        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedPsorterInput, (receiverGroupBitLength + 1) * 8))
+        SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedPsorterInput, (receiverGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
 
         // psorter
@@ -218,11 +218,11 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput)
             .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
-        List<Vector<byte[]>> splitOwn = GroupAggUtils.split(trans, new int[]{1, receiverGroupBitLength});
+        List<Vector<byte[]>> splitOwn = GroupAggUtils.split(trans, new int[]{1, receiverGroupByteLength});
         receiverGroupShare = splitOwn.get(1);
 
         // ### test
-        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
+        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupByteLength);
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
@@ -240,12 +240,12 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         senderGroupShare = sharedPermutationReceiver.permute(piGi, senderGroupShare);
 
         // ### test
-        String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
+        String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupByteLength);
         System.out.println(123);
     }
 
     private Vector<byte[]> mergeGroup() {
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupBitLength)
+        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 

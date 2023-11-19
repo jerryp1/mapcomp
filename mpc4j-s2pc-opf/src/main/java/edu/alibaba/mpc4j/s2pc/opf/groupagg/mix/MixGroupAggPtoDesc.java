@@ -26,6 +26,7 @@ public class MixGroupAggPtoDesc implements PtoDesc {
      */
     enum PtoStep {
         // empty
+        REVEAL_OUTPUT
     }
 
     /**

@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -19,6 +21,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
@@ -27,9 +30,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import org.apache.commons.lang3.time.StopWatch;
 
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -66,6 +67,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      */
     private final PrefixAggParty prefixAggSender;
 
+    private boolean hasSetGroupSet = false;
+
+    protected List<String> senderDistinctGroup;
+
     public MixGroupAggSender(Rpc senderRpc, Party receiverParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
@@ -96,6 +101,8 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         z2cSender.init(maxNum);
         zlcSender.init(1);
         prefixAggSender.init(maxL, maxNum);
+        // generate distinct group
+        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -146,6 +153,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             outputs[i] = prefixAggSender.agg((String[]) null, mul);
             z2cSender.revealOther(outputs[i].getIndicator());
             zlcSender.revealOther(outputs[i].getAggs());
+            if (!hasSetGroupSet) {
+                revealOtherGroup(outputs[i].getGroupings());
+                hasSetGroupSet = true;
+            }
             stopWatch.stop();
             AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -166,5 +177,16 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));
+    }
+
+    protected void revealOtherGroup(Vector<byte[]> input) {
+        List<byte[]> otherShares = new ArrayList<>(input);
+
+        DataPacketHeader sendSharesHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.REVEAL_OUTPUT.ordinal(), extraInfo,
+            ownParty().getPartyId(), otherParties()[0].getPartyId()
+        );
+        rpc.send(DataPacket.fromByteArrayList(sendSharesHeader, otherShares));
+        extraInfo++;
     }
 }

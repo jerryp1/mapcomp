@@ -1,11 +1,14 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
 
+import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -21,6 +24,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -32,8 +36,11 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -74,6 +81,10 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
 
     private BitVector groupIndicator;
 
+    private String[] resultReceiverGroup;
+
+    protected List<String> senderDistinctGroup;
+
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
@@ -107,6 +118,8 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         z2cReceiver.init(maxNum);
         zlcReceiver.init(1);
         prefixAggReceiver.init(maxL, maxNum);
+        // generate distinct group
+        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -144,13 +157,15 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         // indexes of valid position
         int[] groupIndex = getGroupIndexes(groupIndicator);
         // arrange
-        BigInteger[] plainResult = new BigInteger[totalGroupNum];
+        BigInteger[] aggResult = new BigInteger[senderGroupNum * groupIndex.length];
+        String[] groupResult = new String[senderGroupNum * groupIndex.length];
         for (int i = 0; i < senderGroupNum; i++) {
-            for (int j = 0; j < receiverGroupNum; j++) {
-                plainResult[i * senderGroupNum + j] = plainAgg[i].getElement(groupIndex[j]);
+            for (int j = 0; j < groupIndex.length; j++) {
+                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
+                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(resultReceiverGroup[groupIndex[j]]);
             }
         }
-        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), plainResult);
+        return new GroupAggOut(groupResult, aggResult);
     }
 
     private int[] getGroupIndexes(BitVector indicator) {
@@ -173,6 +188,10 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         Zl zl = aggField.getZl();
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField);
+        // group set
+        if (resultReceiverGroup == null) {
+            resultReceiverGroup = revealGroup(agg.getGroupings(), receiverGroupBitLength);
+        }
         // reveal
         groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
@@ -188,11 +207,29 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     private ZlVector maxAgg(String[] groupField, SquareZlVector aggField) throws MpcAbortException {
         // agg
         PrefixAggOutput prefixAggOutput = prefixAggReceiver.agg(groupField, aggField);
+        // group set
+        if (resultReceiverGroup == null) {
+            resultReceiverGroup = revealGroup(prefixAggOutput.getGroupings(), receiverGroupBitLength);
+        }
+        // reveal
         groupIndicator = z2cReceiver.revealOwn(prefixAggOutput.getIndicator());
         return zlcReceiver.revealOwn(prefixAggOutput.getAggs());
     }
 
     private int[] obtainIndexes(BitVector input) {
         return IntStream.range(0, num).filter(input::get).toArray();
+    }
+
+    private String[] revealGroup(Vector<byte[]> ownGroup, int bitLength) {
+        DataPacketHeader groupHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.REVEAL_OUTPUT.ordinal(), extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> senderDataSizePayload = rpc.receive(groupHeader).getPayload();
+        extraInfo++;
+        Preconditions.checkArgument(senderDataSizePayload.size() == num, "group num not match");
+        Vector<byte[]> plainBytes = IntStream.range(0, num).mapToObj(i ->
+            BytesUtils.xor(senderDataSizePayload.get(i), ownGroup.get(i))).collect(Collectors.toCollection(Vector::new));
+        return GroupAggUtils.bytesToBinaryString(plainBytes, bitLength);
     }
 }
