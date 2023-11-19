@@ -60,18 +60,18 @@ public class PrefixAggFactory {
     }
 
     /**
-     * Creates a default prefix-sum config.
+     * Creates a default prefix-agg config.
      *
      * @param securityModel the security model.
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static PrefixAggConfig createDefaultPrefixAggConfig(SecurityModel securityModel, Zl zl, boolean silent, PrefixAggTypes type) {
+    public static PrefixAggConfig createDefaultPrefixAggConfig(SecurityModel securityModel, Zl zl, boolean silent, PrefixAggTypes type, boolean plainOutput) {
         switch (type) {
             case MAX:
-                return PrefixMaxFactory.createDefaultPrefixMaxConfig(securityModel, zl, silent);
+                return PrefixMaxFactory.createDefaultPrefixMaxConfig(securityModel, zl, silent, plainOutput);
             case SUM:
-                return PrefixSumFactory.createDefaultPrefixSumConfig(securityModel, zl, silent);
+                return PrefixSumFactory.createDefaultPrefixSumConfig(securityModel, zl, silent, plainOutput);
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }

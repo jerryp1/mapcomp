@@ -71,11 +71,11 @@ public class PrefixSumFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static PrefixSumConfig createDefaultPrefixSumConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static PrefixSumConfig createDefaultPrefixSumConfig(SecurityModel securityModel, Zl zl, boolean silent,boolean plainOutput) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PrefixSumConfig.Builder(zl, silent).build();
+                return new Xxx23PrefixSumConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
             case COVERT:
             case MALICIOUS:
             default:

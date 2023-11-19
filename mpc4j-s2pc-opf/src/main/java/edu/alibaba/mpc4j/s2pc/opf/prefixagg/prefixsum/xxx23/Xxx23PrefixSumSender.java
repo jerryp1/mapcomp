@@ -40,6 +40,7 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
         needShuffle = config.needShuffle();
+        plainOutput = config.isPlainOutput();
     }
 
     @Override

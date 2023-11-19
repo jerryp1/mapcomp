@@ -16,9 +16,8 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 
@@ -164,16 +163,7 @@ public class SortingGroupAggConfig extends AbstractMultiPartyPtoConfig implement
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             this.zl = zl;
-            switch (type) {
-                case SUM:
-                    prefixAggConfig = PrefixSumFactory.createDefaultPrefixSumConfig(SecurityModel.SEMI_HONEST, zl, silent);
-                    break;
-                case MAX:
-                    prefixAggConfig = PrefixMaxFactory.createDefaultPrefixMaxConfig(SecurityModel.SEMI_HONEST, zl, silent);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid " + PrefixAggTypes.class.getSimpleName() + ": " + type.name());
-            }
+            prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
         }
 
         @Override

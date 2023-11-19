@@ -144,13 +144,11 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             // prefix agg
             stopWatch.start();
             outputs[i] = prefixAggSender.agg((String[]) null, mul);
+            z2cSender.revealOther(outputs[i].getIndicator());
+            zlcSender.revealOther(outputs[i].getAggs());
             stopWatch.stop();
             AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-        }
-        // reveal
-        for (int i = 0; i < senderGroupNum; i++) {
-            zlcSender.revealOther(outputs[i].getAggs());
         }
         return null;
     }

@@ -69,6 +69,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
      * Need shuffle
      */
     private final boolean needShuffle;
+    /**
+     * plain output
+     */
+    private boolean plainOutput;
 
     private Xxx23PrefixMaxConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.zlcConfig, builder.zlMuxConfig,
@@ -83,6 +87,8 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
         needShuffle = builder.needShuffle;
         osnConfig = builder.osnConfig;
         zl = builder.zl;
+        plainOutput = builder.plainOutput;
+
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -137,6 +143,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
         return plainBitMuxConfig;
     }
 
+    public boolean isPlainOutput() {
+        return plainOutput;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PrefixMaxConfig> {
         /**
          * Z2 circuit config.
@@ -174,8 +184,14 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
          * Zl.
          */
         private final Zl zl;
-
+        /**
+         * need shuffle
+         */
         private boolean needShuffle;
+        /**
+         * plain output
+         */
+        private boolean plainOutput;
 
         public Builder(Zl zl, boolean silent) {
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
@@ -197,6 +213,11 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
 
         public Builder setNeedShuffle(boolean needShuffle) {
             this.needShuffle = needShuffle;
+            return this;
+        }
+
+        public Builder setPlainOutput(boolean plainOutput) {
+            this.plainOutput = plainOutput;
             return this;
         }
     }

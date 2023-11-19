@@ -30,6 +30,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggPtoDesc.PtoSte
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
@@ -88,6 +89,10 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
      * permutation of pSorter
      */
     private Vector<byte[]> piGi;
+    /**
+     * Prefix aggregation type.
+     */
+    private PrefixAggTypes prefixAggType;
 
     public SortingGroupAggSender(Rpc senderRpc, Party receiverParty, SortingGroupAggConfig config) {
         super(SortingGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -106,6 +111,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
 //        addSubPtos(zlcSender);
 //        addSubPtos(b2aSender);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cSender);
+        prefixAggType = config.getPrefixAggConfig().getPrefixType();
     }
 
     @Override
@@ -247,10 +253,12 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
 
     private void aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
         PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, flag);
-        revealOtherGroup(agg.getGroupings());
-        Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         // reveal
         zlcSender.revealOther(agg.getAggs());
+        revealOtherGroup(agg.getGroupings());
+        z2cSender.revealOther(agg.getIndicator());
+
+        Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
     }
 
     protected Vector<byte[]> shareOwn(Vector<byte[]> input) {

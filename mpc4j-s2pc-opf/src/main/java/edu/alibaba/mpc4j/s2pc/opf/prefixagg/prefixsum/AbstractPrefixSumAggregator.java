@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.AbstractPrefixGroupAggregator;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggNode;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
@@ -48,4 +49,8 @@ public abstract class AbstractPrefixSumAggregator extends AbstractPrefixGroupAgg
             new PrefixAggNode(sumOut.getZlVector().getElement(i), groupIndicatorOut.getBitVector().get(i))).toArray(PrefixAggNode[]::new);
     }
 
+    @Override
+    public PrefixAggTypes getAggType() {
+        return PrefixAggTypes.SUM;
+    }
 }

@@ -1,10 +1,11 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -24,16 +25,16 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 /**
  * Mix group aggregation receiver.
@@ -66,6 +67,12 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      * Prefix aggregation party.
      */
     private final PrefixAggParty prefixAggReceiver;
+    /**
+     * Prefix aggregation type.
+     */
+    private final PrefixAggTypes aggType;
+
+    private BitVector groupIndicator;
 
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -83,6 +90,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
 //        addSubPtos(zlcReceiver);
 //        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
+        aggType = config.getAggType();
     }
 
     @Override
@@ -128,43 +136,63 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
         // mul1
         SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField);
-        // temporary array
-        PrefixAggOutput[] outputs = new PrefixAggOutput[receiverGroupNum];
-        for (int i = 0; i < receiverGroupNum; i++) {
-            SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);
-            // prefix agg
-            outputs[i] = prefixAggReceiver.agg(permutedGroup, mul);
-        }
-        // reveal
-        ZlVector[] plain = new ZlVector[senderGroupNum];
+        ZlVector[] plainAgg = new ZlVector[senderGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            plain[i] = zlcReceiver.revealOwn(outputs[i].getAggs());
+            SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);
+            plainAgg[i] = aggregate(permutedGroup, mul);
         }
+        // indexes of valid position
+        int[] groupIndex = getGroupIndexes(groupIndicator);
         // arrange
-        List<Integer> groupIndex = getGroupIndexes(permutedGroup);
         BigInteger[] plainResult = new BigInteger[totalGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
             for (int j = 0; j < receiverGroupNum; j++) {
-                if (j < groupIndex.size()) {
-                    plainResult[i * senderGroupNum + j] = plain[i].getElement(groupIndex.get(j));
-                } else {
-                    plainResult[i * senderGroupNum + j] = BigInteger.ZERO;
-                }
+                plainResult[i * senderGroupNum + j] = plainAgg[i].getElement(groupIndex[j]);
             }
         }
         return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), plainResult);
     }
 
-    private List<Integer> getGroupIndexes(String[] sortedGroups) {
-        List<Integer> groupIndexes = new ArrayList<>();
-        groupIndexes.add(0);
-        for (int i = 1; i < num; i++) {
-            if (!sortedGroups[i].equals(sortedGroups[i - 1])) {
-                groupIndexes.add(i);
-            }
+    private int[] getGroupIndexes(BitVector indicator) {
+        return IntStream.range(0, num).filter(indicator::get).toArray();
+    }
+
+    private ZlVector aggregate(String[] permutedGroup, SquareZlVector agg) throws MpcAbortException {
+        // agg
+        switch (aggType) {
+            case SUM:
+                return sumAgg(permutedGroup, agg);
+            case MAX:
+                return maxAgg(permutedGroup, agg);
+            default:
+                throw new IllegalArgumentException("Invalid " + PrefixAggTypes.class.getSimpleName() + ": " + aggType.name());
         }
-        Preconditions.checkArgument(groupIndexes.size() <= receiverGroupNum,
-            "wrong number of groups detected");
-        return groupIndexes;
+    }
+
+    private ZlVector sumAgg(String[] groupField, SquareZlVector aggField) throws MpcAbortException {
+        Zl zl = aggField.getZl();
+        // agg
+        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField);
+        // reveal
+        groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
+        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
+        // subtraction
+        int[] indexes = obtainIndexes(groupIndicator);
+        BigInteger[] result = aggResult.getElements();
+        for (int i = 0; i < indexes.length - 1; i++) {
+            result[indexes[i]] = zl.sub(result[indexes[i]], result[indexes[i + 1]]);
+        }
+        return ZlVector.create(zl, result);
+    }
+
+    private ZlVector maxAgg(String[] groupField, SquareZlVector aggField) throws MpcAbortException {
+        // agg
+        PrefixAggOutput prefixAggOutput = prefixAggReceiver.agg(groupField, aggField);
+        groupIndicator = z2cReceiver.revealOwn(prefixAggOutput.getIndicator());
+        return zlcReceiver.revealOwn(prefixAggOutput.getAggs());
+    }
+
+    private int[] obtainIndexes(BitVector input) {
+        return IntStream.range(0, num).filter(input::get).toArray();
     }
 }

@@ -41,6 +41,7 @@ public class Xxx23PrefixMaxSender extends AbstractPrefixMaxAggregator {
         prefixTree = PrefixTreeFactory.createPrefixSumTree(config.getPrefixTreeType(), this);
         zl = config.getZl();
         needShuffle = config.needShuffle();
+        plainOutput = config.isPlainOutput();
     }
 
     @Override

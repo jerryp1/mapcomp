@@ -145,7 +145,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type);
+            prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             plainAndConfig = PlainAndFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlMaxConfig = ZlMaxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
