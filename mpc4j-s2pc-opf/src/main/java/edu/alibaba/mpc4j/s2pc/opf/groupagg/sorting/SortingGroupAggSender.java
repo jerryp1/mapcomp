@@ -175,8 +175,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // xor two e shares to get aligned e shares
         eByte = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
         // sender group
-        senderGroupShare = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(senderGroupBitLength).put(groupAttr[i].getBytes())
-            .array()).collect(Collectors.toCollection(Vector::new));
+        senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
         senderGroupShare = BenesNetworkUtils.permutation(sigmaS, senderGroupShare);
 
         // ### test

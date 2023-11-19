@@ -152,15 +152,16 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // b2a
         SquareZlVector receiverAggAs = b2a();
         // ### test
-        String[] groupResult = revealOwnGroup(mergedTwoGroup);
+        String[] groupResult = revealBothGroup(mergedTwoGroup);
         ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
         return aggregation(mergedTwoGroup, receiverAggAs, e);
     }
 
     private void osn1(String[] groupAttr, long[] aggAttr) throws MpcAbortException {
-        // merge group // TODO 这里可以考虑写一个 string to bytes的encode和decode，减少通信量
-        Vector<byte[]> groupBytes = Arrays.stream(groupAttr).map(String::getBytes).collect(Collectors.toCollection(Vector::new));
+
+        // merge group
+        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
         // osn1
         Vector<byte[]> osnInput1 = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupBitLength + Long.BYTES + 1)
             .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggAttr[i]))
@@ -179,7 +180,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // share
         senderGroupShare = shareOther();
         // ### test
-        String[] senderGroup = revealOwnGroup(senderGroupShare);
+        String[] senderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
     }
 
     private void pSorter() throws MpcAbortException {
@@ -213,7 +214,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         receiverGroupShare = splitOwn.get(1);
 
         // ### test
-        String[] doubSortedReceiverGroup = revealOwnGroup(receiverGroupShare);
+        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
@@ -231,7 +232,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         senderGroupShare = sharedPermutationReceiver.permute(piGi, senderGroupShare);
 
         // ### test
-        String[] doubSortedSenderGroup = revealOwnGroup(senderGroupShare);
+        String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
         System.out.println(123);
     }
 
@@ -254,12 +255,12 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // reveal
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
-        String[] truetureGroup = revealOwnGroup(agg.getGroupings());
+        String[] truetureGroup = revealBothGroup(agg.getGroupings());
 
         return new GroupAggOut(truetureGroup, aggResult.getElements());
     }
 
-    private String[] revealOwnGroup(Vector<byte[]> ownGroup) {
+    private String[] revealGroup(Vector<byte[]> ownGroup, int bitLength) {
         DataPacketHeader groupHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.REVEAL_OUTPUT.ordinal(), extraInfo,
             otherParties()[0].getPartyId(), ownParty().getPartyId()
@@ -267,7 +268,22 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         List<byte[]> senderDataSizePayload = rpc.receive(groupHeader).getPayload();
         extraInfo++;
         Preconditions.checkArgument(senderDataSizePayload.size() == num, "group num not match");
-        return IntStream.range(0, num).mapToObj(i -> new String(BytesUtils.xor(senderDataSizePayload.get(i), ownGroup.get(i)))).toArray(String[]::new);
+        Vector<byte[]> plainBytes = IntStream.range(0, num).mapToObj(i ->
+            BytesUtils.xor(senderDataSizePayload.get(i), ownGroup.get(i))).collect(Collectors.toCollection(Vector::new));
+        return GroupAggUtils.bytesToBinaryString(plainBytes, bitLength);
+    }
+
+    private String[] revealBothGroup(Vector<byte[]> ownGroup) {
+        DataPacketHeader groupHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.REVEAL_OUTPUT.ordinal(), extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> senderDataSizePayload = rpc.receive(groupHeader).getPayload();
+        extraInfo++;
+        Preconditions.checkArgument(senderDataSizePayload.size() == num, "group num not match");
+        Vector<byte[]> plainBytes = IntStream.range(0, num).mapToObj(i ->
+            BytesUtils.xor(senderDataSizePayload.get(i), ownGroup.get(i))).collect(Collectors.toCollection(Vector::new));
+        return GroupAggUtils.bytesToBinaryString(plainBytes, senderGroupBitLength, receiverGroupBitLength);
     }
 
     private List<byte[]> revealOwnBit(Vector<byte[]> ownGroup) {

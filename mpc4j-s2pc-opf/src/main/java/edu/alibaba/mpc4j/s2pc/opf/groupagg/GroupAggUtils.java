@@ -1,8 +1,10 @@
 package edu.alibaba.mpc4j.s2pc.opf.groupagg;
 
 import com.google.common.base.Preconditions;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -153,5 +155,48 @@ public class GroupAggUtils {
 
     public static SquareZ2Vector[] splitZ2ShareWithPadding(SquareZ2Vector input, int[] nums) {
         return Arrays.stream(input.getBitVector().splitWithPadding(nums)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+    }
+
+    public static Vector<byte[]> binaryStringToBytes(String[] binaryString) {
+        int bitLength = binaryString[0].length();
+        Vector<byte[]> result = new Vector<>(binaryString.length);
+        for (String str : binaryString) {
+            byte[] bytes = new byte[CommonUtils.getByteLength(bitLength)];
+            IntStream.range(0, bitLength).forEach(i -> BinaryUtils.setBoolean(bytes, i, str.charAt(i) == '1'));
+            result.add(bytes);
+        }
+        return result;
+    }
+
+    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int length) {
+        int byteLength = CommonUtils.getByteLength(length);
+
+        MathPreconditions.checkEqual("bytes.get(0).length", "byteLength",
+            bytes.get(0).length, byteLength);
+        String[] result = new String[bytes.size()];
+        for (int i = 0; i < bytes.size(); i++) {
+            byte[] b = bytes.get(i);
+            StringBuilder builder = new StringBuilder();
+            IntStream.range(0, length).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
+            result[i] = builder.toString();
+        }
+        return result;
+    }
+
+    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int length1, int length2) {
+        int byteLength1 = CommonUtils.getByteLength(length1);
+        int byteLength2 = CommonUtils.getByteLength(length2);
+
+        MathPreconditions.checkEqual("bytes.get(0).length", "byteLength1+byteLength2",
+            bytes.get(0).length, byteLength1 + byteLength2);
+        String[] result = new String[bytes.size()];
+        for (int i = 0; i < bytes.size(); i++) {
+            byte[] b = bytes.get(i);
+            StringBuilder builder = new StringBuilder();
+            IntStream.range(0, length1).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
+            IntStream.range(0, length2).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j + byteLength1 * Byte.SIZE) ? "1" : "0"));
+            result[i] = builder.toString();
+        }
+        return result;
     }
 }
