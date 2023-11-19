@@ -128,7 +128,7 @@ public class SbitmapMainUtils {
     }
 
     public static String getCurrentTime() {
-        return new SimpleDateFormat("MM-dd(HH:mm:ss)").format(Calendar.getInstance().getTime());
+        return new SimpleDateFormat("MM-dd*HH:mm:ss").format(Calendar.getInstance().getTime());
 
     }
 

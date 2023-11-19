@@ -64,14 +64,6 @@ public class SbitmapStarter {
      */
     protected String datasetName;
     /**
-     * Metadata of dataset.
-     */
-    protected StructType schema;
-//    /**
-//     * Mapping type.
-//     */
-//    protected String mappingType;
-    /**
      * Group aggregation type.
      */
     protected GroupAggTypes groupAggType;

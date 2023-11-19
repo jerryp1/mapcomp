@@ -123,54 +123,26 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
             }
         }
 
-        // 和e and
-//        SquareZ2Vector[] es = IntStream.range(0, totalGroupNum).mapToObj(i->e).toArray(SquareZ2Vector[]::new);
-//        SquareZ2Vector[] allBitmapShareWithE = z2cReceiver.and(allBitmapShare, es);
-        SquareZ2Vector[] allBitmapShareWithE = new SquareZ2Vector[totalGroupNum];
+        BigInteger[] result = new BigInteger[totalGroupNum];
         for (int i = 0; i < totalGroupNum; i++) {
-            allBitmapShareWithE[i] = z2cReceiver.and(allBitmapShare[i], e);
+            // AND with e
+            allBitmapShare[i] = z2cReceiver.and(allBitmapShare[i], e);
+            // MUX with bitmap
+            SquareZlVector bitmapWithAgg = zlMuxReceiver.mux(allBitmapShare[i], aggShare);
+            // agg
+            bitmapWithAgg = agg(bitmapWithAgg);
+            // reveal
+            result[i] = zlcReceiver.revealOwn(bitmapWithAgg).getElement(0);
         }
-
-        // 和bitmap mux
-        SquareZlVector[] bitmapWithAgg = new SquareZlVector[totalGroupNum];
-        for (int i = 0; i < totalGroupNum; i++) {
-            bitmapWithAgg[i] = zlMuxReceiver.mux(allBitmapShareWithE[i], aggShare);
-        }
-
-        // agg
-        stopWatch.start();
-        agg(bitmapWithAgg);
-        stopWatch.stop();
-        long aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        System.out.println("####Aggtime:" + aggTime);
-
-        // reveal
-        BigInteger[] r = new BigInteger[totalGroupNum];
-        for (int i = 0; i < totalGroupNum; i++) {
-            r[i] = zlcReceiver.revealOwn(bitmapWithAgg[i]).getElement(0);
-        }
-        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), r);
+        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), result);
     }
 
-    private void agg(SquareZlVector[] input) throws MpcAbortException {
+    private SquareZlVector agg(SquareZlVector input) throws MpcAbortException {
         switch (prefixAggType) {
             case SUM:
-                for (int i = 0; i < totalGroupNum; i++) {
-                    input[i] = localSum(input[i]);
-                }
-                break;
+                return localSum(input);
             case MAX:
-//                IntStream.range(0, totalGroupNum).parallel().forEach(i -> {
-//                    try {
-//                        input[i] = zlMaxReceiver.max(input[i]);
-//                    } catch (MpcAbortException e) {
-//                        e.printStackTrace();
-//                    }
-//                });
-                for (int i = 0; i < totalGroupNum; i++) {
-                    input[i] = zlMaxReceiver.max(input[i]);
-                }
-                break;
+                return zlMaxReceiver.max(input);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixAggTypes.class.getSimpleName() + ": " + prefixAggType.name());
         }
