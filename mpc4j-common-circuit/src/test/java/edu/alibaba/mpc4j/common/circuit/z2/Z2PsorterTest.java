@@ -142,7 +142,7 @@ public class Z2PsorterTest {
         // init the protocol
         PlainZ2cParty party = new PlainZ2cParty();
         Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, Z2IntegerOperator.P_SORT, xPlainZ2Vectors, pPlainZ2Vectors, config);
-        partyThread.setPsorterConfig(PlainZ2Vector.createOnes(1), true);
+        partyThread.setPsorterConfig(PlainZ2Vector.createOnes(1), true, false);
         StopWatch stopWatch = new StopWatch();
         // execute the circuit
         LOGGER.info("sorting start");

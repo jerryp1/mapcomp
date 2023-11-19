@@ -247,7 +247,7 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public MpcZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
+    public SquareZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
         return SquareZ2Vector.create(bitVector.getPointsWithFixedSpace(startPos, num, skipLen), isPlain());
     }
 }

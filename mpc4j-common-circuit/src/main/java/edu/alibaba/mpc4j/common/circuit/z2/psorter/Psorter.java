@@ -18,9 +18,10 @@ public interface Psorter {
      *                        for example: c0 with 5 bits and c1 with 7 bits, we want to sort data in order of c0|c1
      *                        then input: xiArrays.length = 2, xiArrays[0].length = 5, xiArrays[1].length = 7
      * @param needPermutation whether the permutation is needed or not
+     * @param needStable      whether stable sorting or not
      * @throws MpcAbortException the protocol failure aborts.
      */
-    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, boolean needPermutation) throws MpcAbortException;
+    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, boolean needPermutation, boolean needStable) throws MpcAbortException;
 
     /**
      * Sorts in the specified order.
@@ -31,9 +32,10 @@ public interface Psorter {
      * @param xiArrays        xi arrays, in column form.
      * @param dir             sorting order, ture for ascending..
      * @param needPermutation whether the permutation is needed or not
+     * @param needStable      whether stable sorting or not
      * @throws MpcAbortException the protocol failure aborts.
      */
-    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, PlainZ2Vector dir, boolean needPermutation) throws MpcAbortException;
+    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, PlainZ2Vector dir, boolean needPermutation, boolean needStable) throws MpcAbortException;
 
     /**
      * Sorts in the specified order.
@@ -46,7 +48,8 @@ public interface Psorter {
      *                        after invoking this function, the values will be refreshed
      * @param dir             sorting order, ture for ascending..
      * @param needPermutation whether the permutation is needed or not
+     * @param needStable      whether stable sorting or not
      * @throws MpcAbortException the protocol failure aborts.
      */
-    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation) throws MpcAbortException;
+    MpcZ2Vector[] sort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation, boolean needStable) throws MpcAbortException;
 }
