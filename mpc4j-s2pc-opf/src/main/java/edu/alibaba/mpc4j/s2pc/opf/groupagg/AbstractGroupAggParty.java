@@ -14,7 +14,10 @@ import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.Vector;
 import java.util.stream.IntStream;
 
 /**
@@ -36,14 +39,12 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
      * num of elements in single vector.
      */
     protected int num;
-    /**
-     * inputs
-     */
-    protected SquareZ2Vector[] inputs;
 
-    protected List<String> senderDistinctGroup;
-    protected List<String> receiverDistinctGroup;
-    protected List<String> totalDistinctGroup;
+    protected Vector<byte[]> aggShare;
+    protected Vector<byte[]> receiverGroupShare;
+    protected Vector<byte[]> senderGroupShare;
+
+    protected SquareZ2Vector e;
 
     protected int senderGroupBitLength;
     protected int receiverGroupBitLength;
@@ -76,16 +77,6 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         maxL = PropertiesUtils.readInt(properties, CommonConstants.MAX_L);
         maxNum = PropertiesUtils.readInt(properties, CommonConstants.MAX_NUM);
 
-        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
-        receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
-        totalDistinctGroup = new ArrayList<>();
-        for (int i = 0; i < senderGroupNum; i++) {
-            for (int j = 0; j < receiverGroupNum; j++) {
-                totalDistinctGroup.add(senderDistinctGroup.get(i).concat(receiverDistinctGroup.get(j)));
-            }
-        }
-
-//        ownDistinctGroup = GroupAggUtils.genStringSetFromRange()
     }
 
     protected void setInitInput(int maxNum) {
@@ -102,6 +93,7 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
             Preconditions.checkArgument(aggField.length == num,
                 "number of elements not match");
         }
+        this.e = e;
     }
 
     /**

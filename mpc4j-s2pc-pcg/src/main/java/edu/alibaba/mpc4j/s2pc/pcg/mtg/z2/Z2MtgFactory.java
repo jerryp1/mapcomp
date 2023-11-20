@@ -8,6 +8,9 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgSender;
@@ -38,6 +41,10 @@ public class Z2MtgFactory implements PtoFactory {
          * cache
          */
         CACHE,
+        /**
+         * hardcode
+         */
+        HARDCODE,
     }
 
     /**
@@ -55,6 +62,8 @@ public class Z2MtgFactory implements PtoFactory {
                 return new OfflineZ2MtgSender(senderRpc, receiverParty, (OfflineZ2MtgConfig) config);
             case CACHE:
                 return new CacheZ2MtgSender(senderRpc, receiverParty, (CacheZ2MtgConfig) config);
+            case HARDCODE:
+                return new HardcodeZ2MtgSender(senderRpc, receiverParty, (HardcodeZ2MtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -76,6 +85,8 @@ public class Z2MtgFactory implements PtoFactory {
                 return new OfflineZ2MtgSender(senderRpc, receiverParty, aiderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
                 return new CacheZ2MtgSender(senderRpc, receiverParty, aiderParty, (CacheZ2MtgConfig) config);
+            case HARDCODE:
+                return new HardcodeZ2MtgSender(senderRpc, receiverParty, aiderParty, (HardcodeZ2MtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -96,6 +107,8 @@ public class Z2MtgFactory implements PtoFactory {
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
                 return new CacheZ2MtgReceiver(receiverRpc, senderParty, (CacheZ2MtgConfig) config);
+            case HARDCODE:
+                return new HardcodeZ2MtgReceiver(receiverRpc, senderParty, (HardcodeZ2MtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -116,6 +129,8 @@ public class Z2MtgFactory implements PtoFactory {
                 return new OfflineZ2MtgReceiver(receiverRpc, senderParty, aiderParty, (OfflineZ2MtgConfig) config);
             case CACHE:
                 return new CacheZ2MtgReceiver(receiverRpc, senderParty, aiderParty, (CacheZ2MtgConfig) config);
+            case HARDCODE:
+                return new HardcodeZ2MtgReceiver(receiverRpc, senderParty, aiderParty, (HardcodeZ2MtgConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + Z2MtgType.class.getSimpleName() + ": " + type.name());
         }
@@ -129,7 +144,7 @@ public class Z2MtgFactory implements PtoFactory {
      * @return a default config.
      */
     public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new CacheZ2MtgConfig.Builder(securityModel)
+        return new HardcodeZ2MtgConfig.Builder(securityModel)
             .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
             .build();
     }

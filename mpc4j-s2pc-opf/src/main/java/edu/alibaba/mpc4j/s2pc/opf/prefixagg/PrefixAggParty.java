@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 
 import java.util.Vector;
 
@@ -65,5 +66,7 @@ public interface PrefixAggParty extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     PrefixAggOutput agg(String[] groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+
+    PrefixAggTypes getAggType();
 
 }

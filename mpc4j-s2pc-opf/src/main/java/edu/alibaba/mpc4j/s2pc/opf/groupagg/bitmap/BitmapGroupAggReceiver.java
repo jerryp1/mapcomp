@@ -21,11 +21,14 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -64,6 +67,9 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
      * Zl
      */
     private final Zl zl;
+    protected List<String> senderDistinctGroup;
+    protected List<String> receiverDistinctGroup;
+    protected List<String> totalDistinctGroup;
 
     public BitmapGroupAggReceiver(Rpc receiverRpc, Party senderParty, BitmapGroupAggConfig config) {
         super(BitmapGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -94,6 +100,15 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
         z2cReceiver.init(maxNum);
         zlcReceiver.init(1);
         zlMaxReceiver.init(maxL, maxNum);
+        // generate distinct group
+        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
+        totalDistinctGroup = new ArrayList<>();
+        for (int i = 0; i < senderGroupNum; i++) {
+            for (int j = 0; j < receiverGroupNum; j++) {
+                totalDistinctGroup.add(senderDistinctGroup.get(i).concat(receiverDistinctGroup.get(j)));
+            }
+        }
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -123,54 +138,26 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
             }
         }
 
-        // 和e and
-//        SquareZ2Vector[] es = IntStream.range(0, totalGroupNum).mapToObj(i->e).toArray(SquareZ2Vector[]::new);
-//        SquareZ2Vector[] allBitmapShareWithE = z2cReceiver.and(allBitmapShare, es);
-        SquareZ2Vector[] allBitmapShareWithE = new SquareZ2Vector[totalGroupNum];
+        BigInteger[] result = new BigInteger[totalGroupNum];
         for (int i = 0; i < totalGroupNum; i++) {
-            allBitmapShareWithE[i] = z2cReceiver.and(allBitmapShare[i], e);
+            // AND with e
+            allBitmapShare[i] = z2cReceiver.and(allBitmapShare[i], e);
+            // MUX with bitmap
+            SquareZlVector bitmapWithAgg = zlMuxReceiver.mux(allBitmapShare[i], aggShare);
+            // agg
+            bitmapWithAgg = agg(bitmapWithAgg);
+            // reveal
+            result[i] = zlcReceiver.revealOwn(bitmapWithAgg).getElement(0);
         }
-
-        // 和bitmap mux
-        SquareZlVector[] bitmapWithAgg = new SquareZlVector[totalGroupNum];
-        for (int i = 0; i < totalGroupNum; i++) {
-            bitmapWithAgg[i] = zlMuxReceiver.mux(allBitmapShareWithE[i], aggShare);
-        }
-
-        // agg
-        stopWatch.start();
-        agg(bitmapWithAgg);
-        stopWatch.stop();
-        long aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        System.out.println("####Aggtime:" + aggTime);
-
-        // reveal
-        BigInteger[] r = new BigInteger[totalGroupNum];
-        for (int i = 0; i < totalGroupNum; i++) {
-            r[i] = zlcReceiver.revealOwn(bitmapWithAgg[i]).getElement(0);
-        }
-        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), r);
+        return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), result);
     }
 
-    private void agg(SquareZlVector[] input) throws MpcAbortException {
+    private SquareZlVector agg(SquareZlVector input) throws MpcAbortException {
         switch (prefixAggType) {
             case SUM:
-                for (int i = 0; i < totalGroupNum; i++) {
-                    input[i] = localSum(input[i]);
-                }
-                break;
+                return localSum(input);
             case MAX:
-//                IntStream.range(0, totalGroupNum).parallel().forEach(i -> {
-//                    try {
-//                        input[i] = zlMaxReceiver.max(input[i]);
-//                    } catch (MpcAbortException e) {
-//                        e.printStackTrace();
-//                    }
-//                });
-                for (int i = 0; i < totalGroupNum; i++) {
-                    input[i] = zlMaxReceiver.max(input[i]);
-                }
-                break;
+                return zlMaxReceiver.max(input);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixAggTypes.class.getSimpleName() + ": " + prefixAggType.name());
         }

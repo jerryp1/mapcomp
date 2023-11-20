@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.gp23.Gp23ZlTruncConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.gp23.Gp23ZlTruncReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.gp23.Gp23ZlTruncSender;
@@ -86,11 +87,11 @@ public class ZlTruncFactory implements PtoFactory {
      * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static ZlTruncConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+    public static ZlTruncConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrk20ZlTruncConfig.Builder(silent).build();
+                return new Rrk20ZlTruncConfig.Builder(zl,silent).build();
             case COVERT:
             case MALICIOUS:
             default:

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,8 +59,10 @@ public class GroupAggregationPtoRunner {
 
     private GroupAggInputData groupAggInputData;
 
+    private Properties properties;
+
     public GroupAggregationPtoRunner(GroupAggParty party, GroupAggConfig groupAggConfig, int totalRound,
-                                     GroupAggInputData groupAggInputData) {
+                                     GroupAggInputData groupAggInputData, Properties properties) {
         this.party = party;
         slaveRpc = party.getRpc();
         this.groupAggConfig = groupAggConfig;
@@ -67,10 +70,11 @@ public class GroupAggregationPtoRunner {
         this.totalRound = totalRound;
 //        this.ownDataFrame = ownDataFrame;
         this.groupAggInputData = groupAggInputData;
+        this.properties = properties;
     }
 
     public void init() throws MpcAbortException {
-
+        party.init(properties);
     }
 
     public void run() throws MpcAbortException {
@@ -98,7 +102,7 @@ public class GroupAggregationPtoRunner {
     }
 
     public void stop() {
-//        this.party..stop();
+        this.party.destroy();
     }
 
     public double getTime() {

@@ -11,6 +11,6 @@ public class CommonConstants {
     public static String RECEIVER_GROUP_BIT_LENGTH = "receiver_group_bit_length";
     public static String MAX_L = "max_l";
     public static String MAX_NUM = "max_num";
-    public static int MAX_GROUP_BIT_LENGTH = 20;
+    public static int MAX_GROUP_BIT_LENGTH = 32;
 
 }

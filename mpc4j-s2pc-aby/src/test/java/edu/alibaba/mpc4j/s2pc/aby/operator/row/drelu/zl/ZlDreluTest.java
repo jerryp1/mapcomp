@@ -8,6 +8,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluFactory.ZlDreluType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.dsz15.Dsz15ZlDreluConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -56,6 +58,12 @@ public class ZlDreluTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             ZlDreluFactory.ZlDreluType.RRK20.name(),
             new Rrk20ZlDreluConfig.Builder().build()
+        });
+
+        // DSZ15
+        configurations.add(new Object[]{
+            ZlDreluType.DSZ15.name(),
+            new Dsz15ZlDreluConfig.Builder(DEFAULT_ZL).build()
         });
 
         return configurations;

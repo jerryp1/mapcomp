@@ -4,6 +4,10 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.dsz15.Dsz15ZlDreluConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.dsz15.Dsz15ZlDreluReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.dsz15.Dsz15ZlDreluSender;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.rrk20.Rrk20ZlDreluSender;
@@ -30,6 +34,10 @@ public class ZlDreluFactory implements PtoFactory {
          * RRK+20
          */
         RRK20,
+        /**
+         * DSZ15
+         */
+        DSZ15,
     }
 
     /**
@@ -42,10 +50,11 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createSender(Rpc senderRpc, Party receiverParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluSender(senderRpc, receiverParty, (Rrk20ZlDreluConfig) config);
+            case DSZ15:
+                return new Dsz15ZlDreluSender(senderRpc, receiverParty, (Dsz15ZlDreluConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlDreluType.class.getSimpleName() + ": " + type.name());
         }
@@ -61,10 +70,11 @@ public class ZlDreluFactory implements PtoFactory {
      */
     public static ZlDreluParty createReceiver(Rpc receiverRpc, Party senderParty, ZlDreluConfig config) {
         ZlDreluFactory.ZlDreluType type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20ZlDreluReceiver(receiverRpc, senderParty, (Rrk20ZlDreluConfig) config);
+            case DSZ15:
+                return new Dsz15ZlDreluReceiver(receiverRpc, senderParty, (Dsz15ZlDreluConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ZlDreluType.class.getSimpleName() + ": " + type.name());
         }
@@ -74,15 +84,14 @@ public class ZlDreluFactory implements PtoFactory {
      * Creates a default config.
      *
      * @param securityModel the security model.
-     * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static ZlDreluConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
+    public static ZlDreluConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrk20ZlDreluConfig.Builder()
-                        .build();
+                return new Dsz15ZlDreluConfig.Builder(zl)
+                    .build();
             case COVERT:
             case MALICIOUS:
             default:

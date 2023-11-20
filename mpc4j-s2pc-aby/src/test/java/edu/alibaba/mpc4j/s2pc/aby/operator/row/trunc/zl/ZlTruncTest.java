@@ -47,7 +47,7 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
         // RRK+20
         configurations.add(new Object[]{
             ZlTruncFactory.ZlTruncType.RRK20.name(),
-            new Rrk20ZlTruncConfig.Builder(true).build()
+            new Rrk20ZlTruncConfig.Builder(DEFAULT_ZL,true).build()
         });
         // GP23
         configurations.add(new Object[]{
