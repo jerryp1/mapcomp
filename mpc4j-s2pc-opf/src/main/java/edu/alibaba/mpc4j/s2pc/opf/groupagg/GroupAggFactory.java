@@ -10,6 +10,9 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggSender;
@@ -36,6 +39,7 @@ public class GroupAggFactory {
         BITMAP,
         MIX,
         SORTING,
+        O_SORTING,
     }
 
     /**
@@ -55,6 +59,8 @@ public class GroupAggFactory {
                 return new MixGroupAggSender(senderRpc, receiverParty, (MixGroupAggConfig) config);
             case SORTING:
                 return new SortingGroupAggSender(senderRpc, receiverParty, (SortingGroupAggConfig) config);
+            case O_SORTING:
+                return new OptimizedSortingGroupAggSender(senderRpc, receiverParty, (OptimizedSortingGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -77,6 +83,8 @@ public class GroupAggFactory {
                 return new MixGroupAggReceiver(receiverRpc, senderParty, (MixGroupAggConfig) config);
             case SORTING:
                 return new SortingGroupAggReceiver(receiverRpc, senderParty, (SortingGroupAggConfig) config);
+            case O_SORTING:
+                return new OptimizedSortingGroupAggReceiver(receiverRpc, senderParty, (OptimizedSortingGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }

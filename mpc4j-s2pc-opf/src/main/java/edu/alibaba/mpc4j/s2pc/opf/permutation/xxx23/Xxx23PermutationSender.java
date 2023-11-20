@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
@@ -91,6 +90,7 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
     @Override
     public SquareZlVector permute(SquareZlVector perm, ZlVector xi) throws MpcAbortException {
         setPtoInput(perm, xi);
+        int byteL = xi.getZl().getByteL();
         logPhaseInfo(PtoState.PTO_BEGIN);
         // a2b
         stopWatch.start();
@@ -109,14 +109,14 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
         logStepInfo(PtoState.PTO_STEP, 2, 5, ptoTime);
         // permute
         stopWatch.start();
-        byte[][] permutedBytes = permute(transposedPerm, xi);
+        Vector<byte[]> permutedBytes = permute(transposedPerm, Arrays.stream(xi.getElements())
+            .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 5, ptoTime);
         // matrix transpose
         stopWatch.start();
-        ZlDatabase database = ZlDatabase.create(l, permutedBytes);
         SquareZ2Vector[] permutedZ2Shares = Arrays.stream(TransposeUtils.transposeSplit(permutedBytes, l))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         stopWatch.stop();
@@ -135,22 +135,26 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
     }
 
 
-    public byte[][] permute(Vector<byte[]> perm, ZlVector xi) throws MpcAbortException {
+    @Override
+    public Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> xi) throws MpcAbortException {
+        setPtoInput(perm, xi);
+        int inputByteL = xi.get(0).length;
+        int permByteL = perm.get(0).length;
         // osn1
-        OsnPartyOutput osnPartyOutput = osnSender.osn(perm, byteL);
+        OsnPartyOutput osnPartyOutput = osnSender.osn(perm, permByteL);
 
         // reveal and permute
         SquareZ2Vector[] osnResultShares = IntStream.range(0, num).mapToObj(osnPartyOutput::getShare)
-            .map(v -> SquareZ2Vector.create(l, v, false)).toArray(SquareZ2Vector[]::new);
+            .map(v -> SquareZ2Vector.create(permByteL * Byte.SIZE, v, false)).toArray(SquareZ2Vector[]::new);
         int[] perm1 = Arrays.stream(z2cSender.revealOwn(osnResultShares)).map(BitVector::getBytes)
             .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
-        Vector<byte[]> osnInputs2 = BenesNetworkUtils.permutation(perm1, Arrays.stream(xi.getElements()).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
+        Vector<byte[]> osnInputs2 = BenesNetworkUtils.permutation(perm1, xi);
 
         // osn2
-        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osnInputs2, byteL);
+        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osnInputs2, inputByteL);
 
         // boolean shares
-        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).toArray(byte[][]::new);
+        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));
     }
 
 }

@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
+import java.util.Vector;
+
 /**
  * Permutation receiver interface.
  * Permutation party.
@@ -29,4 +31,13 @@ public interface PermutationReceiver extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZlVector permute(SquareZlVector perm) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param perm the share of permutation.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    Vector<byte[]> permute(Vector<byte[]> perm, int inputByteL) throws MpcAbortException;
 }

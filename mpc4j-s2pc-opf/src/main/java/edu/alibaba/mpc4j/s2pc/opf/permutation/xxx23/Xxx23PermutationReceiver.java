@@ -27,6 +27,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -108,7 +109,7 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // permute
         stopWatch.start();
-        byte[][] permutedBytes = permute(transposedPerm);
+        Vector<byte[]> permutedBytes = permute(transposedPerm, perm.getZl().getByteL());
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -132,24 +133,27 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         return permutedZlShares;
     }
 
-    public byte[][] permute(Vector<byte[]> perm) throws MpcAbortException {
+    @Override
+    public Vector<byte[]> permute(Vector<byte[]> perm, int inputByteL) throws MpcAbortException {
+        setPtoInput(perm);
+        int permByteL = perm.get(0).length;
         // generate random permutation
         int[] randomPerm = genRandomPerm(num);
         // locally apply permutation
         Vector<byte[]> permutedPerm = BenesNetworkUtils.permutation(randomPerm, perm);
         // osn1
-        OsnPartyOutput osnPartyOutput = osnReceiver.osn(randomPerm, byteL);
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(randomPerm, permByteL);
         // locally add
         SquareZ2Vector[] osnResultShares = IntStream.range(0, num)
             .mapToObj(i -> BytesUtils.xor(permutedPerm.elementAt(i), osnPartyOutput.getShare(i)))
-            .map(v -> SquareZ2Vector.create(l, v, false))
+            .map(v -> SquareZ2Vector.create(permByteL * Byte.SIZE, v, false))
             .toArray(SquareZ2Vector[]::new);
 
         // reveal and permute
         z2cReceiver.revealOther(osnResultShares);
         int[] reversePerm = reversePermutation(randomPerm);
         // osn2
-        OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerm, byteL);
-        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).toArray(byte[][]::new);
+        OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerm, inputByteL);
+        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));
     }
 }

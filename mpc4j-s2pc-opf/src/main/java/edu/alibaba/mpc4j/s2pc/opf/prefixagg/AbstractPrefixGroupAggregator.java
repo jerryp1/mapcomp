@@ -327,10 +327,8 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         // equality test and reverse
         SquareZ2Vector indicator = z2cParty.not(z2IntegerCircuit.eq(groupShiftLeftBc, groupShiftRightBc));
         if (intersFlag != null) {
-            // set first bit of flag to true, then operates "flag and indicator".
-            SquareZ2Vector temp = intersFlag.copy();
-            temp.getBitVector().set(0, receiver);
-            indicator = z2cParty.and(indicator, temp);
+            // and
+            indicator = z2cParty.and(indicator, intersFlag);
         }
         return indicator;
     }
