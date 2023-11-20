@@ -460,7 +460,7 @@ public class KeyGenerator {
         // destination[0][0] = [(-(a*s + e) + q_k * s^2)_q_1, a], [(-(a*s + e))_q_2, a], ..., [(-(a*s + e))_q_{k-1}, a], [(-(a*s + e))_qk, a]
         // destination[0][1] = [(-(a*s + e))_q_1, a], [(-(a*s + e) + q_k * s^2)_q2, a], ..., [(-(a*s + e))_q_{k-1}, a], [(-(a*s + e))_qk, a]
         // ...
-        // destination[0][k-1] = [(-(a*s + e))_q_1, a], [(-(a*s + e))_q_2, a], ..., [(-(a*s + e) + q_{k-1} * s^2)_q2, a], [(-(a*s + e))_qk, a]
+        // destination[0][k-1] = [(-(a*s + e))_q_1, a], [(-(a*s + e))_q_2, a], ..., [(-(a*s + e) + q_{k} * s^2)_q_{k-1}, a], [(-(a*s + e))_qk, a]
         generateKeySwitchKeys(secretKeyArray, coeffCount * coeffModulusSize, coeffCount, coeffModulusSize, count, destination, saveSeed);
         // todo: really need deep-copy?
         destination.setParmsId(contextData.getParmsId().clone());
