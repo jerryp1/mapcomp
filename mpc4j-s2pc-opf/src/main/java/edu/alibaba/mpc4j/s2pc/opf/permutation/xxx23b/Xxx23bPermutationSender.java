@@ -117,7 +117,8 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
         logStepInfo(PtoState.PTO_STEP, 2, 5, ptoTime);
         // permute
         stopWatch.start();
-        Vector<byte[]> permutedBytes = permute(transposedPerm, xi);
+        Vector<byte[]> permutedBytes = permute(transposedPerm, Arrays.stream(xi.getElements())
+            .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -143,7 +144,7 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
 
 
     @Override
-    public Vector<byte[]> permute(Vector<byte[]> perm, ZlVector xi) throws MpcAbortException {
+    public Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> xi) throws MpcAbortException {
         // generate random permutation
         int[] randomPerm = ShuffleUtils.generateRandomPerm(num);
         // locally apply permutation
@@ -159,8 +160,7 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
         z2cReceiver.revealOther(osnResultShares);
 
         // osn2
-        Vector<byte[]> osn2Input = BenesNetworkUtils.permutation(randomPerm, Arrays.stream(xi.getElements())
-            .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
+        Vector<byte[]> osn2Input = BenesNetworkUtils.permutation(randomPerm, xi);
         // osn2
         OsnPartyOutput osnPartyOutput2 = osnSender.osn(osn2Input, byteL);
 

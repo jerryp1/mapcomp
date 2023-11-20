@@ -108,7 +108,8 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
         logStepInfo(PtoState.PTO_STEP, 2, 5, ptoTime);
         // permute
         stopWatch.start();
-        Vector<byte[]> permutedBytes = permute(transposedPerm, xi);
+        Vector<byte[]> permutedBytes = permute(transposedPerm, Arrays.stream(xi.getElements())
+            .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -134,7 +135,7 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
 
 
     @Override
-    public Vector<byte[]> permute(Vector<byte[]> perm, ZlVector xi) throws MpcAbortException {
+    public Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> xi) throws MpcAbortException {
         // osn1
         OsnPartyOutput osnPartyOutput = osnSender.osn(perm, byteL);
 
@@ -143,7 +144,7 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
             .map(v -> SquareZ2Vector.create(l, v, false)).toArray(SquareZ2Vector[]::new);
         int[] perm1 = Arrays.stream(z2cSender.revealOwn(osnResultShares)).map(BitVector::getBytes)
             .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
-        Vector<byte[]> osnInputs2 = BenesNetworkUtils.permutation(perm1, Arrays.stream(xi.getElements()).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteL)).collect(Collectors.toCollection(Vector::new)));
+        Vector<byte[]> osnInputs2 = BenesNetworkUtils.permutation(perm1, xi);
 
         // osn2
         OsnPartyOutput osnPartyOutput2 = osnSender.osn(osnInputs2, byteL);

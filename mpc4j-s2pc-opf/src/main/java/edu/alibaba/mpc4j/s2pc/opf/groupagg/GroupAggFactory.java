@@ -36,6 +36,7 @@ public class GroupAggFactory {
         BITMAP,
         MIX,
         SORTING,
+        O_SORTING,
     }
 
     /**

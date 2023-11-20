@@ -41,5 +41,5 @@ public interface PermutationSender extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    Vector<byte[]> permute(Vector<byte[]> perm, ZlVector x) throws MpcAbortException;
+    Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> x) throws MpcAbortException;
 }
