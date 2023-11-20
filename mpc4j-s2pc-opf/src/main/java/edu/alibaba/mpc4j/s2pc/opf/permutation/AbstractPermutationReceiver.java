@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,10 +42,10 @@ public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto im
      * l.
      */
     protected int l;
-    /**
-     * l in bytes
-     */
-    protected int byteL;
+//    /**
+//     * l in bytes
+//     */
+//    protected int byteL;
     /**
      * inputs
      */
@@ -54,7 +55,7 @@ public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto im
         super(ptoDesc, rpc, otherParty, config);
         zl = config.getZl();
         l = zl.getL();
-        byteL = zl.getByteL();
+//        byteL = zl.getByteL();
     }
 
     protected void setInitInput(int maxL, int maxNum) {
@@ -67,6 +68,12 @@ public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto im
 
     protected void setPtoInput(SquareZlVector perm) {
         num = perm.getNum();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
+    }
+
+    protected void setPtoInput(Vector<byte[]> perm) {
+        num = perm.size();
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }

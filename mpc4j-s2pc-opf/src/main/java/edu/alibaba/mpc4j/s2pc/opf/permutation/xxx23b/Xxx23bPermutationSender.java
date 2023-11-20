@@ -100,6 +100,7 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
     public SquareZlVector permute(SquareZlVector perm, ZlVector xi) throws MpcAbortException {
         setPtoInput(perm, xi);
         logPhaseInfo(PtoState.PTO_BEGIN);
+        int byteL = xi.getZl().getByteL();
         // a2b
         stopWatch.start();
         SquareZ2Vector[] booleanPerm = a2bSender.a2b(perm);
@@ -145,16 +146,19 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
 
     @Override
     public Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> xi) throws MpcAbortException {
+        setPtoInput(perm, xi);
+        int inputByteL = xi.get(0).length;
+        int permByteL = perm.get(0).length;
         // generate random permutation
         int[] randomPerm = ShuffleUtils.generateRandomPerm(num);
         // locally apply permutation
         Vector<byte[]> permutedPerm = BenesNetworkUtils.permutation(randomPerm, perm);
         // osn1
-        OsnPartyOutput osnPartyOutput = osnReceiver.osn(randomPerm, byteL);
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(randomPerm, permByteL);
         // locally add
         SquareZ2Vector[] osnResultShares = IntStream.range(0, num)
             .mapToObj(i -> BytesUtils.xor(permutedPerm.elementAt(i), osnPartyOutput.getShare(i)))
-            .map(v -> SquareZ2Vector.create(l, v, false))
+            .map(v -> SquareZ2Vector.create(permByteL * Byte.SIZE, v, false))
             .toArray(SquareZ2Vector[]::new);
         // reveal
         z2cReceiver.revealOther(osnResultShares);
@@ -162,7 +166,7 @@ public class Xxx23bPermutationSender extends AbstractPermutationSender {
         // osn2
         Vector<byte[]> osn2Input = BenesNetworkUtils.permutation(randomPerm, xi);
         // osn2
-        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osn2Input, byteL);
+        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osn2Input, inputByteL);
 
         // boolean shares
         return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));

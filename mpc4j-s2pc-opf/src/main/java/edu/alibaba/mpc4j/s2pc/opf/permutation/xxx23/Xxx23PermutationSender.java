@@ -90,6 +90,7 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
     @Override
     public SquareZlVector permute(SquareZlVector perm, ZlVector xi) throws MpcAbortException {
         setPtoInput(perm, xi);
+        int byteL = xi.getZl().getByteL();
         logPhaseInfo(PtoState.PTO_BEGIN);
         // a2b
         stopWatch.start();
@@ -136,18 +137,21 @@ public class Xxx23PermutationSender extends AbstractPermutationSender {
 
     @Override
     public Vector<byte[]> permute(Vector<byte[]> perm, Vector<byte[]> xi) throws MpcAbortException {
+        setPtoInput(perm, xi);
+        int inputByteL = xi.get(0).length;
+        int permByteL = perm.get(0).length;
         // osn1
-        OsnPartyOutput osnPartyOutput = osnSender.osn(perm, byteL);
+        OsnPartyOutput osnPartyOutput = osnSender.osn(perm, permByteL);
 
         // reveal and permute
         SquareZ2Vector[] osnResultShares = IntStream.range(0, num).mapToObj(osnPartyOutput::getShare)
-            .map(v -> SquareZ2Vector.create(l, v, false)).toArray(SquareZ2Vector[]::new);
+            .map(v -> SquareZ2Vector.create(permByteL * Byte.SIZE, v, false)).toArray(SquareZ2Vector[]::new);
         int[] perm1 = Arrays.stream(z2cSender.revealOwn(osnResultShares)).map(BitVector::getBytes)
             .mapToInt(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v).intValue()).toArray();
         Vector<byte[]> osnInputs2 = BenesNetworkUtils.permutation(perm1, xi);
 
         // osn2
-        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osnInputs2, byteL);
+        OsnPartyOutput osnPartyOutput2 = osnSender.osn(osnInputs2, inputByteL);
 
         // boolean shares
         return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));
