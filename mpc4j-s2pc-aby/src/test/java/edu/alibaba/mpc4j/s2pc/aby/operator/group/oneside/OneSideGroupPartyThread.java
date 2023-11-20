@@ -7,13 +7,21 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.Agg
 
 public class OneSideGroupPartyThread extends Thread {
     public OneSideGroupParty party;
-    public SquareZ2Vector[] xiArrays;
-    public SquareZ2Vector validFlags;
-    public AggTypes aggTypes;
+    public SquareZ2Vector[][] xiArrays;
+    public SquareZ2Vector[] validFlags;
+    public AggTypes[] aggTypes;
     public BitVector groupFlag;
-    public SquareZ2Vector[] res;
+    public SquareZ2Vector[][] res;
 
     OneSideGroupPartyThread(OneSideGroupParty party, SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, BitVector groupFlag) {
+        this.party = party;
+        this.xiArrays = new SquareZ2Vector[][]{xiArrays};
+        this.validFlags = new SquareZ2Vector[]{validFlags};
+        this.aggTypes = new AggTypes[]{aggTypes};
+        this.groupFlag = groupFlag;
+    }
+
+    OneSideGroupPartyThread(OneSideGroupParty party, SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, BitVector groupFlag) {
         this.party = party;
         this.xiArrays = xiArrays;
         this.validFlags = validFlags;
@@ -21,15 +29,19 @@ public class OneSideGroupPartyThread extends Thread {
         this.groupFlag = groupFlag;
     }
 
-    public SquareZ2Vector[] getGroupRes(){
+    public SquareZ2Vector[][] getGroupRes(){
         return res;
     }
 
     @Override
     public void run() {
         try {
-            party.init(1, xiArrays[0].getNum(), xiArrays.length);
-            res = party.groupAgg(xiArrays, validFlags, aggTypes, groupFlag);
+            party.init(xiArrays.length, xiArrays[0][0].getNum(), xiArrays.length);
+            if(xiArrays.length == 1){
+                res = new SquareZ2Vector[][]{party.groupAgg(xiArrays[0], validFlags[0], aggTypes[0], groupFlag)};
+            }else{
+                res = party.groupAgg(xiArrays, validFlags, aggTypes, groupFlag);
+            }
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

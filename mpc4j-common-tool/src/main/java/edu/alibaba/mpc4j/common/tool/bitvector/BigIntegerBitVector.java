@@ -324,6 +324,12 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
+    public BitVector shiftRight(int bit){
+        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bit", this.bitNum, bit);
+        return create(this.bitNum - bit, bigInteger.shiftRight(bit));
+    }
+
+    @Override
     public BitVector[] splitWithPadding(int[] bitNums){
         BitVector[] res = new BitVector[bitNums.length];
         byte[] src = getBytes();

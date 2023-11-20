@@ -23,23 +23,7 @@ public interface OneSideGroupParty extends TwoPartyPto {
      * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      */
-    default boolean[] getResPosFlag(boolean[] groupFlag) {
-        boolean[] res = new boolean[groupFlag.length];
-        int index = groupFlag.length - 1;
-        while (index >= 0) {
-            int curr = index - 1;
-            while (curr >= 0 && (!groupFlag[curr])) {
-                curr--;
-            }
-            if (curr == -1) {
-                res[0] = true;
-            } else {
-                res[OneSideGroupUtils.rightMostChildOfLeftSubTreeOfCommonAncestor(curr + 1, index)] = true;
-            }
-            index = curr;
-        }
-        return res;
-    }
+    int[] getResPosFlag(BitVector groupFlag);
 
     /**
      * Executes the protocol.
@@ -63,5 +47,5 @@ public interface OneSideGroupParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    SquareZ2Vector[][] groupAgg(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, boolean[] groupFlag) throws MpcAbortException;
+    SquareZ2Vector[][] groupAgg(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException;
 }

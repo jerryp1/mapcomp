@@ -3,14 +3,12 @@ package edu.alibaba.mpc4j.s2pc.pjc.main.pid;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
-import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidParty;
+import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
@@ -25,14 +23,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * PID主函数。
- *
- * @author Weiran Liu
- * @date 2022/5/16
- */
-public class PidMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);
+public class PidMain4Batch {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PidMain4Batch.class);
     /**
      * 协议类型名称
      */
@@ -58,18 +50,19 @@ public class PidMain {
      */
     private final Properties properties;
 
-    public PidMain(Properties properties) {
+    public PidMain4Batch(Properties properties) {
         this.properties = properties;
         serverStopWatch = new StopWatch();
         clientStopWatch = new StopWatch();
     }
 
-    public void runNetty() throws Exception {
-        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
+    public void runNetty(Rpc ownRpc) throws Exception {
         if (ownRpc.ownParty().getPartyId() == 0) {
             runServer(ownRpc, ownRpc.getParty(1));
-        } else {
+        } else if (ownRpc.ownParty().getPartyId() == 1) {
             runClient(ownRpc, ownRpc.getParty(0));
+        } else {
+            throw new IllegalArgumentException("Invalid PartyID for own_name: " + ownRpc.ownParty().getPartyName());
         }
     }
 
@@ -106,8 +99,6 @@ public class PidMain {
             + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
-        // 建立连接
-        serverRpc.connect();
         // 启动测试
         int taskId = 0;
         // 预热
@@ -124,8 +115,6 @@ public class PidMain {
             runServer(serverRpc, clientParty, config, taskId, false, serverElementSet, setSize, printWriter);
             taskId++;
         }
-        // 断开连接
-        serverRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }
@@ -251,8 +240,6 @@ public class PidMain {
             + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", clientRpc.ownParty().getPartyName());
-        // 建立连接
-        clientRpc.connect();
         // 启动测试
         int taskId = 0;
         // 预热
@@ -267,8 +254,6 @@ public class PidMain {
             runClient(clientRpc, serverParty, config, taskId, false, clientElementSet, setSize, printWriter);
             taskId++;
         }
-        // 断开连接
-        clientRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }

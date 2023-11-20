@@ -201,7 +201,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // psorter
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
-            null, PlainZ2Vector.createOnes(1), true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+            null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
         // ### test
         for (int i = 0; i < piGiVector.length; i++) {
             z2cSender.revealOther(piGiVector[i]);

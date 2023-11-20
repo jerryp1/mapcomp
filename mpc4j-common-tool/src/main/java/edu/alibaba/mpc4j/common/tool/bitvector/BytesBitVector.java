@@ -363,6 +363,17 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
+    public BitVector shiftRight(int bit){
+        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bit", this.bitNum, bit);
+        if(bitNum == bit){
+            return createEmpty();
+        }else{
+            byte[] res = BytesUtils.fixedByteArrayLength(BytesUtils.shiftRight(bytes, bit), CommonUtils.getByteLength(bitNum - bit));
+            return create(this.bitNum - bit, res);
+        }
+    }
+
+    @Override
     public BitVector[] splitWithPadding(int[] bitNums){
         BitVector[] res = new BitVector[bitNums.length];
         byte[] src = getBytes();
