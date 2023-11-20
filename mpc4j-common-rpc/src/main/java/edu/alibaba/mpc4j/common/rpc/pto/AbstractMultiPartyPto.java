@@ -31,7 +31,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     /**
      * display log level.
      */
-    private static final int DISPLAY_LOG_LEVEL = 0;
+    private static final int DISPLAY_LOG_LEVEL = 2;
     /**
      * maximal number of sub-protocols. Note that some protocols would have many levels (e.g., PSU based on SKE).
      */

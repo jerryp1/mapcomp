@@ -1,10 +1,18 @@
 package edu.alibaba.mpc4j.s2pc.pjc.main.pmap;
 
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.PeqtFactory.PeqtType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.cgs22.Cgs22PeqtConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidConfigUtils;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 
 import java.util.Properties;
 
@@ -27,11 +35,28 @@ public class PmapConfigUtils {
         switch (pmapType) {
             case HPL24:
                 return createHpl24PmapConfig(properties);
+            case PID_BASED:
+                return createPidBasedPmapConfig(properties);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + PidFactory.PidType.class.getSimpleName() + ":" + pmapTypeString
                 );
         }
+    }
+
+    private static PidBasedPmapConfig createPidBasedPmapConfig(Properties properties) {
+        // 是否使用压缩编码
+        boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
+
+        PidConfig pidConfig = PidConfigUtils.createConfig(properties);
+        String peqtTypeString = PropertiesUtils.readString(properties, "peqtType", PeqtType.NAIVE.name());
+        PeqtConfig peqtConfig;
+        if(peqtTypeString.equals(PeqtType.CGS22.toString())){
+            peqtConfig = new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+        }else{
+            peqtConfig = new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+        }
+        return new PidBasedPmapConfig.Builder(silent).setPidConfig(pidConfig).setPeqtConfig(peqtConfig).build();
     }
 
     private static Hpl24PmapConfig createHpl24PmapConfig(Properties properties) {

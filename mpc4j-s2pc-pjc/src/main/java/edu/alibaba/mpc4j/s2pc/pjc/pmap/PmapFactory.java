@@ -5,6 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapServer;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapClient;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapServer;
 
 /**
  * PMAP协议工厂。
@@ -28,6 +31,10 @@ public class PmapFactory {
          * HPL24方案
          */
         HPL24,
+        /**
+         * based on PID
+         */
+        PID_BASED,
     }
 
     /**
@@ -40,10 +47,14 @@ public class PmapFactory {
      */
     public static <T> PmapServer<T> createServer(Rpc serverRpc, Party clientParty, PmapConfig config) {
         PmapType type = config.getPtoType();
-        if (type == PmapType.HPL24) {
-            return new Hpl24PmapServer<>(serverRpc, clientParty, (Hpl24PmapConfig) config);
+        switch (type){
+            case HPL24:
+                return new Hpl24PmapServer<>(serverRpc, clientParty, (Hpl24PmapConfig) config);
+            case PID_BASED:
+                return new PidBasedPmapServer<>(serverRpc, clientParty, (PidBasedPmapConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
     }
 
     /**
@@ -54,11 +65,15 @@ public class PmapFactory {
      * @param config      config.
      * @return a client.
      */
-    public static <X> PmapClient<X> createClient(Rpc clientRpc, Party serverParty, PmapConfig config) {
+    public static <T> PmapClient<T> createClient(Rpc clientRpc, Party serverParty, PmapConfig config) {
         PmapType type = config.getPtoType();
-        if (type == PmapType.HPL24) {
-            return new Hpl24PmapClient<>(clientRpc, serverParty, (Hpl24PmapConfig) config);
+        switch (type){
+            case HPL24:
+                return new Hpl24PmapClient<>(clientRpc, serverParty, (Hpl24PmapConfig) config);
+            case PID_BASED:
+                return new PidBasedPmapClient<>(clientRpc, serverParty, (PidBasedPmapConfig) config);
+            default:
+                throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
         }
-        throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
     }
 }

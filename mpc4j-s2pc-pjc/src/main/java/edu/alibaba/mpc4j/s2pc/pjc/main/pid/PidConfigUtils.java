@@ -33,7 +33,7 @@ public class PidConfigUtils {
      * @param properties 配置参数。
      * @return 配置项。
      */
-    static PidConfig createConfig(Properties properties) {
+    public static PidConfig createConfig(Properties properties) {
         // 读取协议类型
         String pidTypeString = PropertiesUtils.readString(properties, "pid_pto_name");
         PidFactory.PidType pidType = PidFactory.PidType.valueOf(pidTypeString);

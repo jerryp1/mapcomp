@@ -44,7 +44,7 @@ public abstract class AbstractPmapServer<T> extends AbstractTwoPartyPto implemen
     protected void setInitInput(int maxServerElementSize, int maxClientElementSize) {
         MathPreconditions.checkGreaterOrEqual("maxServerElementSize >= 2", maxServerElementSize, 2);
         MathPreconditions.checkGreaterOrEqual("maxServerElementSize >= maxClientElementSize", maxServerElementSize, maxClientElementSize);
-        MathPreconditions.checkPositive("maxServerElementSize", maxServerElementSize);
+        MathPreconditions.checkGreaterOrEqual("maxClientElementSize >= 2", maxClientElementSize, 2);
         this.maxServerElementSize = maxServerElementSize;
         MathPreconditions.checkPositive("maxClientElementSize", maxClientElementSize);
         this.maxClientElementSize = maxClientElementSize;

@@ -5,7 +5,7 @@ pto_type = PMAP
 element_byte_length = 16
 
 # parties log set size (log(n))
-log_set_size = 8, 10
+log_set_size = 8, 10, 12, 14, 16, 18, 20
 
 # protocol name
 pmap_pto_name = HPL24
