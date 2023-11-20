@@ -97,10 +97,10 @@ public class Context {
     }
 
     /**
-     * Creates an instance of Context and performs several pre-computations on the given EncryptionParameters.
+     * Creates an instance of context and performs several pre-computations on the given EncryptionParameters.
      * Note that expandModChain is default true and SecurityLevelType is default TC128.
      *
-     * @param params The encryption parameters.
+     * @param params the encryption parameters.
      */
     public Context(EncryptionParams params) {
         this(params, true, CoeffModulus.SecurityLevelType.TC128);
@@ -109,20 +109,19 @@ public class Context {
     /**
      * Creates an instance of Context and performs several pre-computations on the given EncryptionParameters.
      *
-     * @param params         encryption parameters.
-     * @param expandModChain using modulus switching chain.
+     * @param params         the encryption parameters.
+     * @param expandModChain determines whether the modulus switching chain should be created.
      */
     public Context(EncryptionParams params, boolean expandModChain) {
         this(params, expandModChain, CoeffModulus.SecurityLevelType.TC128);
     }
 
     /**
-     * Creates an instance of Context, and performs several pre-computations
-     * on the given EncryptionParameters.
+     * Creates an instance of context, and performs several pre-computations on the given EncryptionParameters.
      *
-     * @param parms          encryption parameters
-     * @param expandModChain using modulus switching chain.
-     * @param securityLevel  security level.
+     * @param parms          the encryption parameters.
+     * @param expandModChain determines whether the modulus switching chain should be created.
+     * @param securityLevel  the security level.
      */
     public Context(EncryptionParams parms, boolean expandModChain, CoeffModulus.SecurityLevelType securityLevel) {
         this.securityLevel = securityLevel;
@@ -134,7 +133,6 @@ public class Context {
         contextDataMap.put(parms.getParmsId().clone(), validate(parms));
         // keyParmsId [q1, q2, ..., qk]
         keyParmsId = parms.getParmsId().clone();
-
         // Then create first_parms_id_ if the parameters are valid and there is more than one modulus in coeff_modulus.
         // This is equivalent to expanding the chain by one step. Otherwise, we set first_parms_id_ to equal
         // key_parms_id_.
@@ -180,11 +178,10 @@ public class Context {
         }
     }
 
-
     /**
-     * create context data.
+     * Creates context data of a given encryption parameters.
      *
-     * @param parms encryption parameters.
+     * @param parms the encryption parameters.
      * @return context data includes pre-computation data for a given set of encryption parameters.
      */
     private ContextData validate(EncryptionParams parms) {
@@ -228,7 +225,6 @@ public class Context {
             return contextData;
         }
         // Quick sanity check
-        // todo: really need this check?
         if (!Common.productFitsIn(false, coeffModulusSize, polyModulusDegree)) {
             contextData.qualifiers.parameterError = ErrorType.INVALID_PARAMETERS_TOO_LARGE;
             return contextData;
@@ -258,7 +254,7 @@ public class Context {
             return contextData;
         }
         // todo: Can we use NTT with coeff_modulus?
-        // create small NTT tables for coeff modulus
+        // create small NTT tables for all coeff modulus
         contextData.qualifiers.usingNtt = true;
         try {
             NttTables.createNttTables(coeffCountPower, coeffModulus, contextData.smallNttTables);
@@ -275,7 +271,7 @@ public class Context {
                 contextData.qualifiers.parameterError = ErrorType.INVALID_PLAIN_MODULUS_BIT_COUNT;
                 return contextData;
             }
-            // Check that all coeff moduli are relatively prime to plain_modulus
+            // Check that all coeff modulus are relatively prime to plain_modulus
             for (Modulus modulus : coeffModulus) {
                 if (!Numth.areCoPrime(modulus.getValue(), plainModulus.getValue())) {
                     contextData.qualifiers.parameterError = ErrorType.INVALID_PLAIN_MODULUS_CO_PRIMALITY;
@@ -284,16 +280,10 @@ public class Context {
             }
             // Check that plain_modulus is smaller than total coeff modulus
             // todo: consider remove new Array?
-            if (!UintCore.isLessThanUint(
-                new long[]{plainModulus.getValue()},
-                plainModulus.getUint64Count(),
-                contextData.totalCoeffModulus,
-                coeffModulusSize)
-            ) {
+            if (!UintCore.isLessThanUint(new long[]{plainModulus.getValue()}, plainModulus.getUint64Count(), contextData.totalCoeffModulus, coeffModulusSize)) {
                 contextData.qualifiers.parameterError = ErrorType.INVALID_PLAIN_MODULUS_TOO_LARGE;
                 return contextData;
             }
-            // Can we use batching? (NTT with plain_modulus)
             // plainModulus is a prime and mod 2n = 1
             contextData.qualifiers.usingBatching = true;
             try {
@@ -303,7 +293,7 @@ public class Context {
                 contextData.qualifiers.usingBatching = false;
             }
             // Check for plain_lift
-            // If all the small coefficient moduli are larger than plain modulus, we can quickly
+            // If all the small coefficient modulus are larger than plain modulus, we can quickly
             // lift plain coefficients to RNS form
             // 明文模比其 最小的密文 moduli 更小，那么 convert to RNS 的时候，不需要再取模
             contextData.qualifiers.usingFastPlainLift = true;
@@ -323,24 +313,17 @@ public class Context {
             UintArithmetic.divideUint(
                 contextData.totalCoeffModulus, widePlainModulus, coeffModulusSize, tempCoeffDivPlainModulus, contextData.upperHalfIncrement
             );
-
             // Store the non-RNS form of upper_half_increment for BFV encryption
             contextData.coeffModulusModPlainModulus = contextData.upperHalfIncrement[0];
-
-            // Decompose coeff_div_plain_modulus into RNS factors, [q/t] % q_i
+            // Decompose coeff_div_plain_modulus into RNS factors, floor(q/t) % q_i
             coeffModulusBase.decompose(tempCoeffDivPlainModulus);
-
-
             for (int i = 0; i < coeffModulusSize; i++) {
                 contextData.coeffDivPlainModulus[i].set(tempCoeffDivPlainModulus[i], coeffModulusBase.getBase(i));
             }
-
             // Decompose upper_half_increment into RNS factors
             coeffModulusBase.decompose(contextData.upperHalfIncrement);
-
             // Calculate (plain_modulus + 1) / 2.
             contextData.plainUpperHalfThreshold = (plainModulus.getValue() + 1) >>> 1;
-
             // Calculate coeff_modulus - plain_modulus.
             contextData.plainUpperHalfIncrement = new long[coeffModulusSize];
             if (contextData.qualifiers.usingFastPlainLift) {
@@ -356,11 +339,9 @@ public class Context {
             //todo: implement CKKS
             throw new IllegalArgumentException("now cannot support CKKS");
         } else {
-
             contextData.qualifiers.parameterError = ErrorType.INVALID_SCHEME;
             return contextData;
         }
-
         // Create RNS Tool
         // RNSTool's constructor may fail due to:
         //   (1) auxiliary base being too large
@@ -377,18 +358,19 @@ public class Context {
             contextData.qualifiers.usingDescendingModulusChain &= coeffModulus[i].getValue() > coeffModulus[i + 1].getValue();
         }
         contextData.galoisTool = new GaloisTool(coeffCountPower);
-
         return contextData;
     }
 
     /**
-     * create next context data.
+     * Create the next context data by dropping the last element from coeff_modulus.
+     * If the new encryption parameters are not valid, returns parms_id_zero.
+     * Otherwise, returns the parms_id of the next parameter and appends the next context_data to the chain.
      *
-     * @param prevParmsId previous parms id.
-     * @return next parms id.
+     * @param prevParmsId the parms id of previous context data.
+     * @return the parms id of next context data.
      */
     private ParmsIdType createNextContextData(ParmsIdType prevParmsId) {
-        // note that here EncryptionParams object should be cloned, a new ContextData should hold a new  object.
+        // note that here EncryptionParams object should be cloned, a new ContextData should hold a new object.
         EncryptionParams nextParms = contextDataMap.get(prevParmsId).parms.clone();
         Modulus[] nextCoeffModulus = nextParms.getCoeffModulus();
         // Create the next set of parameters by removing last modulus
@@ -412,40 +394,74 @@ public class Context {
         return nextParmsId;
     }
 
-
+    /**
+     * Returns the context data corresponding to encryption parameters with a given parms id.
+     * If parameters with the given parms_id are not found then the function returns nullptr.
+     *
+     * @param parmsId the parms id of the encryption parameters.
+     * @return the context data corresponding to encryption parameters with a given parms id.
+     */
     public ContextData getContextData(ParmsIdType parmsId) {
-
         return contextDataMap.getOrDefault(parmsId, null);
     }
 
+    /**
+     * Returns the context data corresponding to the first encryption parameters that are used for data.
+     *
+     * @return the context data corresponding to the first encryption parameters that are used for data.
+     */
     public ContextData firstContextData() {
         return contextDataMap.getOrDefault(firstParmsId, null);
     }
 
+    /**
+     * Returns the context data corresponding to encryption parameters that are used for keys.
+     *
+     * @return the context data corresponding to encryption parameters that are used for keys.
+     */
     public ContextData keyContextData() {
         return contextDataMap.getOrDefault(keyParmsId, null);
     }
 
+    /**
+     * Returns the context data corresponding to the last encryption parameters that are used for data.
+     *
+     * @return the context data corresponding to the last encryption parameters that are used for data.
+     */
     public ContextData lastContextData() {
         return contextDataMap.getOrDefault(lastParmsId, null);
     }
 
+    /**
+     * Returns whether the first_context_data's encryption parameters are valid.
+     *
+     * @return whether the first_context_data's encryption parameters are valid.
+     */
     public boolean isParametersSet() {
         return firstContextData() != null && firstContextData().qualifiers.isParametersSet();
     }
 
+    /**
+     * Returns the name of encryption parameters' error.
+     *
+     * @return the name of encryption parameters' error.
+     */
     public String parametersErrorName() {
         return firstContextData() != null ? firstContextData().qualifiers.parameterErrorName() : "Context is empty";
     }
 
+    /**
+     * Returns a comprehensive message that interprets encryption parameters' error.
+     *
+     * @return a comprehensive message that interprets encryption parameters' error.
+     */
     public String parametersErrorMessage() {
         return firstContextData() != null ? firstContextData().qualifiers.parameterErrorMessage() : "Context is empty";
     }
 
-
     /**
      * Returns whether the coefficient modulus supports keyswitching. In practice,
-     * support for keyswitching is required by Evaluator::relinearize,
+     * support for key switching is required by Evaluator::relinearize,
      * Evaluator::apply_galois, and all rotation and conjugation operations. For
      * keyswitching to be available, the coefficient modulus parameter must consist
      * of at least two prime number factors.
@@ -456,15 +472,29 @@ public class Context {
         return usingKeySwitching;
     }
 
+    /**
+     * Returns a parms_id_type corresponding to the last encryption parameters that are used for data.
+     *
+     * @return a parms_id_type corresponding to the last encryption parameters that are used for data.
+     */
     public ParmsIdType getLastParmsId() {
         return lastParmsId;
     }
 
-
+    /**
+     * Returns a parms_id_type corresponding to the first encryption parameters that are used for data.
+     *
+     * @return a parms_id_type corresponding to the first encryption parameters that are used for data.
+     */
     public ParmsIdType getFirstParmsId() {
         return firstParmsId;
     }
 
+    /**
+     * Returns a parms_id_type corresponding to the set of encryption parameters that are used for keys.
+     *
+     * @return a parms_id_type corresponding to the set of encryption parameters that are used for keys.
+     */
     public ParmsIdType getKeyParmsId() {
         return keyParmsId;
     }
@@ -477,39 +507,67 @@ public class Context {
      * </p>
      */
     public class ContextData {
-
+        /**
+         * encryption parameters
+         */
         private EncryptionParams parms;
-
+        /**
+         * attributes (qualifiers) of the encryption parameters
+         */
         private EncryptionParameterQualifiers qualifiers;
-
+        /**
+         * RNS tool
+         */
         private RnsTool rnsTool;
-
+        /**
+         * small NTT tables
+         */
         private NttTables[] smallNttTables;
         /**
-         * only one modulus, so using single NttTables is enough.
+         * plain NTT table
          */
         private NttTables plainNttTables;
-
+        /**
+         * Galois tool
+         */
         private GaloisTool galoisTool;
-
+        /**
+         * q = \prod q_i
+         */
         private long[] totalCoeffModulus;
-
+        /**
+         * bit length of q
+         */
         private int totalCoeffModulusBitCount = 0;
-
+        /**
+         * floor(q / t) mod q_i
+         */
         private MultiplyUintModOperand[] coeffDivPlainModulus;
-
+        /**
+         * (t + 1) / 2
+         */
         private long plainUpperHalfThreshold = 0;
-
+        /**
+         * q_i - t, or q - t
+         */
         private long[] plainUpperHalfIncrement;
 
         private long[] upperHalfThreshold;
-
+        /**
+         * (q mod t) mod q_i
+         */
         private long[] upperHalfIncrement;
-
+        /**
+         * q mod t
+         */
         private long coeffModulusModPlainModulus = 0;
-
+        /**
+         * the context data corresponding to the previous parameters in the modulus switching chain
+         */
         private ContextData preContextData;
-
+        /**
+         * the context data corresponding to the next parameters in the modulus switching chain
+         */
         private ContextData nextContextData;
 
         private int chainIndex = 0;
@@ -588,19 +646,34 @@ public class Context {
             return coeffModulusModPlainModulus;
         }
 
-
+        /**
+         * Returns the context data corresponding to the previous parameters in the modulus switching chain.
+         * If the current data is the first one in the chain, then the result is nullptr.
+         *
+         * @return the context data corresponding to the previous parameters in the modulus switching chain.
+         */
         public ContextData getPreContextData() {
             return preContextData;
         }
 
+        /**
+         * Returns the context data corresponding to the next parameters in the modulus switching chain.
+         * If the current data is the last one in the chain, then the result is nullptr.
+         *
+         * @return the context data corresponding to the next parameters in the modulus switching chain.
+         */
         public ContextData getNextContextData() {
             return nextContextData;
         }
 
+        /**
+         * Returns the index of the parameter set in a chain. The initial parameters have index 0
+         * and the index increases sequentially in the parameter chain.
+         *
+         * @return the index of the parameter set in a chain.
+         */
         public int getChainIndex() {
             return chainIndex;
         }
     }
-
-
 }

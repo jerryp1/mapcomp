@@ -28,7 +28,7 @@ import java.util.Arrays;
 public class KeySwitchKeys implements Cloneable, Serializable {
 
     /**
-     * key-switching keys
+     * key switching keys
      */
     private PublicKey[][] keys = new PublicKey[0][0];
     /**
@@ -36,12 +36,15 @@ public class KeySwitchKeys implements Cloneable, Serializable {
      */
     ParmsIdType parmsId = ParmsIdType.parmsIdZero();
 
+    /**
+     * Creates an empty key switching keys.
+     */
     public KeySwitchKeys() {
         // empty
     }
 
     /**
-     * resize key-switching keys.
+     * Resizes the key switching keys.
      *
      * @param rows rows.
      * @param cols cols.
@@ -52,7 +55,7 @@ public class KeySwitchKeys implements Cloneable, Serializable {
     }
 
     /**
-     * resize key-switching keys.
+     * Resizes the key switching keys.
      *
      * @param rows rows.
      */
@@ -61,26 +64,28 @@ public class KeySwitchKeys implements Cloneable, Serializable {
     }
 
     /**
-     * @return current number of key-switching keys. Only keys that are non-empty are counted.
+     * Returns current number of key switching keys. Only keys that are non-empty are counted.
+     *
+     * @return current number of key switching keys. Only keys that are non-empty are counted.
      */
     public int size() {
         return Arrays.stream(keys).mapToInt(key -> key.length > 0 ? 1 : 0).sum();
     }
 
     /**
-     * return key-switching keys.
+     * Returns key switching keys data.
      *
-     * @return key-switching keys.
+     * @return key switching keys data.
      */
     public PublicKey[][] data() {
         return keys;
     }
 
     /**
-     * return key-switching key.
+     * Returns a key switching key at a given index.
      *
-     * @param index index.
-     * @return key-switching key.
+     * @param index the index of the key switching key.
+     * @return a key switching key.
      */
     public PublicKey[] data(int index) {
         if (index >= keys.length || keys[index].length == 0) {
@@ -90,7 +95,7 @@ public class KeySwitchKeys implements Cloneable, Serializable {
     }
 
     /**
-     * return parms ID of key-switching key.
+     * Returns parms ID of key switching keys.
      *
      * @return parms ID.
      */
@@ -99,19 +104,14 @@ public class KeySwitchKeys implements Cloneable, Serializable {
     }
 
     /**
-     * set parms ID.
+     * Sets a given parms ID to key switching keys.
      *
-     * @param parmsId parms ID.
+     * @param parmsId the given parms ID.
      */
     public void setParmsId(ParmsIdType parmsId) {
         this.parmsId = parmsId;
     }
 
-    /**
-     * ref: seal/kswitchkeys.cpp : KSwitchKeys &KSwitchKeys::operator=(const KSwitchKeys &assign)
-     *
-     * @return a new KeySwitchKeys object
-     */
     @Override
     public KeySwitchKeys clone() {
         try {

@@ -142,7 +142,7 @@ public class KeyGenerator {
     /**
      * Generates relinearization keys and stores the result in destination.
      *
-     * @param destination the relinearization keys to overwrite with the generated public key.
+     * @param destination the relinearization keys to overwrite with the generated relinearization keys.
      */
     public void createRelinKeys(RelinKeys destination) {
         createRelinKeys(1, false, destination);
@@ -225,9 +225,10 @@ public class KeyGenerator {
     }
 
     /**
-     * create Galois keys from steps.
-     * @param steps       steps.
-     * @param destination store Galois keys.
+     * Generates Galois keys from a given rotation steps and stores the result in destination.
+     *
+     * @param steps       the steps.
+     * @param destination the Galois keys to overwrite with the generated Galois keys.
      */
     public void createGaloisKeysFromSteps(int[] steps, GaloisKeys destination) {
         if (!context.keyContextData().getQualifiers().isUsingBatching()) {
@@ -326,7 +327,7 @@ public class KeyGenerator {
             long factor = UintArithmeticSmallMod.barrettReduce64(keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
             // temp = key' * factor mod q_i
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(newKeys, i * coeffCount, coeffCount, factor, keyModulus[i], temp, 0);
-            // ([-(as + e) + new_key * q_k]_q_i, a), only add to the q_i part
+            // ([-(as + e)]_q_0, a), ..., ([-(as + e) + new_keys * q_k]_q_i, a), ...,([-(as + e)]_q_{k-1}, a)
             PolyArithmeticSmallMod.addPolyCoeffMod(destinations[destinationIndex][i].data().getData(), i * coeffCount, temp, 0, coeffCount, keyModulus[i], destinations[destinationIndex][i].data().getData(), i * coeffCount);
         }
     }
@@ -360,12 +361,13 @@ public class KeyGenerator {
         }
         for (int i = 0; i < decomposeModCount; i++) {
             long[] temp = new long[coeffCount];
-            // destination: (c[0], c[1]) = ([-(as + e)], a) in NTT form
+            // destination[index][i] = (c[0], c[1]) = ([-(as + e)], a) under RNS base in NTT form
             RingLwe.encryptZeroSymmetric(secretKey, context, keyContextData.getParmsId(), true, saveSeed, destinations[destinationIndex][i].data());
+            // factor = q_k mod q_i
             long factor = UintArithmeticSmallMod.barrettReduce64(keyModulus[keyModulus.length - 1].getValue(), keyModulus[i]);
             // new_keys * q_k mod q_i
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(newKeys, startIndex + i * coeffCount, coeffCount, factor, keyModulus[i], temp, 0);
-            // ([-(as + e) + new_keys * q_k]_q_i, a), only add to the q_i part
+            // ([-(as + e)]_q_0, a), ..., ([-(as + e) + new_keys * q_k]_q_i, a), ...,([-(as + e)]_q_{k-1}, a)
             PolyArithmeticSmallMod.addPolyCoeffMod(destinations[destinationIndex][i].data().getData(), i * coeffCount, temp, 0, coeffCount, keyModulus[i], destinations[destinationIndex][i].data().getData(), i * coeffCount);
         }
     }
@@ -394,12 +396,10 @@ public class KeyGenerator {
         assert newKeysModulusSize == coeffModulusSize;
         // PublicKey[numKeys][firstContextData.coeffModulusSize]
         destination.resizeRows(numKeys);
-        // store Enc(newKey * q_k) in destination
         for (int i = 0; i < numKeys; i++) {
             generateOneKeySwitchKey(newKeys, i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed);
         }
     }
-
 
     /**
      * Generates new key switching keys for an array of new keys.
@@ -427,7 +427,6 @@ public class KeyGenerator {
         assert newKeysModulusSize == coeffModulusSize;
         // resize the size of key-switch key, PublicKey[numKeys][firstContextData.coeffModulusSize]
         destination.resizeRows(numKeys);
-        // store Enc(newKey * q_k) in destination
         for (int i = 0; i < numKeys; i++) {
             generateOneKeySwitchKey(newKeys, startIndex + i * coeffCount * coeffModulusSize, destination.data(), i, saveSeed);
         }
@@ -452,17 +451,16 @@ public class KeyGenerator {
         EncryptionParams parms = contextData.getParms();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = parms.getCoeffModulus().length;
-        // todo: really need check?
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize)) {
             throw new IllegalArgumentException("invalid parameters");
         }
-        // Make sure we have enough secret keys computed, sk^1, ..., sk^{count+1}
+        // Make sure we have enough secret keys, sk^1, ..., sk^{count+1}
         computeSecretKeyArray(contextData, count + 1);
         // Assume the secret key is already transformed into NTT form.
-        // [(-(a*s + e) + q_k * s^2)_q1, a], [(-(a*s + e))_q2, a], ..., [(-(a*s + e))_qk, a]
-        // [(-(a*s + e))_q1, a], [(-(a*s + e) + q_k * s^2)_q2, a], ..., [(-(a*s + e))_qk, a]
+        // destination[0][0] = [(-(a*s + e) + q_k * s^2)_q_1, a], [(-(a*s + e))_q_2, a], ..., [(-(a*s + e))_q_{k-1}, a], [(-(a*s + e))_qk, a]
+        // destination[0][1] = [(-(a*s + e))_q_1, a], [(-(a*s + e) + q_k * s^2)_q2, a], ..., [(-(a*s + e))_q_{k-1}, a], [(-(a*s + e))_qk, a]
         // ...
-        // [(-(a*s + e))_q1, a], [(-(a*s + e))_q2, a], ..., [(-(a*s + e) + q_{k-1} * s^2)_q2, a], [(-(a*s + e))_qk, a]
+        // destination[0][k-1] = [(-(a*s + e))_q_1, a], [(-(a*s + e))_q_2, a], ..., [(-(a*s + e) + q_{k-1} * s^2)_q2, a], [(-(a*s + e))_qk, a]
         generateKeySwitchKeys(secretKeyArray, coeffCount * coeffModulusSize, coeffCount, coeffModulusSize, count, destination, saveSeed);
         // todo: really need deep-copy?
         destination.setParmsId(contextData.getParmsId().clone());
@@ -495,9 +493,6 @@ public class KeyGenerator {
         computeSecretKeyArray(contextData, count + 1);
         // Assume the secret key is already transformed into NTT form.
         RelinKeys relinKeys = new RelinKeys();
-        // [(-(a*s + e) + q_k * s^2), a] in RNS form, RNS base is {q_1, ..., q_{k-1}, q_k}
-        // [(-(a*s + e) + q_k * s^2)_{q_1}, a_{q_1}], ..., [(-(a*s + e) + q_k * s^2)_{q_{k-1}}, a_{q_{k-1}}], [(-(a*s + e))_{q_k}, a_{q_{k}}]
-        // todo: qixian
         generateKeySwitchKeys(secretKeyArray, coeffCount * coeffModulusSize, coeffCount, coeffModulusSize, count, relinKeys, saveSeed);
         // todo: really need deep-copy?
         relinKeys.setParmsId(contextData.getParmsId().clone());
@@ -521,7 +516,6 @@ public class KeyGenerator {
         GaloisTool galoisTool = contextData.getGaloisTool();
         int coeffCount = parms.getPolyModulusDegree();
         int coeffModulusSize = coeffModulus.length;
-        //todo: really need check?
         if (!Common.productFitsIn(false, coeffCount, coeffModulusSize, 2)) {
             throw new IllegalArgumentException("invalid parameters");
         }

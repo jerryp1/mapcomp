@@ -648,7 +648,6 @@ public class Evaluator {
         if (destinationSize < 2 || destinationSize > encryptedSize) {
             throw new IllegalArgumentException("destinationSize must be at least 2 and less than or equal to current count");
         }
-        // todo: really need subSafe?
         if (relinKeys.size() < Common.subSafe(encryptedSize, 2, false)) {
             throw new IllegalArgumentException("not enough relinearization keys");
         }
@@ -1516,22 +1515,16 @@ public class Evaluator {
         RnsTool rnsTool = contextData.getRnsTool();
         int baseBskSize = rnsTool.getBaseBsk().getSize();
         int baseBskMTildeSize = rnsTool.getBaseBskMTilde().getSize();
-        // Determine destination.size()
         // 每个密文包含2个多项式的情况下，乘法结果包含3个密文---> 2 + 2 - 1
-        // todo: need subSafe?
         int destinationSize = Common.subSafe(Common.addSafe(encrypted1Size, encrypted2Size, false), 1, false);
-        // todo: need check?
         if (!Common.productFitsIn(false, destinationSize, coeffCount, baseBskMTildeSize)) {
             throw new IllegalArgumentException("invalid parameters");
         }
         // Set up iterators for bases
         Modulus[] baseQ = parms.getCoeffModulus();
         Modulus[] baseBsk = rnsTool.getBaseBsk().getBase();
-
-        //
         NttTables[] baseQNttTables = contextData.getSmallNttTables();
         NttTables[] baseBskNttTables = rnsTool.getBaseBskNttTables();
-        // ... 官方注释都说这个方法有点复杂，那确实比较复杂了
         // Microsoft SEAL uses BEHZ-style RNS multiplication. This process is somewhat complex and consists of the
         // following steps:
         //
@@ -1544,11 +1537,8 @@ public class Evaluator {
         // (7) Scale the result by q using a divide-and-floor algorithm, switching base to Bsk
         // (8) Use Shenoy-Kumaresan method to convert the result to base q
 
-
         // Resize encrypted1 to destination size
         encrypted1.resize(context, contextData.getParmsId(), destinationSize);
-//        System.out.println("encrpted1: \n" + Arrays.toString(encrypted1.getData()));
-
         // This lambda function takes as input an IterTuple with three components:
         //
         // 1. (Const)RNSIter to read an input polynomial from
@@ -1558,22 +1548,12 @@ public class Evaluator {
         // It performs steps (1)-(3) of the BEHZ multiplication (see above) on the given input polynomial (given as an
         // RNSIter or ConstRNSIter) and writes the results in base q and base Bsk to the given output
         // iterators.
-        // 这里我就不写成 lambda 函数了，也不重新封装为一个 方法，就顺着往下写吧
-
         // Allocate space for a base q output of behz_extend_base_convert_to_ntt for encrypted1
-        // 这是一个 PolyIter
         long[] encrypted1Q = new long[encrypted1Size * coeffCount * baseQSize];
-
         // Allocate space for a base Bsk output of behz_extend_base_convert_to_ntt for encrypted1
         long[] encrypted1Bsk = new long[encrypted1Size * coeffCount * baseBskSize];
-
         // Perform BEHZ steps (1)-(3) for encrypted1
-        // 对标: SEAL_ITERATE(iter(encrypted1, encrypted1_q, encrypted1_Bsk), encrypted1_size, behz_extend_base_convert_to_ntt);
         for (int i = 0; i < encrypted1Size; i++) {
-            // 依次遍历密文中的每一个 RnsIter
-            // 这里面的处理逻辑就对应 behz_extend_base_convert_to_ntt
-
-            // 先完成当前RnsIter拷贝，注意起点的计算是不一样的，对标 set_poly(get<0>(I), coeff_count, base_q_size, get<1>(I));
             System.arraycopy(
                 encrypted1.getData(),
                 i * coeffCount * encrypted1.getCoeffModulusSize(),
@@ -1581,26 +1561,11 @@ public class Evaluator {
                 i * coeffCount * baseQSize,
                 coeffCount * baseQSize
             );
-
-//            System.out.println("set poly, encrypted1Q:\n " +
-//                    Arrays.toString(
-//                            Arrays.copyOfRange(encrypted1Q, i * coeffCount * baseQSize, (i+1) * coeffCount * baseQSize)
-//                    )
-//            );
-
-            //
             NttTool.nttNegacyclicHarveyLazyPoly(encrypted1Q, encrypted1Size, coeffCount, baseQSize, i, baseQNttTables);
-//            System.out.println("ntt lazy, encrypted1Q: \n" +
-//                    Arrays.toString(
-//                            Arrays.copyOfRange(encrypted1Q, i * coeffCount * baseQSize, (i+1) * coeffCount * baseQSize)
-//                    )
-//            );
-
             // Allocate temporary space for a polynomial in the Bsk U {m_tilde} base
             // 这是一个 RnsIter
             long[] temp = new long[coeffCount * baseBskMTildeSize];
-
-            // 1) Convert from base q to base Bsk U {m_tilde}
+            // 1) Convert from base q to base Bsk U {m_tilde}, temp mod base Bsk U {m_tilde}
             rnsTool.fastBConvMTildeRnsIter(
                 encrypted1.getData(),
                 i * coeffCount * encrypted1.getCoeffModulusSize(),
@@ -1611,38 +1576,20 @@ public class Evaluator {
                 coeffCount,
                 baseBskMTildeSize
             );
-
             // (2) Reduce q-overflows in with Montgomery reduction, switching base to Bsk
-//            rns_tool->sm_mrq(temp, get<2>(I), pool);
             rnsTool.smMrqRnsIter(
-                temp,
-                0,
-                coeffCount,
-                baseBskMTildeSize,
-                encrypted1Bsk, // 对应 get<2>(I)
-                i * coeffCount * baseBskSize, // 注意起点
-                coeffCount,
-                baseBskSize
+                temp, 0, coeffCount, baseBskMTildeSize, encrypted1Bsk, i * coeffCount * baseBskSize, coeffCount, baseBskSize
             );
-
             // Transform to NTT form in base Bsk
             // Lazy reduction
             NttTool.nttNegacyclicHarveyLazyPoly(encrypted1Bsk, encrypted1Size, coeffCount, baseBskSize, i, baseBskNttTables);
         }
-
-//        System.out.println("steps (1)-(3): encrypted1Q: \n" + Arrays.toString(encrypted1Q));
-//        System.out.println("steps (1)-(3): encrypted1Bsk: \n" + Arrays.toString(encrypted1Bsk));
-
         // 对 encrypted2 进行同样的处理
         long[] encrypted2Q = new long[encrypted2Size * coeffCount * baseQSize];
         // Allocate space for a base Bsk output of behz_extend_base_convert_to_ntt for encrypted1
         long[] encrypted2Bsk = new long[encrypted2Size * coeffCount * baseBskSize];
         // 同样的for循环, 处理 encrypted2 相关
         for (int i = 0; i < encrypted2Size; i++) {
-            // 依次遍历密文中的每一个 RnsIter
-            // 这里面的处理逻辑就对应 behz_extend_base_convert_to_ntt
-
-            // 先完成当前RnsIter拷贝，注意起点的计算是不一样的，对标 set_poly(get<0>(I), coeff_count, base_q_size, get<1>(I));
             System.arraycopy(
                 encrypted2.getData(),
                 i * coeffCount * encrypted2.getCoeffModulusSize(),
@@ -1650,12 +1597,9 @@ public class Evaluator {
                 i * coeffCount * baseQSize,
                 coeffCount * baseQSize
             );
-            //
             NttTool.nttNegacyclicHarveyLazyPoly(encrypted2Q, encrypted2Size, coeffCount, baseQSize, i, baseQNttTables);
             // Allocate temporary space for a polynomial in the Bsk U {m_tilde} base
-            // 这是一个 RnsIter
             long[] temp = new long[coeffCount * baseBskMTildeSize];
-
             // 1) Convert from base q to base Bsk U {m_tilde}
             rnsTool.fastBConvMTildeRnsIter(
                 encrypted2.getData(),
@@ -1667,33 +1611,19 @@ public class Evaluator {
                 coeffCount,
                 baseBskMTildeSize
             );
-
             // (2) Reduce q-overflows in with Montgomery reduction, switching base to Bsk
-//            rns_tool->sm_mrq(temp, get<2>(I), pool);
             rnsTool.smMrqRnsIter(temp,
-                0,
-                coeffCount,
-                baseBskMTildeSize,
-                encrypted2Bsk, // 对应 get<2>(I)
-                i * coeffCount * baseBskSize, // 注意起点
-                coeffCount,
-                baseBskSize
+                0, coeffCount, baseBskMTildeSize, encrypted2Bsk, i * coeffCount * baseBskSize, coeffCount, baseBskSize
             );
-
             // Transform to NTT form in base Bsk
             // Lazy reduction
             NttTool.nttNegacyclicHarveyLazyPoly(encrypted2Bsk, encrypted2Size, coeffCount, baseBskSize, i, baseBskNttTables);
         }
-
-//        System.out.println("steps (1)-(3) encrypted2Q: \n" + Arrays.toString(encrypted2Q));
-//        System.out.println("steps (1)-(3) encrypted2Bsk: \n" + Arrays.toString(encrypted2Bsk));
-
         // Allocate temporary space for the output of step (4)
         // We allocate space separately for the base q and the base Bsk components
         // 均为 polyIter
         long[] tempDestinationQ = new long[destinationSize * coeffCount * baseQSize];
         long[] tempDestinationBsk = new long[destinationSize * coeffCount * baseBskSize];
-
         // Perform BEHZ step (4): dyadic multiplication on arbitrary size ciphertexts
         // todo: 尝试并行化加速
         for (int i = 0; i < destinationSize; i++) {
@@ -1703,36 +1633,28 @@ public class Evaluator {
             int currEncrypted1Last = Math.min(i, encrypted1Size - 1);
             int currEncrypted2First = Math.min(i, encrypted2Size - 1);
             int currEncrypted1First = i - currEncrypted2First;
-
             // The total number of dyadic products is now easy to compute
             int steps = currEncrypted1Last - currEncrypted1First + 1;
-
-            // 对标 behz_ciphertext_product, 直接写，不使用 lambda 表达式
             // 处理 behz_ciphertext_product(encrypted1_q, encrypted2_q, base_q, base_q_size, temp_dest_q);
             // 用一个独立的代码块来处理
             {
                 // 其实是一个起点的计算, 注意这里的 k 是 baseQSize
                 // 作为 encrypted1_q 的起点
                 int shiftedIn1Iter = currEncrypted1First * coeffCount * baseQSize;
-
                 // 同样是起点的计算，不过是从这个起点开始逆向迭代
                 // 作为 encrypted2_q 的起点
                 int shiftedReversedIn2Iter = currEncrypted2First * coeffCount * baseQSize;
-                // 作为 tempDestinationQ 的起点， 注意这是指向一个 RnsIter, 上面是指向 PolyIter
-                // 这一点非常容易出错！
                 int shiftedOutIter = i * coeffCount * baseQSize;
                 for (int j = 0; j < steps; j++) {
-                    // 每一步的步长都是 coeffCount * baseQSize
-                    // 注意这里用的是 baseQSize
                     for (int k = 0; k < baseQSize; k++) {
                         // 每次只处理一个 coeffIter
                         long[] temp = new long[coeffCount];
-
+                        // c_1 mod q_i, c2_2 mod q_i in NTT form, compute c_1 * c_2 mod q_i
                         PolyArithmeticSmallMod.dyadicProductCoeffMod(
                             encrypted1Q,
                             shiftedIn1Iter + j * coeffCount * baseQSize + k * coeffCount,
                             encrypted2Q,
-                            (shiftedReversedIn2Iter - j * coeffCount * baseQSize) + k * coeffCount,// 注意这里的 index 是减
+                            (shiftedReversedIn2Iter - j * coeffCount * baseQSize) + k * coeffCount,
                             coeffCount,
                             baseQ[k],
                             temp,
@@ -1755,23 +1677,13 @@ public class Evaluator {
             }
             // behz_ciphertext_product(encrypted1_Bsk, encrypted2_Bsk, base_Bsk, base_Bsk_size, temp_dest_Bsk);
             {
-                // 其实是一个起点的计算, 注意这里的 k 是 base_Bsk_size
-                // 作为 encrypted1_Bsk 的起点
                 int shiftedIn1Iter = currEncrypted1First * coeffCount * baseBskSize;
-
-                // 同样是起点的计算，不过是从这个起点开始逆向迭代
-                // 作为 encrypted2_q 的起点
                 int shiftedReversedIn2Iter = currEncrypted2First * coeffCount * baseBskSize;
-                // 作为 tempDestinationQ 的起点， 注意这是指向一个 RnsIter, 上面是指向 PolyIter
-                // 这一点非常容易出错！
                 int shiftedOutIter = i * coeffCount * baseBskSize;
                 for (int j = 0; j < steps; j++) {
-                    // 每一步的步长都是 coeffCount * baseQSize
-                    // 注意这里用的是 baseBskSize
                     for (int k = 0; k < baseBskSize; k++) {
                         // 每次只处理一个 coeffIter
                         long[] temp = new long[coeffCount];
-
                         PolyArithmeticSmallMod.dyadicProductCoeffMod(
                             encrypted1Bsk,
                             shiftedIn1Iter + j * coeffCount * baseBskSize + k * coeffCount,
@@ -1796,60 +1708,45 @@ public class Evaluator {
                     }
                 }
             }
-        } // i < destinationSize 结束
-
-//        System.out.println("step(4) tempDestinationQ: \n" + Arrays.toString(tempDestinationQ));
-//        System.out.println("step(4) tempDestinationBsk: \n" + Arrays.toString(tempDestinationBsk));
-//
-
-
+        }
         // Perform BEHZ step (5): transform data from NTT form
         // Lazy reduction here. The following multiply_poly_scalar_coeffmod will correct the value back to [0, p)
         // 处理整个 polyIter
         NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationQ, destinationSize, coeffCount, baseQSize, baseQNttTables);
         NttTool.inverseNttNegacyclicHarveyLazyPoly(tempDestinationBsk, destinationSize, coeffCount, baseBskSize, baseBskNttTables);
-
-//        System.out.println("step(4) tempDestinationQ after inverse ntt \n" + Arrays.toString(tempDestinationQ));
-//        System.out.println("step(4) tempDestinationBsk after inverse ntt \n" + Arrays.toString(tempDestinationBsk));
-
-
         // Perform BEHZ steps (6)-(8)
         for (int i = 0; i < destinationSize; i++) {
-            // Bring together the base q and base Bsk components into a single allocation
-            // a RnsIter
+            // Bring together the base q and base Bsk components into a single allocation a RnsIter
             long[] tempQBsk = new long[coeffCount * (baseQSize + baseBskSize)];
-
-            // Step (6): multiply base q components by t (plain_modulus)
+            // output ct * t in base q and bsk
+            // Step (6): multiply base q components by t (plain_modulus), ct_i * t mod q
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationQ,
-                i * coeffCount * baseQSize, // 注意这里的 k
+                i * coeffCount * baseQSize,
                 coeffCount,
                 baseQSize,
                 plainModulus,
                 baseQ,
                 tempQBsk,
                 0,
-                coeffCount, // 注意起点是0, 然后往后的 coeffCount * baseQSize 被占据
+                coeffCount,
                 baseQSize
             );
-
+            // multiply base bsk components by t (plain_modulus), ct_i * t mod bsk
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
                 tempDestinationBsk,
-                i * coeffCount * baseBskSize, // 注意这里的 k
+                i * coeffCount * baseBskSize,
                 coeffCount,
                 baseBskSize,
                 plainModulus,
                 baseBsk,
                 tempQBsk,
-                baseQSize * coeffCount, // 注意起点
+                baseQSize * coeffCount,
                 coeffCount,
                 baseBskSize
             );
-
-            // Allocate yet another temporary for fast divide-and-floor result in base Bsk
-            // a RnsIter
+            // Allocate yet another temporary for fast divide-and-floor result in base Bsk a RnsIter
             long[] tempBsk = new long[coeffCount * baseBskSize];
-
             // Step (7): divide by q and floor, producing a result in base Bsk
             rnsTool.fastFloorRnsIter(
                 tempQBsk,
@@ -1861,7 +1758,6 @@ public class Evaluator {
                 coeffCount,
                 baseBskSize
             );
-
             // Step (8): use Shenoy-Kumaresan method to convert the result to base q and write to encrypted1
             rnsTool.fastBConvSkRnsIter(
                 tempBsk,
@@ -1869,13 +1765,11 @@ public class Evaluator {
                 coeffCount,
                 baseBskSize,
                 encrypted1.getData(),
-                i * coeffCount * encrypted1.getCoeffModulusSize(),// 注意起点
+                i * coeffCount * encrypted1.getCoeffModulusSize(),
                 encrypted1.getPolyModulusDegree(),
                 encrypted1.getCoeffModulusSize()
             );
-
         }
-
     }
 
 

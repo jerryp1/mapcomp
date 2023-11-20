@@ -620,7 +620,7 @@ public class Plaintext implements Cloneable {
     /**
      * Returns the scale of the plaintext.
      *
-     * @return the scale of the plaintext..
+     * @return the scale of the plaintext.
      */
     public double scale() {
         return scale;

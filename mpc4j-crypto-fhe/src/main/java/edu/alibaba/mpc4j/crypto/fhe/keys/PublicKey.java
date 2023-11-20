@@ -18,31 +18,44 @@ import java.io.Serializable;
  */
 public class PublicKey implements Cloneable, Serializable {
 
-
+    /**
+     * public key
+     */
     private Ciphertext pk;
 
+    /**
+     Creates an empty public key.
+     */
     public PublicKey() {
         pk = new Ciphertext();
     }
 
     /**
-     * @return the data of PublicKey object
+     * Returns the underlying polynomials of public key.
+     *
+     * @return the underlying polynomials of public key.
      */
     public Ciphertext data() {
         return pk;
     }
 
     /**
-     * @return parmsId of PublicKey, pointing to an EncryptionParameter object
+     * Returns parmsId of public key, pointing to an EncryptionParameter object.
+     *
+     * @return parmsId of public key.
      */
     public ParmsIdType parmsId() {
         return pk.getParmsId();
     }
 
+    /**
+     * Sets given parms ID to public key.
+     *
+     * @param parmsId the given parms ID.
+     */
     public void setParmsId(ParmsIdType parmsId) {
         this.pk.setParmsId(parmsId);
     }
-
 
     @Override
     public PublicKey clone() {
@@ -56,15 +69,15 @@ public class PublicKey implements Cloneable, Serializable {
         }
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-
-        if (!(o instanceof PublicKey)) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PublicKey)) {
+            return false;
+        }
         PublicKey publicKey = (PublicKey) o;
-
         return new EqualsBuilder().append(pk, publicKey.pk).isEquals();
     }
 

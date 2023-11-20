@@ -14,30 +14,44 @@ import edu.alibaba.mpc4j.crypto.fhe.params.ParmsIdType;
  */
 public class SecretKey implements Cloneable {
 
+    /**
+     * secret key
+     */
     private Plaintext sk;
 
+    /**
+     Creates an empty secret key.
+     */
     public SecretKey() {
         sk = new Plaintext();
     }
 
     /**
-     * @return the data of SecretKey object
+     * Returns the underlying polynomial of secret key.
+     *
+     * @return the underlying polynomial of secret key.
      */
     public Plaintext data() {
         return sk;
     }
 
     /**
-     * @return parmsId of SecretKey, pointing to an EncryptionParameter object
+     * Returns parmsId of secret key, pointing to an EncryptionParameter object.
+     *
+     * @return parmsId of secret key.
      */
     public ParmsIdType parmsId() {
         return sk.getParmsId();
     }
 
+    /**
+     * Sets given parms ID to secret key.
+     *
+     * @param parmsId the given parms ID.
+     */
     public void setParmsId(ParmsIdType parmsId) {
         sk.setParmsId(parmsId);
     }
-
 
     @Override
     public SecretKey clone() {

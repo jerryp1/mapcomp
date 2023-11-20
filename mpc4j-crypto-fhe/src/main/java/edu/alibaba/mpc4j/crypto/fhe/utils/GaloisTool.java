@@ -76,32 +76,25 @@ public class GaloisTool {
 
     /**
      * Compute the Galois element corresponding to a given rotation step.
-     * 输入视为 int 类型，输出是 uint32_t
      *
-     * @param step
-     * @return
+     * @param step a rotation step.
+     * @return the Galois element.
      */
     public int getEltFromStep(int step) {
-
         int n = coeffCount;
         int m32 = Common.mulSafe(n, 2, true);
         long m = (long) m32;
-
         if (step == 0) {
             return (int) m - 1;
         } else {
-
             // Extract sign of steps.
-            // When steps is positive, the rotation is to the left; when steps is negative, it is to the right.
+            // When step is positive, the rotation is to the left; when step is negative, it is to the right.
             boolean sign = step < 0;
             int posStep = Math.abs(step);
-
             if (posStep >= (n >>> 1)) {
                 throw new IllegalArgumentException("step count too large");
             }
-
             posStep &= (m32 - 1);
-
             if (sign) {
                 step = (n >>> 1) - posStep;
             } else {
@@ -121,8 +114,8 @@ public class GaloisTool {
     /**
      * Compute the Galois elements corresponding to a vector of given rotation steps.
      *
-     * @param steps
-     * @return
+     * @param steps the steps.
+     * @return the Galois elements.
      */
     public int[] getEltsFromSteps(int[] steps) {
         return Arrays.stream(steps).parallel().map(this::getEltFromStep).toArray();
@@ -131,34 +124,29 @@ public class GaloisTool {
     /**
      * Compute a vector of all necessary galois_elts.
      *
-     * @return
+     * @return all necessary galois_elts.
      */
     public int[] getEltsAll() {
-
         int m = (int) ((long) coeffCount << 1);
+        // 2*log(n)-1 galois_elts
         int[] galoisElts = new int[2 * (coeffCountPower - 1) + 1];
         int i = 0;
-
         // Generate Galois keys for m - 1 (X -> X^{m-1})
         galoisElts[i++] = m - 1;
-
         // Generate Galois key for power of generator_ mod m (X -> X^{3^k}) and
         // for negative power of generator_ mod m (X -> X^{-3^k})
         long posPower = generator;
         long[] temp = new long[1];
         UintArithmeticSmallMod.tryInvertUintMod(generator, (long) m, temp);
         long negPower = temp[0];
-
         for (int j = 0; j < coeffCountPower - 1; j++) {
             galoisElts[i++] = (int) posPower;
             posPower *= posPower;
             posPower &= (m - 1);
-
             galoisElts[i++] = (int) negPower;
             negPower *= negPower;
             negPower &= (m - 1);
         }
-
         return galoisElts;
     }
 
@@ -344,15 +332,14 @@ public class GaloisTool {
      * @param galoisElt
      * @param resultRnsIter     single poly in rns
      */
-    public void applyGaloisNttRnsIter(long[] rnsIter, int rnsIterCoeffCount, int coeffModulusSize, int galoisElt, long[] resultRnsIter, int resultRnsIterCoeffCount) {
-
+    public void applyGaloisNttRnsIter(long[] rnsIter, int rnsIterCoeffCount, int coeffModulusSize, int galoisElt,
+                                      long[] resultRnsIter, int resultRnsIterCoeffCount) {
+        // todo: 确保地址不一致？
         assert rnsIter != resultRnsIter;
         // Verify coprime conditions.
         assert (galoisElt & 1) > 0 && (galoisElt < 2 * (1L << coeffCountPower));
-
         assert coeffModulusSize > 0 && rnsIterCoeffCount == coeffCount;
         assert resultRnsIterCoeffCount == coeffCount;
-
         // 这里在残次循环是不变的
         generateTableNtt(galoisElt, permutationTables[getIndexFromElt(galoisElt)]);
         int[] table = permutationTables[getIndexFromElt(galoisElt)];
@@ -375,11 +362,15 @@ public class GaloisTool {
     }
 
 
+    /**
+     * Computes the index in the range of 0 to (coeff_count_ - 1) of a given Galois element.
+     *
+     * @param galoisElt the Galois element.
+     * @return the index.
+     */
     public static int getIndexFromElt(int galoisElt) {
-
+        // must be odd
         assert (galoisElt & 1) > 0;
-
         return (galoisElt - 1) >>> 1;
     }
-
 }

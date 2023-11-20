@@ -2,8 +2,6 @@ package edu.alibaba.mpc4j.crypto.fhe.keys;
 
 import edu.alibaba.mpc4j.crypto.fhe.utils.GaloisTool;
 
-import java.io.Serializable;
-
 /**
  * Class to store Galois keys.
  *
@@ -30,15 +28,25 @@ public class GaloisKeys extends KeySwitchKeys {
         super();
     }
 
+    /**
+     * Returns the index of a Galois key in the backing key switching keys instance that corresponds to
+     * the given Galois element, assuming that it exists in the backing key switching keys.
+     *
+     * @param galoisElt the Galois element.
+     * @return the index of a Galois key.
+     */
     public static int getIndex(int galoisElt) {
-
         return GaloisTool.getIndexFromElt(galoisElt);
     }
 
+    /**
+     * Returns whether a Galois key corresponding to a given Galois element exists.
+     *
+     * @param galoisElt the Galois element.
+     * @return trun if the Galois key exists, otherwise false.
+     */
     public boolean hasKey(int galoisElt) {
-
         int index = getIndex(galoisElt);
-
         return data().length > index && data()[index].length > 0;
     }
 
