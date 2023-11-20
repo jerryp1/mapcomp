@@ -91,7 +91,7 @@ public class PermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bPermutationConfig.Builder(zl).build();
+                return new Xxx23PermutationConfig.Builder(zl).build();
             case COVERT:
             case MALICIOUS:
             default:

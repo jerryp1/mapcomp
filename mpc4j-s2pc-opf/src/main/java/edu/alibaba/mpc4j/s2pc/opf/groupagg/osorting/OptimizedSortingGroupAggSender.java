@@ -33,11 +33,8 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationParty;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -60,10 +57,6 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
      * Zl mux party.
      */
     private final ZlMuxParty zlMuxSender;
-    /**
-     * Shared permutation sender.
-     */
-    private final SharedPermutationParty sharedPermutationSender;
     /**
      * Prefix aggregation sender.
      */
@@ -101,15 +94,18 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
      */
     private Vector<byte[]> piGi;
     /**
-     * Prefix aggregation type.
+     * sigma_b
      */
-    private PrefixAggTypes prefixAggType;
+    private int[] sigmaB;
+    /**
+     * rou
+     */
+    private Vector<byte[]> rho;
 
     public OptimizedSortingGroupAggSender(Rpc senderRpc, Party receiverParty, OptimizedSortingGroupAggConfig config) {
         super(OptimizedSortingGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnReceiver = OsnFactory.createReceiver(senderRpc, receiverParty, config.getOsnConfig());
         zlMuxSender = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
-        sharedPermutationSender = SharedPermutationFactory.createSender(senderRpc, receiverParty, config.getSharedPermutationConfig());
         prefixAggSender = PrefixAggFactory.createPrefixAggSender(senderRpc, receiverParty, config.getPrefixAggConfig());
         z2cSender = Z2cFactory.createSender(senderRpc, receiverParty, config.getZ2cConfig());
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
@@ -122,9 +118,7 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
 //        addSubPtos(prefixAggSender);
 //        addSubPtos(z2cSender);
 //        addSubPtos(zlcSender);
-//        addSubPtos(b2aSender);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cSender);
-        prefixAggType = config.getPrefixAggConfig().getPrefixType();
     }
 
     @Override
@@ -137,13 +131,12 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
 
         osnReceiver.init(maxNum);
         zlMuxSender.init(maxNum);
-        sharedPermutationSender.init(maxNum);
         prefixAggSender.init(maxL, maxNum);
         z2cSender.init(maxL * maxNum);
         zlcSender.init(1);
         b2aSender.init(maxL, maxNum);
         permutationSender.init(maxL, maxNum);
-        permutationReceiver.init(maxL,maxNum);
+        permutationReceiver.init(maxL, maxNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -154,7 +147,8 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     @Override
-    public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector interFlagE) throws MpcAbortException {
+    public GroupAggOut groupAgg(String[] groupField, long[] aggField,
+                                SquareZ2Vector interFlagE) throws MpcAbortException {
         assert aggField == null;
         // set input
         setPtoInput(groupField, aggField, interFlagE);
@@ -162,8 +156,10 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         osn1(groupField);
         // pSorting using e and receiver's group
         pSorter();
-        // apply piGi to receiver's agg and sender's group
-        applyPiGi();
+        // permute
+        permute1();
+        // permute
+        permute2();
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
@@ -178,32 +174,26 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
 
     private void osn1(String[] groupAttr) throws MpcAbortException {
         // sigma_s permutation
-        int[] sigmaS = obtainPerms(groupAttr);
+        sigmaB = obtainPerms(groupAttr);
         // osn1, sender permute receiver's group, agg and e
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupByteLength + Long.BYTES + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaB, receiverGroupByteLength + 1).getShare();
         // split
-        List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, Long.BYTES, 1});
+        List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, 1});
         receiverGroupShare = splits.get(0);
-        aggShare = splits.get(1);
-        Vector<byte[]> receiverE = splits.get(2);
+        Vector<byte[]> receiverE = splits.get(1);
 
         // e share in byte form
         Vector<byte[]> tempE = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
             .put((e.getBitVector().get(i) ? (byte) 1 : (byte) 0)).array()).collect(Collectors.toCollection(Vector::new));
         // permute own e share
-        Vector<byte[]> tempE2 = BenesNetworkUtils.permutation(sigmaS, tempE);
+        Vector<byte[]> tempE2 = BenesNetworkUtils.permutation(sigmaB, tempE);
         // xor two e shares to get aligned e shares
         eByte = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
         // sender group
         senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
-        senderGroupShare = BenesNetworkUtils.permutation(sigmaS, senderGroupShare);
 
         // ### test
         revealOtherBit(eByte);
-        // share sender group
-        senderGroupShare = shareOwn(senderGroupShare);
-        // ### test
-        revealOtherGroup(senderGroupShare);
     }
 
     private void pSorter() throws MpcAbortException {
@@ -240,16 +230,21 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         z2cSender.revealOther(e);
     }
 
-    private void applyPiGi() throws MpcAbortException {
-        // now apply piGi to receiver's shared agg. The group and e of receiver have already been permuted
-        aggShare = sharedPermutationSender.permute(piGi, aggShare);
-        revealOtherLong(aggShare);
+    private void permute1() throws MpcAbortException {
+        senderGroupShare = BenesNetworkUtils.permutation(sigmaB, senderGroupShare);
+        // sender's group and sigmaB
+        Vector<byte[]> permInput = IntStream.range(0, num).mapToObj(i ->
+            ByteBuffer.allocate(senderGroupByteLength + Integer.BYTES)
+                .put(senderGroupShare.get(i)).putInt(sigmaB[i]).array())
+            .collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> permuted = permutationSender.permute(piGi, permInput);
+        List<Vector<byte[]>> splitPermuted = GroupAggUtils.split(permuted, new int[]{senderGroupByteLength, Integer.BYTES});
+        senderGroupShare = splitPermuted.get(0);
+        rho = splitPermuted.get(1);
+    }
 
-        // apply piGi to sender's group
-        senderGroupShare = sharedPermutationSender.permute(piGi, senderGroupShare);
-
-        // ### test
-        revealOtherGroup(senderGroupShare);
+    private void permute2() throws MpcAbortException {
+        aggShare = permutationReceiver.permute(rho, Long.BYTES);
     }
 
     private Vector<byte[]> mergeGroup() {
@@ -273,24 +268,6 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         z2cSender.revealOther(agg.getIndicator());
 
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
-    }
-
-    protected Vector<byte[]> shareOwn(Vector<byte[]> input) {
-        Vector<byte[]> ownShares = IntStream.range(0, input.size()).mapToObj(i -> {
-            byte[] bytes = new byte[input.get(0).length];
-            secureRandom.nextBytes(bytes);
-            return bytes;
-        }).collect(Collectors.toCollection(Vector::new));
-
-        List<byte[]> otherShares = IntStream.range(0, input.size()).mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
-
-        DataPacketHeader sendSharesHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_SHARES.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParties()[0].getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(sendSharesHeader, otherShares));
-
-        return ownShares;
     }
 
     protected void revealOtherGroup(Vector<byte[]> input) {
