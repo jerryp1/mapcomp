@@ -219,7 +219,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         List<Vector<byte[]>> splitOther = GroupAggUtils.split(trans, new int[]{1, receiverGroupByteLength});
         receiverGroupShare = splitOther.get(1);
         // ### test
-        revealOtherGroup(senderGroupShare);
+        revealOtherGroup(receiverGroupShare);
 
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOther.get(0).get(i)[0] & 1) == 1));

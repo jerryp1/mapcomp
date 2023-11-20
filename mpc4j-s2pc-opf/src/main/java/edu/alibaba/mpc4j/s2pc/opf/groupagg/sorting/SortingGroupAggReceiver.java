@@ -188,7 +188,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         // share
         senderGroupShare = shareOther();
         // ### test
-        String[] senderGroup = revealGroup(senderGroupShare, senderGroupByteLength);
+        String[] senderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
     }
 
     private void pSorter() throws MpcAbortException {
@@ -222,7 +222,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         receiverGroupShare = splitOwn.get(1);
 
         // ### test
-        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupByteLength);
+        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
@@ -240,7 +240,7 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         senderGroupShare = sharedPermutationReceiver.permute(piGi, senderGroupShare);
 
         // ### test
-        String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupByteLength);
+        String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
         System.out.println(123);
     }
 
@@ -293,8 +293,16 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
-
-        return new GroupAggOut(tureGroup, aggResult.getElements());
+        BitVector groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
+        // filter
+        int[] indexes = obtainIndexes(groupIndicator);
+        BigInteger[] filteredAgg = new BigInteger[indexes.length];
+        String[] filteredGroup = new String[indexes.length];
+        for (int i = 0; i < indexes.length; i++) {
+            filteredAgg[i] = aggResult.getElement(indexes[i]);
+            filteredGroup[i] = tureGroup[indexes[i]];
+        }
+        return new GroupAggOut(filteredGroup, filteredAgg);
     }
 
     private int[] obtainIndexes(BitVector input) {
@@ -356,5 +364,9 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         );
         List<byte[]> receiveSharesPayload = rpc.receive(receiveSharesHeader).getPayload();
         return new Vector<>(receiveSharesPayload);
+    }
+
+    private int[] getGroupIndexes(BitVector indicator) {
+        return IntStream.range(0, num).filter(indicator::get).toArray();
     }
 }

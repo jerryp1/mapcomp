@@ -77,7 +77,6 @@ public class Dsz15A2bSender extends AbstractA2bParty {
         logPhaseInfo(PtoState.PTO_BEGIN);
         // transpose and re-share
         stopWatch.start();
-        ZlDatabase zlDatabase = ZlDatabase.create(l, xi.getZlVector().getElements());
         BitVector[] bitVectors = TransposeUtils.transposeSplit(xi.getZlVector().getElements(), l);
         int[] nums = IntStream.range(0, l).map(i -> num).toArray();
         SquareZ2Vector[] reSharedX0 = z2cSender.shareOwn(bitVectors);

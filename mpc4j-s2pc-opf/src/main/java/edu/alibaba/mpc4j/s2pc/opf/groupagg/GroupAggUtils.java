@@ -168,16 +168,16 @@ public class GroupAggUtils {
         return result;
     }
 
-    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int length) {
-        int byteLength = CommonUtils.getByteLength(length);
+    public static String[] bytesToBinaryString(Vector<byte[]> bytes, int bitLength) {
+        int byteLength = CommonUtils.getByteLength(bitLength);
 
-        MathPreconditions.checkEqual("bytes.get(0).length", "byteLength",
+        MathPreconditions.checkEqual("bytes.get(0).bitLength", "byteLength",
             bytes.get(0).length, byteLength);
         String[] result = new String[bytes.size()];
         for (int i = 0; i < bytes.size(); i++) {
             byte[] b = bytes.get(i);
             StringBuilder builder = new StringBuilder();
-            IntStream.range(0, length).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
+            IntStream.range(0, bitLength).forEach(j -> builder.append(BinaryUtils.getBoolean(b, j) ? "1" : "0"));
             result[i] = builder.toString();
         }
         return result;
