@@ -27,6 +27,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -108,7 +109,7 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // permute
         stopWatch.start();
-        byte[][] permutedBytes = permute(transposedPerm);
+        Vector<byte[]> permutedBytes = permute(transposedPerm);
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -132,7 +133,8 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         return permutedZlShares;
     }
 
-    public byte[][] permute(Vector<byte[]> perm) throws MpcAbortException {
+    @Override
+    public Vector<byte[]> permute(Vector<byte[]> perm) throws MpcAbortException {
         // generate random permutation
         int[] randomPerm = genRandomPerm(num);
         // locally apply permutation
@@ -150,6 +152,6 @@ public class Xxx23PermutationReceiver extends AbstractPermutationReceiver {
         int[] reversePerm = reversePermutation(randomPerm);
         // osn2
         OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerm, byteL);
-        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).toArray(byte[][]::new);
+        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));
     }
 }

@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
-import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
@@ -116,15 +115,14 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // permute
         stopWatch.start();
-        byte[][] permutedBytes = permute(transposedPerm);
+        Vector<byte[]> permutedBytes = permute(transposedPerm);
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 5, ptoTime);
         // matrix transpose
         stopWatch.start();
-        ZlDatabase database = ZlDatabase.create(l, permutedBytes);
-        SquareZ2Vector[] permutedZ2Shares = Arrays.stream(TransposeUtils.transposeSplit(permutedBytes,l))
+        SquareZ2Vector[] permutedZ2Shares = Arrays.stream(TransposeUtils.transposeSplit(permutedBytes, l))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         stopWatch.stop();
         ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -141,7 +139,8 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         return permutedZlShares;
     }
 
-    public byte[][] permute(Vector<byte[]> perm) throws MpcAbortException {
+    @Override
+    public Vector<byte[]> permute(Vector<byte[]> perm) throws MpcAbortException {
         // osn1
         OsnPartyOutput osnPartyOutput = osnSender.osn(perm, byteL);
         // reveal and permute
@@ -153,7 +152,7 @@ public class Xxx23bPermutationReceiver extends AbstractPermutationReceiver {
         // osn2
         OsnPartyOutput osnPartyOutput2 = osnReceiver.osn(reversePerms, byteL);
         // boolean shares
-        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).toArray(byte[][]::new);
+        return IntStream.range(0, num).mapToObj(osnPartyOutput2::getShare).collect(Collectors.toCollection(Vector::new));
     }
 
 }
