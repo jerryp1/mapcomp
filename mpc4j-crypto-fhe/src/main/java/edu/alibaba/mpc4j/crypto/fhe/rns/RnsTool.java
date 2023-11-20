@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
@@ -22,13 +21,14 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.*;
  * @author Qixian Zhou
  * @date 2023/8/21
  */
+@SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
 public class RnsTool {
     /**
      * the degree of the polynomial
      */
     int coeffCount;
     /**
-     * the coefficient modulus q=\prod q_i
+     * {q_1, ..., q_k} and q = q_1 · q_2 ... · q_k
      */
     RnsBase baseQ;
     /**
@@ -44,7 +44,7 @@ public class RnsTool {
      */
     RnsBase baseBskMTilde;
     /**
-     * modulus {t, \gamma} for decryption with
+     * the RNS modulus {t, γ}, used in BFV decryption
      */
     RnsBase baseTGamma;
     /**
@@ -64,11 +64,11 @@ public class RnsTool {
      */
     BaseConverter baseBToMskConv;
     /**
-     * base convert q --> modulus{t, \gamma}
+     * RNS base converter: {q_1, ..., q_k} -> {t, γ}, used in BFV decryption
      */
     BaseConverter baseQToTGammaConv;
     /**
-     * base convert q --> modulus{t}
+     * RNS base converter: {q_1, ..., q_k} -> {t}, used in BGV decryption
      */
     BaseConverter baseQToTConv;
     /**
@@ -84,7 +84,7 @@ public class RnsTool {
      */
     MultiplyUintModOperand invProdBModMsk;
     /**
-     * gamma^{-1} mod t
+     * |γ^{-1}|_t, used in BFV decryption
      */
     MultiplyUintModOperand invGammaModT;
     /**
@@ -100,11 +100,11 @@ public class RnsTool {
      */
     long[] prodQModBsk;
     /**
-     * -prod(q)^(-1) mod {t, gamma}
+     * |-q^(-1)|_{t, γ}, used in BFV decryption
      */
     MultiplyUintModOperand[] negInvQModTGamma;
     /**
-     * prod({t, gamma}) mod {q_1,...,q_k}
+     * |γt|_{q_1, ..., q_k}, used in BFV decryption
      */
     MultiplyUintModOperand[] prodTGammaModQ;
     /**
@@ -126,7 +126,8 @@ public class RnsTool {
      */
     Modulus t;
     /**
-     * a prime congruent to 1 modulo 2*n using for decryption
+     * γ, an integer co-prime to {q_1, ..., q_k}, γ ≡ 1 (mod 2n). There is a trade-off between the size of γ and the
+     * error bound. In the implementation, we choose γ ~ 2^61.
      */
     Modulus gamma;
     /**
@@ -365,142 +366,65 @@ public class RnsTool {
     }
 
     /**
-     * Decryptions a ciphertext and stores the result in destination. ref: Algorithm 1 in BEHZ.
+     * Decrypts a ciphertext and stores the result in output. The algorithm is from Algorithm 1 in [BEHZ16].
      *
-     * @param input           polynomial in RNS form to decrypt.
-     * @param inputCoeffCount coeff count of the polynomial.
-     * @param destination     the result to overwrite with decrypted values, the length is coeff count.
+     * @param input      polynomial in RNS form to decrypt.
+     * @param coeffCount coeff count of the polynomial.
+     * @param output     the result to overwrite with decrypted values, the length is coeff count.
      */
-    public void decryptScaleAndRound(long[] input, int inputCoeffCount, long[] destination) {
+    public void decryptScaleAndRound(long[] input, int coeffCount, long[] output) {
         assert input != null;
-        assert inputCoeffCount == coeffCount;
-        assert destination.length == coeffCount;
+        assert coeffCount == this.coeffCount;
+        assert output.length == this.coeffCount;
         int baseQSize = baseQ.getSize();
+        // the decryption RNS modulus {t, γ}
         int baseTGammaSize = baseTGamma.getSize();
-        // Compute |gamma * t|_qi * ct(s), note that here is under RNS representation operation, |gamma*t|_{q_i} has been pre-computed, so has baseQSize
-        // ct(s) is also a poly under RNS base Q, so has baseQSize fractions.
-        // Algorithm 1 line-2, 的第一个输入, |gamma * t|_{q_i} is the scalar
+        // step 1-3: compute |γt · ct(s)|_{q_1, ..., q_k}, where |γt|_{q_1, ..., q_k} is pre-computed
         long[] temp = PolyCore.allocateZeroPolyArray(baseQSize, coeffCount, 1);
         for (int i = 0; i < baseQSize; i++) {
-            // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
-            // coeffIter[startIndex * coeffCount, (startIndex + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
-            // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
+            // compute temp = |γt · ct(s)|_{q_1, ..., q_k}
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
                 input, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), temp, i * coeffCount
             );
         }
-        // Make another temp destination to get the poly in mod {t, gamma}
+        // compute s^{t, γ} = FastBconv(temp, {q_1, ..., q_k}, {t, γ})
+        // therefore, s^{t, γ} = FastBconv(|γt · ct(s)|_{q_1, ..., q_k}, {q_1, ..., q_k}, {t, γ})
         long[] tempTGammaRns = PolyCore.allocateZeroPolyArray(baseTGammaSize, coeffCount, 1);
-        // Convert from q to {t, gamma}
-        baseQToTGammaConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempTGammaRns, 0, coeffCount, baseTGammaSize);
-        // Multiply by -prod(q)^(-1) mod {t, gamma}
-        // line-2
+        baseQToTGammaConv.fastConvertArrayRnsIter(
+            temp, 0, coeffCount, baseQSize, tempTGammaRns, 0, coeffCount, baseTGammaSize
+        );
+        // compute s^{t, γ} = s^{t, γ} × |-q^{-1}|_{t, γ}
+        // therefore, s^{t, γ} = FastBconv(|γt · ct(s)|_{q_1, ..., q_k}, {q_1, ..., q_k}, {t, γ}) × |-q^{-1}|_{t, γ}
         for (int i = 0; i < baseTGammaSize; i++) {
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                tempTGammaRns,
-                i * coeffCount,
-                coeffCount,
-                negInvQModTGamma[i],
-                baseTGamma.getBase(i),
-                tempTGammaRns,
-                i * coeffCount);
+                tempTGammaRns, i * coeffCount, coeffCount,
+                negInvQModTGamma[i], baseTGamma.getBase(i),
+                tempTGammaRns, i * coeffCount
+            );
         }
-        // Need to correct values in temp_t_gamma (gamma component only) which are
-        // larger than floor(gamma/2)
-        // for  ||_p --> []_p , i.e. [0, q) ---> [-q/2, q/2)
+        // step 4: ~s^(γ) ← [s^(γ)]_{γ}, that is, subtract q/2 if the coefficient is in [q/2, q).
+        // step 5(1): m^(t) ← [(s^(t) - ~s^(γ))]_t
         long gammaDiv2 = baseTGamma.getBase(1).getValue() >>> 1;
-        // Now compute the subtraction to remove error and perform final multiplication by
-        // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
         for (int i = 0; i < coeffCount; i++) {
-            // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
-            // [s^t - [s^gamma]_gamma], 第二项为中心化模数
             if (tempTGammaRns[coeffCount + i] > gammaDiv2) {
-                // Compute |s^t + (gamma - |s^gamma|_gamma)|_t instead of |s^t - (|s^gamma|_gamma - gamma)|_t
-                destination[i] = UintArithmeticSmallMod.addUintMod(
+                // the coefficient is in [q/2, q).
+                // compute |s^(t) + (γ - |s^(γ)|_{γ})|_t instead of |s^t - (|s^(γ)|_{γ} - γ)|_t
+                output[i] = UintArithmeticSmallMod.addUintMod(
                     tempTGammaRns[i],
                     UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGammaRns[coeffCount + i], t),
                     t
                 );
             } else {
-                // No correction needed, just no need gamma - a, directly use a, because a \in [0, gamma/2)
-                destination[i] = UintArithmeticSmallMod.subUintMod(
+                // the coefficient is in [0, q/2], compute |s^t - |s^(γ)|_{γ}|_t
+                output[i] = UintArithmeticSmallMod.subUintMod(
                     tempTGammaRns[i],
                     UintArithmeticSmallMod.barrettReduce64(tempTGammaRns[coeffCount + i], t),
                     t
                 );
             }
-            // now handle multiplication
-            // If this coefficient was non-zero, multiply by gamma^(-1)
-            // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
-            if (destination[i] != 0) {
-                // Perform final multiplication by gamma inverse mod t
-                destination[i] = UintArithmeticSmallMod.multiplyUintMod(destination[i], invGammaModT, t);
-            }
-        }
-    }
-
-    /**
-     * Decryptions a ciphertext and stores the result in destination. ref: Algorithm 1 in BEHZ.
-     *
-     * @param input       polynomial in RNS form to decrypt.
-     * @param destination the result to overwrite with decrypted values, the length is coeff count.
-     */
-    public void decryptScaleAndRound(RnsIter input, long[] destination) {
-        assert input != null;
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert destination.length == coeffCount;
-        int baseQSize = baseQ.getSize();
-        int baseTGammaSize = baseTGamma.getSize();
-        // Compute |gamma * t|_qi * ct(s), note that here is under RNS representation operation, |gamma*t|_{q_i} has been pre-computed, so has baseQSize
-        // ct(s) is also a poly under RNS base Q, so has baseQSize fractions.
-        // Algorithm 1 line-2, 的第一个输入, |gamma * t|_{q_i} is the scalar
-        // |gamma * t|_qi * ct(s) mod q_i
-        RnsIter temp = new RnsIter(baseQSize, coeffCount);
-        for (int i = 0; i < baseQSize; i++) {
-            // 注意这里的函数签名，通过指定 startIndex和coeffCount, 每一次处理的值就是
-            // coeffIter[startIndex * coeffCount, (startIndex + 1) * coeffCount) 这样避免了原来的调用方式 .getCoeffIter(int i)
-            // 因为现在 RnsIter 底层是一个一维数组，这样可以避免 对一维数组进行 split 操作带来的 new long[] 的开销
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), temp.coeffIter, i * coeffCount);
-        }
-        // Make another temp destination to get the poly in mod {t, gamma}
-        RnsIter tempTGamma = new RnsIter(baseTGammaSize, coeffCount);
-        // Convert from q to {t, gamma}
-        baseQToTGammaConv.fastConvertArray(temp, tempTGamma);
-        // Multiply by -prod(q)^(-1) mod {t, gamma}
-        // line-2
-        for (int i = 0; i < baseTGammaSize; i++) {
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(tempTGamma.coeffIter, i * coeffCount, coeffCount, negInvQModTGamma[i], baseTGamma.getBase(i), tempTGamma.coeffIter, i * coeffCount);
-        }
-        // Need to correct values in temp_t_gamma (gamma component only) which are
-        // larger than floor(gamma/2)
-        // for  ||_p --> []_p , i.e. [0, q) ---> [-q/2, q/2)
-        long gammaDiv2 = baseTGamma.getBase(1).getValue() >>> 1;
-        // Now compute the subtraction to remove error and perform final multiplication by
-        // gamma inverse mod t. just : s^{(t)}, s^{(\gamma)}, line-4/5
-        for (int i = 0; i < coeffCount; i++) {
-            // tempTGamma.getCoeffIter(1) is the gamma, [i] is the i-th count value
-            // s^{(\gamma)}
-            if (tempTGamma.getCoeff(1, i) > gammaDiv2) {
-                // Compute -(gamma - a) instead of (a - gamma)
-                destination[i] = UintArithmeticSmallMod.addUintMod(
-                    tempTGamma.getCoeff(0, i),
-                    UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGamma.getCoeff(1, i), t),
-                    t
-                );
-            } else {
-                // No correction needed, just no need gamma - a, directly use a, because a \in [0, gamma/2)
-                destination[i] = UintArithmeticSmallMod.subUintMod(
-                    tempTGamma.getCoeff(0, i),
-                    UintArithmeticSmallMod.barrettReduce64(tempTGamma.getCoeff(1, i), t),
-                    t
-                );
-            }
-            // now handle multiplication
-            // If this coefficient was non-zero, multiply by gamma^(-1)
-            // 对应 line-5 的乘法 ， 如果前面一项等于0， 自然不需要计算乘法了
-            if (destination[i] != 0) {
-                // Perform final multiplication by gamma inverse mod t
-                destination[i] = UintArithmeticSmallMod.multiplyUintMod(destination[i], invGammaModT, t);
+            // step 5(2): m^(t) ← [m^(t) × |γ^{-1}|_{t}]_t, therefore, m^(t) ← [[(s^(t) - ~s^(γ))]_t × |γ^{-1}|_{t}]_t
+            if (output[i] != 0) {
+                output[i] = UintArithmeticSmallMod.multiplyUintMod(output[i], invGammaModT, t);
             }
         }
     }
@@ -589,6 +513,7 @@ public class RnsTool {
         destination.update(tempOut, tempOut2);
 
     }
+
     /**
      * Small Montgomery Reduction mod q. Ref Algorithm 2, page-10 in BEHZ16.
      *
@@ -602,7 +527,7 @@ public class RnsTool {
      * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
      */
     public void smMrqRnsIter(long[] input, int inputStartIndex, int inputCoeffCount, int inputCoeffModulusSize,
-        long[] destination, int destinationStartIndex, int destinationCoeffCount, int destinationCoeffModulusSize) {
+                             long[] destination, int destinationStartIndex, int destinationCoeffCount, int destinationCoeffModulusSize) {
         assert input != null;
         assert inputCoeffCount == coeffCount;
         assert destination != null;
@@ -706,7 +631,7 @@ public class RnsTool {
      * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
      */
     public void fastFloorRnsIter(long[] input, int inputStartIndex, int inputCoeffCount, int inputCoeffModulusSize,
-        long[] destination, int destinationStartIndex, int destinationCoeffCount, int destinationCoeffModulusSize) {
+                                 long[] destination, int destinationStartIndex, int destinationCoeffCount, int destinationCoeffModulusSize) {
         assert input != null;
         assert inputCoeffCount == coeffCount;
         assert destination != null;
@@ -1224,9 +1149,7 @@ public class RnsTool {
         }
     }
 
-
     public void decryptModT(RnsIter phase, long[] destination) {
-
         // Use exact base convension rather than convert the base through the compose API
         baseQToTConv.exactConvertArray(phase, destination);
     }

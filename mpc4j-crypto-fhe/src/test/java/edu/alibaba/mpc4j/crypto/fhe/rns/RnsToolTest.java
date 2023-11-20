@@ -37,15 +37,14 @@ public class RnsToolTest {
     public void exactScaleAndRound() {
         // This function computes [round(t/q * |input|_q)]_t exactly using the gamma-correction technique.
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
-            int polyModulusDegree = 2;
+            int coeffCount = 2;
             Modulus plainT = new Modulus(3);
-            RnsTool rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{5, 7}), plainT);
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            long[] outIter = new long[polyModulusDegree];
+            RnsTool rnsTool = new RnsTool(coeffCount, new RnsBase(new long[]{5, 7}), plainT);
+            long[] in = new long[coeffCount * rnsTool.getBaseBsk().getSize()];
+            long[] out = new long[coeffCount];
             // 0 ---> scale and round must be 0
-            rnsTool.decryptScaleAndRound(inIter, outIter);
-            for (long o : outIter) {
+            rnsTool.decryptScaleAndRound(in, coeffCount, out);
+            for (long o : out) {
                 Assert.assertEquals(0, o);
             }
             // baseQSize = 2, {5, 7}, coeff count = 2
@@ -57,8 +56,8 @@ public class RnsToolTest {
             in[3] = 70;
             // Q = 35, [(t/35) * 35] mod t --> 0,  [(t/35) * 70] mod t --> 0
             // so result is zero
-            rnsTool.decryptScaleAndRound(inIter, outIter);
-            for (long o : outIter) {
+            rnsTool.decryptScaleAndRound(in, coeffCount, out);
+            for (long o : out) {
                 Assert.assertEquals(0, o);
             }
             // try non-trivial case
@@ -70,9 +69,9 @@ public class RnsToolTest {
             in[3] = 30 + 35;
             // Here 29 will scale and round to 2 and 30 will scale and round to 0.
             // The added 35 should not make a difference.
-            rnsTool.decryptScaleAndRound(inIter, outIter);
-            Assert.assertEquals(2, outIter[0]);
-            Assert.assertEquals(0, outIter[1]);
+            rnsTool.decryptScaleAndRound(in, coeffCount, out);
+            Assert.assertEquals(2, out[0]);
+            Assert.assertEquals(0, out[1]);
         }
     }
 
