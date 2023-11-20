@@ -10,12 +10,12 @@ public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
-     * @param maxL   max l.
-     * @param maxNum max num.
+     * @param attrNum   attribute number.
+     * @param maxNum    max num.
      * @param maxBitNum max input bit number
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException;
+    void init(int attrNum, int maxNum, int maxBitNum) throws MpcAbortException;
 
     /**
      * get the flags representing which rows store the group aggregation results
@@ -23,16 +23,17 @@ public interface OneSideGroupParty extends TwoPartyPto {
      * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      */
-    default boolean[] getResPosFlag(boolean[] groupFlag){
+    default boolean[] getResPosFlag(boolean[] groupFlag) {
         boolean[] res = new boolean[groupFlag.length];
         int index = groupFlag.length - 1;
         while (index >= 0) {
             int curr = index - 1;
             while (curr >= 0 && (!groupFlag[curr])) {
                 curr--;
-            }if(curr == -1){
+            }
+            if (curr == -1) {
                 res[0] = true;
-            }else{
+            } else {
                 res[OneSideGroupUtils.rightMostChildOfLeftSubTreeOfCommonAncestor(curr + 1, index)] = true;
             }
             index = curr;
@@ -43,10 +44,10 @@ public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param xiArrays the arrays of share xi.
+     * @param xiArrays   the arrays of share xi.
      * @param validFlags whether the corresponding row is valid
-     * @param aggTypes max or min
-     * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @param aggTypes   max or min
+     * @param groupFlag  if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
@@ -55,10 +56,10 @@ public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param xiArrays the arrays of share xi.
+     * @param xiArrays   the arrays of share xi.
      * @param validFlags whether the corresponding row is valid
-     * @param aggTypes max or min
-     * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @param aggTypes   max or min
+     * @param groupFlag  if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */

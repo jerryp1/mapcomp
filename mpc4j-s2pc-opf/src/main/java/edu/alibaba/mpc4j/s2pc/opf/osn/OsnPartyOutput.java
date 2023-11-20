@@ -44,6 +44,15 @@ public class OsnPartyOutput {
     }
 
     /**
+     * 返回分享值。
+     *
+     * @return 分享值。
+     */
+    public Vector<byte[]> getVector() {
+        return shareVector;
+    }
+
+    /**
      * 返回所有分享值。
      *
      * @return 分享值。

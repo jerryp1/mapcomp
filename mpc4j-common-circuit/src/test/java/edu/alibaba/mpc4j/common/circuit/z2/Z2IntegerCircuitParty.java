@@ -36,10 +36,18 @@ class Z2IntegerCircuitParty {
      * config
      */
     private final Z2CircuitConfig config;
-
+    /**
+     * sorting order, ture for ascending..
+     */
     private PlainZ2Vector pSortDir;
-
+    /**
+     * whether sorting should output a permutation
+     */
     private boolean needPermutation;
+    /**
+     * whether sorting should be stable
+     */
+    private boolean needStable;
 
     Z2IntegerCircuitParty(PlainZ2cParty party, Z2IntegerOperator operator, PlainZ2Vector[] x, PlainZ2Vector[] y, Z2CircuitConfig config) {
         this(party, operator, new PlainZ2Vector[][]{x}, new PlainZ2Vector[][]{y}, config);
@@ -53,9 +61,10 @@ class Z2IntegerCircuitParty {
         this.config = config;
     }
 
-    public void setPsorterConfig(PlainZ2Vector pSortDir, boolean needPermutation){
+    public void setPsorterConfig(PlainZ2Vector pSortDir, boolean needPermutation, boolean needStable){
         this.pSortDir = pSortDir;
         this.needPermutation = needPermutation;
+        this.needStable = needStable;
     }
 
     MpcZ2Vector[] getZ() {
@@ -88,7 +97,7 @@ class Z2IntegerCircuitParty {
                     circuit.sort(x);
                     break;
                 case P_SORT:
-                    z = circuit.psort(x, y, pSortDir, needPermutation);
+                    z = circuit.psort(x, y, pSortDir, needPermutation, needStable);
                     break;
                 default:
                     throw new IllegalStateException("Invalid " + operator.name() + ": " + operator.name());

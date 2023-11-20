@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.OneSideGroupTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.OneSideGroupType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 
@@ -34,8 +34,8 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
     }
 
     @Override
-    public OneSideGroupTypes getPtoType() {
-        return OneSideGroupTypes.AMOS22_ONE_SIDE;
+    public OneSideGroupType getPtoType() {
+        return OneSideGroupType.AMOS22_ONE_SIDE;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Amos22OneSideGroupConfig> {

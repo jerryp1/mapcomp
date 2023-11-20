@@ -100,15 +100,18 @@ public class Kvh21Bit2aReceiver extends AbstractBit2aParty {
     @Override
     public SquareZlVector[] bit2a(SquareZ2Vector[] xiArray) throws MpcAbortException {
         // merge
-        SquareZ2Vector mergedXiArray = (SquareZ2Vector) z2cReceiver.merge(xiArray);
+        SquareZ2Vector mergedXiArray = SquareZ2Vector.mergeWithPadding(xiArray);
+//        SquareZ2Vector mergedXiArray = (SquareZ2Vector) z2cReceiver.merge(xiArray);
         // bit2a
         SquareZlVector mergedZiArray = bit2a(mergedXiArray);
         // split
         int[] nums = Arrays.stream(xiArray)
             .mapToInt(SquareZ2Vector::getNum).toArray();
 
-        return Arrays.stream(ZlVector.split(mergedZiArray.getZlVector(), nums))
+        return Arrays.stream(ZlVector.splitWithPadding(mergedZiArray.getZlVector(), nums))
             .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
+//        return Arrays.stream(ZlVector.split(mergedZiArray.getZlVector(), nums))
+//            .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
     }
 
     private SquareZlVector t0t1(CotReceiverOutput cotReceiverOutput, List<byte[]> t0t1Payload) throws MpcAbortException {

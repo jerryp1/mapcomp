@@ -220,9 +220,10 @@ public interface BitVector {
      */
     default void setPointsWithFixedSpace(BitVector source, int startPos, int num, int skipLen){
         MathPreconditions.checkNonNegative("startPos", startPos);
+        startPos = startPos >= bitNum() ? bitNum() - 1 : startPos;
         MathPreconditions.checkPositive("num", num);
         MathPreconditions.checkPositive("skipLen", skipLen);
-        MathPreconditions.checkGreater("bitNum() > startPos", bitNum(), startPos);
+        MathPreconditions.checkGreaterOrEqual("bitNum() >= startPos", bitNum(), startPos);
         MathPreconditions.checkGreaterOrEqual("source.bitNum() >= num", source.bitNum(), num);
         MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), startPos + (num - 2) * skipLen);
         for(int i = 0, targetIndex = startPos; i < num; i++, targetIndex += skipLen){

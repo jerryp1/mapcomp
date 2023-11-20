@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.Adder;
 import edu.alibaba.mpc4j.common.circuit.z2.adder.AdderFactory;
 import edu.alibaba.mpc4j.common.circuit.z2.multiplier.Multiplier;
@@ -236,12 +235,12 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         sorter.sort(xiArray);
     }
 
-    public MpcZ2Vector[] psort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation) throws MpcAbortException {
+    public MpcZ2Vector[] psort(MpcZ2Vector[][] xiArrays, MpcZ2Vector[][] payloadArrays, PlainZ2Vector dir, boolean needPermutation, boolean needStable) throws MpcAbortException {
         Arrays.stream(xiArrays).forEach(this::checkInputs);
         if(payloadArrays != null){
             Arrays.stream(xiArrays).forEach(this::checkInputs);
         }
-        return pSorter.sort(xiArrays, payloadArrays, dir, needPermutation);
+        return pSorter.sort(xiArrays, payloadArrays, dir, needPermutation, needStable);
     }
 
     public Adder getAdder() {

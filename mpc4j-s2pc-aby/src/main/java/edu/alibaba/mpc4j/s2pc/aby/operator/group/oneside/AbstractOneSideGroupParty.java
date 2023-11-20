@@ -22,20 +22,28 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
 
     protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
         super(ptoDesc, rpc, otherParty, config);
+    }
 
+    protected void setInitInput(int attrNum, int maxNum, int maxBitNum) {
+        MathPreconditions.checkPositive("attrNum", attrNum);
+        MathPreconditions.checkGreaterOrEqual("maxNum", maxNum, 2);
+        MathPreconditions.checkPositive("maxBitNum", maxBitNum);
+        initState();
     }
 
     protected void setInputs(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggType, BitVector groupFlag){
         dataNum = xiArrays[0].bitNum();
         assert dataNum >= 2;
-        MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
-        MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags.bitNum());
+        if(groupFlag != null){
+            MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
+        }
+//        MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags.bitNum());
         Arrays.stream(xiArrays).forEach(x -> MathPreconditions.checkEqual("dataNum", "xiArrays[i].bitNum()", dataNum, x.bitNum()));
         // copy original data
         resultData = Arrays.stream(xiArrays).map(x -> SquareZ2Vector.createZeros(x.bitNum(), false)).toArray(SquareZ2Vector[]::new);
-        validFlagArray = validFlags;
+//        validFlagArray = validFlags.copy();
         this.aggType = aggType;
-        gFlag = groupFlag.copy();
+        gFlag = groupFlag == null ? null : groupFlag.copy();
         // todo 先处理一遍 得到初始的sValue和pValue，对于左孩子：p=0, s=v; 对于右孩子：p = v - fv, s = fv. 需要验证是否正确
         pValues = Arrays.stream(xiArrays).map(x -> SquareZ2Vector.createZeros(x.bitNum(), false)).toArray(SquareZ2Vector[]::new);
         sValues = Arrays.copyOf(xiArrays, xiArrays.length);

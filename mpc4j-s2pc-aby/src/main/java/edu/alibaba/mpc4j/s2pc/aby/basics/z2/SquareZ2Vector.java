@@ -134,6 +134,21 @@ public class SquareZ2Vector implements MpcZ2Vector {
         return squareShareBitVector;
     }
 
+    /**
+     * merge inputs by padding zeros to make each input full
+     *
+     * @param vectors merge data
+     */
+    public static SquareZ2Vector mergeWithPadding(SquareZ2Vector[] vectors) {
+        assert vectors.length > 0 : "merged vector length must be greater than 0";
+        boolean plain = vectors[0].isPlain();
+        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors).map(x -> {
+            assert x.isPlain() == plain;
+            return x.getBitVector();
+        }).toArray(BitVector[]::new));
+        return create(mergeBit, plain);
+    }
+
     private SquareZ2Vector() {
         // empty
     }
@@ -214,6 +229,12 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
+    public SquareZ2Vector[] splitWithPadding(int[] bitLens) {
+        BitVector[] splitBitVectors = getBitVector().splitWithPadding(bitLens);
+        return Arrays.stream(splitBitVectors).map(x -> create(x, this.isPlain())).toArray(SquareZ2Vector[]::new);
+    }
+
+    @Override
     public MpcZ2Vector extendBitsWithSkip(int destBitLen, int skipLen) {
         byte[] destByte = PSorterUtils.extendBitsWithSkip(this, destBitLen, skipLen);
         return SquareZ2Vector.create(destBitLen, destByte, this.isPlain());
@@ -226,7 +247,7 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
-    public MpcZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
+    public SquareZ2Vector getPointsWithFixedSpace(int startPos, int num, int skipLen){
         return SquareZ2Vector.create(bitVector.getPointsWithFixedSpace(startPos, num, skipLen), isPlain());
     }
 }

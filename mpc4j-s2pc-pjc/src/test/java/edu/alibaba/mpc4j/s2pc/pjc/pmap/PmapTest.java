@@ -80,6 +80,16 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
         this.config = config;
     }
 
+//    @Test
+//    public void testLOG() {
+//        byte a = (byte) (1<<7);
+//        byte b = 1;
+//        LOGGER.info(String.valueOf((a)));
+//        LOGGER.info(String.valueOf((a >>> 7)));
+//        LOGGER.info(String.valueOf((b&1)));
+//        LOGGER.info(String.valueOf(((byte)(a >>>7) & 1) == (b&1)));
+//    }
+
     @Test
     public void test2() {
         testPto(2, 2, false);
