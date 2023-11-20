@@ -16,6 +16,9 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggSend
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 
 /**
@@ -40,6 +43,7 @@ public class GroupAggFactory {
         MIX,
         SORTING,
         O_SORTING,
+        T_SORTING,
     }
 
     /**
@@ -61,6 +65,8 @@ public class GroupAggFactory {
                 return new SortingGroupAggSender(senderRpc, receiverParty, (SortingGroupAggConfig) config);
             case O_SORTING:
                 return new OptimizedSortingGroupAggSender(senderRpc, receiverParty, (OptimizedSortingGroupAggConfig) config);
+            case T_SORTING:
+                return new TrivialSortingGroupAggSender(senderRpc, receiverParty, (TrivialSortingGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -85,6 +91,8 @@ public class GroupAggFactory {
                 return new SortingGroupAggReceiver(receiverRpc, senderParty, (SortingGroupAggConfig) config);
             case O_SORTING:
                 return new OptimizedSortingGroupAggReceiver(receiverRpc, senderParty, (OptimizedSortingGroupAggConfig) config);
+            case T_SORTING:
+                return new TrivialSortingGroupAggReceiver(receiverRpc, senderParty, (TrivialSortingGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }

@@ -22,7 +22,7 @@ public class HardcodeZ2MtgConfig extends AbstractMultiPartyPtoConfig implements 
 
     @Override
     public Z2MtgFactory.Z2MtgType getPtoType() {
-        return Z2MtgType.CACHE;
+        return Z2MtgType.HARDCODE;
     }
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<HardcodeZ2MtgConfig> {
