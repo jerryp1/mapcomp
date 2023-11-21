@@ -93,6 +93,7 @@ public class PidMain {
         // 创建统计结果文件
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
+            + PropertiesUtils.readString(properties, "append_string", "")
             + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
             + "_" + serverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
@@ -237,6 +238,7 @@ public class PidMain {
         LOGGER.info("{} create result file", clientRpc.ownParty().getPartyName());
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
+            + PropertiesUtils.readString(properties, "append_string", "")
             + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
             + "_" + clientRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()

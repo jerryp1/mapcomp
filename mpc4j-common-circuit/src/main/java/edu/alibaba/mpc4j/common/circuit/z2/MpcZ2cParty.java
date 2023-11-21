@@ -322,7 +322,6 @@ public interface MpcZ2cParty {
         return not(xor(xiArray, yiArray));
     }
 
-
     MpcZ2Vector[] setPublicValues(BitVector[] data);
 
     /**

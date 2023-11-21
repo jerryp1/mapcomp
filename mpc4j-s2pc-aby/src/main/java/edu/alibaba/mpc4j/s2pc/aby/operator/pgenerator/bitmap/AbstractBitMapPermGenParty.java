@@ -61,13 +61,13 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
     }
 
     @Override
-    public void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException {
+    public void init(int maxNum, int maxBitNum) throws MpcAbortException {
         int maxFullNum = CommonUtils.getByteLength(maxNum)<<3;
-        setInitInput(maxL, maxFullNum, maxBitNum);
+        setInitInput(maxFullNum, maxBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bit2aParty.init(maxL, maxFullNum * maxBitNum);
+        bit2aParty.init(zl.getL(), maxFullNum * maxBitNum);
         z2cParty.init(1);
         zlcParty.init(1);
         zlMuxParty.init(maxFullNum * (maxBitNum + 1));

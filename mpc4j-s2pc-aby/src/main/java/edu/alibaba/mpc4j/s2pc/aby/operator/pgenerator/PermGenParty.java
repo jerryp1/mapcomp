@@ -15,12 +15,11 @@ public interface PermGenParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
-     * @param maxL   max l.
      * @param maxNum max num.
      * @param maxBitNum max input bit number
      * @throws MpcAbortException the protocol failure aborts.
      */
-    void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException;
+    void init(int maxNum, int maxBitNum) throws MpcAbortException;
 
     /**
      * Executes the protocol.

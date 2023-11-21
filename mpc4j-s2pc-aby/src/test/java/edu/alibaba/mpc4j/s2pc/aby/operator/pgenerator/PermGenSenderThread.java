@@ -32,21 +32,16 @@ class PermGenSenderThread extends Thread {
     /**
      * l
      */
-    private final int l;
-    /**
-     * l
-     */
     private final int k;
     /**
      * z0
      */
     private SquareZlVector z0;
 
-    PermGenSenderThread(PermGenParty sender, SquareZ2Vector[] x0, int l, int k) {
+    PermGenSenderThread(PermGenParty sender, SquareZ2Vector[] x0, int k) {
         this.sender = sender;
         this.x0 = x0;
         num = x0[0].getNum();
-        this.l = l;
         this.k = k;
     }
 
@@ -59,7 +54,7 @@ class PermGenSenderThread extends Thread {
         try {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            sender.init(l, num, k);
+            sender.init(num, k);
             stopWatch.stop();
             long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

@@ -13,12 +13,7 @@ import java.util.Arrays;
 
 public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
     protected int dataNum;
-    protected SquareZ2Vector[] pValues, sValues;
-    protected SquareZ2Vector[] resultData;
-    protected SquareZ2Vector validFlagArray;
-    protected AggTypes aggType;
-    protected BitVector gFlag;
-
+    protected int dimLen;
 
     protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
         super(ptoDesc, rpc, otherParty, config);
@@ -37,33 +32,25 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
         if(groupFlag != null){
             MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
         }
-//        MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags.bitNum());
+        MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags.bitNum());
         Arrays.stream(xiArrays).forEach(x -> MathPreconditions.checkEqual("dataNum", "xiArrays[i].bitNum()", dataNum, x.bitNum()));
-        // copy original data
-        resultData = Arrays.stream(xiArrays).map(x -> SquareZ2Vector.createZeros(x.bitNum(), false)).toArray(SquareZ2Vector[]::new);
-//        validFlagArray = validFlags.copy();
-        this.aggType = aggType;
-        gFlag = groupFlag == null ? null : groupFlag.copy();
-        // todo 先处理一遍 得到初始的sValue和pValue，对于左孩子：p=0, s=v; 对于右孩子：p = v - fv, s = fv. 需要验证是否正确
-        pValues = Arrays.stream(xiArrays).map(x -> SquareZ2Vector.createZeros(x.bitNum(), false)).toArray(SquareZ2Vector[]::new);
-        sValues = Arrays.copyOf(xiArrays, xiArrays.length);
     }
 
-//    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, boolean[] groupFlag){
-//        MathPreconditions.checkEqual("xiArrays.length", "validFlags.length", xiArrays.length, validFlags.length);
-//        MathPreconditions.checkEqual("xiArrays.length", "aggTypes.length", xiArrays.length, aggTypes.length);
-//        dataNum = xiArrays[0][0].bitNum();
-//        int eachDimBitLen = xiArrays[0].length;
-//        MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.length);
-//        for(int i = 0; i < xiArrays.length; i++){
-//            MathPreconditions.checkEqual("dataNum", "validFlags[i].bitNum()", dataNum, validFlags[i].bitNum());
-//            MathPreconditions.checkEqual("eachDimBitLen", "xiArrays[i].length", eachDimBitLen, xiArrays[i].length);
-//            Arrays.stream(xiArrays[i]).forEach(x -> MathPreconditions.checkEqual("dataNum", "xiArrays[i][j].bitNum()", dataNum, x.bitNum()));
-//        }
-//        // copy original data
-//        inputData = Arrays.stream(xiArrays).map(xi -> Arrays.copyOf(xi, xi.length)).toArray(SquareZ2Vector[][]::new);
-//        validFlagArray = Arrays.copyOf(validFlags, validFlags.length);
-//        this.aggTypes = aggTypes;
-//        gFlag = Arrays.copyOf(groupFlag, groupFlag.length);
-//    }
+    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, BitVector groupFlag){
+        dataNum = xiArrays[0][0].bitNum();
+        assert dataNum >= 2;
+        dimLen = xiArrays[0].length;
+        for(SquareZ2Vector[] eachAttr : xiArrays){
+            MathPreconditions.checkEqual("dimLen", "eachAttr.length", dimLen, eachAttr.length);
+            for(SquareZ2Vector each : eachAttr){
+                MathPreconditions.checkEqual("dataNum", "each.bitNum()", dataNum, each.bitNum());
+            }
+        }
+        for(SquareZ2Vector each : validFlags){
+            MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
+        }
+        if(groupFlag != null){
+            MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
+        }
+    }
 }

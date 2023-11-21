@@ -186,13 +186,11 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         int rowLength = xiArray.length;
         // 两个数先计算 x^(x&Y)，得到每一位的 x<y
         MpcZ2Vector[] bitResult = party.and(xiArray, yiArray);
-//        bitResult = party.xor(bitResult, yiArray);
         for(int i = 0; i < bitResult.length; i++){
             party.xori(bitResult[i], yiArray[i]);
         }
         // 还要记录下两个bit是否相同，即 !(x^y)
         MpcZ2Vector[] xorResult = party.xor(xiArray, yiArray);
-//        xorResult = party.not(xorResult);
         for(int i = 0; i < bitResult.length; i++){
             party.noti(xorResult[i]);
         }
@@ -220,7 +218,6 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
             }
             MpcZ2Vector[] tmpAnd = party.and(leftInput, rightInput);
             for (int i = 0; i < halfLen; i++) {
-//                bitResult[oneInt[2 * i + start]] = party.xor(bitResult[oneInt[2 * i + start]], tmpAnd[i]);
                 party.xori(bitResult[oneInt[2 * i + start]], tmpAnd[i]);
                 if (i < halfLen - 1) {
                     xorResult[oneInt[2 * i + start]] = tmpAnd[i + halfLen];
@@ -228,6 +225,15 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
             }
         }
         return bitResult[0];
+    }
+
+    public MpcZ2Vector[] leqParallel(MpcZ2Vector[][] xiArray, MpcZ2Vector[][] yiArray) throws MpcAbortException {
+        int[] bitLens = Arrays.stream(xiArray).mapToInt(x -> x[0].bitNum()).toArray();
+        MpcZ2Vector[] xs = IntStream.range(0, xiArray[0].length).mapToObj(i -> party.mergeWithPadding(
+            Arrays.stream(xiArray).map(x -> x[i]).toArray(MpcZ2Vector[]::new))).toArray(MpcZ2Vector[]::new);
+        MpcZ2Vector[] ys = IntStream.range(0, yiArray[0].length).mapToObj(i -> party.mergeWithPadding(
+            Arrays.stream(yiArray).map(x -> x[i]).toArray(MpcZ2Vector[]::new))).toArray(MpcZ2Vector[]::new);
+        return party.splitWithPadding(leqParallel(xs, ys), bitLens);
     }
 
     public void sort(MpcZ2Vector[][] xiArray) throws MpcAbortException {

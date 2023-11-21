@@ -26,21 +26,16 @@ class PermGenReceiverThread extends Thread {
     /**
      * l
      */
-    private final int l;
-    /**
-     * l
-     */
     private final int k;
     /**
      * z1
      */
     private SquareZlVector z1;
 
-    PermGenReceiverThread(PermGenParty receiver, SquareZ2Vector[] x1, int l, int k) {
+    PermGenReceiverThread(PermGenParty receiver, SquareZ2Vector[] x1, int k) {
         this.receiver = receiver;
         this.x1 = x1;
         num = x1[0].getNum();
-        this.l = l;
         this.k = k;
     }
 
@@ -51,7 +46,7 @@ class PermGenReceiverThread extends Thread {
     @Override
     public void run() {
         try {
-            receiver.init(l, num, k);
+            receiver.init(num, k);
             z1 = receiver.sort(x1);
         } catch (MpcAbortException e) {
             e.printStackTrace();

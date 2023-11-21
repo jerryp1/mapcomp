@@ -10,10 +10,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implements PermGenParty {
     /**
-     * max l
-     */
-    protected int maxL;
-    /**
      * max num
      */
     protected int maxNum;
@@ -46,9 +42,7 @@ public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implement
         super(ptoDesc, rpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int maxNum, int maxBitNum) {
-        MathPreconditions.checkPositive("maxL", maxL);
-        this.maxL = maxL;
+    protected void setInitInput(int maxNum, int maxBitNum) {
         MathPreconditions.checkPositive("maxNum", maxNum);
         this.maxNum = maxNum;
         MathPreconditions.checkPositive("maxBitNum", maxBitNum);
@@ -61,6 +55,5 @@ public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implement
         l = xiArray.length;
         MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
         MathPreconditions.checkPositiveInRangeClosed("maxBitNum", xiArray.length, maxBitNum);
-        MathPreconditions.checkPositiveInRangeClosed("l", l, maxL);
     }
 }

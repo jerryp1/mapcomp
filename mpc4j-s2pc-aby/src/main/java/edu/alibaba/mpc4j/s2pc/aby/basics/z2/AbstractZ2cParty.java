@@ -179,8 +179,10 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
                 return bitNum;
             })
             .toArray();
-        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) merge(selectXs);
-        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) merge(selectYs);
+//        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) merge(selectXs);
+//        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) merge(selectYs);
+        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) mergeWithPadding(selectXs);
+        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) mergeWithPadding(selectYs);
         SquareZ2Vector mergeSelectZs;
         switch (operator) {
             case AND:
@@ -192,7 +194,10 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
             default:
                 throw new IllegalStateException();
         }
-        SquareZ2Vector[] selectZs = Arrays.stream(split(mergeSelectZs, bitNums))
+//        SquareZ2Vector[] selectZs = Arrays.stream(split(mergeSelectZs, bitNums))
+//            .map(vector -> (SquareZ2Vector) vector)
+//            .toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] selectZs = Arrays.stream(splitWithPadding(mergeSelectZs, bitNums))
             .map(vector -> (SquareZ2Vector) vector)
             .toArray(SquareZ2Vector[]::new);
         assert selectZs.length == selectIndexes.length;
@@ -204,20 +209,17 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
         if (xiArray.length == 0) {
             return new SquareZ2Vector[0];
         }
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
-        SquareZ2Vector mergeZiArray;
+        SquareZ2Vector[] res = new SquareZ2Vector[xiArray.length];
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NOT:
-                mergeZiArray = not(mergeXiArray);
+                for(int i = 0; i < xiArray.length; i++){
+                    res[i] = not(xiArray[i]);
+                }
                 break;
             default:
                 throw new IllegalStateException();
         }
-        // split
-        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::getNum).toArray();
-        return Arrays.stream(split(mergeZiArray, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
+        return res;
     }
 }

@@ -38,42 +38,6 @@ public class OneSideGroupUtils {
         return res;
     }
 
-    public static int[] getResPosNew(boolean[] flag){
-        // p1. 该分组里面有没有1                      = l.p1 | r.p2
-        // p2. 该分组的前一个分组最后一个是不是1         = l.p2
-        // r1. 要不要更新p                           l.p2 = 0 & (( l.p1 = 0 & r.p1 = 1) | 自己是右孩子，l.p1 = 0 & r.p1 = 0)
-        // r2. 要不要更新s
-        // r3. 要不要更新上组的最后一个                ((l.p2 = 1 | l.p1 = 1) & r.p1 = 1) | l.p2 = 1
-        // 更新的值
-        //          case1: l.p2 = 1, l.p1 = 0, r.p1 = 1 代表左边的分组到了尽头，必须要更新了:
-        //                      更新给分组最后一个的值 v = op(l.s,r.p)
-        //                      p = null, s = r.s
-        //          case2: r.p2 = 1 代表左边最后一个是分位点，无论如何更新下它的值
-        //                      更新给分组最后一个的值 v = l.s
-        //                      p = l.p, s = r.p1 ? r.s : r.p
-        //          case3:
-
-        // 初始化
-        // 先做一次判断，如果自己的f = 0，则置为非法值，如果自己的f = 1，且自己的p2 = 1，即自己是独立的值，那么直接赋值给结果
-        // 左边p
-        //      左孩子:
-        //          自己是1的时候
-        //              p = null, s = v
-        //          自己是0的时候
-        //              p = null, s = v
-        //      右孩子:
-        //          自己是1的时候
-        //              p2 = 1: p = null, s = v
-        //              p2 = 0: p = v, s = null
-        //          自己是0的时候
-        //              p = v, s = null
-        //
-        // 右边s 右孩子 = 0   自己是右孩子，并且l.
-
-        return null;
-    }
-
-
     public static SquareZ2Vector[][] getPos(SquareZ2Vector[] data, int[] startIndex, int num, int skipLen, boolean parallel){
         SquareZ2Vector[][] res = new SquareZ2Vector[2][data.length];
         IntStream intStream = parallel ? IntStream.range(0, data.length).parallel() : IntStream.range(0, data.length);

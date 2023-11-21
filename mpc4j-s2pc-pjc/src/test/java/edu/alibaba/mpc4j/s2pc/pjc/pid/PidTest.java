@@ -40,7 +40,7 @@ public class PidTest extends AbstractTwoPartyPtoTest {
     /**
      * large size
      */
-    private static final int LARGE_SIZE = 1 << 12;
+    private static final int LARGE_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -71,6 +71,11 @@ public class PidTest extends AbstractTwoPartyPtoTest {
             PidFactory.PidType.GMR21_SLOPPY.name() + " (" + PsuType.JSZ22_SFC + ")",
             new Gmr21SloppyPidConfig.Builder().setPsuConfig(new Jsz22SfcPsuConfig.Builder(false).build()).build(),
         });
+//        // GMR21_SLOPPY (ZCL22_PKE_PSU)
+//        configurations.add(new Object[] {
+//            PidFactory.PidType.GMR21_SLOPPY.name() + " (" + PsuType.ZCL22_PKE + ")",
+//            new Gmr21SloppyPidConfig.Builder().setPsuConfig(new Zcl22PkePsuConfig.Builder().build()).build(),
+//        });
         // BKMS20_BYTE_ECC
         configurations.add(new Object[] {
             PidFactory.PidType.BKMS20_BYTE_ECC.name(), new Bkms20ByteEccPidConfig.Builder().build(),

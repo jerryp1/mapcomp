@@ -1,0 +1,23 @@
+# protocol type
+pto_type = PMAP
+
+# element byte length
+element_byte_length = 16
+
+# parties log set size (log(n))
+log_set_size = 8, 10, 12, 14, 16, 18, 20
+
+# protocol name
+pmap_pto_name = HPL24
+
+# specific config
+silent = false
+bitLen = 24
+append_string = _no_silent_24
+
+server_name = server
+server_ip = localhost
+server_port = 8090
+client_name = client
+client_ip = localhost
+client_port = 8091

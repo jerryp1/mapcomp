@@ -1,13 +1,21 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pmap;
 
+import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20ByteEccPidConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21MpPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,12 +41,12 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 16;
+    private static final int LARGE_SIZE = 1 << 14;
 
     /**
      * default middle size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y
      */
-    private static final int[] DEFAULT_SIZE_PAIR_0 = new int[]{100, 1};
+    private static final int[] DEFAULT_SIZE_PAIR_0 = new int[]{100, 2};
     private static final int[] DEFAULT_SIZE_PAIR_1 = new int[]{120, 99};
     private static final int[] DEFAULT_SIZE_PAIR_2 = new int[]{200, 20};
     private static final int[] DEFAULT_SIZE_PAIR_3 = new int[]{LARGE_SIZE, DEFAULT_SMALL_SIZE};
@@ -47,6 +55,25 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
+
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
+            new PidBasedPmapConfig.Builder(false).build(),
+        });
+
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
+            new PidBasedPmapConfig.Builder(false).setPidConfig(
+                new Gmr21MpPidConfig.Builder().setPsuConfig(
+                    new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
+        });
+
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
+            new PidBasedPmapConfig.Builder(false).setPidConfig(
+                new Bkms20ByteEccPidConfig.Builder().build()).build(),
+        });
+
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
                 PmapType.HPL24.name() + "_silent_bitLen_" + bitLen,
@@ -56,6 +83,14 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
             configurations.add(new Object[]{
                 PmapType.HPL24.name()+ "_bitLen_" + bitLen,
                 new Hpl24PmapConfig.Builder(false).setBitLength(bitLen).build(),
+            });
+
+            configurations.add(new Object[]{
+                PmapType.HPL24.name()+ "_naive_peqt_bitLen_" + bitLen,
+                new Hpl24PmapConfig.Builder(false).setPlpsiconfig(
+                    new Rs21PlpsiConfig.Builder(false).setPeqtConfig(
+                        new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()).build())
+                    .setBitLength(bitLen).build(),
             });
         }
         return configurations;
@@ -186,9 +221,15 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
                               PmapPartyOutput<ByteBuffer> serverOutput, PmapPartyOutput<ByteBuffer> clientOutput){
         HashSet<ByteBuffer> clientSet = new HashSet<>(clientElementList);
         BitVector equalFlag = serverOutput.getEqualFlag().getBitVector().xor(clientOutput.getEqualFlag().getBitVector());
-        MathPreconditions.checkEqual("equalFlag.bitNum()", "serverElementList.size()", equalFlag.bitNum(), serverElementList.size());
-        MathPreconditions.checkEqual("serverOutput.getIndexMap().size()", "serverElementList.size()", serverOutput.getIndexMap().size(), serverElementList.size());
-        MathPreconditions.checkEqual("clientOutput.getIndexMap().size()", "serverElementList.size()", clientOutput.getIndexMap().size(), serverElementList.size());
+        if(serverOutput.getMapType().equals(MapType.MAP)){
+            MathPreconditions.checkEqual("equalFlag.bitNum()", "serverElementList.size()", equalFlag.bitNum(), serverElementList.size());
+            MathPreconditions.checkEqual("serverOutput.getIndexMap().size()", "serverElementList.size()", serverOutput.getIndexMap().size(), serverElementList.size());
+            MathPreconditions.checkEqual("clientOutput.getIndexMap().size()", "serverElementList.size()", clientOutput.getIndexMap().size(), serverElementList.size());
+        } else if (serverOutput.getMapType().equals(MapType.PID)) {
+            MathPreconditions.checkGreaterOrEqual("equalFlag.bitNum() >= serverElementList.size()", equalFlag.bitNum(), serverElementList.size());
+            MathPreconditions.checkGreaterOrEqual("serverOutput.getIndexMap().size() >= serverElementList.size()", serverOutput.getIndexMap().size(), serverElementList.size());
+            MathPreconditions.checkGreaterOrEqual("clientOutput.getIndexMap().size() >= serverElementList.size()", clientOutput.getIndexMap().size(), serverElementList.size());
+        }
 
         Map<Integer, ByteBuffer> serverResMap = serverOutput.getIndexMap();
         Map<Integer, ByteBuffer> clientResMap = clientOutput.getIndexMap();

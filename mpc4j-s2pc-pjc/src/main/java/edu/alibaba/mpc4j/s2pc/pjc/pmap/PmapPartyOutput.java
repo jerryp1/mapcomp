@@ -18,6 +18,7 @@ public class PmapPartyOutput<T> {
         PSI,
         PID,
     }
+    private final MapType mapType;
     /**
      * valid element list
      */
@@ -40,6 +41,7 @@ public class PmapPartyOutput<T> {
     public PmapPartyOutput(MapType mapType, List<T> elementList, Map<Integer, T> indexMap, SquareZ2Vector equalFlag) {
         MathPreconditions.checkPositive("elementList.size()", elementList.size());
         this.elementList = elementList;
+        this.mapType = mapType;
         switch (mapType){
             case PID:
             case MAP:
@@ -60,6 +62,13 @@ public class PmapPartyOutput<T> {
             MathPreconditions.checkEqual("indexMap.size()", "equalSign.bitNum()", indexMap.size(), equalFlag.bitNum());
         }
         this.equalFlag = equalFlag;
+    }
+
+    /**
+     * 返回类型
+     */
+    public MapType getMapType() {
+        return mapType;
     }
 
     /**
