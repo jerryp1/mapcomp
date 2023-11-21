@@ -92,14 +92,16 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             return new BitVector[0];
         }
         // merge
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+//        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) mergeWithPadding(xiArray);
         // reveal
         BitVector mergeX = revealOwn(mergeXiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray)
             .map(vector -> (SquareZ2Vector) vector)
             .mapToInt(SquareZ2Vector::getNum).toArray();
-        return BitVectorFactory.split(mergeX, bitNums);
+//        return BitVectorFactory.split(mergeX, bitNums);
+        return mergeX.splitWithPadding(bitNums);
     }
 
     /**
@@ -114,7 +116,8 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             // do nothing for 0 length
         }
         // merge
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+//        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
+        SquareZ2Vector mergeXiArray = (SquareZ2Vector) mergeWithPadding(xiArray);
         // reveal
         revealOther(mergeXiArray);
     }

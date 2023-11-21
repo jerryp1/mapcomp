@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
-import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
@@ -202,13 +201,18 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         // merge xi and yi
-        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
+//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
+//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
+        PlainZ2Vector mergeXiArray = (PlainZ2Vector) mergeWithPadding(xiArray);
+        PlainZ2Vector mergeYiArray = (PlainZ2Vector) mergeWithPadding(yiArray);
         // or operation
         PlainZ2Vector mergeZiArray = or(mergeXiArray, mergeYiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-        return Arrays.stream(split(mergeZiArray, bitNums))
+//        return Arrays.stream(split(mergeZiArray, bitNums))
+//            .map(vector -> (PlainZ2Vector) vector)
+//            .toArray(PlainZ2Vector[]::new);
+        return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
     }
@@ -229,12 +233,16 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         // merge xi
-        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
+//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
+        PlainZ2Vector mergeXiArray = (PlainZ2Vector) mergeWithPadding(xiArray);
         // not operation
         PlainZ2Vector mergeZiArray = not(mergeXiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-        return Arrays.stream(split(mergeZiArray, bitNums))
+//        return Arrays.stream(split(mergeZiArray, bitNums))
+//            .map(vector -> (PlainZ2Vector) vector)
+//            .toArray(PlainZ2Vector[]::new);
+        return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
     }

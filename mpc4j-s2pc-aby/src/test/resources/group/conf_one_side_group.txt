@@ -1,0 +1,18 @@
+# element bit length
+aggAttrBitNum = 64
+
+# 每次并行的log batch size是多少
+logMaxBatchNum = 20
+
+# 每次group 字段的domain多大
+log_domain_size = 2, 4, 6
+
+# 对数集合大小（log(n)）
+log_set_size = 8, 10, 12, 14, 16, 18, 20
+
+server_name = server
+server_ip = localhost
+server_port = 8090
+client_name = client
+client_ip = localhost
+client_port = 8091

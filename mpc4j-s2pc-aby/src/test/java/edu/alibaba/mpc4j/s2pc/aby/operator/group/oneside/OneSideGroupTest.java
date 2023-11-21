@@ -28,11 +28,11 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
-    private static final int ATTR_NUM = 2;
+    private static final int ATTR_NUM = 64;
     /**
      * bitLen
      */
-    private static final int[] bitLens = new int[]{8, 53};
+    private static final int[] bitLens = new int[]{8, 64};
     /**
      * default small size
      */
@@ -40,7 +40,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 16;
+    private static final int LARGE_SIZE = 1 << 10;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
