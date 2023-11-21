@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -64,15 +65,16 @@ public abstract class AbstractAhi22SmallFieldPermGenParty extends AbstractSmallF
     }
 
     @Override
-    public void init(int maxL, int maxNum, int maxBitNum) throws MpcAbortException {
-        setInitInput(maxL, maxNum, maxBitNum);
+    public void init(int maxNum, int maxBitNum) throws MpcAbortException {
+        setInitInput(maxNum, maxBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bit2aParty.init(maxL, maxNum * ((1 << maxBitNum) - 1));
-        z2cParty.init(maxNum * (1 << (maxBitNum - 1)));
-        zlcParty.init(maxNum);
-        zlMuxParty.init(maxBitNum == 1 ? maxNum : maxNum * (1 << maxBitNum));
+        int maxFullNum = CommonUtils.getByteLength(maxNum)<<3;
+        bit2aParty.init(zl.getL(), maxFullNum * ((1 << maxBitNum) - 1));
+        z2cParty.init(maxFullNum * (1 << (maxBitNum - 1)));
+        zlcParty.init(maxFullNum);
+        zlMuxParty.init(maxBitNum == 1 ? maxFullNum : maxFullNum * (1 << maxBitNum));
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);

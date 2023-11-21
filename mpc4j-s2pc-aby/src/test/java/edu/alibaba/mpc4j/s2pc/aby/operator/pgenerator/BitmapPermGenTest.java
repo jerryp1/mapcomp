@@ -154,8 +154,8 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            PermGenSenderThread senderThread = new PermGenSenderThread(sender, x0Share, config.getZl().getL(), bitNum);
-            PermGenReceiverThread receiverThread = new PermGenReceiverThread(receiver, x1Share, config.getZl().getL(), bitNum);
+            PermGenSenderThread senderThread = new PermGenSenderThread(sender, x0Share, bitNum);
+            PermGenReceiverThread receiverThread = new PermGenReceiverThread(receiver, x1Share, bitNum);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();

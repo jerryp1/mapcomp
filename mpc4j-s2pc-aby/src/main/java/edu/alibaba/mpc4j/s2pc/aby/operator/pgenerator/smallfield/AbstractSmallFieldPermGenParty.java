@@ -21,9 +21,9 @@ public abstract class AbstractSmallFieldPermGenParty extends AbstractPermGenPart
         super(ptoDesc, rpc, otherParty, config);
     }
 
-    protected void setInitInput(int maxL, int maxNum, int maxBitNum) {
+    protected void setInitInput(int maxNum, int maxBitNum) {
         MathPreconditions.checkGreaterOrEqual("maxBitNum <= 3", 3, maxBitNum);
-        super.setInitInput(maxL, maxNum, maxBitNum);
+        super.setInitInput(maxNum, maxBitNum);
     }
 
     protected void setPtoInput(SquareZ2Vector[] xiArray) {
