@@ -46,7 +46,7 @@ import java.util.stream.IntStream;
  * Trivial sorting-based group aggregation sender.
  *
  * @author Li Peng
- * @date 2023/11/3
+ * @date 2023/11/19
  */
 public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     /**

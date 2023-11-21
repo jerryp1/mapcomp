@@ -44,6 +44,8 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     protected Vector<byte[]> receiverGroupShare;
     protected Vector<byte[]> senderGroupShare;
 
+    protected String[] groupAttr;
+    protected long[] aggAttr;
     protected SquareZ2Vector e;
 
     protected int senderGroupBitLength;
@@ -85,14 +87,16 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         initState();
     }
 
-    protected void setPtoInput(String[] groupField, long[] aggField, SquareZ2Vector e) {
-        num = groupField.length;
+    protected void setPtoInput(String[] groupAttr, long[] aggAttr, SquareZ2Vector e) {
+        num = groupAttr.length;
         Preconditions.checkArgument(e.bitNum() == num,
             "number of elements not match");
-        if (aggField != null) {
-            Preconditions.checkArgument(aggField.length == num,
+        if (aggAttr != null) {
+            Preconditions.checkArgument(aggAttr.length == num,
                 "number of elements not match");
         }
+        this.groupAttr = groupAttr;
+        this.aggAttr = aggAttr;
         this.e = e;
     }
 

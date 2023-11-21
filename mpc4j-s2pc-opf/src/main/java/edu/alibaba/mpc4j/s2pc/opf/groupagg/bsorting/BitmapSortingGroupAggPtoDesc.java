@@ -1,25 +1,25 @@
-package edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting;
+package edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Trivial sorting-based group aggregation protocol description. The protocol comes from the following paper:
+ * Bitmap assist sorting-based group aggregation protocol description. The protocol comes from the following paper:
  * <p>
  * </p>
  *
  * @author Li Peng
- * @date 2023/11/19
+ * @date 2023/11/20
  */
-public class TrivialSortingGroupAggPtoDesc implements PtoDesc {
+public class BitmapSortingGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -5849383651481337726L);
+    private static final int PTO_ID = Math.abs((int) -1861431552725647393L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "T_SORTING_GROUP_AGG";
+    private static final String PTO_NAME = "SORTING_GROUP_AGG";
 
     /**
      * protocol step
@@ -33,11 +33,9 @@ public class TrivialSortingGroupAggPtoDesc implements PtoDesc {
 
         SENDER_SEND_BETA,
 
-//        SEND_SHARES,
+        SEND_SHARES,
 
-        SENDER_SEND_SHARES,
-
-        RECEIVER_SEND_SHARES,
+        SEND_BITMAP_SHARES,
 
         REVEAL_OUTPUT,
 
@@ -49,12 +47,12 @@ public class TrivialSortingGroupAggPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final TrivialSortingGroupAggPtoDesc INSTANCE = new TrivialSortingGroupAggPtoDesc();
+    private static final BitmapSortingGroupAggPtoDesc INSTANCE = new BitmapSortingGroupAggPtoDesc();
 
     /**
      * private constructor.
      */
-    private TrivialSortingGroupAggPtoDesc() {
+    private BitmapSortingGroupAggPtoDesc() {
         // empty
     }
 

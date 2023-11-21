@@ -98,4 +98,22 @@ public class PermutationFactory {
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
     }
+
+    /**
+     * Creates a default config.
+     *
+     * @param securityModel the security model.
+     * @return a default config.
+     */
+    public static PermutationConfig createDefaultReverseConfig(SecurityModel securityModel, Zl zl) {
+        switch (securityModel) {
+            case IDEAL:
+            case SEMI_HONEST:
+                return new Xxx23bPermutationConfig.Builder(zl).build();
+            case COVERT:
+            case MALICIOUS:
+            default:
+                throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
+        }
+    }
 }

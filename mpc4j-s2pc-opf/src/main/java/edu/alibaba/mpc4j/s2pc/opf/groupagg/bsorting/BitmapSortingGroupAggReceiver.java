@@ -1,20 +1,20 @@
-package edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting;
+package edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.circuit.z2.PlainZ2Vector;
-import edu.alibaba.mpc4j.common.circuit.z2.Z2IntegerCircuit;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -23,15 +23,21 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
@@ -52,20 +58,24 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Trivial sorting-based group aggregation receiver.
+ * Bitmap assist sorting-based group aggregation receiver.
  *
  * @author Li Peng
- * @date 2023/11/19
+ * @date 2023/11/20
  */
-public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
+public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
     /**
-     * Osn sender.
+     * Osn receiver.
      */
-    private final OsnSender osnSender;
+    private final OsnReceiver osnReceiver;
     /**
      * Zl mux receiver.
      */
     private final ZlMuxParty zlMuxReceiver;
+    /**
+     * Shared permutation receiver.
+     */
+    private final SharedPermutationParty sharedPermutationReceiver;
     /**
      * Prefix aggregation receiver.
      */
@@ -83,40 +93,60 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
      */
     private final B2aParty b2aReceiver;
     /**
-     * Permutation sender.
+     * Plain bit mux sender.
      */
-    private final PermutationSender permutationSender;
+    private final PlainPayloadMuxParty plainPayloadMuxSender;
     /**
-     * Shared permutation receiver.
+     * Permutation sender of reverse order.
      */
-    private final SharedPermutationParty sharedPermutationReceiver;
+    private final PermutationSender reversePermutationSender;
     /**
-     * Z2 integer circuit.
+     * Permutation receiver.
      */
-    private final Z2IntegerCircuit z2IntegerCircuit;
+    private final PermutationReceiver permutationReceiver;
+    /**
+     * Permutation generation protocol receiver.
+     */
+    private final PermGenParty permGenReceiver;
+    /**
+     * A2b receiver
+     */
+    private final A2bParty a2bReceiver;
+    /**
+     * Own bit split.
+     */
+    private Vector<byte[]> eByte;
     /**
      * Prefix aggregation type.
      */
     private final PrefixAggTypes prefixAggType;
     /**
-     * total group shares.
+     * bitmap shares
      */
-    private Vector<byte[]> mergedGroups;
+    private SquareZ2Vector[] senderBitmapShares;
     /**
-     * permutation
+     * sigmaB
      */
-    private Vector<byte[]> perms;
+    private int[] sigmaB;
 
-    public TrivialSortingGroupAggReceiver(Rpc receiverRpc, Party senderParty, TrivialSortingGroupAggConfig config) {
-        super(TrivialSortingGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
-        osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
+    private Vector<byte[]> piG0;
+
+    private Vector<byte[]> rho;
+
+    public BitmapSortingGroupAggReceiver(Rpc receiverRpc, Party senderParty, BitmapSortingGroupAggConfig config) {
+        super(BitmapSortingGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
+        osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         zlMuxReceiver = ZlMuxFactory.createReceiver(receiverRpc, senderParty, config.getZlMuxConfig());
+        sharedPermutationReceiver = SharedPermutationFactory.createReceiver(receiverRpc, senderParty, config.getSharedPermutationConfig());
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
-        permutationSender = PermutationFactory.createSender(receiverRpc, senderParty, config.getPermutationConfig());
-        sharedPermutationReceiver = SharedPermutationFactory.createReceiver(receiverRpc, senderParty, config.getSharedPermutationConfig());
+        plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
+        reversePermutationSender = PermutationFactory.createSender(receiverRpc, senderParty, config.getReversePermutationConfig());
+        permutationReceiver = PermutationFactory.createReceiver(receiverRpc, senderParty, config.getPermutationConfig());
+        permGenReceiver = PermGenFactory.createReceiver(receiverRpc, senderParty, config.getPermGenConfig());
+        a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
 //        addSubPtos(osnSender);
 //        addSubPtos(zlMuxReceiver);
 //        addSubPtos(sharedPermutationReceiver);
@@ -124,7 +154,6 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 //        addSubPtos(z2cReceiver);
 //        addSubPtos(zlcReceiver);
 //        addSubPtos(b2aReceiver);
-        z2IntegerCircuit = new Z2IntegerCircuit(z2cReceiver);
         prefixAggType = config.getPrefixAggConfig().getPrefixType();
         secureRandom = new SecureRandom();
     }
@@ -137,14 +166,19 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 
         stopWatch.start();
 
-        osnSender.init(maxNum);
+        osnReceiver.init(maxNum);
         zlMuxReceiver.init(maxNum);
+
         prefixAggReceiver.init(maxL, maxNum);
         z2cReceiver.init(maxL * maxNum);
         zlcReceiver.init(1);
         b2aReceiver.init(maxL, maxNum);
-        permutationSender.init(maxL, maxNum);
+        reversePermutationSender.init(maxL, maxNum);
         sharedPermutationReceiver.init(maxNum);
+        permutationReceiver.init(maxL, maxNum);
+        permGenReceiver.init(maxNum, maxL);
+        a2bReceiver.init(maxL, maxNum);
+        plainPayloadMuxSender.init(maxNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -159,62 +193,100 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         assert aggAttr != null;
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
-        // share and merge groups
-        share(groupAttr);
+
+        // bitmap
+        bitmap();
         // sort
         sort();
-        // apply permutation to agg
-        apply(aggAttr);
+        // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
+        permute1();
+        // permute2, permute sender's group using rho
+        permute2();
+        // permute3, permute e
+        permute3();
+        // merge group
+        Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
         SquareZlVector receiverAggAs = b2a();
         // ### test
-        String[] groupResult = revealBothGroup(mergedGroups);
+        String[] groupResult = revealBothGroup(mergedTwoGroup);
         ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+        BitVector eB = z2cReceiver.revealOwn(e);
         // aggregation
-        return aggregation(mergedGroups, receiverAggAs, e);
+        return aggregation(mergedTwoGroup, receiverAggAs, e);
     }
 
-    private void share(String[] groups) {
-        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groups);
-        Vector<byte[]> senderGroupShare = shareOther();
-        Vector<byte[]> receiverGroupShare = shareOwn(groupBytes);
-        mergedGroups = mergeGroup(senderGroupShare, receiverGroupShare);
+
+    private void bitmap() throws MpcAbortException {
+        // obtain sorting permutation
+        sigmaB = obtainPerms(groupAttr);
+        // apply perms to group and agg
+        groupAttr = GroupAggUtils.applyPermutation(groupAttr, sigmaB);
+        aggAttr = GroupAggUtils.applyPermutation(aggAttr, sigmaB);
+        e = GroupAggUtils.applyPermutation(e, sigmaB);
+        // osn
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, CommonUtils.getByteLength(senderGroupNum + 1));
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
+        // xor own share to meet permutation
+        e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
+//      // and
+        for (int i = 0; i < senderGroupNum; i++) {
+            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
+        }
+        // mux
+//        SquareZlVector aggShareVector = plainPayloadMuxSender.mux(e, aggAttr);
+//        aggShare = Arrays.stream(aggShareVector.getZlVector().getElements()).map(v ->
+//            LongUtils.longToByteArray(v.longValue())).collect(Collectors.toCollection(Vector::new));
+////        aggShare = IntStream.range(0,num).mapToObj(i -> LongUtils.longToByteArray(aggAttr[i])).collect(Collectors.toCollection(Vector::new));
+////        aggShare =
+//        long[] test = revealOwnLong(aggShare);
+//        System.out.println(123);
     }
 
     private void sort() throws MpcAbortException {
-        // merge input
-        Vector<byte[]> eByte = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
-            .put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
-        Vector<byte[]> mergedInput = merge(Arrays.asList(eByte, mergedGroups));
-        // transpose
-        SquareZ2Vector[] transposedGroup = Arrays.stream(TransposeUtils.transposeSplit(mergedInput, (totalGroupByteLength + 1) * Byte.SIZE))
-            .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+        // merge e and bitmap as input
+        SquareZ2Vector[] permInput = new SquareZ2Vector[senderGroupNum + 1];
+        permInput[0] = e;
+        System.arraycopy(senderBitmapShares, 0, permInput, 1, senderGroupNum);
         // sort
-        SquareZ2Vector[] permsVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{transposedGroup},
-            null, PlainZ2Vector.createOnes(1), true, false))
-            .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        SquareZlVector perm = permGenReceiver.sort(senderBitmapShares);
+        // a2b
+        SquareZ2Vector[] permB = a2bReceiver.a2b(perm);
         // transpose
-        perms = TransposeUtils.transposeMergeToVector(Arrays.stream(permsVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
-        // get e and sorted groups from psorter's input.
-        Vector<byte[]> mergedOutput = TransposeUtils.transposeMergeToVector(Arrays.stream(transposedGroup)
-            .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
-        List<Vector<byte[]>> split = GroupAggUtils.split(mergedOutput, new int[]{1, totalGroupByteLength});
+        piG0 = TransposeUtils.transposeMergeToVector(Arrays.stream(permB).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+
+        long[] test = revealOwnLong(piG0);
+        System.out.println(123);
+    }
+
+    private void permute1() throws MpcAbortException {
+        // permute receiver's group,agg and sigmaB
+        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
+        Vector<byte[]> input = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Long.BYTES + Integer.BYTES)
+            .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggAttr[i])).putInt(sigmaB[i]).array()).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> output = reversePermutationSender.permute(piG0, input);
+        // split
+        List<Vector<byte[]>> split = GroupAggUtils.split(output, new int[]{receiverGroupByteLength, Long.BYTES, Integer.BYTES});
+        receiverGroupShare = split.get(0);
+        aggShare = split.get(1);
+        rho = split.get(2);
+    }
+
+    private void permute2() throws MpcAbortException {
+        senderGroupShare = permutationReceiver.permute(rho, senderGroupByteLength);
+    }
+
+    private void permute3() throws MpcAbortException {
+        Vector<byte[]> eByte = IntStream.range(0, num).mapToObj(i ->
+            ByteBuffer.allocate(1).put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> permutedE = sharedPermutationReceiver.permute(rho, eByte);
         e = SquareZ2Vector.createZeros(num, false);
-        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (split.get(0).get(i)[0] & 1) == 1));
-        mergedGroups = split.get(1);
+        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (permutedE.get(i)[0] & 1) == 1));
     }
 
-    private void apply(long[] agg) throws MpcAbortException {
-        // apply permutation to plain agg
-        aggShare = IntStream.range(0, num).mapToObj(i ->
-            ByteBuffer.allocate(Long.BYTES)
-                .put(LongUtils.longToByteArray(agg[i])).array())
-            .collect(Collectors.toCollection(Vector::new));
-        aggShare = permutationSender.permute(perms, aggShare);
-    }
-
-
-    private Vector<byte[]> mergeGroup(Vector<byte[]> senderGroupShare, Vector<byte[]> receiverGroupShare) {
+    private Vector<byte[]> mergeGroup() {
         return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
@@ -223,7 +295,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         // b2a, transfer agg to arithmetic share
         SquareZ2Vector[] transposed = Arrays.stream(TransposeUtils.transposeSplit(aggShare, Long.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        return b2aReceiver.b2a(transposed);
+
+        return zlMuxReceiver.mux(e, b2aReceiver.b2a(transposed));
     }
 
     private GroupAggOut aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
@@ -241,7 +314,7 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     private GroupAggOut sumAgg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
         Zl zl = aggField.getZl();
         // agg
-        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
+        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, null);
         // reveal
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
@@ -257,7 +330,7 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 
     private GroupAggOut maxAgg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
-        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
+        PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, null);
         // reveal
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
@@ -326,33 +399,22 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         return IntStream.range(0, num).mapToLong(i -> LongUtils.byteArrayToLong(BytesUtils.xor(senderDataSizePayload.get(i), input.get(i)))).toArray();
     }
 
-    protected Vector<byte[]> shareOwn(Vector<byte[]> input) {
-        Vector<byte[]> ownShares = IntStream.range(0, input.size()).mapToObj(i -> {
-            byte[] bytes = new byte[input.get(0).length];
-            secureRandom.nextBytes(bytes);
-            return bytes;
-        }).collect(Collectors.toCollection(Vector::new));
-
-        List<byte[]> otherShares = IntStream.range(0, input.size()).mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
-
-        DataPacketHeader sendSharesHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.RECEIVER_SEND_SHARES.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParties()[0].getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(sendSharesHeader, otherShares));
-        extraInfo++;
-
-        return ownShares;
-    }
-
     protected Vector<byte[]> shareOther() {
         DataPacketHeader receiveSharesHeader = new DataPacketHeader(
-            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_SHARES.ordinal(), extraInfo,
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_SHARES.ordinal(), extraInfo,
             otherParties()[0].getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> receiveSharesPayload = rpc.receive(receiveSharesHeader).getPayload();
-        extraInfo++;
         return new Vector<>(receiveSharesPayload);
+    }
+
+    protected SquareZ2Vector[] shareOtherBitmap() {
+        DataPacketHeader receiveSharesHeader = new DataPacketHeader(
+            encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_BITMAP_SHARES.ordinal(), extraInfo,
+            otherParties()[0].getPartyId(), ownParty().getPartyId()
+        );
+        List<byte[]> receiveSharesPayload = rpc.receive(receiveSharesHeader).getPayload();
+        return receiveSharesPayload.stream().map(v -> SquareZ2Vector.create(num, v, false)).toArray(SquareZ2Vector[]::new);
     }
 
     private int[] getGroupIndexes(BitVector indicator) {

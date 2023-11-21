@@ -165,7 +165,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     }
 
     /**
-     * Generate vertical bitmaps.
+     * Generate horizontal bitmaps.
      *
      * @param group group.
      * @return vertical bitmaps.
