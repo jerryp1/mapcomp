@@ -83,7 +83,7 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
 
         osnReceiver.init(maxNum);
         osnSender.init(maxNum);
-        smallFieldPermGenSender.init(bitLen, maxServerElementSize, 2);
+        smallFieldPermGenSender.init(maxServerElementSize, 2);
 
         z2cSender.init(bitLen * maxServerElementSize);
 
