@@ -12,6 +12,9 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggReceiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -27,6 +30,8 @@ import java.util.stream.IntStream;
  * @date 2023/10/18
  */
 public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implements GroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGroupAggParty.class);
+
     /**
      * max l.
      */
@@ -78,7 +83,6 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         totalGroupNum = senderGroupNum * receiverGroupNum;
         maxL = PropertiesUtils.readInt(properties, CommonConstants.MAX_L);
         maxNum = PropertiesUtils.readInt(properties, CommonConstants.MAX_NUM);
-
     }
 
     protected void setInitInput(int maxNum) {
@@ -89,6 +93,7 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
 
     protected void setPtoInput(String[] groupAttr, long[] aggAttr, SquareZ2Vector e) {
         num = groupAttr.length;
+        LOGGER.info("data num: " + num);
         Preconditions.checkArgument(e.bitNum() == num,
             "number of elements not match");
         if (aggAttr != null) {
