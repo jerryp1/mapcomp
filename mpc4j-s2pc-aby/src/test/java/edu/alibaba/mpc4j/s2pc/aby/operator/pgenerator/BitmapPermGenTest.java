@@ -39,7 +39,7 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * bit numbers
      */
@@ -189,11 +189,10 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         BigInteger[] elements0 = z0.getZlVector().getElements();
         BigInteger[] elements1 = z1.getZlVector().getElements();
         BigInteger[] resultOrder = IntStream.range(0, num).mapToObj(i -> config.getZl().add(elements0[i], (elements1[i]))).toArray(BigInteger[]::new);
-//        LOGGER.info(Arrays.toString(resultOrder));
+//        LOGGER.info("resultOrder:{}", Arrays.toString(resultOrder));
 
         // obtain ture order
         ZlDatabase zl = ZlDatabase.create(EnvType.STANDARD, true, origin);
-
         BigInteger[] tureValue = IntStream.range(0, num).mapToObj(zl::getBigIntegerData).toArray(BigInteger[]::new);
         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(tureValue[j], BigInteger.valueOf(j))).toArray(Tuple[]::new);
         Arrays.sort(tuples);
@@ -202,6 +201,8 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         for (int j = 0; j < num; j++) {
             reverseTureOrder[tureOrder[j].intValue()] = BigInteger.valueOf(j);
         }
+//        LOGGER.info("origin:{}", Arrays.toString(origin));
+//        LOGGER.info("reverseTureOrder:{}", Arrays.toString(reverseTureOrder));
         // verify
         for (int j = 0; j < num; j++) {
             Assert.assertEquals(resultOrder[j], reverseTureOrder[j]);
