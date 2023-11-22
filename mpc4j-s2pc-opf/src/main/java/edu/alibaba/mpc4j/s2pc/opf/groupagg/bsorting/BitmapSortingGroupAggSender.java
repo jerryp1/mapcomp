@@ -163,7 +163,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         reversePermutationReceiver.init(maxL, maxNum);
         sharedPermutationSender.init(maxNum);
         permutationSender.init(maxL, maxNum);
-        permGenSender.init(maxNum, maxL);
+        permGenSender.init(maxNum, senderGroupNum);
         a2bSender.init(maxL, maxNum);
         plainPayloadMuxReceiver.init(maxNum);
 
@@ -220,6 +220,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         for (int i = 0; i < senderGroupNum; i++) {
             senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
         }
+//        z2cSender.revealOther(e);
+//        System.out.println(123);
     }
 
     private void sort() throws MpcAbortException {
