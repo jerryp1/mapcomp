@@ -39,7 +39,7 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 16;
+    private static final int LARGE_NUM = 1 << 18;
     /**
      * bit numbers
      */

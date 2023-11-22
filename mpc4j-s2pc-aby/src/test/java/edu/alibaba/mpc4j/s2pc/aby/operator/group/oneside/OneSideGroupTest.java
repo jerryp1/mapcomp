@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.OneSideGroupType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.AbstractAmos22OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
@@ -74,6 +75,16 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
         super(name);
         this.domainBitLen = domainBitLen;
         this.config = config;
+    }
+
+    @Test
+    public void testTmp(){
+        BitVector r = BitVectorFactory.createRandom(1<<20, new SecureRandom());
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        BitVector[][] res = AbstractAmos22OneSideGroupParty.getPlainBitVectors(r);
+        long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        LOGGER.info(String.valueOf(time));
     }
 
     @Test
