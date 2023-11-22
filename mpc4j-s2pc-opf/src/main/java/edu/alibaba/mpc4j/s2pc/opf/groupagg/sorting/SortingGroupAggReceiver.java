@@ -241,7 +241,6 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
 
         // ### test
         String[] doubSortedSenderGroup = revealGroup(senderGroupShare, senderGroupBitLength);
-        System.out.println(123);
     }
 
     private Vector<byte[]> mergeGroup() {

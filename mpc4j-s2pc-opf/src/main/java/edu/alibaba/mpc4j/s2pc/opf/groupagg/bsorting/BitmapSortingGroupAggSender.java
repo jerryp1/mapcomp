@@ -220,18 +220,9 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         for (int i = 0; i < senderGroupNum; i++) {
             senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
         }
-        // mux
-//        SquareZlVector aggShareVector = plainPayloadMuxReceiver.mux(e, null);
-//        aggShare = Arrays.stream(aggShareVector.getZlVector().getElements()).map(v ->
-//            LongUtils.longToByteArray(v.longValue())).collect(Collectors.toCollection(Vector::new));
-//        revealOtherLong(aggShare);
     }
 
     private void sort() throws MpcAbortException {
-        // merge e and bitmap as input
-        SquareZ2Vector[] permInput = new SquareZ2Vector[senderGroupNum + 1];
-        permInput[0] = e;
-        System.arraycopy(senderBitmapShares, 0, permInput, 1, senderGroupNum);
         // sort
         SquareZlVector perm = permGenSender.sort(senderBitmapShares);
         // a2b

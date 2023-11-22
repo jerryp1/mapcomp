@@ -47,11 +47,6 @@ public class SklanskyTree extends AbstractPrefixTree {
                     }
                 }
             }
-            for (int k = 0; k < inputIndexes.length; k++) {
-                if (inputIndexes[k] == 0 && outputIndexes[k] == 0) {
-                    System.out.println(123);
-                }
-            }
             prefixOp.updateCurrentLevel(inputIndexes, outputIndexes);
             blockNum >>= 1;
             blockSize <<= 1;
