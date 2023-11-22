@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.tuple;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+import java.io.Serializable;
+
 /**
  * Tuple Bit2a protocol description. The protocol comes from the following paper:
  * <p>
@@ -16,11 +18,12 @@ public class TupleBit2aPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -583684506541113298L);
+    private static final int PTO_ID = Math.abs((int) 1683890901205554855L);
     /**
      * protocol name
      */
     private static final String PTO_NAME = "TUPLE_BIT2A";
+
     /**
      * protocol step
      */

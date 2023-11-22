@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+import java.io.Serializable;
+
 /**
  * Bitmap assist sorting-based group aggregation protocol description. The protocol comes from the following paper:
  * <p>
@@ -15,11 +17,11 @@ public class BitmapSortingGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -1861431552725647393L);
+    private static final int PTO_ID = Math.abs((int) -7453570605640191836L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "SORTING_GROUP_AGG";
+    private static final String PTO_NAME = "BITMAP_ASSIST_SORTING_GROUP_AGG";
 
     /**
      * protocol step

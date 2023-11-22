@@ -33,6 +33,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -45,6 +46,8 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationParty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -64,6 +67,7 @@ import java.util.stream.IntStream;
  * @date 2023/11/20
  */
 public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BitmapSortingGroupAggReceiver.class);
     /**
      * Osn receiver.
      */
@@ -195,25 +199,56 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         setPtoInput(groupAttr, aggAttr, interFlagE);
 
         // bitmap
+        stopWatch.start();
         bitmap();
+        stopWatch.stop();
+        long bitmapT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // sort
+        stopWatch.start();
         sort();
+        stopWatch.stop();
+        long sortT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
+        stopWatch.start();
         permute1();
+        stopWatch.stop();
+        long permute1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute2, permute sender's group using rho
+        stopWatch.start();
         permute2();
+        stopWatch.stop();
+        long permute2T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute3, permute e
+        stopWatch.start();
         permute3();
+        stopWatch.stop();
+        long permute3T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
+        stopWatch.start();
         SquareZlVector receiverAggAs = b2a();
+        stopWatch.stop();
+        long b2aT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // ### test
         String[] groupResult = revealBothGroup(mergedTwoGroup);
         ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         BitVector eB = z2cReceiver.revealOwn(e);
         // aggregation
-        return aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.start();
+        GroupAggOut out = aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.stop();
+        long agg1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        LOGGER.info("bitmapT:{},sortT:{},permute1T:{},permute2T:{},permute3:{},b2aT:{},aggT:{}",bitmapT,sortT,permute1T,permute2T,permute3T,b2aT,agg1T);
+
+        return out;
     }
 
 

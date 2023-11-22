@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.impl.file.FileRpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
@@ -37,6 +38,8 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -56,6 +59,7 @@ import java.util.stream.IntStream;
  * @date 2023/11/19
  */
 public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSortingGroupAggReceiver.class);
     /**
      * Osn sender.
      */
@@ -163,22 +167,52 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
         // osn1
+        stopWatch.start();
         osn1(groupAttr);
+        stopWatch.stop();
+        long osn1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // pSorter using e and receiver's group
+        stopWatch.start();
         pSorter();
+        stopWatch.stop();
+        long psorterT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute1
+        stopWatch.start();
         permute1();
+        stopWatch.stop();
+        long permute1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute2
+        stopWatch.start();
         permute2(aggAttr);
+        stopWatch.stop();
+        long permute2T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // merge group
+        stopWatch.start();
         Vector<byte[]> mergedTwoGroup = mergeGroup();
+        stopWatch.stop();
+        long mergeGroupT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // b2a
+        stopWatch.start();
         SquareZlVector receiverAggAs = b2a();
+        stopWatch.stop();
+        long b2aT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // ### test
         String[] groupResult = revealBothGroup(mergedTwoGroup);
         ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
-        return aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.start();
+        GroupAggOut groupAggOut = aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.stop();
+        long aggT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        LOGGER.info("osn1T:{},psorterT:{},permute1T:{},permute2T:{},mergeGroupT:{},b2aT:{},aggT:{}",osn1T,psorterT,permute1T,permute2T,mergeGroupT,b2aT,aggT);
+        return groupAggOut;
     }
 
     private void osn1(String[] groupAttr) throws MpcAbortException {
