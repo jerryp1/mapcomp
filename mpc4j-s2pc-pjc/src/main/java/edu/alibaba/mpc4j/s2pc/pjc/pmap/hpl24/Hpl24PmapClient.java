@@ -43,9 +43,7 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
     private final OsnReceiver osnReceiver;
     private final PermGenParty smallFieldPermGenReceiver;
     private final Z2cParty z2cReceiver;
-
     private final SharedPermutationParty permutationReceiver, invPermutationReceiver;
-
     private final A2bParty a2bReceiver;
 
     public Hpl24PmapClient(Rpc clientRpc, Party serverParty, Hpl24PmapConfig config) {

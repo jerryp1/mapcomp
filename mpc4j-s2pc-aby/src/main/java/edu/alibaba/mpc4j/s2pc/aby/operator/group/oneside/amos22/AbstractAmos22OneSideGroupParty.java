@@ -85,8 +85,10 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        z2cParty.init(attrNum * maxBitNum * maxNum);
-        plainBitMuxParty.init(attrNum * maxBitNum * maxNum);
+        int initSize = attrNum * maxBitNum * maxNum;
+        initSize = initSize <= 0 ? Integer.MAX_VALUE : initSize;
+        z2cParty.init(initSize);
+        plainBitMuxParty.init(initSize);
 
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
