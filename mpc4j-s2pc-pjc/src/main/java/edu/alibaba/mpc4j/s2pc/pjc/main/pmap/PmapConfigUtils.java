@@ -13,6 +13,10 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory.PlpsiType;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.psty19.Psty19PlpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
 import java.util.Properties;
 
@@ -63,7 +67,20 @@ public class PmapConfigUtils {
         // 是否使用压缩编码
         boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
         int bitLen = PropertiesUtils.readIntWithDefault(properties, "bitLen", 32);
-
-        return new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen).build();
+        String peqtTypeString = PropertiesUtils.readString(properties, "peqtType", PeqtType.NAIVE.name());
+        PeqtConfig peqtConfig;
+        if(peqtTypeString.equals(PeqtType.CGS22.toString())){
+            peqtConfig = new Cgs22PeqtConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+        }else{
+            peqtConfig = new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, silent).build();
+        }
+        String cPsiTypeString = PropertiesUtils.readString(properties, "payload_psi_pto_name", PlpsiType.RS21.name());
+        PlpsiConfig plpsiConfig;
+        if(cPsiTypeString.equals(PlpsiType.PSTY19.name())){
+            plpsiConfig = new Psty19PlpsiConfig.Builder(silent).setPeqtConfig(peqtConfig).build();
+        }else{
+            plpsiConfig = new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(peqtConfig).build();
+        }
+        return new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(plpsiConfig).setBitLength(bitLen).build();
     }
 }

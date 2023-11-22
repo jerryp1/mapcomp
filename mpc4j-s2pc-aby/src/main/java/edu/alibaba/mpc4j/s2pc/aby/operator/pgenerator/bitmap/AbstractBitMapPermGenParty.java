@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
@@ -24,7 +25,7 @@ import java.math.BigInteger;
 import java.util.stream.IntStream;
 
 public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
-
+    private static final int MAX_BIT_IN_PARALLEL = 1 << 22;
     /**
      * Bit2a sender.
      */
@@ -62,7 +63,7 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
     @Override
     public void init(int maxNum, int maxBitNum) throws MpcAbortException {
-        int maxFullNum = CommonUtils.getByteLength(maxNum)<<3;
+        int maxFullNum = CommonUtils.getByteLength(maxNum) << 3;
         setInitInput(maxFullNum, maxBitNum);
         logPhaseInfo(PtoState.INIT_BEGIN);
 
@@ -79,6 +80,13 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
     @Override
     public SquareZlVector sort(SquareZ2Vector[] xiArray) throws MpcAbortException {
         setPtoInput(xiArray);
+
+        long total = ((long) xiArray.length) * xiArray[0].bitNum();
+        if (total > MAX_BIT_IN_PARALLEL) {
+            int maxBatchSize = Math.max(MAX_BIT_IN_PARALLEL / xiArray[0].bitNum(), 1);
+            return sortWithSeq(xiArray, maxBatchSize);
+        }
+
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
@@ -97,7 +105,8 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
         // prefix sum
         stopWatch.start();
-        SquareZlVector[] indexes = computeIndex(bitA);
+        SquareZlVector zeroPlain = SquareZlVector.createZeros(zl, 1);
+        SquareZlVector[] indexes = computeIndex(bitA, zeroPlain);
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime(), "prefix sum");
 
         stopWatch.start();
@@ -108,15 +117,67 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         z2cParty.noti(notXorAll);
         bits[xiArray.length] = notXorAll;
         SquareZlVector res = muxMultiIndex(bits, indexes);
+        SquareZlVector plainOne = SquareZlVector.createOnes(zl, res.getNum());
+        res = zlcParty.sub(res, plainOne);
         logStepInfo(PtoState.PTO_STEP, 3, 3, resetAndGetTime(), "compute permutation");
 
         logPhaseInfo(PtoState.PTO_END);
         return res;
     }
 
-    private SquareZlVector[] computeIndex(SquareZlVector[] signs) {
-        // prefix sum
+    private SquareZlVector sortWithSeq(SquareZ2Vector[] xiArray, int maxBatchNum) throws MpcAbortException {
+        MathPreconditions.checkGreaterOrEqual("xiArray.length >= maxBatchNum", xiArray.length, maxBatchNum);
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        SquareZ2Vector notXorAll = xiArray[0].copy();
+        IntStream.range(1, xiArray.length).forEach(i -> notXorAll.getBitVector().xori(xiArray[i].getBitVector()));
+        z2cParty.noti(notXorAll);
+
+        SquareZlVector currentIndex = null;
         SquareZlVector zeroPlain = SquareZlVector.createZeros(zl, 1);
+        int round = xiArray.length / maxBatchNum + (xiArray.length % maxBatchNum > 0 ? 1 : 0);
+        for (int i = 0, endIndex = xiArray.length; i < round; i++, endIndex -= maxBatchNum) {
+            stopWatch.start();
+            int startIndex = Math.max(0, endIndex - maxBatchNum);
+            int inputDim = (endIndex - startIndex) + (i == 0 ? 1 : 0);
+            SquareZ2Vector[] inputBits = new SquareZ2Vector[inputDim];
+            System.arraycopy(xiArray, startIndex, inputBits, 0, endIndex - startIndex);
+            if (i == 0) {
+                inputBits[inputDim - 1] = notXorAll;
+            }
+            SquareZlVector[] bitA = bit2aParty.bit2a(inputBits);
+            logStepInfo(PtoState.PTO_STEP, 1 + i * 3, 3 * round, resetAndGetTime(), "transfer binary shares to arithmetic shares");
+
+            stopWatch.start();
+            SquareZlVector[] indexes = computeIndex(bitA, zeroPlain);
+            zeroPlain = SquareZlVector.create(zl, new BigInteger[]{indexes[0].getZlVector()
+                .getElement(indexes[0].getNum() - 1)}, false);
+            logStepInfo(PtoState.PTO_STEP, 2 + i * 3, 3 * round, resetAndGetTime(), "prefix sum");
+
+            stopWatch.start();
+            SquareZlVector res = muxMultiIndex(inputBits, indexes);
+//            if(rpc.ownParty().getPartyId() == 0){
+//                BigInteger[] tmpRes = zlcParty.revealOwn(res).getElements();
+//                LOGGER.info("tmpRes:{}", Arrays.toString(tmpRes));
+//            }else{
+//                zlcParty.revealOther(res);
+//            }
+            if (currentIndex == null) {
+                currentIndex = res;
+            } else {
+                currentIndex = zlcParty.add(currentIndex, res);
+            }
+            logStepInfo(PtoState.PTO_STEP, 3 + i * 3, 3 * round, resetAndGetTime(), "compute permutation");
+        }
+        assert currentIndex != null;
+        SquareZlVector plainOne = SquareZlVector.createOnes(zl, currentIndex.getNum());
+        currentIndex = zlcParty.sub(currentIndex, plainOne);
+        logPhaseInfo(PtoState.PTO_END);
+        return currentIndex;
+    }
+
+    private SquareZlVector[] computeIndex(SquareZlVector[] signs, SquareZlVector zeroPlain) {
+        // prefix sum
         SquareZlVector[] indexes = new SquareZlVector[signs.length];
         for (int i = signs.length - 1; i >= 0; i--) {
             indexes[i] = zlcParty.rowAdderWithPrefix(signs[i], zeroPlain);
@@ -131,7 +192,6 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         for (int i = 1; i < mulRes.length; i++) {
             mulRes[0] = zlcParty.add(mulRes[0], mulRes[i]);
         }
-        SquareZlVector plainOne = SquareZlVector.createOnes(zl, mulRes[0].getNum());
-        return zlcParty.sub(mulRes[0], plainOne);
+        return mulRes[0];
     }
 }

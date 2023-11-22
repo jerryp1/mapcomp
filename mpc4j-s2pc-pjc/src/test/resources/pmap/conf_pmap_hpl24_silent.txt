@@ -13,7 +13,9 @@ pmap_pto_name = HPL24
 # specific config
 silent = true
 bitLen = 24
-append_string = _silent_24
+peqtType = NAIVE
+payload_psi_pto_name = RS21
+append_string = _silent_naive_rs21_24
 
 server_name = server
 server_ip = localhost
