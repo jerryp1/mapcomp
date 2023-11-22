@@ -33,6 +33,14 @@ public class B2aTuple implements MergedPcgPartyOutput {
         return b2ATuple;
     }
 
+    public BitVector getA() {
+        return a;
+    }
+
+    public ZlVector getB() {
+        return b;
+    }
+
     /**
      * private constructor.
      */

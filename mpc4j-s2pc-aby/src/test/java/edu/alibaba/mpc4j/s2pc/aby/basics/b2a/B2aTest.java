@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory.B2aTypes;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.tuple.TupleB2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import org.apache.commons.lang3.time.StopWatch;
@@ -63,6 +64,16 @@ public class B2aTest extends AbstractTwoPartyPtoTest {
         // DSZ15 default zl
         configurations.add(new Object[]{
             B2aTypes.DSZ15.name(), new Dsz15B2aConfig.Builder(DEFAULT_ZL).build()
+        });
+
+        // tuple small zl
+        configurations.add(new Object[]{
+            B2aTypes.TUPLE.name(), new TupleB2aConfig.Builder(SMALL_ZL).build()
+        });
+
+        // tuple default zl
+        configurations.add(new Object[]{
+            B2aTypes.TUPLE.name(), new TupleB2aConfig.Builder(DEFAULT_ZL).build()
         });
 
         return configurations;
