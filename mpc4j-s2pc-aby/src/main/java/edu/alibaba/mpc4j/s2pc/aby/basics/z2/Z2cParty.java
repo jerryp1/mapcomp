@@ -5,8 +5,6 @@ import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 
 import java.util.Arrays;
 
@@ -37,15 +35,16 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
         if (xiArray.length == 0) {
             return new SquareZ2Vector[0];
         }
-        // merge
-        BitVector mergeX = BitVectorFactory.mergeWithPadding(xiArray);
-        // share
-        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
-        // split
-        int[] bitNums = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).toArray();
-        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
+        return Arrays.stream(xiArray).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+//        // merge
+//        BitVector mergeX = BitVectorFactory.mergeWithPadding(xiArray);
+//        // share
+//        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
+//        // split
+//        int[] bitNums = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).toArray();
+//        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
+//            .map(vector -> (SquareZ2Vector) vector)
+//            .toArray(SquareZ2Vector[]::new);
     }
 
     /**
@@ -70,13 +69,14 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
         if (bitNums.length == 0) {
             return new SquareZ2Vector[0];
         }
-        // share
-        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
-        SquareZ2Vector mergeShareXi = shareOther(totalByteNum << 3);
-        // split
-        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
+        return Arrays.stream(bitNums).mapToObj(num -> SquareZ2Vector.createZeros(num, false)).toArray(SquareZ2Vector[]::new);
+//        // share
+//        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
+//        SquareZ2Vector mergeShareXi = shareOther(totalByteNum << 3);
+//        // split
+//        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
+//            .map(vector -> (SquareZ2Vector) vector)
+//            .toArray(SquareZ2Vector[]::new);
     }
 
     /**

@@ -160,6 +160,18 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
         return result[0];
     }
 
+    public MpcZ2Vector[] leq(MpcZ2Vector[][] xiArray, MpcZ2Vector[][] yiArray) throws MpcAbortException {
+        if(xiArray.length == 1){
+            return new MpcZ2Vector[]{leqParallel(xiArray[0], yiArray[0])};
+        }
+        int[] bitLens = Arrays.stream(xiArray).mapToInt(x -> x[0].bitNum()).toArray();
+        MpcZ2Vector[] xs = IntStream.range(0, xiArray[0].length).mapToObj(i -> party.mergeWithPadding(
+            Arrays.stream(xiArray).map(x -> x[i]).toArray(MpcZ2Vector[]::new))).toArray(MpcZ2Vector[]::new);
+        MpcZ2Vector[] ys = IntStream.range(0, yiArray[0].length).mapToObj(i -> party.mergeWithPadding(
+            Arrays.stream(yiArray).map(x -> x[i]).toArray(MpcZ2Vector[]::new))).toArray(MpcZ2Vector[]::new);
+        return party.splitWithPadding(leq(xs, ys), bitLens);
+    }
+
     /**
      * 根据维度得到指示运行的数组
      * 数组的用处是对于那些需要递归执行的算法，指示每一层的参与计算的数据是第几维的
@@ -228,6 +240,9 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     }
 
     public MpcZ2Vector[] leqParallel(MpcZ2Vector[][] xiArray, MpcZ2Vector[][] yiArray) throws MpcAbortException {
+        if(xiArray.length == 1){
+            return new MpcZ2Vector[]{leqParallel(xiArray[0], yiArray[0])};
+        }
         int[] bitLens = Arrays.stream(xiArray).mapToInt(x -> x[0].bitNum()).toArray();
         MpcZ2Vector[] xs = IntStream.range(0, xiArray[0].length).mapToObj(i -> party.mergeWithPadding(
             Arrays.stream(xiArray).map(x -> x[i]).toArray(MpcZ2Vector[]::new))).toArray(MpcZ2Vector[]::new);

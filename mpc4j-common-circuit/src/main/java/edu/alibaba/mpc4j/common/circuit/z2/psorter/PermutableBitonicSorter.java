@@ -229,7 +229,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
 
         // 先比较得到是否需要交换顺序的flag，如果=0，则不用换顺序，如果=1，则换顺序
         stopWatch.start();
-        MpcZ2Vector compFlag = party.xor(party.not(circuit.leqParallel(upperX, belowX)), compareMaskVec);
+        MpcZ2Vector compFlag = party.xor(party.not(circuit.leq(upperX, belowX)), compareMaskVec);
         stopWatch.stop();
         compareTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

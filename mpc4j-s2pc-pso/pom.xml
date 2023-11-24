@@ -78,7 +78,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>edu.alibaba.mpc4j.s2pc.pso.main.PsoMain</mainClass>
+                            <mainClass>edu.alibaba.mpc4j.s2pc.pso.main.PsoMain4Dir</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

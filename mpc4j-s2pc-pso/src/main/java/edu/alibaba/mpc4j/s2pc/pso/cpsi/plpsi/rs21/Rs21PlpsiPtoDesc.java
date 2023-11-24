@@ -22,7 +22,7 @@ public class Rs21PlpsiPtoDesc implements PtoDesc {
     /**
      * the protocol name
      */
-    private static final String PTO_NAME = "RS21-CCPSI";
+    private static final String PTO_NAME = "RS21-PLPSI";
     /**
      * the singleton mode
      */
