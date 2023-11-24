@@ -38,6 +38,8 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -82,14 +84,6 @@ public class SbitmapStarter {
      */
     protected int totalRound;
     /**
-     * Own dataset.
-     */
-    protected DataFrame ownDataFrame;
-    /**
-     * Metadata of own dataset
-     */
-    protected StructType ownSchema;
-    /**
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
@@ -118,7 +112,7 @@ public class SbitmapStarter {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
         String tab = "Data Num(bits)\t" + "Time(ms)\t" +
-            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num";
+            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num\tMix Time\tMix Triple";
         printWriter.println(tab);
         // connect
         ownRpc.connect();
@@ -195,9 +189,11 @@ public class SbitmapStarter {
             + "\t" + payloadByteLength
             // send byte length
             + "\t" + sendByteLength
-            + "\t" + TRIPLE_NUM;
+            + "\t" + TRIPLE_NUM + "\t" + MIX_TIME_AGG + "\t" + MIX_TRIPLE_AGG;
         printWriter.println(information);
         TRIPLE_NUM = 0;
+        MIX_TIME_AGG = 0;
+        MIX_TRIPLE_AGG = 0;
     }
 
 

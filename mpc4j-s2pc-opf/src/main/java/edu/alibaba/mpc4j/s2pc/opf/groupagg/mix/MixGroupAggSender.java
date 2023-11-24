@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
+
 /**
  * Mix group aggregation sender.
  *
@@ -116,6 +118,9 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     public static long AGG_TIME = 0;
     public static long MUX_TIME = 0;
 
+    public static long MIX_TIME_AGG = 0;
+    public static long MIX_TRIPLE_AGG = 0;
+
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
         StopWatch stopWatch = new StopWatch();
@@ -142,6 +147,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         stopWatch.reset();
         // temporary array
         PrefixAggOutput[] outputs = new PrefixAggOutput[senderGroupNum];
+        long tripleNum = TRIPLE_NUM;
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
             SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], mul1);
@@ -159,8 +165,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             }
             stopWatch.stop();
             AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+            MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
         }
+        MIX_TRIPLE_AGG = TRIPLE_NUM - tripleNum;
         return null;
     }
 
