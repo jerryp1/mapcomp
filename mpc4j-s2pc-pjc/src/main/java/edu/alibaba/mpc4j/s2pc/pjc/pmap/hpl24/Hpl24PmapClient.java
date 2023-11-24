@@ -211,7 +211,7 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         }
         SquareZ2Vector[] p0Vec = Arrays.stream(ZlDatabase.create(bitLen, p0.toArray(new byte[0][])).bitPartition(envType, parallel))
             .map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
-        logStepInfo(PtoState.PTO_STEP, 8, stepSteps, resetAndGetTime());
+        logStepInfo(PtoState.PTO_STEP, 7, stepSteps, resetAndGetTime());
 
         // 10. 计算mux，并将结果回复给client
         stopWatch.start();

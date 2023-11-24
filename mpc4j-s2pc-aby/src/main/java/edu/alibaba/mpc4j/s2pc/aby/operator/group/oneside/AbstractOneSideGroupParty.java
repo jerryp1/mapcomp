@@ -29,6 +29,7 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
     protected void setInputs(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggType, BitVector groupFlag){
         dataNum = xiArrays[0].bitNum();
         assert dataNum >= 2;
+        dimLen = xiArrays.length;
         if(groupFlag != null){
             MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
         }

@@ -105,64 +105,6 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
     public PlpsiShareOutput psi(List<T> serverElementList, int clientElementSize) throws MpcAbortException {
         setPtoInput(serverElementList, clientElementSize);
         return psiCommonPart(false);
-//        logPhaseInfo(PtoState.PTO_BEGIN);
-//
-//        // P1 receives the cuckoo hash bin keys
-//        DataPacketHeader cuckooHashKeyHeader = new DataPacketHeader(
-//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.CLIENT_SEND_CUCKOO_HASH_KEYS.ordinal(), extraInfo,
-//            otherParty().getPartyId(), ownParty().getPartyId()
-//        );
-//        List<byte[]> cuckooHashKeyPayload = rpc.receive(cuckooHashKeyHeader).getPayload();
-//
-//        stopWatch.start();
-//        // β = (1 + ε) * n_s
-//        beta = CuckooHashBinFactory.getBinNum(cuckooHashBinType, clientElementSize);
-//        // point_num = hash_num * n_s
-//        int pointNum = hashNum * serverElementSize;
-//        // l_peqt = σ + log_2(β)
-//        int peqtL = CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(beta);
-//        int peqtByteL = CommonUtils.getByteLength(peqtL);
-//        // l_opprf = σ + log_2(point_num)
-//        int opprfL = Math.max(CommonConstants.STATS_BIT_LENGTH + LongUtils.ceilLog2(pointNum), peqtL);
-//        int opprfByteL = CommonUtils.getByteLength(opprfL);
-//        // P1 inserts items into simple hash bin Table_2 with β bins
-//        handleCuckooHashKeyPayload(cuckooHashKeyPayload);
-//        stopWatch.stop();
-//        long binTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 1, 3, binTime, "Client inserts simple hash");
-//
-//        stopWatch.start();
-//        // The parties invoke a batched OPPRF.
-//        // P1 inputs Table_2[1], . . . , Table_2[β] and receives T[1], ..., T[β]
-//        generateBopprfInputs(opprfL);
-//        bopprfSender.opprf(opprfL, inputArrays, targetArrays);
-//        targetArrays = null;
-//        stopWatch.stop();
-//        long opprfTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 2, 3, opprfTime);
-//
-//        stopWatch.start();
-//        // The parties invoke a private equality test
-//        targetArray = Arrays.stream(targetArray)
-//            .map(target -> {
-//                byte[] truncatedTarget = new byte[peqtByteL];
-//                System.arraycopy(target, opprfByteL - peqtByteL, truncatedTarget, 0, peqtByteL);
-//                BytesUtils.reduceByteArray(truncatedTarget, peqtL);
-//                return truncatedTarget;
-//            })
-//            .toArray(byte[][]::new);
-//        // P1 inputs y_1^*, ..., y_β^* and outputs z0.
-//        SquareZ2Vector z0 = peqtSender.peqt(peqtL, targetArray);
-//        targetArray = null;
-//        plpsiShareOutput = new PlpsiShareOutput(z0);
-//        stopWatch.stop();
-//        long peqtTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 3, 3, peqtTime);
-//        logPhaseInfo(PtoState.PTO_END);
-//        return plpsiShareOutput;
     }
 
     @Override
