@@ -3,6 +3,9 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.utils;
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.dp.ldp.nominal.encode.DirectEncodeLdpConfig;
@@ -84,6 +87,15 @@ public class SbitmapMainUtils {
     public static PrefixAggTypes setPrefixAggTypes(Properties properties) {
         String prefixAggType = PropertiesUtils.readString(properties, "prefix_agg_type");
         return PrefixAggTypes.valueOf(prefixAggType.toUpperCase());
+    }
+
+    public static boolean setSilent(Properties properties) {
+        return PropertiesUtils.readBoolean(properties, "silent");
+    }
+
+    public static Zl setZl(Properties properties) {
+        int l = PropertiesUtils.readInt(properties, "max_l");
+        return ZlFactory.createInstance(EnvType.STANDARD, l);
     }
 
     public static GroupAggTypes setGroupAggTypes(Properties properties) {

@@ -7,11 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 /**
- * Sbitmap main class.、
- * TODO 协议分以下几个执行参数：
- * 协议类型（set operations..)
- * 安全状态（plain dp secure)
- * 具体参数（epsilons等）
+ * Sbitmap main class.
  *
  * @author Li Peng
  * @date 2023/8/3

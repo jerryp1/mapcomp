@@ -86,9 +86,8 @@ public class SbitmapStarter {
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+    private Zl zl;
 
-    private int num;
     private GroupAggInputData groupAggInputData;
     private int senderGroupBitLength;
     private int receiverGroupBitLength;
@@ -97,6 +96,8 @@ public class SbitmapStarter {
     private StructType receiverSchema;
 
     private int[] testDataNums;
+
+    private boolean silent;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
@@ -152,6 +153,10 @@ public class SbitmapStarter {
         testDataNums = SbitmapMainUtils.setTestDataNums(properties);
         // 设置总测试轮数
         totalRound = SbitmapMainUtils.setTotalRound(properties);
+        // silent
+        silent = SbitmapMainUtils.setSilent(properties);
+        // zl
+        zl = SbitmapMainUtils.setZl(properties);
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
@@ -219,19 +224,20 @@ public class SbitmapStarter {
     }
 
     private GroupAggConfig genGroupAggConfig() {
+
         switch (groupAggType) {
             case BITMAP:
-                return new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new BitmapGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case MIX:
-                return new MixGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new MixGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case SORTING:
-                return new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new SortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case O_SORTING:
-                return new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new OptimizedSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case T_SORTING:
-                return new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new TrivialSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case B_SORTING:
-                return new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new BitmapSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + groupAggType.name());
         }

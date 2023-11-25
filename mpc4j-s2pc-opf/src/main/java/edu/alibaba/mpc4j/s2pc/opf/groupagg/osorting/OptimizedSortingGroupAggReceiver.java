@@ -203,8 +203,8 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         long b2aT = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // ### test
-        String[] groupResult = revealBothGroup(mergedTwoGroup);
-        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+//        String[] groupResult = revealBothGroup(mergedTwoGroup);
+//        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
         stopWatch.start();
         GroupAggOut groupAggOut = aggregation(mergedTwoGroup, receiverAggAs, e);
@@ -231,7 +231,7 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         eByte = splitOsn1.get(1);
 
         // ### test ownBit
-        List<byte[]> ownBit = revealOwnBit(eByte);
+//        List<byte[]> ownBit = revealOwnBit(eByte);
     }
 
     private void pSorter() throws MpcAbortException {
@@ -246,17 +246,17 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
             null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
 
         // ### test
-        BitVector[] permVector = new BitVector[piGiVector.length];
-        for (int i = 0; i < piGiVector.length; i++) {
-            permVector[i] = z2cReceiver.revealOwn(piGiVector[i]);
-        }
-        Vector<byte[]> permBytes = TransposeUtils.transposeMergeToVector(permVector);
-        long[] perm = permBytes.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).mapToLong(LongUtils::byteArrayToLong).toArray();
+//        BitVector[] permVector = new BitVector[piGiVector.length];
+//        for (int i = 0; i < piGiVector.length; i++) {
+//            permVector[i] = z2cReceiver.revealOwn(piGiVector[i]);
+//        }
+//        Vector<byte[]> permBytes = TransposeUtils.transposeMergeToVector(permVector);
+//        long[] perm = permBytes.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).mapToLong(LongUtils::byteArrayToLong).toArray();
 
         // get vector form of piGi
         piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         // ### test
-        long[] perms2 = revealOwnLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
+//        long[] perms2 = revealOwnLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
 
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput)
@@ -265,12 +265,12 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         receiverGroupShare = splitOwn.get(1);
 
         // ### test
-        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
+//        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
         // ### test
-        BitVector bit3 = z2cReceiver.revealOwn(e);
+//        BitVector bit3 = z2cReceiver.revealOwn(e);
     }
 
     private void permute1() throws MpcAbortException {
