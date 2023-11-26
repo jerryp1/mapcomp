@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -65,9 +66,11 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     protected int senderGroupNum;
     protected int receiverGroupNum;
     protected int totalGroupNum;
+    protected Zl zl;
 
     protected AbstractGroupAggParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, GroupAggConfig config) {
         super(ptoDesc, rpc, otherParty, config);
+        zl = config.getZl();
     }
 
     @Override
