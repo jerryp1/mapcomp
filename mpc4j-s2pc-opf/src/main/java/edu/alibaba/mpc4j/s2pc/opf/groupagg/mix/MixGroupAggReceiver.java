@@ -32,6 +32,8 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgReceiver;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -42,6 +44,8 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
  * Mix group aggregation receiver.
@@ -128,6 +132,9 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
+
+//    public static long MIX_TIME_AGG = 0;
+//    public static long MIX_TRIPLE_AGG = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {

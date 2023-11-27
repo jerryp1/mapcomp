@@ -7,6 +7,9 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.dsz15.Dsz15B2aSender;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.tuple.TupleB2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.tuple.TupleB2aReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.tuple.TupleB2aSender;
 
 /**
  * B2a Factory.
@@ -30,6 +33,10 @@ public class B2aFactory {
          * DSZ15.
          */
         DSZ15,
+        /**
+         * Using b2a tuple
+         */
+        TUPLE,
     }
 
     /**
@@ -42,10 +49,11 @@ public class B2aFactory {
      */
     public static B2aParty createSender(Rpc senderRpc, Party receiverParty, B2aConfig config) {
         B2aTypes type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case DSZ15:
                 return new Dsz15B2aSender(senderRpc, receiverParty, (Dsz15B2aConfig) config);
+            case TUPLE:
+                return new TupleB2aSender(senderRpc,receiverParty,(TupleB2aConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + B2aTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -61,10 +69,11 @@ public class B2aFactory {
      */
     public static B2aParty createReceiver(Rpc receiverRpc, Party senderParty, B2aConfig config) {
         B2aTypes type = config.getPtoType();
-        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case DSZ15:
                 return new Dsz15B2aReceiver(receiverRpc, senderParty, (Dsz15B2aConfig) config);
+            case TUPLE:
+                return new TupleB2aReceiver(receiverRpc,senderParty,(TupleB2aConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + B2aTypes.class.getSimpleName() + ": " + type.name());
         }

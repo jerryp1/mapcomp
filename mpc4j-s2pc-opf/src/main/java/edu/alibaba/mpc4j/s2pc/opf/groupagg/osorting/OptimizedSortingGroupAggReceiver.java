@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.impl.file.FileRpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
@@ -37,6 +38,8 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -56,6 +59,7 @@ import java.util.stream.IntStream;
  * @date 2023/11/19
  */
 public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSortingGroupAggReceiver.class);
     /**
      * Osn sender.
      */
@@ -163,22 +167,52 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
         // osn1
+        stopWatch.start();
         osn1(groupAttr);
+        stopWatch.stop();
+        long osn1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // pSorter using e and receiver's group
+        stopWatch.start();
         pSorter();
+        stopWatch.stop();
+        long psorterT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute1
+        stopWatch.start();
         permute1();
+        stopWatch.stop();
+        long permute1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute2
+        stopWatch.start();
         permute2(aggAttr);
+        stopWatch.stop();
+        long permute2T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // merge group
+        stopWatch.start();
         Vector<byte[]> mergedTwoGroup = mergeGroup();
+        stopWatch.stop();
+        long mergeGroupT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // b2a
+        stopWatch.start();
         SquareZlVector receiverAggAs = b2a();
+        stopWatch.stop();
+        long b2aT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // ### test
-        String[] groupResult = revealBothGroup(mergedTwoGroup);
-        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+//        String[] groupResult = revealBothGroup(mergedTwoGroup);
+//        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
-        return aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.start();
+        GroupAggOut groupAggOut = aggregation(mergedTwoGroup, receiverAggAs, e);
+        stopWatch.stop();
+        long aggT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        LOGGER.info("osn1T:{},psorterT:{},permute1T:{},permute2T:{},mergeGroupT:{},b2aT:{},aggT:{}",osn1T,psorterT,permute1T,permute2T,mergeGroupT,b2aT,aggT);
+        return groupAggOut;
     }
 
     private void osn1(String[] groupAttr) throws MpcAbortException {
@@ -197,7 +231,7 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         eByte = splitOsn1.get(1);
 
         // ### test ownBit
-        List<byte[]> ownBit = revealOwnBit(eByte);
+//        List<byte[]> ownBit = revealOwnBit(eByte);
     }
 
     private void pSorter() throws MpcAbortException {
@@ -212,17 +246,17 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
             null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
 
         // ### test
-        BitVector[] permVector = new BitVector[piGiVector.length];
-        for (int i = 0; i < piGiVector.length; i++) {
-            permVector[i] = z2cReceiver.revealOwn(piGiVector[i]);
-        }
-        Vector<byte[]> permBytes = TransposeUtils.transposeMergeToVector(permVector);
-        long[] perm = permBytes.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).mapToLong(LongUtils::byteArrayToLong).toArray();
+//        BitVector[] permVector = new BitVector[piGiVector.length];
+//        for (int i = 0; i < piGiVector.length; i++) {
+//            permVector[i] = z2cReceiver.revealOwn(piGiVector[i]);
+//        }
+//        Vector<byte[]> permBytes = TransposeUtils.transposeMergeToVector(permVector);
+//        long[] perm = permBytes.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).mapToLong(LongUtils::byteArrayToLong).toArray();
 
         // get vector form of piGi
         piGi = TransposeUtils.transposeMergeToVector(Arrays.stream(piGiVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         // ### test
-        long[] perms2 = revealOwnLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
+//        long[] perms2 = revealOwnLong(piGi.stream().map(v -> BytesUtils.fixedByteArrayLength(v, 8)).collect(Collectors.toCollection(Vector::new)));
 
         // get receiver's shared agg and e from psorter's input, which have been sorted.
         Vector<byte[]> trans = TransposeUtils.transposeMergeToVector(Arrays.stream(psorterInput)
@@ -231,12 +265,12 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         receiverGroupShare = splitOwn.get(1);
 
         // ### test
-        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
+//        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
         e = SquareZ2Vector.createZeros(num, false);
         IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
         // ### test
-        BitVector bit3 = z2cReceiver.revealOwn(e);
+//        BitVector bit3 = z2cReceiver.revealOwn(e);
     }
 
     private void permute1() throws MpcAbortException {

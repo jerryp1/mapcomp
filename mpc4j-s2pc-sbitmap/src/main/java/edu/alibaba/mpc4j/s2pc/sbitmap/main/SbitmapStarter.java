@@ -15,8 +15,11 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
@@ -34,6 +37,10 @@ import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
+
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
  * Sbitmap starter.
@@ -77,19 +84,10 @@ public class SbitmapStarter {
      */
     protected int totalRound;
     /**
-     * Own dataset.
-     */
-    protected DataFrame ownDataFrame;
-    /**
-     * Metadata of own dataset
-     */
-    protected StructType ownSchema;
-    /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+    private Zl zl;
 
-    private int num;
     private GroupAggInputData groupAggInputData;
     private int senderGroupBitLength;
     private int receiverGroupBitLength;
@@ -98,6 +96,8 @@ public class SbitmapStarter {
     private StructType receiverSchema;
 
     private int[] testDataNums;
+
+    private boolean silent;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
@@ -113,7 +113,7 @@ public class SbitmapStarter {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
         String tab = "Data Num(bits)\t" + "Time(ms)\t" +
-            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)";
+            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num\tMix Time\tMix Triple";
         printWriter.println(tab);
         // connect
         ownRpc.connect();
@@ -153,6 +153,10 @@ public class SbitmapStarter {
         testDataNums = SbitmapMainUtils.setTestDataNums(properties);
         // 设置总测试轮数
         totalRound = SbitmapMainUtils.setTotalRound(properties);
+        // silent
+        silent = SbitmapMainUtils.setSilent(properties);
+        // zl
+        zl = SbitmapMainUtils.setZl(properties);
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
@@ -189,8 +193,12 @@ public class SbitmapStarter {
             // payload byte length
             + "\t" + payloadByteLength
             // send byte length
-            + "\t" + sendByteLength;
+            + "\t" + sendByteLength
+            + "\t" + TRIPLE_NUM + "\t" + MIX_TIME_AGG + "\t" + MIX_TRIPLE_AGG;
         printWriter.println(information);
+        TRIPLE_NUM = 0;
+        MIX_TIME_AGG = 0;
+        MIX_TRIPLE_AGG = 0;
     }
 
 
@@ -216,13 +224,20 @@ public class SbitmapStarter {
     }
 
     private GroupAggConfig genGroupAggConfig() {
+
         switch (groupAggType) {
             case BITMAP:
-                return new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
-            case SORTING:
-                return new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new BitmapGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case MIX:
-                return new MixGroupAggConfig.Builder(DEFAULT_ZL, true, prefixAggType).build();
+                return new MixGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case SORTING:
+                return new SortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case O_SORTING:
+                return new OptimizedSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case T_SORTING:
+                return new TrivialSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case B_SORTING:
+                return new BitmapSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + groupAggType.name());
         }

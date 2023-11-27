@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting;
+package edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -25,12 +25,12 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 
 /**
- * Optimized sorting-based group aggregation config.
+ * Trivial sorting-based group aggregation config.
  *
  * @author Li Peng
  * @date 2023/11/19
  */
-public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
+public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**
      * Osn config.
      */
@@ -60,18 +60,18 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
      */
     private final B2aConfig b2aConfig;
     /**
-     * Permutation config
+     * Permutation config.
      */
     private final PermutationConfig permutationConfig;
     /**
-     * Zl
+     * Zl zl.
      */
     private final Zl zl;
 
-    private OptimizedSortingGroupAggConfig(Builder builder) {
+    private TrivialSortingGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
-            builder.sharedPermutationConfig, builder.z2cConfig, builder.permutationConfig,
-            builder.zlcConfig, builder.b2aConfig);
+            builder.sharedPermutationConfig, builder.z2cConfig,
+            builder.zlcConfig, builder.b2aConfig, builder.permutationConfig);
         this.osnConfig = builder.osnConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
         this.sharedPermutationConfig = builder.sharedPermutationConfig;
@@ -85,7 +85,7 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
 
     @Override
     public GroupAggTypes getPtoType() {
-        return GroupAggTypes.O_SORTING;
+        return GroupAggTypes.T_SORTING;
     }
 
     @Override
@@ -121,6 +121,7 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
         return zlcConfig;
     }
 
+
     public PermutationConfig getPermutationConfig() {
         return permutationConfig;
     }
@@ -135,7 +136,7 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
         return zl;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<OptimizedSortingGroupAggConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<TrivialSortingGroupAggConfig> {
         /**
          * Osn config.
          */
@@ -165,7 +166,7 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
          */
         private final B2aConfig b2aConfig;
         /**
-         * Permutation config
+         * Permutation config.
          */
         private final PermutationConfig permutationConfig;
         /**
@@ -186,8 +187,8 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
         }
 
         @Override
-        public OptimizedSortingGroupAggConfig build() {
-            return new OptimizedSortingGroupAggConfig(this);
+        public TrivialSortingGroupAggConfig build() {
+            return new TrivialSortingGroupAggConfig(this);
         }
     }
 }

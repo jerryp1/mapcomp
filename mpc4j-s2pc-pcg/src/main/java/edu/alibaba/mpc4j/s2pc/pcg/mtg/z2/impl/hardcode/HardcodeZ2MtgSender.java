@@ -18,6 +18,7 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgParty;
  * @date 2023/11/11
  */
 public class HardcodeZ2MtgSender extends AbstractZ2MtgParty {
+    public static long TRIPLE_NUM = 0;
 
     public HardcodeZ2MtgSender(Rpc senderRpc, Party receiverParty, HardcodeZ2MtgConfig config) {
         super(HardcodeZ2MtgPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -37,6 +38,7 @@ public class HardcodeZ2MtgSender extends AbstractZ2MtgParty {
 
     @Override
     public Z2Triple generate(int num) throws MpcAbortException {
+        TRIPLE_NUM+=num;
         logPhaseInfo(PtoState.INIT_BEGIN);
         int byteNum = CommonUtils.getByteLength(num);
         Z2Triple z2Triple =  Z2Triple.create(num,new byte[byteNum], new byte[byteNum], new byte[byteNum]);

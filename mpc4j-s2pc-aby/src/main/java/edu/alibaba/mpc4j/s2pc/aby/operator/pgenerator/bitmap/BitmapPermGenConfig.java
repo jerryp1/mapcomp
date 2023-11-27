@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
@@ -91,7 +92,7 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         private ZlMuxConfig zlMuxConfig;
 
         public Builder(Zl zl) {
-            this.bit2aConfig = new Kvh21Bit2aConfig.Builder(zl).build();
+            this.bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
