@@ -272,36 +272,36 @@ public class BaseConverter {
     }
 
     /**
-     * get input base size.
+     * Gets input base size.
      *
-     * @return return input base size.
+     * @return input base size.
      */
     public int getInputBaseSize() {
         return inBase.getSize();
     }
 
     /**
-     * get output base size.
+     * Gets output base size.
      *
-     * @return return output base size.
+     * @return output base size.
      */
     public int getOutputBaseSize() {
         return outBase.getSize();
     }
 
     /**
-     * get input base.
+     * Gets input base.
      *
-     * @return return input base.
+     * @return input base.
      */
     public RnsBase getInputBase() {
         return inBase;
     }
 
     /**
-     * get output base.
+     * Gets output base.
      *
-     * @return return output base.
+     * @return output base.
      */
     public RnsBase getOutputBase() {
         return outBase;
