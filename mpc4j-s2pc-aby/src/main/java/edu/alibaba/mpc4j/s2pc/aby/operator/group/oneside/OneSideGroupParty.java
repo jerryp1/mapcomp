@@ -48,6 +48,4 @@ public interface OneSideGroupParty extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZ2Vector[][] groupAgg(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException;
-
-    SquareZ2Vector[][] groupAggNew(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException;
 }

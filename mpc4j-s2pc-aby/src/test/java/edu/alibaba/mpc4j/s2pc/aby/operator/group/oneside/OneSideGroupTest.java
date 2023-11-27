@@ -94,6 +94,12 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
+    public void test7() {
+        testPto(1, 7, domainBitLen, false);
+//        testPto(ATTR_NUM, 7, domainBitLen, false);
+    }
+
+    @Test
     public void test8() {
         testPto(1, 8, domainBitLen, false);
         testPto(ATTR_NUM, 8, domainBitLen, false);
@@ -101,13 +107,13 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void test10() {
-//        testPto(1, 10, domainBitLen, false);
-        testPto(ATTR_NUM, 7, domainBitLen, false);
+        testPto(1, 10, domainBitLen, false);
+        testPto(ATTR_NUM, 10, domainBitLen, false);
     }
 
     @Test
     public void testDefault() {
-//        testPto(1, DEFAULT_SMALL_SIZE, domainBitLen, false);
+        testPto(1, DEFAULT_SMALL_SIZE, domainBitLen, false);
         testPto(ATTR_NUM, DEFAULT_SMALL_SIZE, domainBitLen, false);
     }
 
@@ -220,25 +226,6 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
 //        LOGGER.info(Arrays.toString(targetIndexes));
 //        LOGGER.info("origin:{}", Arrays.deepToString(origin));
 //        LOGGER.info("resData:{}", Arrays.deepToString(resData));
-
-//        BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
-//        for(int i = 0; i < groupFlag.bitNum(); i++){
-//            for(int j = 0; j < data.length; j++){
-//                if(type[j].equals(AggTypes.MAX)){
-//                    tmp[j] = tmp[j].compareTo(origin[j][i]) > 0 ? tmp[j] : origin[j][i];
-//                }else{
-//                    tmp[j] = tmp[j].compareTo(origin[j][i]) < 0 ? tmp[j] : origin[j][i];
-//                }
-//            }
-//            if(gFlag[i]){
-//                for(int j = 0; j < data.length; j++){
-//                    BigInteger compRes = resData[j][targetIndexes[groupIndex]];
-//                    assert compRes.compareTo(tmp[j]) == 0;
-//                }
-//                groupIndex++;
-//                tmp = Arrays.copyOf(nullValue, data.length);
-//            }
-//        }
 
         BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
         for(int i = 0; i < groupFlag.bitNum(); i++){
