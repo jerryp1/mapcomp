@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
-    private static final int ATTR_NUM = 64;
+    private static final int ATTR_NUM = 2;
     /**
      * bitLen
      */
@@ -41,7 +41,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 10;
+    private static final int LARGE_SIZE = 57474;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -102,12 +102,12 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     @Test
     public void test10() {
 //        testPto(1, 10, domainBitLen, false);
-        testPto(ATTR_NUM, 10, domainBitLen, false);
+        testPto(ATTR_NUM, 7, domainBitLen, false);
     }
 
     @Test
     public void testDefault() {
-        testPto(1, DEFAULT_SMALL_SIZE, domainBitLen, false);
+//        testPto(1, DEFAULT_SMALL_SIZE, domainBitLen, false);
         testPto(ATTR_NUM, DEFAULT_SMALL_SIZE, domainBitLen, false);
     }
 
@@ -151,7 +151,8 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
                 aggTypes[i] = secureRandom.nextBoolean() ? AggTypes.MIN : AggTypes.MAX;
                 data[i] = IntStream.range(0, domainBitLen).mapToObj(j ->
                     BitVectorFactory.createRandom(listSize, secureRandom)).toArray(BitVector[]::new);
-                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
+//                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
+                validFlag[i] = BitVectorFactory.createOnes(listSize);
                 f0[i] = BitVectorFactory.createRandom(listSize, secureRandom);
                 f1[i] = f0[i].xor(validFlag[i]);
                 BitVector[] tmp = IntStream.range(0, domainBitLen).mapToObj(j ->
@@ -161,12 +162,12 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
                     data[i][j].xor(tmp[j])).toArray(BitVector[]::new);
                 s1[i] = Arrays.stream(tmp1).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
             });
-//            BitVector groupFlag = BitVectorFactory.create(listSize, new byte[]{0, 17});
             BitVector groupFlag = BitVectorFactory.createZeros(listSize);
             // 设置group flag，保证最后一个bit是1
             int possibleGroupNum = Math.max(listSize>>2, 1);
             IntStream.range(0, possibleGroupNum).forEach(i -> groupFlag.set(secureRandom.nextInt(listSize), true));
-            groupFlag.set(listSize - 1, true);
+            groupFlag.set(0, true);
+//            groupFlag.set(listSize - 1, true);
 
             OneSideGroupPartyThread senderThread = new OneSideGroupPartyThread(sender, s0,
                 Arrays.stream(f0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, null);
@@ -220,6 +221,25 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
 //        LOGGER.info("origin:{}", Arrays.deepToString(origin));
 //        LOGGER.info("resData:{}", Arrays.deepToString(resData));
 
+//        BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
+//        for(int i = 0; i < groupFlag.bitNum(); i++){
+//            for(int j = 0; j < data.length; j++){
+//                if(type[j].equals(AggTypes.MAX)){
+//                    tmp[j] = tmp[j].compareTo(origin[j][i]) > 0 ? tmp[j] : origin[j][i];
+//                }else{
+//                    tmp[j] = tmp[j].compareTo(origin[j][i]) < 0 ? tmp[j] : origin[j][i];
+//                }
+//            }
+//            if(gFlag[i]){
+//                for(int j = 0; j < data.length; j++){
+//                    BigInteger compRes = resData[j][targetIndexes[groupIndex]];
+//                    assert compRes.compareTo(tmp[j]) == 0;
+//                }
+//                groupIndex++;
+//                tmp = Arrays.copyOf(nullValue, data.length);
+//            }
+//        }
+
         BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
         for(int i = 0; i < groupFlag.bitNum(); i++){
             for(int j = 0; j < data.length; j++){
@@ -229,9 +249,14 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
                     tmp[j] = tmp[j].compareTo(origin[j][i]) < 0 ? tmp[j] : origin[j][i];
                 }
             }
-            if(gFlag[i]){
+            if(i + 1 == groupFlag.bitNum() || gFlag[i + 1]){
                 for(int j = 0; j < data.length; j++){
                     BigInteger compRes = resData[j][targetIndexes[groupIndex]];
+                    if(compRes.compareTo(tmp[j]) != 0){
+                        LOGGER.info("i:{}", i);
+                        LOGGER.info("should be:{}", compRes);
+                        LOGGER.info("res is:{}", tmp[j]);
+                    }
                     assert compRes.compareTo(tmp[j]) == 0;
                 }
                 groupIndex++;

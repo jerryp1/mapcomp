@@ -39,10 +39,11 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
     private SquareZ2Vector[] pValues;
     private SquareZ2Vector[] sValues;
     private SquareZ2Vector[] resultData;
+    private SquareZ2Vector[] inputDataProcessed;
 
     @Override
     public int[] getResPosFlag(BitVector groupFlag) {
-        BitVector[][] params = getPlainBitVectors(groupFlag);
+        BitVector[][] params = getPlainBitVectorsNew(groupFlag);
         BitVector r = params[params.length - 1][0];
         TIntList updateIndexes = new TIntLinkedList();
         for(int i = 0; i < groupFlag.bitNum(); i++){
@@ -207,7 +208,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                 Arrays.copyOfRange(sl, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
             SquareZ2Vector[][] inputPr = IntStream.range(0, attrNum).mapToObj(i ->
                 Arrays.copyOfRange(pr, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
-            MpcZ2Vector[] leqRes = z2IntegerCircuit.leq(inputSl, inputPr);
+            MpcZ2Vector[] leqRes = z2IntegerCircuit.leqParallel(inputSl, inputPr);
 
             SquareZ2Vector[] leqFlagExtend = new SquareZ2Vector[attrNum * dimLen];
             for(int i = 0; i < attrNum; i++){
@@ -229,6 +230,251 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
 
             logStepInfo(PtoState.PTO_STEP, level + 1, levelNum + 1, resetAndGetTime());
         }
+        // 再得到最终的结果
+        stopWatch.start();
+        resultData = plainBitMuxParty.mux(groupFlag == null ? null : params[levelNum][0], resultData);
+        SquareZ2Vector[] finalResultData = resultData;
+        SquareZ2Vector[][] finalRes = attrNum == 1 ? new SquareZ2Vector[][]{resultData} : IntStream.range(0, attrNum).mapToObj(i ->
+            Arrays.copyOfRange(finalResultData, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
+        logStepInfo(PtoState.PTO_STEP, levelNum + 1, levelNum + 1, resetAndGetTime());
+        return finalRes;
+    }
+
+    public static BitVector[][] getPlainBitVectorsNew(BitVector groupFlag){
+        int dataNum = groupFlag.bitNum();
+        BitVector gFlag = groupFlag.copy();
+        // 为了放置最后一组数据没有更新，强制将最后一个group flag置为1
+        gFlag.set(dataNum - 1, true);
+        BitVector resF = BitVectorFactory.createZeros(dataNum);
+        int levelNum = LongUtils.ceilLog2(dataNum);
+        BitVector[][] flagsInEachRound = new BitVector[levelNum + 1][];
+        for (int level = 0; level < levelNum; level++) {
+//            LOGGER.info("level:{}", level);
+//            LOGGER.info("gFlag before:{}", gFlag);
+            int childGroupLen = 1 << level;
+            int parentLen = childGroupLen << 1;
+            int mergeNum = dataNum / parentLen;
+            mergeNum += dataNum % parentLen > childGroupLen ? 1 : 0;
+            BitVector fIntoMux;
+            BitVector leftF = gFlag.getPointsWithFixedSpace(0, mergeNum, parentLen);
+            BitVector rightF = gFlag.getPointsWithFixedSpace(childGroupLen, mergeNum, parentLen);
+            BitVector a = leftF.and(rightF);
+            // 更新结果
+            resF.setPointsWithFixedSpace(a, childGroupLen - 1, mergeNum, parentLen);
+            gFlag.setPointsWithFixedSpace(leftF.or(rightF), 0, mergeNum, parentLen);
+            // 3.1.1 计算得到fv的flag
+            if(mergeNum == 1){
+                fIntoMux = rightF.copy();
+            }else{
+                if((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen){
+                    // 当前merge得到的最后一个节点应该是右节点
+                    fIntoMux = leftF.copy();
+                    fIntoMux.setPointsWithFixedSpace(rightF.getPointsWithFixedSpace(0, mergeNum / 2, 2), 0, mergeNum / 2, 2);
+                }else{
+                    fIntoMux = rightF.copy();
+                    fIntoMux.setPointsWithFixedSpace(leftF.getPointsWithFixedSpace(1, mergeNum / 2, 2), 1, mergeNum / 2, 2);
+                }
+            }
+            flagsInEachRound[level] = new BitVector[]{a, fIntoMux};
+//            LOGGER.info("a:{}", a);
+//            LOGGER.info("fIntoMux:{}", fIntoMux);
+//            LOGGER.info("gFlag after:{}", gFlag);
+        }
+        if(groupFlag.get(dataNum - 1)){
+            resF.set(dataNum - 1, true);
+        }
+        flagsInEachRound[levelNum] = new BitVector[]{resF};
+        return flagsInEachRound;
+    }
+
+    @Override
+    public SquareZ2Vector[][] groupAggNew(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags,
+                                       AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException {
+        setInputs(xiArrays, validFlags, aggTypes, groupFlag);
+        logPhaseInfo(PtoState.PTO_BEGIN);
+
+        stopWatch.start();
+        // 1. 先计算真实的值
+        BitVector[][] zerosAndOnes = new BitVector[2][];
+        zerosAndOnes[0] = IntStream.range(0, dimLen).mapToObj(i ->
+                BitVectorFactory.createZeros(dataNum)).toArray(BitVector[]::new);
+        zerosAndOnes[1] = IntStream.range(0, dimLen).mapToObj(i ->
+                BitVectorFactory.createOnes(dataNum)).toArray(BitVector[]::new);
+        BitVector[] perpValue = IntStream.range(0, xiArrays.length).mapToObj(i ->
+                aggTypes[i].equals(AggTypes.MAX) ? zerosAndOnes[0] : zerosAndOnes[1])
+            .flatMap(Arrays::stream).toArray(BitVector[]::new);
+        if(validFlags != null){
+            SquareZ2Vector[] validFs = new SquareZ2Vector[dimLen * xiArrays.length];
+            for(int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen){
+                for(int j = startPos; j < startPos + dimLen; j++){
+                    validFs[j] = validFlags[i];
+                }
+            }
+            SquareZ2Vector[] perpShare = (SquareZ2Vector[]) z2cParty.setPublicValues(perpValue);
+            SquareZ2Vector[] originValues = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
+            inputDataProcessed = z2cParty.xor(z2cParty.and(validFs, z2cParty.xor(perpShare, originValues)), perpShare);
+        }else{
+            inputDataProcessed = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
+        }
+//        if(groupFlag != null){
+//            BitVector[] inputDataProcessedPlain = z2cParty.revealOwn(inputDataProcessed);
+//            LOGGER.info("before all");
+//            for(int i = 1; i < xiArrays.length; i++){
+//                LOGGER.info("inputDataProcessedPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(inputDataProcessedPlain, i * dimLen, i * dimLen + dimLen))));
+//            }
+//        }else{
+//            z2cParty.revealOther(inputDataProcessed);
+//        }
+        // 1.1 将result data置为 0
+        resultData = IntStream.range(0, perpValue.length).mapToObj(i ->
+            SquareZ2Vector.createZeros(dataNum, false)).toArray(SquareZ2Vector[]::new);
+        // 2. 计算p值和s值
+        SquareZ2Vector[] fe = null;
+        if(groupFlag != null){
+            BitVector[] fePlain = Arrays.stream(perpValue).map(x -> x.and(groupFlag)).toArray(BitVector[]::new);
+            fe = z2cParty.shareOwn(fePlain);
+        }else{
+            fe = z2cParty.shareOther(IntStream.range(0, perpValue.length).map(i -> dataNum).toArray());
+        }
+        int rightChildNum = dataNum / 2 + (dataNum % 2);
+        // 2.1 初始化 p = fe, s = v
+        pValues = Arrays.copyOf(fe, fe.length);
+        sValues = Arrays.copyOf(inputDataProcessed, inputDataProcessed.length);
+        // 2.2 更新右节点的值为：p = v - fv + fe, s = fv
+        SquareZ2Vector[] rightV = OneSideGroupUtils.getPos(inputDataProcessed, 1, rightChildNum, 2, parallel);
+        SquareZ2Vector[] rightFe = OneSideGroupUtils.getPos(fe, 1, rightChildNum, 2, parallel);
+        BitVector rightF = null;
+        if(groupFlag != null){
+            rightF = groupFlag.getPointsWithFixedSpace(1, rightChildNum, 2);
+        }
+        SquareZ2Vector[] rightFv = plainBitMuxParty.mux(rightF, rightV);
+        OneSideGroupUtils.setPos(pValues, z2cParty.xor(rightV, z2cParty.xor(rightFv, rightFe)), 1, rightChildNum, 2, parallel);
+        OneSideGroupUtils.setPos(sValues, rightFv, 1, rightChildNum, 2, parallel);
+
+        int levelNum = LongUtils.ceilLog2(dataNum);
+        logStepInfo(PtoState.PTO_STEP, 0, levelNum + 1, resetAndGetTime(), "init end");
+        // 3. 循环进行更新
+        return commonIterNew(aggTypes, groupFlag, xiArrays.length);
+    }
+
+    public SquareZ2Vector[][] commonIterNew(AggTypes[] aggTypes, BitVector groupFlag, int attrNum) throws MpcAbortException {
+        BitVector[][] params = groupFlag != null ? getPlainBitVectorsNew(groupFlag) : null;
+//        if(groupFlag != null){
+//            BitVector[] pPlain = z2cParty.revealOwn(pValues);
+//            BitVector[] sPlain = z2cParty.revealOwn(sValues);
+//            BitVector[] resultPlain = z2cParty.revealOwn(resultData);
+//            LOGGER.info("before all");
+//            for(int i = 1; i < attrNum; i++){
+//                LOGGER.info("pPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(pPlain, i * dimLen, i * dimLen + dimLen))));
+//                LOGGER.info("sPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(sPlain, i * dimLen, i * dimLen + dimLen))));
+//                LOGGER.info("resultPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(resultPlain, i * dimLen, i * dimLen + dimLen))));
+//            }
+//        }else{
+//            z2cParty.revealOther(pValues);
+//            z2cParty.revealOther(sValues);
+//            z2cParty.revealOther(resultData);
+//        }
+
+        int levelNum = LongUtils.ceilLog2(dataNum);
+        for (int level = 0; level < levelNum; level++) {
+            stopWatch.start();
+            int childGroupLen = 1 << level;
+            int parentLen = childGroupLen << 1;
+            int mergeNum = dataNum / parentLen;
+            mergeNum += dataNum % parentLen > childGroupLen ? 1 : 0;
+            // 3.1 计算各个flag
+            BitVector a = groupFlag == null ? null : params[level][0],
+                fIntoMux = groupFlag == null ? null : params[level][1];
+            // 3.2 计算合并值
+            SquareZ2Vector[] sl = OneSideGroupUtils.getPos(sValues, childGroupLen - 1, mergeNum, parentLen, parallel);
+            SquareZ2Vector[] pr = OneSideGroupUtils.getPos(pValues, childGroupLen, mergeNum, parentLen, parallel);
+            // 3.2.1 得到比较结果 v = OP(sl, pr)
+            SquareZ2Vector[][] inputSl = IntStream.range(0, attrNum).mapToObj(i ->
+                Arrays.copyOfRange(sl, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
+            SquareZ2Vector[][] inputPr = IntStream.range(0, attrNum).mapToObj(i ->
+                Arrays.copyOfRange(pr, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
+            MpcZ2Vector[] leqRes = z2IntegerCircuit.leqParallel(inputSl, inputPr);
+            // 得到op结果
+            SquareZ2Vector[] leqFlagExtend = new SquareZ2Vector[attrNum * dimLen];
+            for(int i = 0; i < attrNum; i++){
+                z2cParty.xori(leqRes[i], aggTypes[i].equals(AggTypes.MAX) ? SquareZ2Vector.createZeros(mergeNum) : SquareZ2Vector.createOnes(mergeNum));
+                Arrays.fill(leqFlagExtend, i * dimLen, i * dimLen + dimLen, leqRes[i]);
+            }
+            SquareZ2Vector[] v = (SquareZ2Vector[]) z2cParty.mux(sl, pr, leqFlagExtend);
+            SquareZ2Vector[] vPrime = plainBitMuxParty.mux(a, v);
+            // 3.3 更新left child的最后一个值
+            OneSideGroupUtils.setPos(resultData, vPrime, childGroupLen - 1, mergeNum, parentLen, parallel);
+            if(mergeNum == 1){
+                // 3.4 先计算出fv
+                SquareZ2Vector[] fv = plainBitMuxParty.mux(fIntoMux, v);
+                // 3.5 如果只更新一个，那么说明自己已经是左节点了，这时候更新p是没有意义的
+                SquareZ2Vector[] sr = OneSideGroupUtils.getPos(sValues, parentLen - 1, mergeNum, parentLen, parallel);
+                SquareZ2Vector[] leftV = OneSideGroupUtils.getPos(v, 0, 1, 2, parallel);
+                for(int i = 0; i < sr.length; i++){
+                    z2cParty.xori(sr[i], fv[i]);
+                    z2cParty.xori(sr[i], leftV[i]);
+                }
+                OneSideGroupUtils.setPos(sValues, sr, parentLen - 1, mergeNum, parentLen, parallel);
+            }else{
+                // 3.4 先计算出fv
+                SquareZ2Vector[] fv = plainBitMuxParty.mux(fIntoMux, v);
+                // 3.5 更新p和s
+                SquareZ2Vector[] pl = OneSideGroupUtils.getPos(pValues, 0, mergeNum, parentLen, parallel);
+                SquareZ2Vector[] sr = OneSideGroupUtils.getPos(sValues, parentLen - 1, mergeNum, parentLen, parallel);
+
+                SquareZ2Vector[] leftVRightVPrime, leftVPrimeRightV;
+                if((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen){
+                    // 最后一个节点是右节点
+                    SquareZ2Vector[] leftV = OneSideGroupUtils.getPos(v, 0, mergeNum / 2, 2, parallel);
+                    SquareZ2Vector[] leftVPrime = OneSideGroupUtils.getPos(vPrime, 0, mergeNum / 2, 2, parallel);
+                    leftVRightVPrime = Arrays.copyOf(vPrime, vPrime.length);
+                    leftVPrimeRightV = Arrays.copyOf(v, v.length);
+                    OneSideGroupUtils.setPos(leftVRightVPrime, leftV, 0, mergeNum / 2, 2, parallel);
+                    OneSideGroupUtils.setPos(leftVPrimeRightV, leftVPrime, 0, mergeNum / 2, 2, parallel);
+                }else{
+                    SquareZ2Vector[] rightV = OneSideGroupUtils.getPos(v, 1, mergeNum / 2, 2, parallel);
+                    SquareZ2Vector[] rightVPrime = OneSideGroupUtils.getPos(vPrime, 1, mergeNum / 2, 2, parallel);
+                    leftVRightVPrime = Arrays.copyOf(v, v.length);
+                    leftVPrimeRightV = Arrays.copyOf(vPrime, vPrime.length);
+                    OneSideGroupUtils.setPos(leftVRightVPrime, rightVPrime, 1, mergeNum / 2, 2, parallel);
+                    OneSideGroupUtils.setPos(leftVPrimeRightV, rightV, 1, mergeNum / 2, 2, parallel);
+                }
+                for(int i = 0; i < pl.length; i++){
+                    z2cParty.xori(pl[i], fv[i]);
+                    z2cParty.xori(sr[i], fv[i]);
+                    z2cParty.xori(pl[i], leftVPrimeRightV[i]);
+                    z2cParty.xori(sr[i], leftVRightVPrime[i]);
+                }
+                OneSideGroupUtils.setPos(pValues, pl, 0, mergeNum, parentLen, parallel);
+                OneSideGroupUtils.setPos(sValues, sr, parentLen - 1, mergeNum, parentLen, parallel);
+            }
+            logStepInfo(PtoState.PTO_STEP, level + 1, levelNum + 1, resetAndGetTime());
+
+//            if(groupFlag != null){
+//                BitVector[] pPlain = z2cParty.revealOwn(pValues);
+//                BitVector[] sPlain = z2cParty.revealOwn(sValues);
+//                BitVector[] resultPlain = z2cParty.revealOwn(resultData);
+//                LOGGER.info("after level:{}", level);
+//                LOGGER.info("origin group flag:{}", groupFlag);
+//                LOGGER.info("a:{}", a);
+//                LOGGER.info("fIntoMux:{}", fIntoMux);
+//                for(int i = 1; i < attrNum; i++){
+//                    LOGGER.info("pPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(pPlain, i * dimLen, i * dimLen + dimLen))));
+//                    LOGGER.info("sPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(sPlain, i * dimLen, i * dimLen + dimLen))));
+//                    LOGGER.info("resultPlain[{}]:{}", i,  Arrays.toString(trans(Arrays.copyOfRange(resultPlain, i * dimLen, i * dimLen + dimLen))));
+//                }
+//            }else{
+//                z2cParty.revealOther(pValues);
+//                z2cParty.revealOther(sValues);
+//                z2cParty.revealOther(resultData);
+//            }
+
+        }
+        // 如果最后两个flag都是1的话，那么最后一个数据也要更新下，直接设为自己的值
+        SquareZ2Vector[] lastOneOrigin = OneSideGroupUtils.getPos(inputDataProcessed, dataNum - 1, 1, 1, parallel);
+        SquareZ2Vector[] lastOneNew = plainBitMuxParty.mux(groupFlag == null ? null :
+            (groupFlag.get(dataNum - 1) ? BitVectorFactory.createOnes(1) : BitVectorFactory.createZeros(1)), lastOneOrigin);
+        OneSideGroupUtils.setPos(resultData, lastOneNew, dataNum - 1, 1, 1, parallel);
         // 再得到最终的结果
         stopWatch.start();
         resultData = plainBitMuxParty.mux(groupFlag == null ? null : params[levelNum][0], resultData);

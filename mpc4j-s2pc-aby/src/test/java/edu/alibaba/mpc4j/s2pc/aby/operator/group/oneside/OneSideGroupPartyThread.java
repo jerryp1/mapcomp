@@ -37,11 +37,12 @@ public class OneSideGroupPartyThread extends Thread {
     public void run() {
         try {
             party.init(xiArrays.length, xiArrays[0][0].getNum(), xiArrays.length);
-            if(xiArrays.length == 1){
-                res = new SquareZ2Vector[][]{party.groupAgg(xiArrays[0], validFlags[0], aggTypes[0], groupFlag)};
-            }else{
-                res = party.groupAgg(xiArrays, validFlags, aggTypes, groupFlag);
-            }
+            res = party.groupAggNew(xiArrays, validFlags, aggTypes, groupFlag);
+//            if(xiArrays.length == 1){
+//                res = new SquareZ2Vector[][]{party.groupAgg(xiArrays[0], validFlags[0], aggTypes[0], groupFlag)};
+//            }else{
+//                res = party.groupAggNew(xiArrays, validFlags, aggTypes, groupFlag);
+//            }
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
