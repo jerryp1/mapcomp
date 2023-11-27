@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
+import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
@@ -76,7 +77,7 @@ public class RnsTool {
      */
     MultiplyUintModOperand[] invProdQModBsk;
     /**
-     * |-q^{-1}|_{~m}, use in BFV multiplication
+     * |-q^{-1}|_{m_tilde}, use in BFV multiplication
      */
     MultiplyUintModOperand negInvProdQModMTilde;
     /**
@@ -171,6 +172,7 @@ public class RnsTool {
      * @param t                 the plaintext modulus.
      */
     private void initialize(int polyModulusDegree, RnsBase q, Modulus t) {
+        // Return if q is out of bounds
         if (q.getSize() < Constants.COEFF_MOD_COUNT_MIN || q.getSize() > Constants.COEFF_MOD_COUNT_MAX) {
             throw new IllegalArgumentException("rns base is invalid.");
         }
@@ -182,48 +184,51 @@ public class RnsTool {
         }
         this.t = t;
         this.coeffCount = polyModulusDegree;
-        // number of moduli in RnsBase q, allocate length for bases q, B, Bsk, Bsk U m_tilde, t_gamma
+        // create RNS bases q = {q_1, ..., q_k}, B = {p_1, ..., p_{k'}}, B_sk = {B, m_sk}, {B_sk, m_tilde}, {t, γ}.
         int baseQSize = q.getSize();
-        // In some cases we might need to increase the size of the base B by one, namely we require
-        // K * n * t * q^2 < q * prod(B) * m_sk, where K takes into account cross terms when larger size ciphertexts
-        // are used, and n is the "delta factor" for the ring. We reserve 32 bits for K * n. Here the coeff modulus
-        // primes q_i are bounded to be SEAL_USER_MOD_BIT_COUNT_MAX (60) bits, and all primes in B and m_sk are
-        // SEAL_INTERNAL_MOD_BIT_COUNT (61) bits.
+        /*
+         * In some cases we might need to increase the size of the base B by one, namely we require
+         * K * n * t * q^2 < q * prod(B) * m_sk, where K takes into account cross terms when larger size ciphertexts
+         * are used, and n is the "delta factor" for the ring. We reserve 32 bits for K * n. Here the coeff modulus
+         * primes q_i are bounded to be SEAL_USER_MOD_BIT_COUNT_MAX (60) bits, and all primes in B and m_sk are
+         * SEAL_INTERNAL_MOD_BIT_COUNT (61) bits.
+         */
+        // the bit size of q
         int totalCoeffBitCount = UintCore.getSignificantBitCountUint(q.getBaseProd(), q.getSize());
-        // why baseBSize is this?
         int baseBSize = baseQSize;
+        // ensure K * n * t * q < prod(B) * m_sk (compared in log_2()).
+        // In the left, 32 is the reserved K * n.
+        // In the right, prod(B) is INTERNAL_MOD_BIT_COUNT (61) * baseBSize bits, m_sk is INTERNAL_MOD_BIT_COUNT bits.
         if (32 + this.t.getBitCount() + totalCoeffBitCount >=
             Constants.INTERNAL_MOD_BIT_COUNT * baseQSize + Constants.INTERNAL_MOD_BIT_COUNT) {
             baseBSize++;
         }
-        // base B extend modulus m_{sk} ---> B_{sk}, so size + 1
+        // B_{sk} = {B, m_sk}, baseBskSize = baseBSize + 1
         int baseBskSize = Common.addSafe(baseBSize, 1, true);
-        // base B_{sk} extend single-modulus \tilde m ---> B_{sk} U \tilde m, so size + 1
+        // {B_sk, m_tilde}, baseBskMTildeSize = baseBskSize + 1
         int baseBskMTildeSize = Common.addSafe(baseBskSize, 1, true);
         int baseTGammaSize = 0;
-        // Sample primes for B and two more primes: m_sk and gamma, size it qSize + 2
-        // todo: bit length of gamma
+        // Sample primes for m_sk, γ, and B = (p_1, ..., p_{k'}), each is INTERNAL_MOD_BIT_COUNT (61) bits.
         Modulus[] baseConvPrimes = Numth.getPrimes(Common.mulSafe(2, coeffCount, true), Constants.INTERNAL_MOD_BIT_COUNT, baseBskMTildeSize);
         mSk = baseConvPrimes[0];
-        // bit-length is Constants.INTERNAL_MOD_BIT_COUNT
         gamma = baseConvPrimes[1];
         Modulus[] baseBPrimes = new Modulus[baseBSize];
         System.arraycopy(baseConvPrimes, 2, baseBPrimes, 0, baseBSize);
-        // Set m_tilde_ to a non-prime value
+        // fix m_tilde to be a non-prime value 2^32
         mTilde = new Modulus(1L << 32);
-        // Populate the base arrays
+        // create each RNS bases
         baseQ = new RnsBase(q);
         baseB = new RnsBase(baseBPrimes);
         baseBsk = baseB.extend(mSk);
         baseBskMTilde = baseBsk.extend(mTilde);
+        // Set up t-gamma base if t_ is non-zero (using BFV)
         if (!this.t.isZero()) {
             baseTGammaSize = 2;
             baseTGamma = new RnsBase(new Modulus[]{t, gamma});
         }
-        // here we create the reference of the table, NttTablesCreateIter.createNttTables will create instances.
+        // Generate the B_sk NTTTables; these are used for NTT after base extension to B_sk
         baseBskNttTables = new NttTables[baseBskSize];
         try {
-            // b_i mod 2n = 1
             NttTables.createNttTables(coeffCountPower, baseBsk.getBase(), baseBskNttTables);
         } catch (Exception e) {
             throw new IllegalArgumentException("invalid rns bases");
@@ -232,7 +237,7 @@ public class RnsTool {
             // Set up BaseConvTool for q --> {t}
             baseQToTConv = new BaseConverter(baseQ, new RnsBase(new Modulus[]{this.t}));
         }
-        // Set up BaseConverter for q --> Bsk
+        // Set up BaseConverter for q --> B_sk
         baseQToBskConv = new BaseConverter(baseQ, baseBsk);
         // Set up BaseConverter for q --> {m_tilde}
         baseQToMTildeConv = new BaseConverter(baseQ, new RnsBase(new Modulus[]{mTilde}));
@@ -249,13 +254,13 @@ public class RnsTool {
         for (int i = 0; i < baseQSize; i++) {
             prodBModQ[i] = UintArithmeticSmallMod.moduloUint(baseB.getBaseProd(), baseBSize, baseQ.getBase(i));
         }
-        // Compute prod(q)^(-1) mod Bsk, which has many modulus
+        // Compute prod(q)^(-1) mod B_sk, which has many modulus
         invProdQModBsk = new MultiplyUintModOperand[baseBskSize];
         for (int i = 0; i < baseBskSize; i++) {
             invProdQModBsk[i] = new MultiplyUintModOperand();
         }
         for (int i = 0; i < baseBskSize; i++) {
-            // first reduce prod(q) to Bsk[i]
+            // first reduce prod(q) to B_sk[i]
             long innerTemp = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
             // then compute inverse
             long[] innerInvTemp = new long[1];
@@ -275,7 +280,7 @@ public class RnsTool {
         }
         invProdBModMsk = new MultiplyUintModOperand();
         invProdBModMsk.set(invTemp[0], mSk);
-        // Compute m_tilde^(-1) mod Bsk
+        // Compute m_tilde^(-1) mod B_sk
         invMTildeModBsk = new MultiplyUintModOperand[baseBskSize];
         for (int i = 0; i < baseBskSize; i++) {
             invMTildeModBsk[i] = new MultiplyUintModOperand();
@@ -298,33 +303,33 @@ public class RnsTool {
         // note that the neg
         negInvProdQModMTilde = new MultiplyUintModOperand();
         negInvProdQModMTilde.set(UintArithmeticSmallMod.negateUintMod(invTemp[0], mTilde), mTilde);
-        // Compute prod(q) mod Bsk
+        // Compute prod(q) mod B_sk
         prodQModBsk = new long[baseBskSize];
         for (int i = 0; i < baseBskSize; i++) {
             prodQModBsk[i] = UintArithmeticSmallMod.moduloUint(baseQ.getBaseProd(), baseQSize, baseBsk.getBase(i));
         }
         if (baseTGamma != null) {
-            // Compute gamma^(-1) mod t
+            // Compute γ^(-1) mod t
             if (!UintArithmeticSmallMod.tryInvertUintMod(
                 UintArithmeticSmallMod.barrettReduce64(gamma.getValue(), this.t), this.t, invTemp)) {
                 throw new IllegalArgumentException("invalid rns bases");
             }
             invGammaModT = new MultiplyUintModOperand();
             invGammaModT.set(invTemp[0], this.t);
-            // Compute prod({t, gamma}) mod q
+            // Compute prod({t, γ}) mod q
             prodTGammaModQ = new MultiplyUintModOperand[baseQSize];
             for (int i = 0; i < baseQSize; i++) {
                 prodTGammaModQ[i] = new MultiplyUintModOperand();
             }
             for (int i = 0; i < baseQSize; i++) {
                 prodTGammaModQ[i].set(
-                    // t * \gamma q_i
-                    // todo: why don't use baseTGamma.getBaseProd() mod baseQ.getBase(i), which can avoid repeat multiplication?
-                    UintArithmeticSmallMod.multiplyUintMod(baseTGamma.getBase(0).getValue(), baseTGamma.getBase(1).getValue(), baseQ.getBase(i)),
+                    // t * γ mod q_i, SEAL use UintArithmeticSmallMod.multiplyUintMod(t, γ, baseQ.getBase(i))
+                    // Here, we use UintArithmeticSmallMod.moduloUint(baseTGamma.getBaseProd(), 2, baseQ.getBase(i))
+                    UintArithmeticSmallMod.moduloUint(baseTGamma.getBaseProd(), 2, baseQ.getBase(i)),
                     baseQ.getBase(i)
                 );
             }
-            // Compute -prod(q)^(-1) mod {t, gamma}
+            // Compute -prod(q)^(-1) mod {t, γ}
             negInvQModTGamma = new MultiplyUintModOperand[baseTGammaSize];
             for (int i = 0; i < baseTGammaSize; i++) {
                 negInvQModTGamma[i] = new MultiplyUintModOperand();
@@ -341,7 +346,7 @@ public class RnsTool {
                 );
             }
         }
-        // Compute q[last]^(-1) mod q[i] for i = 0..last-1, i.e. q_k mod q_1, q_k mod q_2, ..., q_k mod q_{k-1}
+        // Compute q[last]^(-1) mod q[i] for i = [0, last - 1], i.e. q_k mod q_1, q_k mod q_2, ..., q_k mod q_{k-1}
         // This is used by modulus switching and rescaling
         invQLastModQ = new MultiplyUintModOperand[baseQSize - 1];
         for (int i = 0; i < baseQSize - 1; i++) {
@@ -430,7 +435,8 @@ public class RnsTool {
     }
 
     /**
-     * FastConverts the input * m_tilde from base Q to base {B, msk, m_tilde}.
+     * Converts fast the input * m_tilde from base q = (q_1, ..., q_k) to base {B, m_sk, m_tilde}. This is the Step 0 of
+     * Algorithm 3 in the BEHZ16 paper.
      *
      * @param input                       input array.
      * @param inputStartIndex             start index of input array.
@@ -449,7 +455,10 @@ public class RnsTool {
         assert destinationCoeffCount == coeffCount;
         assert inputCoeffModulusSize == baseQ.getSize();
         assert destinationCoeffModulusSize == baseBskMTilde.getSize();
-
+        /*
+         * Require: Input in q.
+         * Ensure: Output in {B_sk, m_tilde}.
+         */
         int baseQSize = baseQ.getSize();
         int baseBskSize = baseBsk.getSize();
         // We need to multiply first the input with m_tilde mod q
@@ -457,24 +466,19 @@ public class RnsTool {
         // This is NOT an ideal approach: as mentioned in BEHZ16, multiplication by
         // m_tilde can be easily merge into the base conversion operation; however, then
         // we could not use the BaseConverter as below without modifications.
-        // k * N
-        RnsIter temp = new RnsIter(baseQSize, coeffCount);
-        // (input * \tilde m) mod q
+        long[] temp = RnsIterator.allocateZeroRns(coeffCount, baseQSize);
+        // (input * m_tilde) mod q
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
-            input, inputStartIndex, inputCoeffCount, baseQSize, mTilde.getValue(), baseQ.getBase(), temp.coeffIter, 0, coeffCount, baseQSize
+            input, inputStartIndex, inputCoeffCount, baseQSize, mTilde.getValue(), baseQ.getBase(), temp, 0, coeffCount, baseQSize
         );
-        // Now convert to Bsk
-        long[] tempOut = new long[baseBskSize * coeffCount];
-        baseQToBskConv.fastConvertArray(temp, tempOut);
-        // Finally, convert to {m_tilde}
-        // mTilde is a single modulus, so baseSize is 1.
-        // 1 * coeffCount
-        long[] tempOut2 = new long[coeffCount];
-        baseQToMTildeConv.fastConvertArray(temp, tempOut2);
-        // update destination, Now input is in Bsk U {\tilde m}
-        // copy tempOut
+        // Now convert to B_sk, i.e., FastBcov([input * m_tilde]_q, q, {B_sk})
+        long[] tempOut = RnsIterator.allocateZeroRns(coeffCount, baseBskSize);
+        baseQToBskConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempOut, 0, coeffCount, baseBskSize);
+        // Finally, convert to {m_tilde}, i.e., FastBcov([input * m_tilde]_q, q, {m_tilde})
+        long[] tempOut2 = RnsIterator.allocateZeroRns(coeffCount, 1);
+        baseQToMTildeConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempOut2, 0, coeffCount, 1);
+        // output = {tempOut, tempOut2} = {[input * m_tilde]_q in {B_sk}, [input * m_tilde]_q in {m_tilde}}
         System.arraycopy(tempOut, 0, destination, destinationStartIndex, tempOut.length);
-        // copy tempOut2
         System.arraycopy(tempOut2, 0, destination, destinationStartIndex + tempOut.length, tempOut2.length);
     }
 
@@ -527,23 +531,26 @@ public class RnsTool {
      * @param destinationCoeffCount       coeff count of destination RNS iter.
      * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
      */
-    public void smMrqRnsIter(long[] input, int inputOffset, int inputCoeffCount, int inputCoeffModulusSize,
-                             long[] destination, int destinationOffset, int destinationCoeffCount, int destinationCoeffModulusSize) {
+    public void smMrqRnsIter(
+        long[] input, int inputOffset, int inputCoeffCount, int inputCoeffModulusSize,
+        long[] destination, int destinationOffset, int destinationCoeffCount, int destinationCoeffModulusSize
+    ) {
         assert input != null;
         assert inputCoeffCount == coeffCount;
         assert destination != null;
         assert destinationCoeffCount == coeffCount;
-        // input in base {B_sk, ~m}
+        // input in base {B_sk, m_tilde}
         assert inputCoeffModulusSize == baseBskMTilde.getSize();
         // output in base {B_sk}
         assert destinationCoeffModulusSize == baseBsk.getSize();
 
-        // recall that the input is c''_{~m}
+        // recall that the input is c''_{m_tilde}
         int baseBskSize = baseBsk.getSize();
-        // input base is {B_sk, ~m}, so the size is |B_sk| + 1. The last component of the input is mod ~m
+        // input base is {B_sk, m_tilde}, so the size is |B_sk| + 1. The last component of the input is mod m_tilde
         int inputMTildeOffset = baseBskSize * coeffCount;
         long mTildeDiv2 = mTilde.getValue() >>> 1;
-        // Step 1: r_{~m} ← [-c''_{~m} / q]_{~m}, here r_{~m} = |-c''_{~m} / q|_{~m} (instead of []_{~m})
+        // Step 1: r_{m_tilde} ← [-c''_{m_tilde} / q]_{m_tilde}.
+        // Here r_{m_tilde} = |-c''_{m_tilde} / q|_{m_tilde} (instead of []_{m_tilde})
         long[] rMTilde = new long[coeffCount];
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
             input, inputOffset + inputMTildeOffset, coeffCount, negInvProdQModMTilde, mTilde, rMTilde, 0
@@ -555,15 +562,15 @@ public class RnsTool {
             prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
             for (int j = 0; j < coeffCount; j++) {
                 long temp = rMTilde[j];
-                // convert r_{~m} from |-c''_{~m} / q|_{~m} to [-c''_{~m} / q]_{~m}
+                // convert r_{m_tilde} from |-c''_{m_tilde} / q|_{m_tilde} to [-c''_{m_tilde} / q]_{m_tilde}
                 if (temp >= mTildeDiv2) {
                     temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
                 }
-                // c = |c''_m + q · r_{~m}|_m
+                // c = |c''_m + q · r_{m_tilde}|_m
                 long c = UintArithmeticSmallMod.multiplyAddUintMod(
                     temp, prodQModBskElt, input[inputOffset + i * inputCoeffCount + j], baseBsk.getBase(i)
                 );
-                // c'_m ← |c · {~m}^(-1)|_m = |(c''_m + q · r_{~m}) · {~m}^(-1)|_{m}
+                // c'_m ← |c · {m_tilde}^(-1)|_m = |(c''_m + q · r_{m_tilde}) · {m_tilde}^(-1)|_{m}
                 destination[destinationOffset + i * destinationCoeffCount + j] = UintArithmeticSmallMod.multiplyUintMod(
                     c, invMTildeModBsk[i], baseBsk.getBase(i)
                 );
@@ -732,7 +739,6 @@ public class RnsTool {
 
         // Fast convert B -> q; input is in Bsk but we only use B
         // 处理 [0, baseBSize * N)
-//        RnsIter inputInBaseB = input.subIter(0, baseBSize);
         int inputInBaseB = 0;
         baseBToQConv.fastConvertArrayRnsIter(
             input,
@@ -748,7 +754,6 @@ public class RnsTool {
         // Compute alpha_sk
         // Fast convert B -> {m_sk}; input is in Bsk but we only use B
         long[] temp = new long[coeffCount];
-//        RnsIter tempIter = new RnsIter(temp, coeffCount);
         // Compute alpha_sk
         // Fast convert B -> {m_sk}; input is in Bsk but we only use B
         baseBToMskConv.fastConvertArrayRnsIter(
@@ -761,8 +766,6 @@ public class RnsTool {
             coeffCount,
             1
         );
-        // temp will be changed?
-
         // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
         // Note: input_sk is allocated in input[base_B_size]
         long[] alphaSk = new long[coeffCount];
