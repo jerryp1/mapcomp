@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
+import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTool;
@@ -78,29 +79,25 @@ public class RnsToolTest {
 
     @Test
     public void fastBConvMTilde() {
-
         Modulus plainT = new Modulus(0);
         RnsTool rnsTool;
-
         {
             // 1-th test
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3}), plainT);
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3}), plainT);
+            int inK = rnsTool.getBaseQ().getSize();
+            int outK = rnsTool.getBaseBskMTilde().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBskMTilde().getSize()];
-
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-
-            rnsTool.fastBConvMTilde(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastBConvMTildeRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
 
             in[0] = 1;
             in[1] = 2;
-            rnsTool.fastBConvMTilde(inIter, outIter);
+            rnsTool.fastBConvMTildeRnsIter(in, 0, n, inK, out, 0, n, outK);
             // These are results for fast base conversion for a length-2 array ((m_tilde), (2*m_tilde))
             // before reduction to target base.
             long temp = rnsTool.getMTilde().getValue() % 3;
@@ -114,17 +111,14 @@ public class RnsToolTest {
         }
 
         {
-            int polyModulusDegree = 2;
-            int coeffModulusSize = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3, 5}), plainT);
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3, 5}), plainT);
+            int inK = rnsTool.getBaseQ().getSize();
+            int outK = rnsTool.getBaseBskMTilde().getSize();
 
-            long[] in = new long[polyModulusDegree * coeffModulusSize];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBskMTilde().getSize()];
-
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-
-            rnsTool.fastBConvMTilde(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastBConvMTildeRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
@@ -133,13 +127,11 @@ public class RnsToolTest {
             in[1] = 1;
             in[2] = 2;
             in[3] = 2;
-            rnsTool.fastBConvMTilde(inIter, outIter);
+            rnsTool.fastBConvMTildeRnsIter(in, 0, n, inK, out, 0, n, outK);
             long mTilde = rnsTool.getMTilde().getValue();
             // This is the result of fast base conversion for a length-2 array
-            // ((m_tilde, 2*m_tilde), (m_tilde, 2*m_tilde)) before reduction to target base.
-
+            // ((m_tilde, 2 * m_tilde), (m_tilde, 2 * m_tilde)) before reduction to target base.
             long temp = ((2 * mTilde) % 3) * 5 + ((4 * mTilde) % 5) * 3;
-
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(0).getValue()), out[0]);
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(0).getValue()), out[1]);
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(1).getValue()), out[2]);
@@ -148,12 +140,8 @@ public class RnsToolTest {
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(2).getValue()), out[5]);
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(3).getValue()), out[6]);
             Assert.assertEquals(temp % (rnsTool.getBaseBskMTilde().getBase(3).getValue()), out[7]);
-
-
         }
-
     }
-
 
     @Test
     public void smMrq() {
@@ -166,15 +154,14 @@ public class RnsToolTest {
         Modulus plainT = new Modulus(0);
         RnsTool rnsTool;
         {
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3}), plainT);
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3}), plainT);
+            int inK = rnsTool.getBaseBskMTilde().getSize();
+            int outK = rnsTool.getBaseBsk().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseBskMTilde().getSize()];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.smMrq(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
@@ -186,12 +173,11 @@ public class RnsToolTest {
             in[1] = 2 * rnsTool.getMTilde().getValue();
             in[2] = rnsTool.getMTilde().getValue();
             in[3] = 2 * rnsTool.getMTilde().getValue();
-
             // modulo m_tilde
             in[4] = 0;
             in[5] = 0;
             // This should simply get rid of the m_tilde factor
-            rnsTool.smMrq(inIter, outIter);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(1, out[0]);
             Assert.assertEquals(2, out[1]);
             Assert.assertEquals(1, out[2]);
@@ -204,21 +190,21 @@ public class RnsToolTest {
             in[3] = rnsTool.getBaseQ().getBase(0).getValue();
             in[4] = rnsTool.getBaseQ().getBase(0).getValue();
             in[5] = rnsTool.getBaseQ().getBase(0).getValue();
-            rnsTool.smMrq(inIter, outIter);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
         }
+
         {
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3, 5}), plainT);
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3, 5}), plainT);
+            int inK = rnsTool.getBaseBskMTilde().getSize();
+            int outK = rnsTool.getBaseBsk().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseBskMTilde().getSize()];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.smMrq(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
@@ -237,7 +223,7 @@ public class RnsToolTest {
             in[6] = 0;
             in[7] = 0;
             // This should simply get rid of the m_tilde factor
-            rnsTool.smMrq(inIter, outIter);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(1, out[0]);
             Assert.assertEquals(2, out[1]);
             Assert.assertEquals(1, out[2]);
@@ -254,7 +240,7 @@ public class RnsToolTest {
             in[5] = 30;
             in[6] = 15;
             in[7] = 30;
-            rnsTool.smMrq(inIter, outIter);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
@@ -268,7 +254,7 @@ public class RnsToolTest {
             in[5] = 2 * rnsTool.getMTilde().getValue() + 30;
             in[6] = 2 * rnsTool.getMTilde().getValue() + 15;
             in[7] = 2 * rnsTool.getMTilde().getValue() + 30;
-            rnsTool.smMrq(inIter, outIter);
+            rnsTool.smMrqRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(2, val);
             }
@@ -280,22 +266,21 @@ public class RnsToolTest {
         // This function assumes the input is in base q U Bsk. It outputs an approximation of
         // the value divided by q floored in base Bsk. The approximation has absolute value up
         // to k-1, where k is the number of primes in the base q.
-
         Modulus plainT = new Modulus(2);
         RnsTool rnsTool;
         {
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3}), plainT);
-            int inSize = rnsTool.getBaseQ().getSize() + rnsTool.getBaseBsk().getSize();
-            long[] in = new long[polyModulusDegree * inSize];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3}), plainT);
+            int inK = rnsTool.getBaseQ().getSize() + rnsTool.getBaseBsk().getSize();
+            int outK = rnsTool.getBaseBsk().getSize();
 
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.fastFloor(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
+
             // The size of q U Bsk is 3. We set the input to have values 15 and 5, and divide by 3 (i.e., q).
             in[0] = 0;
             in[1] = 2;
@@ -303,9 +288,8 @@ public class RnsToolTest {
             in[3] = 5;
             in[4] = 15;
             in[5] = 5;
-
             // We get an exact result in this case since input base only has size 1
-            rnsTool.fastFloor(inIter, outIter);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(5, out[0]);
             Assert.assertEquals(1, out[1]);
             Assert.assertEquals(5, out[2]);
@@ -318,26 +302,26 @@ public class RnsToolTest {
             in[3] = 4;
             in[4] = 17;
             in[5] = 4;
-
-            rnsTool.fastFloor(inIter, outIter);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(5, out[0]);
             Assert.assertEquals(1, out[1]);
             Assert.assertEquals(5, out[2]);
             Assert.assertEquals(1, out[3]);
         }
-        {
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3, 5}), plainT);
-            int inSize = rnsTool.getBaseQ().getSize() + rnsTool.getBaseBsk().getSize();
-            long[] in = new long[polyModulusDegree * inSize];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
 
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.fastFloor(inIter, outIter);
+        {
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3, 5}), plainT);
+            int inK = rnsTool.getBaseQ().getSize() + rnsTool.getBaseBsk().getSize();
+            int outK = rnsTool.getBaseBsk().getSize();
+
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long val : out) {
                 Assert.assertEquals(0, val);
             }
+
             // The size of q U Bsk is 3. We set the input to have values 30 and 15, and divide by 3 * 5.
             in[0] = 0;
             in[1] = 0;
@@ -349,7 +333,7 @@ public class RnsToolTest {
             in[7] = 30;
             in[8] = 15;
             in[9] = 30;
-            rnsTool.fastFloor(inIter, outIter);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(1, out[0]);
             Assert.assertEquals(2, out[1]);
             Assert.assertEquals(1, out[2]);
@@ -368,7 +352,7 @@ public class RnsToolTest {
             in[7] = 32;
             in[8] = 21;
             in[9] = 32;
-            rnsTool.fastFloor(inIter, outIter);
+            rnsTool.fastFloorRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertTrue(Math.abs(1L - out[0]) <= 1);
             Assert.assertTrue(Math.abs(2L - out[1]) <= 1);
             Assert.assertTrue(Math.abs(1L - out[2]) <= 1);
@@ -380,19 +364,18 @@ public class RnsToolTest {
 
     @Test
     public void fastBConvSk() {
-
         Modulus plainT = new Modulus(2);
         RnsTool rnsTool;
         {
             // 1-th test
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3}), plainT);
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3}), plainT);
+            int inK = rnsTool.getBaseBsk().getSize();
+            int outK = rnsTool.getBaseQ().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.fastBConvSk(inIter, outIter);
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastBConvSkRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long l : out) {
                 Assert.assertEquals(0, l);
             }
@@ -402,20 +385,21 @@ public class RnsToolTest {
             in[1] = 6;
             in[2] = 5;
             in[3] = 6;
-            rnsTool.fastBConvSk(inIter, outIter);
+            rnsTool.fastBConvSkRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(5 % 3, out[0]);
             Assert.assertEquals(6 % 3, out[1]);
         }
-        {
-            // 1-th test
-            int polyModulusDegree = 2;
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3, 5}), plainT);
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseBsk().getSize()];
-            long[] out = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-            RnsIter outIter = new RnsIter(out, polyModulusDegree);
-            rnsTool.fastBConvSk(inIter, outIter);
+        {
+            // 2-th test
+            int n = 2;
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3, 5}), plainT);
+            int inK = rnsTool.getBaseBsk().getSize();
+            int outK = rnsTool.getBaseQ().getSize();
+
+            long[] in = RnsIterator.allocateZeroRns(n, inK);
+            long[] out = RnsIterator.allocateZeroRns(n, outK);
+            rnsTool.fastBConvSkRnsIter(in, 0, n, inK, out, 0, n, outK);
             for (long l : out) {
                 Assert.assertEquals(0, l);
             }
@@ -427,20 +411,16 @@ public class RnsToolTest {
             in[3] = 2;
             in[4] = 1;
             in[5] = 2;
-
-            rnsTool.fastBConvSk(inIter, outIter);
+            rnsTool.fastBConvSkRnsIter(in, 0, n, inK, out, 0, n, outK);
             Assert.assertEquals(1, out[0]);
             Assert.assertEquals(2, out[1]);
             Assert.assertEquals(1, out[2]);
             Assert.assertEquals(2, out[3]);
         }
-
     }
 
     @Test
     public void divideAndRoundQLastInplace() {
-
-
         RnsTool rnsTool;
         {
             int polyModulusDegree = 2;

@@ -20,15 +20,15 @@ public class CoeffIterator {
     /**
      * The coefficient for the degree-(N-1) polynomial is coeff[offset + 0 .. offset + N).
      */
-    public final long[] coeff;
+    private final long[] coeff;
     /**
      * offset
      */
-    public final int offset;
+    private final int offset;
     /**
      * N, i.e., modulus polynomial degree.
      */
-    public final int n;
+    private final int n;
 
     /**
      * Creates a coefficient iterator.
@@ -42,6 +42,28 @@ public class CoeffIterator {
         this.coeff = coeff;
         this.offset = offset;
         this.n = n;
+    }
+
+    /**
+     * Sets the coefficient.
+     *
+     * @param i     coefficient index.
+     * @param value value.
+     */
+    public void setCoefficient(int i, long value) {
+        assert i >= 0 && i < n;
+        coeff[offset + i] = value;
+    }
+
+    /**
+     * Gets the coefficient.
+     *
+     * @param i coefficient index.
+     * @return value.
+     */
+    public long getCoefficient(int i) {
+        assert i >= 0 && i < n;
+        return coeff[offset + i];
     }
 
     @Override

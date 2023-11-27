@@ -107,6 +107,17 @@ public class RnsIterator {
      * Creates an RNS iterator.
      *
      * @param coeff  the coefficient.
+     * @param n      N, i.e., the modulus polynomial degree.
+     * @param k      k, i.e., the number of RNS bases.
+     */
+    public RnsIterator(long[] coeff, int n, int k) {
+        this(coeff, 0, n, k);
+    }
+
+    /**
+     * Creates an RNS iterator.
+     *
+     * @param coeff  the coefficient.
      * @param offset the offset.
      * @param n      N, i.e., the modulus polynomial degree.
      * @param k      k, i.e., the number of RNS bases.
@@ -122,6 +133,48 @@ public class RnsIterator {
             int jOffset = offset + j * n;
             coeffIterators[j] = new CoeffIterator(coeff, jOffset, n);
         }
+    }
+
+    /**
+     * Creates a sub-RNS iterator.
+     *
+     * @param fromIndex the start index.
+     * @param toIndex the end index.
+     * @return a sub-RNS iterator.
+     */
+    public RnsIterator subRnsIterator(int fromIndex, int toIndex) {
+        assert fromIndex >= 0 && fromIndex < toIndex;
+        assert toIndex < k;
+        return new RnsIterator(coeff, offset + fromIndex * n, n, toIndex - fromIndex);
+    }
+
+    /**
+     * Converts the RNS iterator to 2D array.
+     *
+     * @return the 2D array with size k * n.
+     */
+    public long[][] to2dArray() {
+        long[][] data = new long[k][n];
+        for (int j = 0; j < k; j++) {
+            System.arraycopy(coeff, offset + j * n, data[j], 0, n);
+        }
+        return data;
+    }
+
+    /**
+     * Converts the RNS iterator to a transpose 2D array.
+     *
+     * @return the 2D array with size n * k.
+     */
+    public long[][] toTranspose2dArray() {
+        long[][] data = new long[n][k];
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < k; i++) {
+                CoeffIterator coeffIterator = coeffIterators[i];
+                data[j][i] = coeffIterators[i].getCoefficient(j);
+            }
+        }
+        return data;
     }
 
     @Override

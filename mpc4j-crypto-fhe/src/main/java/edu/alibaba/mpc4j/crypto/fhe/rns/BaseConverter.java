@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
+import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.UintArithmeticSmallMod;
@@ -146,69 +147,6 @@ public class BaseConverter {
         }
     }
 
-    void fastConvertArray(RnsIter in, RnsIter out) {
-        assert in.getRnsBaseSize() == inBase.getSize();
-        assert out.getRnsBaseSize() == outBase.getSize();
-        assert in.getPolyModulusDegree() == out.getPolyModulusDegree();
-        int count = in.getPolyModulusDegree();
-        // N * k
-        long[][] temp = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
-        //  |x_i * \tilde{q_i}|_{q_i}  i \in [0, k), the result is length-k array
-        //  Now we have N x, so need N * k array store
-        for (int i = 0; i < inBase.getSize(); i++) {
-            if (inBase.getInvPuncturedProdModBaseArray(i).operand == 1) {
-                for (int j = 0; j < count; j++) {
-                    temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i));
-                }
-            } else {
-                for (int j = 0; j < count; j++) {
-                    temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
-                        in.getCoeff(i, j), inBase.getInvPuncturedProdModBaseArray(i), inBase.getBase(i)
-                    );
-                }
-            }
-        }
-        for (int i = 0; i < outBase.getSize(); i++) {
-            for (int j = 0; j < count; j++) {
-                out.setCoeff(
-                    i,
-                    j,
-                    UintArithmeticSmallMod.dotProductMod(temp[j], baseChangeMatrix[i], inBase.getSize(), outBase.getBase(i))
-                );
-            }
-        }
-    }
-
-    void fastConvertArray(RnsIter in, long[] out) {
-        assert in.getRnsBaseSize() == inBase.getSize();
-        assert out.length == outBase.getSize() * in.polyModulusDegree;
-        int count = in.getPolyModulusDegree();
-        // N * k
-        long[][] temp = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
-        //  |x_i * \tilde{q_i}|_{q_i}  i \in [0, k), the result is length-k array
-        //  Now we have N x, so need N * k array store
-        for (int i = 0; i < inBase.getSize(); i++) {
-            if (inBase.getInvPuncturedProdModBaseArray(i).operand == 1) {
-                for (int j = 0; j < count; j++) {
-                    temp[j][i] = UintArithmeticSmallMod.barrettReduce64(in.getCoeff(i, j), inBase.getBase(i));
-                }
-            } else {
-                for (int j = 0; j < count; j++) {
-                    temp[j][i] = UintArithmeticSmallMod.multiplyUintMod(
-                        in.getCoeff(i, j), inBase.getInvPuncturedProdModBaseArray(i), inBase.getBase(i)
-                    );
-                }
-            }
-        }
-        for (int i = 0; i < outBase.getSize(); i++) {
-            for (int j = 0; j < count; j++) {
-                out[i * count + j] = UintArithmeticSmallMod.dotProductMod(
-                    temp[j], baseChangeMatrix[i], inBase.getSize(), outBase.getBase(i)
-                );
-            }
-        }
-    }
-
     /**
      * Computes Exact Fast Base Conversion, i.e., FastBcov(x, q, p).
      * Ref: Section 2.2 in An Improved RNS Variant of the BFV Homomorphic Encryption Scheme(HPS).
@@ -252,21 +190,31 @@ public class BaseConverter {
         }
     }
 
-    void exactConvertArray(RnsIter in, long[] out) {
-        assert in.getPolyModulusDegree() == out.length;
-        assert in.getRnsBaseSize() == inBase.getSize();
-        // transpose coeffIter of in
-        // Temporarily use a two-dimensional array to do it
-        long[][] inCoeffs = RnsIter.to2dArray(in);
-        long[][] inColumns = new long[in.getPolyModulusDegree()][in.getRnsBaseSize()];
+    /**
+     * Computes Exact Fast Base Conversion, i.e., FastBcov(x, q, p).
+     * Ref: Section 2.2 in An Improved RNS Variant of the BFV Homomorphic Encryption Scheme(HPS).
+     * <p>The input is an RNS in base q = {q_1, ..., q_k}.</p>
+     * <p>The output is an RNS in base p.</p>
+     * The algorithm in shown in Section 2.2, of the HPS19 paper.
+     *
+     * @param in  input RNS in base q = {q_1, ..., q_k}.
+     * @param inN input coefficient count (N).
+     * @param inK input coefficient modulus size (k).
+     * @param out RNS in a single base p.
+     */
+    public void exactConvertArray(long[] in, int inN, int inK, long[] out) {
+        assert inN == out.length;
+        assert inK == inBase.getSize();
+        long[][] inCoeffs = RnsIterator.rnsTo2dArray(in, inN, inK);
+        long[][] inColumns = new long[inN][inK];
         // transpose
-        for (int j = 0; j < in.getPolyModulusDegree(); j++) {
-            for (int i = 0; i < in.getRnsBaseSize(); i++) {
-                inColumns[j][i] = inCoeffs[i][j];
+        for (int i = 0; i < inN; i++) {
+            for (int j = 0; j < inK; j++) {
+                inColumns[i][j] = inCoeffs[j][i];
             }
         }
         // exact convert by column
-        for (int i = 0; i < in.getPolyModulusDegree(); i++) {
+        for (int i = 0; i < inN; i++) {
             out[i] = exactConvert(inColumns[i]);
         }
     }

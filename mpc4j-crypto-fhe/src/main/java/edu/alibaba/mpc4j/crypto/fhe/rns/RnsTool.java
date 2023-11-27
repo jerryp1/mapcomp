@@ -482,36 +482,6 @@ public class RnsTool {
         System.arraycopy(tempOut2, 0, destination, destinationPos + tempOut.length, tempOut2.length);
     }
 
-    void fastBConvMTilde(RnsIter input, RnsIter destination) {
-        assert input != null && destination != null;
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert destination.getPolyModulusDegree() == coeffCount;
-        assert input.getRnsBaseSize() == baseQ.getSize();
-        assert destination.getRnsBaseSize() == baseBskMTilde.getSize();
-
-        int baseQSize = baseQ.getSize();
-        int baseBskSize = baseBsk.getSize();
-        // We need to multiply first the input with m_tilde mod q
-        // This is to facilitate Montgomery reduction in the next step of multiplication
-        // This is NOT an ideal approach: as mentioned in BEHZ16, multiplication by
-        // m_tilde can be easily merge into the base conversion operation; however, then
-        // we could not use the BaseConverter as below without modifications.
-        // k * N
-        RnsIter temp = new RnsIter(baseQSize, coeffCount);
-        // (input * \tilde m) mod q
-        PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input, baseQSize, mTilde.getValue(), baseQ.getBase(), temp);
-        // Now convert to Bsk
-        long[] tempOut = new long[baseBskSize * coeffCount];
-        baseQToBskConv.fastConvertArray(temp, tempOut);
-        // Finally, convert to {m_tilde}
-        // mTilde is a single modulus, so baseSize is 1.
-        long[] tempOut2 = new long[coeffCount];
-        baseQToMTildeConv.fastConvertArray(temp, tempOut2);
-        // update destination, Now input is in Bsk U {\tilde m}
-        destination.update(tempOut, tempOut2);
-
-    }
-
     /**
      * Small Montgomery Reduction mod q.
      * <p>The input is the ciphertext c'' in base {B_sk, m_tilde}. </p>
@@ -572,46 +542,6 @@ public class RnsTool {
         }
     }
 
-    void smMrq(RnsIter input, RnsIter destination) {
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert destination.getPolyModulusDegree() == coeffCount;
-        // input's base must be Bsk U {\tilde m}
-        assert input.getRnsBaseSize() == baseBskMTilde.getSize();
-        assert destination.getRnsBaseSize() == baseBsk.getSize();
-        int baseBskSize = baseBsk.getSize();
-        // input base size is baseBskSize + 1, so last row index is baseBskSize, just the input mod \tilde m
-        long mTildeDiv2 = mTilde.getValue() >>> 1;
-        // line-1: r_{\tilde m} = [-c^{''}_{\tilde m} / q]_{\tilde m}
-        long[] rMTilde = new long[coeffCount];
-        // using startIndex to avoid new inputMTilde
-        PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-            input.coeffIter, baseBskSize * coeffCount, coeffCount, negInvProdQModMTilde, mTilde, rMTilde, 0
-        );
-        // line 2-4
-        for (int i = 0; i < baseBskSize; i++) {
-            MultiplyUintModOperand prodQModBskElt = new MultiplyUintModOperand();
-            // q mod bsk_i
-            prodQModBskElt.set(prodQModBsk[i], baseBsk.getBase(i));
-            for (int j = 0; j < coeffCount; j++) {
-                long temp = rMTilde[j];
-                // rounding rMTilde
-                if (temp >= mTildeDiv2) {
-                    temp += (baseBsk.getBase(i).getValue() - mTilde.getValue());
-                }
-                // Compute ( input + q * r_m_tilde ) * m_tilde^(-1) mod Bsk
-                destination.setCoeff(
-                    i,
-                    j,
-                    UintArithmeticSmallMod.multiplyUintMod(
-                        UintArithmeticSmallMod.multiplyAddUintMod(temp, prodQModBskElt, input.getCoeff(i, j), baseBsk.getBase(i)),
-                        invMTildeModBsk[i],
-                        baseBsk.getBase(i)
-                    )
-                );
-            }
-        }
-    }
-
     /**
      * Fast RNS floor.
      * <p>The input is the ciphertext a in base {q, B_sk}.</p>
@@ -658,34 +588,6 @@ public class RnsTool {
                         + (baseBsk.getBase(i).getValue() - destination[destinationPos + i * coeffCount + j]),
                     invProdQModBsk[i],
                     baseBsk.getBase(i)
-                );
-            }
-        }
-    }
-
-    void fastFloor(RnsIter input, RnsIter destination) {
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert destination.getPolyModulusDegree() == coeffCount;
-        assert input.getRnsBaseSize() == baseQ.getSize() + baseBsk.getSize();
-        assert destination.getRnsBaseSize() == baseBsk.getSize();
-        // input mod q
-        RnsIter inputInBaseQ = input.subIter(0, baseQ.getSize());
-        // base convert q -> Bsk
-        baseQToBskConv.fastConvertArray(inputInBaseQ, destination);
-        // input mod Bsk
-        RnsIter inputInBaseBsk = input.subIter(baseQ.getSize());
-        // (input mod Bsk + convert(input mod q)) * q^{-1}
-        for (int i = 0; i < baseBsk.getSize(); i++) {
-            for (int j = 0; j < coeffCount; j++) {
-                // It is not necessary for the negation to be reduced modulo base_Bsk_elt
-                destination.setCoeff(
-                    i,
-                    j,
-                    UintArithmeticSmallMod.multiplyUintMod(
-                        inputInBaseBsk.getCoeff(i, j) + baseBsk.getBase(i).getValue() - destination.getCoeff(i, j),
-                        invProdQModBsk[i],
-                        baseBsk.getBase(i)
-                    )
                 );
             }
         }
@@ -757,73 +659,6 @@ public class RnsTool {
                 } else {
                     destination[destinationPos + i * coeffCount + j] = UintArithmeticSmallMod.multiplyAddUintMod(
                         alphaSk[j], negProdBModQElt, destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
-                    );
-                }
-            }
-        }
-    }
-
-    void fastBConvSk(RnsIter input, RnsIter destination) {
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert input.getRnsBaseSize() == baseBsk.getSize();
-        assert destination.getRnsBaseSize() == baseQ.getSize();
-
-        int baseQSize = baseQ.getSize();
-        int baseBSize = baseB.getSize();
-
-        // Fast convert B -> q; input is in Bsk, but we only use B
-        RnsIter inputInBaseB = input.subIter(0, baseBSize);
-        baseBToQConv.fastConvertArray(inputInBaseB, destination);
-
-        // Compute alpha_sk
-        // Fast convert B -> {m_sk}; input is in Bsk, but we only use B
-        long[] temp = new long[coeffCount];
-        RnsIter tempIter = new RnsIter(temp, coeffCount);
-        baseBToMskConv.fastConvertArray(inputInBaseB, tempIter);
-        // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
-        // Note: input_sk is allocated in input[base_B_size]
-        // (FastBConv(x, B, {m_sk}) - x_sk) * M^{-1} mod msk
-        long[] alphaSk = new long[coeffCount];
-        for (int i = 0; i < coeffCount; i++) {
-            // It is not necessary for the negation to be reduced modulo the small prime
-            alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
-                tempIter.getCoeff(0, i) + (mSk.getValue() - input.getCoeff(baseBSize, i)),
-                invProdBModMsk,
-                mSk
-            );
-        }
-        // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
-        // alpha_sk here is not a centered reduction, so we need to apply a correction below.
-        long mSkDiv2 = mSk.getValue() >>> 1;
-        for (int i = 0; i < baseQSize; i++) {
-            MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
-            prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
-            MultiplyUintModOperand negProdBModQElt = new MultiplyUintModOperand();
-            negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
-            for (int j = 0; j < coeffCount; j++) {
-                // Correcting alpha_sk since it represents a negative value
-                // FastBConv(x, B, q) - alpha_sk * M mod q
-                if (alphaSk[j] > mSkDiv2) {
-                    destination.setCoeff(
-                        i,
-                        j,
-                        UintArithmeticSmallMod.multiplyAddUintMod(
-                            UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
-                            prodBModQElt,
-                            destination.getCoeff(i, j),
-                            baseQ.getBase(i)
-                        )
-                    );
-                } else {
-                    destination.setCoeff(
-                        i,
-                        j,
-                        UintArithmeticSmallMod.multiplyAddUintMod(
-                            alphaSk[j],
-                            negProdBModQElt,
-                            destination.getCoeff(i, j),
-                            baseQ.getBase(i)
-                        )
                     );
                 }
             }
@@ -1093,9 +928,9 @@ public class RnsTool {
         }
     }
 
-    public void decryptModT(RnsIter phase, long[] destination) {
-        // Use exact base convension rather than convert the base through the compose API
-        baseQToTConv.exactConvertArray(phase, destination);
+    public void decryptModT(long[] phase, int inN, int inK, long[] destination) {
+        // Use exact base conversion rather than convert the base through the compose API
+        baseQToTConv.exactConvertArray(phase, inN, inK, destination);
     }
 
     public long getInvQLastModT() {
