@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * RNS Base Class, representing a group of co-prime moduli: [q1, q2, ..., qk] with q = Π_{i = 1}^{k} q_i.
+ * RNS Base Class, representing a group of co-prime moduli: (q_1, q_2, ..., q_k) with q = Π_{i = 1}^{k} q_i.
  * It provides decompose (converting x in Z_q to Z_{q_i}) and compose (converting {x_i ∈ Z_{q_i}} to x ∈ Z_q) functions.
  * The scheme comes from:
  * <p>

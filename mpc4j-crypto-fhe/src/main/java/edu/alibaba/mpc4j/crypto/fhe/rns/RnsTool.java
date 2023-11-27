@@ -11,9 +11,9 @@ import edu.alibaba.mpc4j.crypto.fhe.utils.Constants;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
 /**
- * This class implements the BEHZ RNS scheme. The scheme comes from:
+ * This class implements the BEHZ16 RNS scheme. The scheme comes from:
  * <p>
- * A full rns variant of fv like somewhat homomorphic encryption schemes(BEHZ). https://eprint.iacr.org/2016/510
+ * A full RNS variant of FV like somewhat homomorphic encryption schemes. https://eprint.iacr.org/2016/510
  * <p/>
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/rns.h#L190
@@ -27,122 +27,123 @@ public class RnsTool {
     /**
      * the degree of the polynomial
      */
-    int coeffCount;
+    private int coeffCount;
     /**
-     * {q_1, ..., q_k} and q = q_1 · q_2 ... · q_k
+     * RNS base q = (q_1, ..., q_k) for q = q_1 · q_2 ... · q_k
      */
-    RnsBase baseQ;
+    private RnsBase baseQ;
     /**
-     * modulus{B}
+     * RNS base B = {p_1, ..., p_{k'}}
      */
-    RnsBase baseB;
+    private RnsBase baseB;
     /**
-     * modulus{B, msk}
+     * RNS base B_sk = {B, m_sk}
      */
-    RnsBase baseBsk;
+    private RnsBase baseBsk;
     /**
-     * modulus{B, msk, mTilde}
+     * RNS base {B_sk, m_tilde}
      */
-    RnsBase baseBskMTilde;
+    private RnsBase baseBskMTilde;
     /**
-     * the RNS modulus {t, γ}, used in BFV decryption
+     * RNS base {t, γ}, used in BFV decryption
      */
-    RnsBase baseTGamma;
+    private RnsBase baseTGamma;
     /**
-     * base convert q --> modulus{B, msk}
+     * RNS base converter: q --> B_sk
      */
-    BaseConverter baseQToBskConv;
+    private BaseConverter baseQToBskConv;
     /**
-     * base convert q --> modulus{mTilde}
+     * RNS base converter: q --> {m_tilde}
      */
-    BaseConverter baseQToMTildeConv;
+    private BaseConverter baseQToMTildeConv;
     /**
-     * base convert B --> q
+     * RNS base converter B --> q
      */
-    BaseConverter baseBToQConv;
+    private BaseConverter baseBToQConv;
     /**
-     * base convert B --> modulus{msk}
+     * RNS base converter B --> {m_sk}
      */
-    BaseConverter baseBToMskConv;
+    private BaseConverter baseBToMskConv;
     /**
-     * RNS base converter: {q_1, ..., q_k} -> {t, γ}, used in BFV decryption
+     * RNS base converter: q --> {t, γ}, used in BFV decryption
      */
-    BaseConverter baseQToTGammaConv;
+    private BaseConverter baseQToTGammaConv;
     /**
-     * RNS base converter: {q_1, ..., q_k} -> {t}, used in BGV decryption
+     * RNS base converter: q --> {t}, used in BGV decryption
      */
-    BaseConverter baseQToTConv;
+    private BaseConverter baseQToTConv;
     /**
-     * prod(q)^(-1) mod modulus{B, msk}
+     * |prod(q)^(-1)|_{B, m_sk}
      */
-    MultiplyUintModOperand[] invProdQModBsk;
+    private MultiplyUintModOperand[] invProdQModBsk;
     /**
-     * |-q^{-1}|_{m_tilde}, use in BFV multiplication
+     * |-q^{-1}|_{m_tilde}, used in BFV multiplication
      */
-    MultiplyUintModOperand negInvProdQModMTilde;
+    private MultiplyUintModOperand negInvProdQModMTilde;
     /**
-     * prod(B)^(-1) mod m_sk
+     * |prod(B)^(-1)|_{m_sk}
      */
-    MultiplyUintModOperand invProdBModMsk;
+    private MultiplyUintModOperand invProdBModMsk;
     /**
      * |γ^{-1}|_t, used in BFV decryption
      */
-    MultiplyUintModOperand invGammaModT;
+    private MultiplyUintModOperand invGammaModT;
     /**
-     * prod(B) mod q_1, ..., prod(B) mod q_k
+     * |prod(B)|_{q_1}, |prod(B)|_{q_2}, ..., |prod(B)|_{q_k}
      */
-    long[] prodBModQ;
+    private long[] prodBModQ;
     /**
-     * m_tilde^(-1) mod modulus{B, msk}
+     * |m_tilde^(-1)|_{B, m_sk}
      */
-    MultiplyUintModOperand[] invMTildeModBsk;
+    private MultiplyUintModOperand[] invMTildeModBsk;
     /**
-     * prod(q) mod modulus{B, msk}
+     * |prod(q)|_{B, m_sk}
      */
-    long[] prodQModBsk;
+    private long[] prodQModBsk;
     /**
      * |-q^(-1)|_{t, γ}, used in BFV decryption
      */
-    MultiplyUintModOperand[] negInvQModTGamma;
+    private MultiplyUintModOperand[] negInvQModTGamma;
     /**
      * |γt|_{q_1, ..., q_k}, used in BFV decryption
      */
-    MultiplyUintModOperand[] prodTGammaModQ;
+    private MultiplyUintModOperand[] prodTGammaModQ;
     /**
-     * q_k^{-1} mod q_1, q_k^{-1} mod q_2, ..., q_k^{-1} mod q_{k-1}
+     * |q_k^{-1}|_{q_1}, |q_k^{-1}|_{q_2}, ..., |q_k^{-1}|_{q_{k-1}}
      */
-    MultiplyUintModOperand[] invQLastModQ;
+    private MultiplyUintModOperand[] invQLastModQ;
     /**
-     * NTT tables for modulus{B, msk}
+     * NTT tables for RNS base {B, m_sk}
      */
-    NttTables[] baseBskNttTables;
+    private NttTables[] baseBskNttTables;
     /**
-     * Modulus(1L << 32)
+     * m_tilde = 2^32
      */
-    Modulus mTilde;
+    private Modulus mTilde;
+    /**
+     * m_sk
+     */
+    private Modulus mSk;
+    /**
+     * t, i.e., the plaintext modulus
+     */
+    private Modulus t;
+    /**
+     * γ, an integer co-prime to {q_1, ..., q_k}, γ ≡ 1 (mod 2n).
+     * There is a trade-off between the size of γ and the error bound. SEAL chooses γ ~ 2^61.
+     */
+    private Modulus gamma;
+    /**
+     * |(q_k)^{-1}|_t
+     */
+    private long invQLastModT;
+    /**
+     * |q_k|_t
+     */
+    private long qLastModT;
 
-    Modulus mSk;
     /**
-     * the plaintext modulus
-     */
-    Modulus t;
-    /**
-     * γ, an integer co-prime to {q_1, ..., q_k}, γ ≡ 1 (mod 2n). There is a trade-off between the size of γ and the
-     * error bound. In the implementation, we choose γ ~ 2^61.
-     */
-    Modulus gamma;
-    /**
-     * (q_k)^{-1} mod t
-     */
-    long invQLastModT;
-    /**
-     * q_k mod t
-     */
-    long qLastModT;
-
-
-    /**
-     * Constructs a RNS tool instance for the given parameters.
+     * Constructs an RNS tool instance for the given parameters.
      *
      * @param polyModulusDegree the degree of the polynomial.
      * @param coeffModulus      the coefficient modulus.
@@ -150,18 +151,6 @@ public class RnsTool {
      */
     public RnsTool(int polyModulusDegree, RnsBase coeffModulus, Modulus plainModulus) {
         initialize(polyModulusDegree, coeffModulus, plainModulus);
-    }
-
-    /**
-     * Constructs a RNS tool instance for the given parameters.
-     *
-     * @param polyModulusDegree the degree of the polynomial.
-     * @param coeffModulus      the coefficient modulus.
-     * @param plainModulus      the plaintext modulus.
-     */
-    public RnsTool(int polyModulusDegree, long[] coeffModulus, Modulus plainModulus) {
-        RnsBase base = new RnsBase(coeffModulus);
-        initialize(polyModulusDegree, base, plainModulus);
     }
 
     /**
@@ -374,56 +363,56 @@ public class RnsTool {
      * Decrypts a ciphertext and stores the result in destination. The algorithm is from Algorithm 1 in [BEHZ16].
      *
      * @param input       polynomial in RNS form to decrypt.
-     * @param coeffCount  coeff count of the polynomial.
-     * @param destination the result to overwrite with decrypted values, the length is coeff count.
+     * @param inputN      the coefficient count of the polynomial.
+     * @param destination the result to overwrite with decrypted values, the length is the coefficient count.
      */
-    public void decryptScaleAndRound(long[] input, int coeffCount, long[] destination) {
+    public void decryptScaleAndRound(long[] input, int inputN, long[] destination) {
         assert input != null;
-        assert coeffCount == this.coeffCount;
+        assert inputN == this.coeffCount;
         assert destination.length == this.coeffCount;
         int baseQSize = baseQ.getSize();
         // the decryption RNS modulus {t, γ}
         int baseTGammaSize = baseTGamma.getSize();
         // step 1-3: compute |γt · ct(s)|_{q_1, ..., q_k}, where |γt|_{q_1, ..., q_k} is pre-computed
-        long[] temp = PolyCore.allocateZeroPolyArray(baseQSize, coeffCount, 1);
+        long[] temp = PolyCore.allocateZeroPolyArray(baseQSize, inputN, 1);
         for (int i = 0; i < baseQSize; i++) {
             // compute temp = |γt · ct(s)|_{q_1, ..., q_k}
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                input, i * coeffCount, coeffCount, prodTGammaModQ[i], baseQ.getBase(i), temp, i * coeffCount
+                input, i * inputN, inputN, prodTGammaModQ[i], baseQ.getBase(i), temp, i * inputN
             );
         }
         // compute s^{t, γ} = FastBconv(temp, {q_1, ..., q_k}, {t, γ})
         // therefore, s^{t, γ} = FastBconv(|γt · ct(s)|_{q_1, ..., q_k}, {q_1, ..., q_k}, {t, γ})
-        long[] tempTGammaRns = PolyCore.allocateZeroPolyArray(baseTGammaSize, coeffCount, 1);
+        long[] tempTGammaRns = PolyCore.allocateZeroPolyArray(baseTGammaSize, inputN, 1);
         baseQToTGammaConv.fastConvertArrayRnsIter(
-            temp, 0, coeffCount, baseQSize, tempTGammaRns, 0, coeffCount, baseTGammaSize
+            temp, 0, inputN, baseQSize, tempTGammaRns, 0, inputN, baseTGammaSize
         );
         // compute s^{t, γ} = s^{t, γ} × |-q^{-1}|_{t, γ}
         // therefore, s^{t, γ} = FastBconv(|γt · ct(s)|_{q_1, ..., q_k}, {q_1, ..., q_k}, {t, γ}) × |-q^{-1}|_{t, γ}
         for (int i = 0; i < baseTGammaSize; i++) {
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                tempTGammaRns, i * coeffCount, coeffCount,
+                tempTGammaRns, i * inputN, inputN,
                 negInvQModTGamma[i], baseTGamma.getBase(i),
-                tempTGammaRns, i * coeffCount
+                tempTGammaRns, i * inputN
             );
         }
         // step 4: ~s^(γ) ← [s^(γ)]_{γ}, that is, subtract q/2 if the coefficient is in [q/2, q).
         // step 5(1): m^(t) ← [(s^(t) - ~s^(γ))]_t
         long gammaDiv2 = baseTGamma.getBase(1).getValue() >>> 1;
-        for (int i = 0; i < coeffCount; i++) {
-            if (tempTGammaRns[coeffCount + i] > gammaDiv2) {
+        for (int i = 0; i < inputN; i++) {
+            if (tempTGammaRns[inputN + i] > gammaDiv2) {
                 // the coefficient is in [q/2, q).
                 // compute |s^(t) + (γ - |s^(γ)|_{γ})|_t instead of |s^t - (|s^(γ)|_{γ} - γ)|_t
                 destination[i] = UintArithmeticSmallMod.addUintMod(
                     tempTGammaRns[i],
-                    UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGammaRns[coeffCount + i], t),
+                    UintArithmeticSmallMod.barrettReduce64(gamma.getValue() - tempTGammaRns[inputN + i], t),
                     t
                 );
             } else {
                 // the coefficient is in [0, q/2], compute |s^t - |s^(γ)|_{γ}|_t
                 destination[i] = UintArithmeticSmallMod.subUintMod(
                     tempTGammaRns[i],
-                    UintArithmeticSmallMod.barrettReduce64(tempTGammaRns[coeffCount + i], t),
+                    UintArithmeticSmallMod.barrettReduce64(tempTGammaRns[inputN + i], t),
                     t
                 );
             }
@@ -435,26 +424,29 @@ public class RnsTool {
     }
 
     /**
-     * Converts fast the input * m_tilde from base q = (q_1, ..., q_k) to base {B, m_sk, m_tilde}. This is the Step 0 of
-     * Algorithm 3 in the BEHZ16 paper.
+     * Converts fast ct * m_tilde from base q = (q_1, ..., q_k) to base {B, m_sk, m_tilde}.
+     * <p>The input is the ciphertext ct in base q = (q_1, ..., q_k).</p>
+     * <p>The output (written in destination) is the ciphertext ct * m_tilde in base {B, m_sk, m_tilde}.</p>
+     * This is the Step S0 of Algorithm 3 in the BEHZ16 paper. The reason for multiplying m_tilde is shown in Lemma 4.
      *
-     * @param input                       input array.
-     * @param inputStartIndex             start index of input array.
-     * @param inputCoeffCount             coeff count of input RNS iter.
-     * @param inputCoeffModulusSize       coeff modulus size of input RNS iter.
-     * @param destination                 destination to overwrite the result.
-     * @param destinationStartIndex       start index of destination array to overwrite.
-     * @param destinationCoeffCount       coeff count of destination RNS iter.
-     * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
+     * @param input          the ciphertext ct in base q = (q_1, ..., q_k).
+     * @param inputPos       start index of input array.
+     * @param inputN         coefficient count of input RNS.
+     * @param inputK         coefficient modulus size of input RNS iter.
+     * @param destination    the output ciphertext ct * m_tilde in base {B, m_sk, m_tilde}.
+     * @param destinationPos start index of destination array to overwrite.
+     * @param destinationN   coefficient count of destination RNS iter.
+     * @param destinationK   coefficient modulus size of destination RNS iter.
      */
-    public void fastBConvMTildeRnsIter(long[] input, int inputStartIndex, int inputCoeffCount, int inputCoeffModulusSize,
-                                       long[] destination, int destinationStartIndex, int destinationCoeffCount,
-                                       int destinationCoeffModulusSize) {
+    public void fastBConvMTildeRnsIter(
+        long[] input, int inputPos, int inputN, int inputK,
+        long[] destination, int destinationPos, int destinationN, int destinationK
+    ) {
         assert input != null && destination != null;
-        assert inputCoeffCount == coeffCount;
-        assert destinationCoeffCount == coeffCount;
-        assert inputCoeffModulusSize == baseQ.getSize();
-        assert destinationCoeffModulusSize == baseBskMTilde.getSize();
+        assert inputN == coeffCount;
+        assert destinationN == coeffCount;
+        assert inputK == baseQ.getSize();
+        assert destinationK == baseBskMTilde.getSize();
         /*
          * Require: Input in q.
          * Ensure: Output in {B_sk, m_tilde}.
@@ -469,26 +461,28 @@ public class RnsTool {
         long[] temp = RnsIterator.allocateZeroRns(coeffCount, baseQSize);
         // (input * m_tilde) mod q
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffModRns(
-            input, inputStartIndex, inputCoeffCount, baseQSize, mTilde.getValue(), baseQ.getBase(), temp, 0, coeffCount, baseQSize
+            input, inputPos, inputN, baseQSize,
+            mTilde.getValue(), baseQ.getBase(),
+            temp, 0, coeffCount, baseQSize
         );
         // Now convert to B_sk, i.e., FastBcov([input * m_tilde]_q, q, {B_sk})
         long[] tempOut = RnsIterator.allocateZeroRns(coeffCount, baseBskSize);
-        baseQToBskConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempOut, 0, coeffCount, baseBskSize);
+        baseQToBskConv.fastConvertArrayRnsIter(
+            temp, 0, coeffCount, baseQSize,
+            tempOut, 0, coeffCount, baseBskSize
+        );
         // Finally, convert to {m_tilde}, i.e., FastBcov([input * m_tilde]_q, q, {m_tilde})
         long[] tempOut2 = RnsIterator.allocateZeroRns(coeffCount, 1);
-        baseQToMTildeConv.fastConvertArrayRnsIter(temp, 0, coeffCount, baseQSize, tempOut2, 0, coeffCount, 1);
+        baseQToMTildeConv.fastConvertArrayRnsIter(
+            temp, 0, coeffCount, baseQSize,
+            tempOut2, 0, coeffCount, 1
+        );
         // output = {tempOut, tempOut2} = {[input * m_tilde]_q in {B_sk}, [input * m_tilde]_q in {m_tilde}}
-        System.arraycopy(tempOut, 0, destination, destinationStartIndex, tempOut.length);
-        System.arraycopy(tempOut2, 0, destination, destinationStartIndex + tempOut.length, tempOut2.length);
+        System.arraycopy(tempOut, 0, destination, destinationPos, tempOut.length);
+        System.arraycopy(tempOut2, 0, destination, destinationPos + tempOut.length, tempOut2.length);
     }
 
-    /**
-     * FastConverts the input * m_tilde from base Q to base {B, msk, m_tilde}.
-     *
-     * @param input       rns iter in base q.
-     * @param destination rns iter in base B_sk U {\tilde m}.
-     */
-    public void fastBConvMTilde(RnsIter input, RnsIter destination) {
+    void fastBConvMTilde(RnsIter input, RnsIter destination) {
         assert input != null && destination != null;
         assert input.getPolyModulusDegree() == coeffCount;
         assert destination.getPolyModulusDegree() == coeffCount;
@@ -519,41 +513,42 @@ public class RnsTool {
     }
 
     /**
-     * Small Montgomery Reduction mod q. The input is c'' in base {B_sk, ~m}. The output is c' in base {B_sk}
-     * (written in destination). The algorithm is from Algorithm 2 in [BEHZ16].
+     * Small Montgomery Reduction mod q.
+     * <p>The input is the ciphertext c'' in base {B_sk, m_tilde}. </p>
+     * <p>The output (written in destination) is the ciphertext c' in base {B_sk}. </p>
+     * This is the Step S1 of Algorithm 3 in the BEHZ16 paper. The detail is shown in Algorithm 2 of the BEHZ16 paper.
      *
-     * @param input                       c'' in base {B_sk, ~m}.
-     * @param inputOffset                 start index of input array.
-     * @param inputCoeffCount             coeff count of input RNS iter.
-     * @param inputCoeffModulusSize       coeff modulus size of input RNS iter.
-     * @param destination                 destination to overwrite c' in base {B_sk}.
-     * @param destinationOffset           start index of destination array to overwrite.
-     * @param destinationCoeffCount       coeff count of destination RNS iter.
-     * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
+     * @param input          the ciphertext c'' in base {B_sk, m_tilde}.
+     * @param inputPos       start index of input array.
+     * @param inputN         coeff count of input RNS iter.
+     * @param inputK         coeff modulus size of input RNS iter.
+     * @param destination    the output ciphertext c' in base {B_sk}.
+     * @param destinationPos start index of destination array to overwrite.
+     * @param destinationN   coeff count of destination RNS iter.
+     * @param destinationK   coeff modulus size of destination RNS iter.
      */
     public void smMrqRnsIter(
-        long[] input, int inputOffset, int inputCoeffCount, int inputCoeffModulusSize,
-        long[] destination, int destinationOffset, int destinationCoeffCount, int destinationCoeffModulusSize
+        long[] input, int inputPos, int inputN, int inputK,
+        long[] destination, int destinationPos, int destinationN, int destinationK
     ) {
         assert input != null;
-        assert inputCoeffCount == coeffCount;
+        assert inputN == coeffCount;
         assert destination != null;
-        assert destinationCoeffCount == coeffCount;
+        assert destinationN == coeffCount;
         // input in base {B_sk, m_tilde}
-        assert inputCoeffModulusSize == baseBskMTilde.getSize();
+        assert inputK == baseBskMTilde.getSize();
         // output in base {B_sk}
-        assert destinationCoeffModulusSize == baseBsk.getSize();
+        assert destinationK == baseBsk.getSize();
 
-        // recall that the input is c''_{m_tilde}
         int baseBskSize = baseBsk.getSize();
         // input base is {B_sk, m_tilde}, so the size is |B_sk| + 1. The last component of the input is mod m_tilde
         int inputMTildeOffset = baseBskSize * coeffCount;
         long mTildeDiv2 = mTilde.getValue() >>> 1;
         // Step 1: r_{m_tilde} ← [-c''_{m_tilde} / q]_{m_tilde}.
-        // Here r_{m_tilde} = |-c''_{m_tilde} / q|_{m_tilde} (instead of []_{m_tilde})
+        // Here r_{m_tilde} = |-c''_{m_tilde} / q|_{m_tilde} instead of []_{m_tilde}.
         long[] rMTilde = new long[coeffCount];
         PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-            input, inputOffset + inputMTildeOffset, coeffCount, negInvProdQModMTilde, mTilde, rMTilde, 0
+            input, inputPos + inputMTildeOffset, coeffCount, negInvProdQModMTilde, mTilde, rMTilde, 0
         );
         // Step 2: for m ∈ B_sk do
         for (int i = 0; i < baseBskSize; i++) {
@@ -568,23 +563,16 @@ public class RnsTool {
                 }
                 // c = |c''_m + q · r_{m_tilde}|_m
                 long c = UintArithmeticSmallMod.multiplyAddUintMod(
-                    temp, prodQModBskElt, input[inputOffset + i * inputCoeffCount + j], baseBsk.getBase(i)
+                    temp, prodQModBskElt, input[inputPos + i * inputN + j], baseBsk.getBase(i)
                 );
                 // c'_m ← |c · {m_tilde}^(-1)|_m = |(c''_m + q · r_{m_tilde}) · {m_tilde}^(-1)|_{m}
-                destination[destinationOffset + i * destinationCoeffCount + j] = UintArithmeticSmallMod.multiplyUintMod(
-                    c, invMTildeModBsk[i], baseBsk.getBase(i)
-                );
+                destination[destinationPos + i * destinationN + j]
+                    = UintArithmeticSmallMod.multiplyUintMod(c, invMTildeModBsk[i], baseBsk.getBase(i));
             }
         }
     }
 
-    /**
-     * Small Montgomery Reduction mod q. Ref Algorithm 2, page-10 in BEHZ16.
-     *
-     * @param input       in base Bsk U {m_tilde}.
-     * @param destination in base Bsk.
-     */
-    public void smMrq(RnsIter input, RnsIter destination) {
+    void smMrq(RnsIter input, RnsIter destination) {
         assert input.getPolyModulusDegree() == coeffCount;
         assert destination.getPolyModulusDegree() == coeffCount;
         // input's base must be Bsk U {\tilde m}
@@ -625,67 +613,57 @@ public class RnsTool {
     }
 
     /**
-     * Fast RNS floor. Ref Lemma 5 of BEHZ16.
+     * Fast RNS floor.
+     * <p>The input is the ciphertext a in base {q, B_sk}.</p>
+     * <p>The output is the ciphertext a in base B_sk.</p>
+     * This is the Step S3 of Algorithm 3 in the BEHZ16 paper. The detail is shown in Lemma 5 of the BEHZ16 paper.
      *
-     * @param input                       input array.
-     * @param inputStartIndex             start index of input array.
-     * @param inputCoeffCount             coeff count of input RNS iter.
-     * @param inputCoeffModulusSize       coeff modulus size of input RNS iter.
-     * @param destination                 destination to overwrite the result.
-     * @param destinationStartIndex       start index of destination array to overwrite.
-     * @param destinationCoeffCount       coeff count of destination RNS iter.
-     * @param destinationCoeffModulusSize coeff modulus size of destination RNS iter.
+     * @param input          the ciphertext a in base {q, B_sk}.
+     * @param inputPos       start index of input array.
+     * @param inputN         coeff count of input RNS iter.
+     * @param inputK         coeff modulus size of input RNS iter.
+     * @param destination    the ciphertext a in base B_sk.
+     * @param destinationPos start index of destination array to overwrite.
+     * @param destinationN   coeff count of destination RNS iter.
+     * @param destinationK   coeff modulus size of destination RNS iter.
      */
-    public void fastFloorRnsIter(long[] input, int inputStartIndex, int inputCoeffCount, int inputCoeffModulusSize,
-                                 long[] destination, int destinationStartIndex, int destinationCoeffCount, int destinationCoeffModulusSize) {
+    public void fastFloorRnsIter(
+        long[] input, int inputPos, int inputN, int inputK,
+        long[] destination, int destinationPos, int destinationN, int destinationK
+    ) {
         assert input != null;
-        assert inputCoeffCount == coeffCount;
+        assert inputN == coeffCount;
         assert destination != null;
-        assert destinationCoeffCount == coeffCount;
-        // add
-        assert inputCoeffModulusSize == baseQ.getSize() + baseBsk.getSize();
-        assert destinationCoeffModulusSize == baseBsk.getSize();
+        assert destinationN == coeffCount;
+        // the input ciphertext a is in base {q, B_sk}.
+        assert inputK == baseQ.getSize() + baseBsk.getSize();
+        // the output ciphertext is in base B_sk.
+        assert destinationK == baseBsk.getSize();
         int baseQSize = baseQ.getSize();
         int baseBskSize = baseBsk.getSize();
-        // Convert q -> Bsk
-        // input 的结构是 [0, baseQSize * N | ..., (baseQSize + baseBskSize) * N)
+        // Convert q -> B_sk, invoke FactBCov(|a|_q, q, B_sk).
         int inputInBaseQ = 0;
-        // 处理 [0, baseQSize * N)
-        // FastBConv(|a|_q, q, bsk)
         baseQToBskConv.fastConvertArrayRnsIter(
-            input,
-            inputStartIndex + inputInBaseQ,
-            inputCoeffCount,
-            baseQ.getSize(),
-            destination,
-            destinationStartIndex,
-            destinationCoeffCount,
-            destinationCoeffModulusSize
+            input, inputPos + inputInBaseQ, inputN, baseQ.getSize(),
+            destination, destinationPos, destinationN, destinationK
         );
         int inputInBsk = baseQSize * coeffCount;
         for (int i = 0; i < baseBskSize; i++) {
             for (int j = 0; j < coeffCount; j++) {
                 // It is not necessary for the negation to be reduced modulo base_Bsk_elt
-                // (a - FastBConv(|a|_q, q, bsk)) * q^{-1} mod bsk
-                destination[destinationStartIndex + i * coeffCount + j] =
-                    UintArithmeticSmallMod.multiplyUintMod(
-                        input[inputStartIndex + inputInBsk + i * coeffCount + j] + (baseBsk.getBase(i).getValue() - destination[destinationStartIndex + i * coeffCount + j]),
-                        invProdQModBsk[i],
-                        baseBsk.getBase(i)
-                    );
+                // (a - FastBConv(|a|_q, q, B_sk)) * q^{-1} mod B_sk
+                destination[destinationPos + i * coeffCount + j]
+                    = UintArithmeticSmallMod.multiplyUintMod(
+                    input[inputPos + inputInBsk + i * coeffCount + j]
+                        + (baseBsk.getBase(i).getValue() - destination[destinationPos + i * coeffCount + j]),
+                    invProdQModBsk[i],
+                    baseBsk.getBase(i)
+                );
             }
         }
     }
 
-
-    /**
-     * Fast RNS Floor. For any a \in R, compute (a - FastBconv(|a|_q, q, Bsk)) * |q^{-1}| mod Bsk.
-     * Output \round(a / q mod Bsk).
-     *
-     * @param input       input RNS iter in base q U Bsk.
-     * @param destination output RNS iter in base Bsk.
-     */
-    public void fastFloor(RnsIter input, RnsIter destination) {
+    void fastFloor(RnsIter input, RnsIter destination) {
         assert input.getPolyModulusDegree() == coeffCount;
         assert destination.getPolyModulusDegree() == coeffCount;
         assert input.getRnsBaseSize() == baseQ.getSize() + baseBsk.getSize();
@@ -720,19 +698,13 @@ public class RnsTool {
      * @param destination in base q
      */
     public void fastBConvSkRnsIter(
-        long[] input,
-        int inputStartIndex,
-        int inputCoeffCount,
-        int inputCoeffModulusSize,
-        long[] destination,
-        int destinationStartIndex,
-        int destinationCoeffCount,
-        int destinationCoeffModulusSize) {
-
-        assert inputCoeffCount == coeffCount;
-        assert inputCoeffModulusSize == baseBsk.getSize();
-        assert destinationCoeffModulusSize == baseQ.getSize();
-        assert destinationCoeffCount == coeffCount;
+        long[] input, int inputPos, int inputN, int inputK,
+        long[] destination, int destinationPos, int destinationN, int destinationK
+    ) {
+        assert inputN == coeffCount;
+        assert inputK == baseBsk.getSize();
+        assert destinationK == baseQ.getSize();
+        assert destinationN == coeffCount;
 
         int baseQSize = baseQ.getSize();
         int baseBSize = baseB.getSize();
@@ -741,14 +713,8 @@ public class RnsTool {
         // 处理 [0, baseBSize * N)
         int inputInBaseB = 0;
         baseBToQConv.fastConvertArrayRnsIter(
-            input,
-            inputStartIndex + inputInBaseB,
-            coeffCount,
-            baseBSize,
-            destination,
-            destinationStartIndex,
-            destinationCoeffCount,
-            destinationCoeffModulusSize
+            input, inputPos + inputInBaseB, coeffCount, baseBSize,
+            destination, destinationPos, destinationN, destinationK
         );
 
         // Compute alpha_sk
@@ -757,14 +723,8 @@ public class RnsTool {
         // Compute alpha_sk
         // Fast convert B -> {m_sk}; input is in Bsk but we only use B
         baseBToMskConv.fastConvertArrayRnsIter(
-            input,
-            inputStartIndex + inputInBaseB,
-            coeffCount,
-            baseBSize,
-            temp,
-            0,
-            coeffCount,
-            1
+            input, inputPos + inputInBaseB, coeffCount, baseBSize,
+            temp, 0, coeffCount, 1
         );
         // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
         // Note: input_sk is allocated in input[base_B_size]
@@ -772,9 +732,7 @@ public class RnsTool {
         for (int i = 0; i < coeffCount; i++) {
             // It is not necessary for the negation to be reduced modulo the small prime
             alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
-                temp[i] + (mSk.getValue() - input[inputStartIndex + baseBSize * coeffCount + i]),
-                invProdBModMsk,
-                mSk
+                temp[i] + (mSk.getValue() - input[inputPos + baseBSize * coeffCount + i]), invProdBModMsk, mSk
             );
         }
         // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
@@ -791,35 +749,21 @@ public class RnsTool {
             for (int j = 0; j < coeffCount; j++) {
                 // Correcting alpha_sk since it represents a negative value
                 if (alphaSk[j] > mSkDiv2) {
-                    destination[destinationStartIndex + i * coeffCount + j] =
+                    destination[destinationPos + i * coeffCount + j] =
                         UintArithmeticSmallMod.multiplyAddUintMod(
-                            UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk),
-                            prodBModQElt,
-                            destination[destinationStartIndex + i * coeffCount + j],
-                            baseQ.getBase(i)
+                            UintArithmeticSmallMod.negateUintMod(alphaSk[j], mSk), prodBModQElt,
+                            destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
                         );
                 } else {
-                    destination[destinationStartIndex + i * coeffCount + j] =
-                        UintArithmeticSmallMod.multiplyAddUintMod(
-                            alphaSk[j],
-                            negProdBModQElt,
-                            destination[destinationStartIndex + i * coeffCount + j],
-                            baseQ.getBase(i)
-
-                        );
+                    destination[destinationPos + i * coeffCount + j] = UintArithmeticSmallMod.multiplyAddUintMod(
+                        alphaSk[j], negProdBModQElt, destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
+                    );
                 }
             }
         }
     }
 
-    /**
-     * Ref Lemma 6 the equation (13) in BEHZ16.
-     *
-     * @param input       input in base Bsk.
-     * @param destination output in base q.
-     */
-    public void fastBConvSk(RnsIter input, RnsIter destination) {
-
+    void fastBConvSk(RnsIter input, RnsIter destination) {
         assert input.getPolyModulusDegree() == coeffCount;
         assert input.getRnsBaseSize() == baseBsk.getSize();
         assert destination.getRnsBaseSize() == baseQ.getSize();
@@ -882,11 +826,9 @@ public class RnsTool {
                         )
                     );
                 }
-
             }
         }
     }
-
 
     /**
      * 输入是一个 polyIter, 长度 size * k * N, 函数处理的是一个 RnsIter, 用 startIndex 表示处理的是哪一个 RnsIter
