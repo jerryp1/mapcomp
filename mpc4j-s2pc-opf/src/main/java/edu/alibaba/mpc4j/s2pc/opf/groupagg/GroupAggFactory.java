@@ -13,6 +13,9 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggSender;
@@ -44,6 +47,7 @@ public class GroupAggFactory {
     public enum GroupAggTypes {
         BITMAP,
         MIX,
+        O_MIX,
         SORTING,
         O_SORTING,
         T_SORTING,
@@ -65,6 +69,8 @@ public class GroupAggFactory {
                 return new BitmapGroupAggSender(senderRpc, receiverParty, (BitmapGroupAggConfig) config);
             case MIX:
                 return new MixGroupAggSender(senderRpc, receiverParty, (MixGroupAggConfig) config);
+            case O_MIX:
+                return new OptimizedMixGroupAggSender(senderRpc,receiverParty,(OptimizedMixGroupAggConfig) config);
             case SORTING:
                 return new SortingGroupAggSender(senderRpc, receiverParty, (SortingGroupAggConfig) config);
             case O_SORTING:
@@ -93,6 +99,8 @@ public class GroupAggFactory {
                 return new BitmapGroupAggReceiver(receiverRpc, senderParty, (BitmapGroupAggConfig) config);
             case MIX:
                 return new MixGroupAggReceiver(receiverRpc, senderParty, (MixGroupAggConfig) config);
+            case O_MIX:
+                return new OptimizedMixGroupAggReceiver(receiverRpc, senderParty, (OptimizedMixGroupAggConfig) config);
             case SORTING:
                 return new SortingGroupAggReceiver(receiverRpc, senderParty, (SortingGroupAggConfig) config);
             case O_SORTING:

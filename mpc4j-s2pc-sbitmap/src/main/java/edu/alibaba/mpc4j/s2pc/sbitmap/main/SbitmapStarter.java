@@ -17,6 +17,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
@@ -230,6 +231,8 @@ public class SbitmapStarter {
                 return new BitmapGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case MIX:
                 return new MixGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case O_MIX:
+                return new OptimizedMixGroupAggConfig.Builder(zl,silent,prefixAggType).build();
             case SORTING:
                 return new SortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case O_SORTING:
