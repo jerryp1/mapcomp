@@ -40,7 +40,7 @@ public class Xxx23PlainPayloadMuxConfig extends AbstractMultiPartyPtoConfig impl
         private CotConfig cotConfig;
 
         public Builder(boolean silent) {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {
