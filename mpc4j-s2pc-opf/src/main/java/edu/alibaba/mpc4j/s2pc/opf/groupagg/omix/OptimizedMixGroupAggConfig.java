@@ -9,6 +9,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
@@ -57,6 +59,10 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
      */
     private final OneSideGroupConfig oneSideGroupConfig;
     /**
+     * Z2 mux config
+     */
+    private final Z2MuxConfig z2MuxConfig;
+    /**
      * Zl
      */
     private final Zl zl;
@@ -68,13 +74,14 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
     private OptimizedMixGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
             builder.plainPayloadMuxConfig, builder.prefixAggConfig, builder.z2cConfig,
-            builder.zlcConfig, builder.oneSideGroupConfig);
+            builder.zlcConfig, builder.oneSideGroupConfig, builder.z2MuxConfig);
         this.osnConfig = builder.osnConfig;
         this.z2cConfig = builder.z2cConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
         this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
         this.zlcConfig = builder.zlcConfig;
+        this.z2MuxConfig = builder.z2MuxConfig;
         oneSideGroupConfig = builder.oneSideGroupConfig;
         this.zl = builder.zl;
         this.silent = builder.silent;
@@ -112,6 +119,10 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
 
     public ZlcConfig getZlcConfig() {
         return zlcConfig;
+    }
+
+    public Z2MuxConfig getZ2MuxConfig() {
+        return z2MuxConfig;
     }
 
     public boolean isSilent() {
@@ -162,6 +173,10 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
          */
         private final OneSideGroupConfig oneSideGroupConfig;
         /**
+         * Z2 mux config
+         */
+        private final Z2MuxConfig z2MuxConfig;
+        /**
          * Zl
          */
         private final Zl zl;
@@ -178,6 +193,7 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             oneSideGroupConfig = OneSideGroupFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,silent);
             this.zl = zl;
             this.silent = silent;
         }

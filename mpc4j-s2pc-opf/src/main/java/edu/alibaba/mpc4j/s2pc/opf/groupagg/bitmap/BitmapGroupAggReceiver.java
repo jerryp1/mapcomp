@@ -144,7 +144,7 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
             // AND with e
             allBitmapShare[i] = z2cReceiver.and(allBitmapShare[i], e);
             // MUX with bitmap
-            SquareZlVector bitmapWithAgg = plainPayloadMuxSender.mux(allBitmapShare[i], aggAttr);
+            SquareZlVector bitmapWithAgg = plainPayloadMuxSender.mux(allBitmapShare[i], aggAttr,zl.getL());
             // agg
             bitmapWithAgg = agg(bitmapWithAgg);
             // reveal

@@ -2,6 +2,10 @@ package edu.alibaba.mpc4j.crypto.matrix;
 
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.Zl64Database;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -66,6 +70,26 @@ public class TransposeUtils {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         BitVector[] result = transposeSplit(input.toArray(new byte[0][]), l);
+        stopWatch.stop();
+        TRANSPORT_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        return result;
+    }
+
+    /**
+     * Transpose vectors of byte array to bitvectors.
+     *
+     * @param input vector of byte arrays.
+     * @param l     bit length.
+     * @return byte arrays to bitvectors.
+     */
+    public static BitVector[] transposeSplit(long[] input, int l) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        byte[][] bytes = Arrays.stream(input).mapToObj(v->BigIntegerUtils.nonNegBigIntegerToByteArray(BigInteger.valueOf(v), CommonUtils.getByteLength(l))).toArray(byte[][]::new);
+        ZlDatabase zlDatabase = ZlDatabase.create(l, bytes);
+        BitVector[] result = Arrays.stream(zlDatabase.bitPartition(EnvType.STANDARD, true))
+            .toArray(BitVector[]::new);
         stopWatch.stop();
         TRANSPORT_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

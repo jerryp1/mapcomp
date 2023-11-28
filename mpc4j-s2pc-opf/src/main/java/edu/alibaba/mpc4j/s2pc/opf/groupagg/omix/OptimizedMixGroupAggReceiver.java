@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -22,6 +23,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -83,6 +86,7 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
     private final GroupAggParty groupAggReceiver;
 
     private final OneSideGroupParty oneSideGroupReceiver;
+    private final Z2MuxParty z2MuxReceiver;
     /**
      * Prefix aggregation type.
      */
@@ -90,9 +94,11 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
 
     private BitVector groupIndicator;
 
-    private String[] resultReceiverGroup;
-
     protected List<String> senderDistinctGroup;
+    /**
+     * indexes of valid position
+     */
+    private int[] groupIndex;
 
     public OptimizedMixGroupAggReceiver(Rpc receiverRpc, Party senderParty, OptimizedMixGroupAggConfig config) {
         super(OptimizedMixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -104,6 +110,7 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         groupAggReceiver = GroupAggFactory.createReceiver(receiverRpc, senderParty, new MixGroupAggConfig.Builder(config.getZl(), config.isSilent(), config.getAggType()).build());
         oneSideGroupReceiver = OneSideGroupFactory.createReceiver(receiverRpc, senderParty, config.getOneSideGroupConfig());
+        z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
 //        addMultipleSubPtos(osnReceiver);
 //        addMultipleSubPtos(plainPayloadMuxSender);
 //        addSubPtos(zlMuxReceiver);
@@ -132,6 +139,7 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
             groupAggReceiver.init(properties);
         }
         oneSideGroupReceiver.init(1, maxNum, maxL);
+        z2MuxReceiver.init(maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
@@ -173,14 +181,13 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
         // mul1
-        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField, 64);
+        BitVector[] tranposedLong = TransposeUtils.transposeSplit(aggField, zl.getL());
+        SquareZ2Vector[] mul1 = plainPayloadMuxSender.muxB(e, tranposedLong, zl.getL());
         ZlVector[] plainAgg = new ZlVector[senderGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);
+            SquareZ2Vector[] mul = z2MuxReceiver.mux(bitmapShares[i], mul1);
             plainAgg[i] = aggregate(permutedGroup, mul, e);
         }
-        // indexes of valid position
-        int[] groupIndex = getGroupIndexes(groupIndicator);
         // arrange
         BigInteger[] aggResult = new BigInteger[senderGroupNum * groupIndex.length];
         String[] groupResult = new String[senderGroupNum * groupIndex.length];
@@ -197,20 +204,18 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         return IntStream.range(0, num).filter(indicator::get).toArray();
     }
 
-    private ZlVector aggregate(String[] permutedGroup, SquareZlVector agg, SquareZ2Vector e) throws MpcAbortException {
+    private ZlVector aggregate(String[] permutedGroup, SquareZ2Vector[] agg, SquareZ2Vector e) throws MpcAbortException {
         // agg
         return maxAgg(permutedGroup, agg, e);
     }
 
-    private ZlVector maxAgg(String[] groupField, SquareZlVector aggField, SquareZ2Vector e) throws MpcAbortException {
+    private ZlVector maxAgg(String[] groupField, SquareZ2Vector[] aggField, SquareZ2Vector e) throws MpcAbortException {
         // compute indicator
         groupIndicator = obtainIndicator(groupField);
 
-        // agg to z2
-        SquareZ2Vector[] aggZ2 = Arrays.stream(TransposeUtils.transposeSplit(aggField.getZlVector().getElements(), zl.getL()))
-            .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         // agg
-        SquareZ2Vector[] aggResultZ2Share = oneSideGroupReceiver.groupAgg(aggZ2, e, AggTypes.MAX, groupIndicator);
+        SquareZ2Vector[] aggResultZ2Share = oneSideGroupReceiver.groupAgg(aggField, e, AggTypes.MAX, groupIndicator);
+        groupIndex = oneSideGroupReceiver.getResPosFlag(groupIndicator);
         // reveal
         BitVector[] aggResultZ2 = new BitVector[zl.getL()];
         for (int i = 0; i < zl.getL(); i++) {

@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
@@ -18,6 +19,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -76,6 +79,8 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
 
     private final OneSideGroupParty oneSideGroupSender;
 
+    private final Z2MuxParty z2MuxSender;
+
     private boolean hasSetGroupSet = false;
 
     protected List<String> senderDistinctGroup;
@@ -93,6 +98,7 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         groupAggSender = GroupAggFactory.createSender(senderRpc, receiverParty,
             new MixGroupAggConfig.Builder(config.getZl(), config.isSilent(), config.getAggType()).build());
         oneSideGroupSender = OneSideGroupFactory.createSender(senderRpc, receiverParty, config.getOneSideGroupConfig());
+        z2MuxSender = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
         aggType = config.getAggType();
 
 
@@ -122,6 +128,7 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
             groupAggSender.init(properties);
         }
         oneSideGroupSender.init(1, maxNum, maxL);
+        z2MuxSender.init(maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
@@ -168,20 +175,20 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
 
         // mul1
         stopWatch.start();
-        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null, 64);
+        SquareZ2Vector[] mul1 = plainPayloadMuxReceiver.muxB(e, null, zl.getL());
         stopWatch.stop();
         MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         long tripleNum = TRIPLE_NUM;
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
-            SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], mul1);
+            SquareZ2Vector[] mul = z2MuxSender.mux(bitmapShares[i], mul1);
             stopWatch.stop();
             MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // prefix agg
             stopWatch.start();
-            aggregate(mul1, e);
+            aggregate(mul, e);
             stopWatch.stop();
             AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -191,18 +198,14 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         return null;
     }
 
-    private void aggregate(SquareZlVector agg, SquareZ2Vector e) throws MpcAbortException {
+    private void aggregate(SquareZ2Vector[] agg, SquareZ2Vector e) throws MpcAbortException {
         // agg
         maxAgg(agg, e);
     }
 
-    private void maxAgg(SquareZlVector aggField, SquareZ2Vector e) throws MpcAbortException {
+    private void maxAgg(SquareZ2Vector[] aggField, SquareZ2Vector e) throws MpcAbortException {
 
-        // agg to z2
-        SquareZ2Vector[] aggZ2 = Arrays.stream(TransposeUtils.transposeSplit(aggField.getZlVector().getElements(), zl.getL()))
-            .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-
-        SquareZ2Vector[] aggResultZ2Share = oneSideGroupSender.groupAgg(aggZ2, e, AggTypes.MAX, null);
+        SquareZ2Vector[] aggResultZ2Share = oneSideGroupSender.groupAgg(aggField, e, AggTypes.MAX, null);
         // reveal
         for (int i = 0; i < zl.getL(); i++) {
             z2cSender.revealOther(aggResultZ2Share[i]);
