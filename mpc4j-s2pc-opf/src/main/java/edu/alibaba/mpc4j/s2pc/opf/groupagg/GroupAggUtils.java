@@ -162,7 +162,11 @@ public class GroupAggUtils {
         Vector<byte[]> result = new Vector<>(binaryString.length);
         for (String str : binaryString) {
             byte[] bytes = new byte[CommonUtils.getByteLength(bitLength)];
-            IntStream.range(0, bitLength).forEach(i -> BinaryUtils.setBoolean(bytes, i, str.charAt(i) == '1'));
+            IntStream.range(0, bitLength).forEach(i -> {
+                if(str.charAt(i) == '1'){
+                    BinaryUtils.setBoolean(bytes, i, true);
+                }
+            });
             result.add(bytes);
         }
         return result;

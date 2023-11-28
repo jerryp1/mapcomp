@@ -19,6 +19,8 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.GroupPartyTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.AbstractShareGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ import java.util.stream.IntStream;
 public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupParty implements ShareGroupParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAmos22ShareGroupParty.class);
     private final Z2cParty z2cParty;
+    private final Z2MuxParty z2MuxParty;
     private final Z2IntegerCircuit z2IntegerCircuit;
     private SquareZ2Vector[] pValues;
     private SquareZ2Vector[] sValues;
@@ -39,11 +42,13 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         super(ptoDesc, rpc, otherParty, config);
         if (partyTypes.equals(GroupPartyTypes.RECEIVER)) {
             z2cParty = Z2cFactory.createReceiver(rpc, otherParty, config.getZ2cConfig());
+            z2MuxParty = Z2MuxFactory.createReceiver(rpc, otherParty, config.getZ2MuxConfig());
         } else {
             z2cParty = Z2cFactory.createSender(rpc, otherParty, config.getZ2cConfig());
+            z2MuxParty = Z2MuxFactory.createSender(rpc, otherParty, config.getZ2MuxConfig());
         }
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
-        addMultipleSubPtos(z2cParty);
+        addMultipleSubPtos(z2cParty, z2MuxParty);
     }
 
     @Override
@@ -55,6 +60,7 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         int initSize = attrNum * maxBitNum * maxNum * 4;
         initSize = initSize <= 0 ? Integer.MAX_VALUE : initSize;
         z2cParty.init(initSize);
+        z2MuxParty.init(initSize);
 
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
@@ -122,10 +128,12 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
             BitVectorFactory.createZeros(dataNum)).toArray(BitVector[]::new);
         zerosAndOnes[1] = IntStream.range(0, dimLen).mapToObj(i ->
             BitVectorFactory.createOnes(dataNum)).toArray(BitVector[]::new);
+
         BitVector[] perpValue = IntStream.range(0, xiArrays.length).mapToObj(i ->
                 aggTypes[i].equals(AggTypes.MAX) ? zerosAndOnes[0] : zerosAndOnes[1])
             .flatMap(Arrays::stream).toArray(BitVector[]::new);
         SquareZ2Vector[] perpShare = (SquareZ2Vector[]) z2cParty.setPublicValues(perpValue);
+
         if(validFlags != null){
             SquareZ2Vector[] validFs = new SquareZ2Vector[dimLen * xiArrays.length];
             for(int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen){
@@ -133,8 +141,25 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
                     validFs[j] = validFlags[i];
                 }
             }
-            SquareZ2Vector[] originValues = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
-            inputDataProcessed = z2cParty.xor(z2cParty.and(validFs, z2cParty.xor(perpShare, originValues)), perpShare);
+
+            SquareZ2Vector[][] perpMatrix = IntStream.range(0, xiArrays.length).mapToObj(i ->
+                Arrays.copyOfRange(perpShare, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
+            SquareZ2Vector[][] xorRes =  IntStream.range(0, xiArrays.length).mapToObj(i -> {
+                try {
+                    return z2cParty.xor(perpMatrix[i], xiArrays[i]);
+                } catch (MpcAbortException e) {
+                    throw new RuntimeException(e);
+                }
+            }).toArray(SquareZ2Vector[][]::new);
+            SquareZ2Vector[][] tmp = z2MuxParty.mux(validFlags, xorRes);
+            for(int i = 0; i < tmp.length; i++){
+                for(int j = 0; j < tmp[i].length; j++){
+                    z2cParty.xori(tmp[i][j], perpMatrix[i][j]);
+                }
+            }
+            inputDataProcessed = Arrays.stream(tmp).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
+//            SquareZ2Vector[] originValues = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
+//            inputDataProcessed = z2cParty.xor(z2cParty.and(validFs, z2cParty.xor(perpShare, originValues)), perpShare);
         }else{
             inputDataProcessed = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
         }
@@ -151,7 +176,8 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         resultData = IntStream.range(0, perpValue.length).mapToObj(i ->
             SquareZ2Vector.createZeros(dataNum, false)).toArray(SquareZ2Vector[]::new);
         // 2. 计算p值和s值
-        SquareZ2Vector[] fe = z2cParty.and(GroupUtils.extendData(groupFlag, perpShare.length), perpShare);
+        SquareZ2Vector[] fe = z2MuxParty.mux(groupFlag, perpShare);
+//        SquareZ2Vector[] fe = z2cParty.and(GroupUtils.extendData(groupFlag, perpShare.length), perpShare);
         int rightChildNum = dataNum / 2 + (dataNum % 2);
         // 2.1 初始化 p = fe, s = v
         pValues = Arrays.copyOf(fe, fe.length);
@@ -160,7 +186,8 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         SquareZ2Vector[] rightV = GroupUtils.getPos(inputDataProcessed, 1, rightChildNum, 2, parallel);
         SquareZ2Vector[] rightFe = GroupUtils.getPos(fe, 1, rightChildNum, 2, parallel);
         SquareZ2Vector rightF = groupFlag.getPointsWithFixedSpace(1, rightChildNum, 2);
-        SquareZ2Vector[] rightFv = z2cParty.and(GroupUtils.extendData(rightF, rightV.length), rightV);
+        SquareZ2Vector[] rightFv = z2MuxParty.mux(rightF, rightV);
+//        SquareZ2Vector[] rightFv = z2cParty.and(GroupUtils.extendData(rightF, rightV.length), rightV);
         GroupUtils.setPos(pValues, z2cParty.xor(rightV, z2cParty.xor(rightFv, rightFe)), 1, rightChildNum, 2, parallel);
         GroupUtils.setPos(sValues, rightFv, 1, rightChildNum, 2, parallel);
 
@@ -214,11 +241,13 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
                 Arrays.fill(leqFlagExtend, i * dimLen, i * dimLen + dimLen, leqRes[i]);
             }
             SquareZ2Vector[] v = (SquareZ2Vector[]) z2cParty.mux(sl, pr, leqFlagExtend);
-            SquareZ2Vector[] vPrime = z2cParty.and(GroupUtils.extendData(a, v.length), v);
+            SquareZ2Vector[] vPrime = z2MuxParty.mux(a, v);
+//            SquareZ2Vector[] vPrime = z2cParty.and(GroupUtils.extendData(a, v.length), v);
             // 3.3 更新left child的最后一个值
             GroupUtils.setPos(resultData, vPrime, childGroupLen - 1, mergeNum, parentLen, parallel);
             // 3.4 先计算出fv
-            SquareZ2Vector[] fv = z2cParty.and(GroupUtils.extendData(fIntoMux, v.length), v);
+            SquareZ2Vector[] fv = z2MuxParty.mux(fIntoMux, v);
+//            SquareZ2Vector[] fv = z2cParty.and(GroupUtils.extendData(fIntoMux, v.length), v);
             if(mergeNum == 1){
                 // 3.5 如果只更新一个，那么说明自己已经是左节点了，这时候更新p是没有意义的
                 SquareZ2Vector[] sr = GroupUtils.getPos(sValues, parentLen - 1, mergeNum, parentLen, parallel);
@@ -282,11 +311,13 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         }
         // 如果最后两个flag都是1的话，那么最后一个数据也要更新下，直接设为自己的值
         SquareZ2Vector[] lastOneOrigin = GroupUtils.getPos(inputDataProcessed, dataNum - 1, 1, 1, parallel);
-        SquareZ2Vector[] lastOneNew = z2cParty.and(GroupUtils.extendData(groupFlag.getPointsWithFixedSpace(dataNum - 1, 1, 1), lastOneOrigin.length),  lastOneOrigin);
+        SquareZ2Vector[] lastOneNew = z2MuxParty.mux(groupFlag.getPointsWithFixedSpace(dataNum - 1, 1, 1),  lastOneOrigin);
+//        SquareZ2Vector[] lastOneNew = z2cParty.and(GroupUtils.extendData(groupFlag.getPointsWithFixedSpace(dataNum - 1, 1, 1), lastOneOrigin.length),  lastOneOrigin);
         GroupUtils.setPos(resultData, lastOneNew, dataNum - 1, 1, 1, parallel);
         // 再得到最终的结果
         stopWatch.start();
-        resultData = z2cParty.and(GroupUtils.extendData(params[levelNum][0], resultData.length), resultData);
+        resultData = z2MuxParty.mux(params[levelNum][0], resultData);
+//        resultData = z2cParty.and(GroupUtils.extendData(params[levelNum][0], resultData.length), resultData);
         SquareZ2Vector[] finalResultData = resultData;
         SquareZ2Vector[][] finalRes = attrNum == 1 ? new SquareZ2Vector[][]{resultData} : IntStream.range(0, attrNum).mapToObj(i ->
             Arrays.copyOfRange(finalResultData, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);

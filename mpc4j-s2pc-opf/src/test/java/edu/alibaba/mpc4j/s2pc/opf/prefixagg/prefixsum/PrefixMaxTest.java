@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
-
 /**
  * Prefix max Test.
  *
@@ -45,11 +43,11 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 8;
+    private static final int LARGE_NUM = 1 << 12;
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
     /**
      * current Zl
      */
@@ -62,7 +60,7 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         // default zl
         configurations.add(new Object[]{
             PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, true).build()
+            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
         });
 
         return configurations;
