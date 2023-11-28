@@ -242,9 +242,9 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         long b2aT = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // ### test
-        String[] groupResult = revealBothGroup(mergedTwoGroup);
-        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
-        BitVector eB = z2cReceiver.revealOwn(e);
+//        String[] groupResult = revealBothGroup(mergedTwoGroup);
+//        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+//        BitVector eB = z2cReceiver.revealOwn(e);
         // aggregation
         stopWatch.start();
         GroupAggOut out = aggregation(mergedTwoGroup, receiverAggAs, e);

@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
+
 /**
  * Bitmap group aggregation sender.
  *
@@ -127,10 +129,11 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         // 假定receiver拥有agg
         assert aggField == null;
         setPtoInput(groupField, aggField, e);
+
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
         // gen bitmap
         BitVector[] bitmaps = genVerticalBitmap(groupField, senderDistinctGroup);
-        // share long field
-//        SquareZlVector aggShare = zlcSender.shareOther(num);
 
         // and 没有merge
         SquareZ2Vector[] allBitmapShare = new SquareZ2Vector[totalGroupNum];
@@ -139,18 +142,36 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
                 allBitmapShare[i * receiverGroupNum + j] = plainAndSender.and(bitmaps[i]);
             }
         }
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+
+
 
         BigInteger[] result = new BigInteger[totalGroupNum];
         for (int i = 0; i < totalGroupNum; i++) {
+            stopWatch.start();
             // AND with e
             allBitmapShare[i] = z2cSender.and(allBitmapShare[i], e);
             // MUX with bitmap
             SquareZlVector bitmapWithAgg =  plainPayloadMuxReceiver.mux(allBitmapShare[i],null,zl.getL());
+            stopWatch.stop();
+            groupStep2Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+
             // agg
+            stopWatch.start();
+            long tempTripleNum = TRIPLE_NUM;
             bitmapWithAgg = agg(bitmapWithAgg);
+            stopWatch.stop();
+            aggTripleNum += TRIPLE_NUM - tempTripleNum;
+            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
             // reveal
             zlcSender.revealOther(bitmapWithAgg);
         }
+
         return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), result);
     }
 

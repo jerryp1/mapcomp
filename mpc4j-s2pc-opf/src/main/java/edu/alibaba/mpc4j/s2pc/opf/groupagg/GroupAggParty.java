@@ -28,16 +28,20 @@ public interface GroupAggParty extends TwoPartyPto {
      * @return result.
      */
     GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException;
-//
-//    int getStep1Time();
-//
-//    int getStep2Time();
-//
-//    int getStep3Time();
-//
-//    int getStep4Time();
-//
-//    int getStep5Time();
-//
-//    int getAggTime();
+
+    long getGroupStep1Time();
+
+    long getGroupStep2Time();
+
+    long getGroupStep3Time();
+
+    long getGroupStep4Time();
+
+    long getGroupStep5Time();
+
+    long getAggTime();
+
+    long getGroupTripleNum();
+
+    long getAggTripleNum();
 }

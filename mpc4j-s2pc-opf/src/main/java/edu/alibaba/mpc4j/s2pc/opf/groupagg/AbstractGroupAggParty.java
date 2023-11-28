@@ -13,7 +13,6 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +66,16 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     protected int receiverGroupNum;
     protected int totalGroupNum;
     protected Zl zl;
+
+    protected long groupStep1Time;
+    protected long groupStep2Time;
+    protected long groupStep3Time;
+    protected long groupStep4Time;
+    protected long groupStep5Time;
+    protected long aggTime;
+    protected long groupTripleNum;
+    protected long aggTripleNum;
+
 
     protected AbstractGroupAggParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, GroupAggConfig config) {
         super(ptoDesc, rpc, otherParty, config);
@@ -168,5 +177,46 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         BitVector[] bitmaps = IntStream.range(0, distinctGroupSet.size()).mapToObj(i -> BitVectorFactory.createZeros(num)).toArray(BitVector[]::new);
         IntStream.range(0, num).forEach(i -> bitmaps[distinctGroupSet.indexOf(group[i])].set(i, true));
         return bitmaps;
+    }
+
+
+    @Override
+    public long getGroupStep1Time() {
+        return groupStep1Time;
+    }
+
+    @Override
+    public long getGroupStep2Time() {
+        return groupStep2Time;
+    }
+
+    @Override
+    public long getGroupStep3Time() {
+        return groupStep3Time;
+    }
+
+    @Override
+    public long getGroupStep4Time() {
+        return groupStep4Time;
+    }
+
+    @Override
+    public long getGroupStep5Time() {
+        return groupStep5Time;
+    }
+
+    @Override
+    public long getAggTime() {
+        return aggTime;
+    }
+
+    @Override
+    public long getGroupTripleNum() {
+        return groupTripleNum;
+    }
+
+    @Override
+    public long getAggTripleNum() {
+        return aggTripleNum;
     }
 }

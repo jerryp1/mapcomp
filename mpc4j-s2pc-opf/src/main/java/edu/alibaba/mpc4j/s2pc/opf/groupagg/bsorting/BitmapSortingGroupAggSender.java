@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
+
 /**
  * Bitmap assist sorting-based group aggregation sender.
  *
@@ -184,25 +186,53 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupField, aggField, interFlagE);
         // bitmap
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
         bitmap();
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // sort, output pig0
+        stopWatch.start();
         sort();
+        stopWatch.stop();
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
+        stopWatch.start();
         permute1();
+        stopWatch.stop();
+        groupStep3Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute2, permute sender's group using rho
+        stopWatch.start();
         permute2();
+        stopWatch.stop();
+        groupStep4Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute3, permute e
+        stopWatch.start();
         permute3();
+        stopWatch.stop();
+        groupStep5Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
         SquareZlVector otherAggB2a = b2a();
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
         // ### test
-        zlcSender.revealOther(otherAggB2a);
-        revealOtherGroup(mergedTwoGroup);
-        z2cSender.revealOther(e);
+//        zlcSender.revealOther(otherAggB2a);
+//        revealOtherGroup(mergedTwoGroup);
+//        z2cSender.revealOther(e);
         // agg
+        stopWatch.start();
+        aggTripleNum = TRIPLE_NUM;
         aggregation(mergedTwoGroup, otherAggB2a, e);
+        stopWatch.stop();
+        aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        aggTripleNum = TRIPLE_NUM - aggTripleNum;
         return null;
     }
 

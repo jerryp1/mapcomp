@@ -163,10 +163,12 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         // gen bitmap
         Vector<byte[]> bitmaps = genBitmap(groupField, e);
         // osn
+        long tempTripleNum = TRIPLE_NUM;
         stopWatch.start();
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         stopWatch.stop();
         OSN_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
@@ -178,18 +180,27 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         SquareZ2Vector[] mul1 = plainPayloadMuxReceiver.muxB(e, null, zl.getL());
         stopWatch.stop();
         MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
+        groupTripleNum = TRIPLE_NUM - tempTripleNum;
+
         long tripleNum = TRIPLE_NUM;
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
+            tempTripleNum = TRIPLE_NUM;
             SquareZ2Vector[] mul = z2MuxSender.mux(bitmapShares[i], mul1);
             stopWatch.stop();
+            groupTripleNum += TRIPLE_NUM - tempTripleNum;
+            groupStep3Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
             MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // prefix agg
             stopWatch.start();
+            tempTripleNum = TRIPLE_NUM;
             aggregate(mul, e);
             stopWatch.stop();
+            aggTripleNum += TRIPLE_NUM - tempTripleNum;
+            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

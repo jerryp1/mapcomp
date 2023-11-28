@@ -69,8 +69,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      */
     private final PrefixAggParty prefixAggSender;
 
-    private boolean hasSetGroupSet = false;
-
     protected List<String> senderDistinctGroup;
 
     public MixGroupAggSender(Rpc senderRpc, Party receiverParty, MixGroupAggConfig config) {
