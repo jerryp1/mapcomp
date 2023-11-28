@@ -20,7 +20,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
@@ -173,7 +173,7 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
         // mul1
-        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField);
+        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField, 64);
         ZlVector[] plainAgg = new ZlVector[senderGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
             SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);

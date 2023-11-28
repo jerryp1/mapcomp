@@ -46,6 +46,4 @@ public interface PlainAndParty extends TwoPartyPto {
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
     }
 
-    ;
-
 }

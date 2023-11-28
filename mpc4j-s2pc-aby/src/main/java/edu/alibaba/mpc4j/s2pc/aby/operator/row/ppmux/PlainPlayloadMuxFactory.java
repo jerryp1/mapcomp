@@ -4,11 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxSender;
-import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
  * Plain mux factory.
@@ -79,13 +77,11 @@ public class PlainPlayloadMuxFactory implements PtoFactory {
      * @param silent        if using a silent protocol.
      * @return a default config.
      */
-    public static PlainPayloadMuxConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
+    public static PlainPayloadMuxConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PlainPayloadMuxConfig.Builder(zl)
-                    .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
-                    .build();
+                return new Xxx23PlainPayloadMuxConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

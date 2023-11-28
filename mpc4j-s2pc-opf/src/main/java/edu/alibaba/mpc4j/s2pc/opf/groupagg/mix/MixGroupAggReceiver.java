@@ -155,7 +155,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
         // mul1
-        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField);
+        SquareZlVector mul1 = plainPayloadMuxSender.mux(e, aggField, 64);
         ZlVector[] plainAgg = new ZlVector[senderGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
             SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], mul1);

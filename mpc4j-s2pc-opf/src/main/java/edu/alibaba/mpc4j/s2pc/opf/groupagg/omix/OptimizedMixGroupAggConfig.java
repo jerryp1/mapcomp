@@ -172,7 +172,7 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);

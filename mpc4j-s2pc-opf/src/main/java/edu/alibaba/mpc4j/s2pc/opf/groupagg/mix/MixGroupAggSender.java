@@ -141,7 +141,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
         // mul1
         stopWatch.start();
-        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null);
+        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null, 64);
         stopWatch.stop();
         MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

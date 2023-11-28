@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory.PlainMuxType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
@@ -20,21 +19,13 @@ public class Xxx23PlainPayloadMuxConfig extends AbstractMultiPartyPtoConfig impl
      */
     private final CotConfig cotConfig;
 
-    private final Zl zl;
-
     private Xxx23PlainPayloadMuxConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.cotConfig);
         cotConfig = builder.cotConfig;
-        zl = builder.zl;
     }
 
     public CotConfig getCotConfig() {
         return cotConfig;
-    }
-
-    @Override
-    public Zl getZl() {
-        return zl;
     }
 
     @Override
@@ -47,14 +38,9 @@ public class Xxx23PlainPayloadMuxConfig extends AbstractMultiPartyPtoConfig impl
          * COT config
          */
         private CotConfig cotConfig;
-        /**
-         * Zl
-         */
-        private final Zl zl;
 
-        public Builder(Zl zl) {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            this.zl = zl;
+        public Builder(boolean silent) {
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

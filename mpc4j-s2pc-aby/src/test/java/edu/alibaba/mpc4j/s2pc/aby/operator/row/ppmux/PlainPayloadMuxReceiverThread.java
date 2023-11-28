@@ -28,25 +28,37 @@ class PlainPayloadMuxReceiverThread extends Thread {
      */
     private SquareZlVector z1;
     /**
-     * y
+     * z0
      */
-    private long[] y;
+    private SquareZ2Vector[] z1Binary;
 
-    PlainPayloadMuxReceiverThread(PlainPayloadMuxParty receiver, SquareZ2Vector x1) {
+    private final boolean runBinary;
+    private final int validBitLen;
+
+    PlainPayloadMuxReceiverThread(PlainPayloadMuxParty receiver, SquareZ2Vector x1, int validBitLen, boolean runBinary) {
         this.receiver = receiver;
         this.x1 = x1;
         num = x1.getNum();
+        this.runBinary = runBinary;
+        this.validBitLen = validBitLen;
     }
 
     SquareZlVector getZ1() {
         return z1;
+    }
+    SquareZ2Vector[] getZ1Binary(){
+        return z1Binary;
     }
 
     @Override
     public void run() {
         try {
             receiver.init(num);
-            z1 = receiver.mux(x1, null);
+            if(!runBinary){
+                z1 = receiver.mux(x1, null, validBitLen);
+            }else{
+                z1Binary = receiver.muxB(x1, null, validBitLen);
+            }
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }
