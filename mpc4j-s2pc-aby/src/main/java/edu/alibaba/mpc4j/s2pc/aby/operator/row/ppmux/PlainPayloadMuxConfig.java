@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory.PlainMuxType;
 
 /**
@@ -17,11 +16,4 @@ public interface PlainPayloadMuxConfig extends MultiPartyPtoConfig {
      * @return the protocol type.
      */
     PlainMuxType getPtoType();
-
-    /**
-     * Gets the zl.
-     *
-     * @return zl.
-     */
-    Zl getZl();
 }

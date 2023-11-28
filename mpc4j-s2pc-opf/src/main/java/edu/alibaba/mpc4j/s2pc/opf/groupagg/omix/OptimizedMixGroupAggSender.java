@@ -16,7 +16,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
@@ -168,7 +168,7 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
 
         // mul1
         stopWatch.start();
-        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null);
+        SquareZlVector mul1 = plainPayloadMuxReceiver.mux(e, null, 64);
         stopWatch.stop();
         MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

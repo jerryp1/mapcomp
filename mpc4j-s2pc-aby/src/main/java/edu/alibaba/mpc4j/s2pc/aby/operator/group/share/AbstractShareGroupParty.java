@@ -1,19 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
+package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 
-public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
+public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implements ShareGroupParty {
     protected int dataNum;
     protected int dimLen;
 
-    protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {
+    protected AbstractShareGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, ShareGroupConfig config) {
         super(ptoDesc, rpc, otherParty, config);
     }
 
@@ -24,7 +23,7 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
         initState();
     }
 
-    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, BitVector groupFlag){
+    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, SquareZ2Vector groupFlag){
         dataNum = xiArrays[0][0].bitNum();
         assert dataNum >= 2;
         dimLen = xiArrays[0].length;
@@ -38,8 +37,6 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
         for(SquareZ2Vector each : validFlags){
             MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
         }
-        if(groupFlag != null){
-            MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
-        }
+        MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
     }
 }

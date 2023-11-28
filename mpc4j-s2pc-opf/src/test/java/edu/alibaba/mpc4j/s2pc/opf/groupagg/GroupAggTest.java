@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
 import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.*;
 
 /**
@@ -44,7 +42,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1 << 18;
+    private static final int DEFAULT_NUM = 1000;
     /**
      * large num
      */

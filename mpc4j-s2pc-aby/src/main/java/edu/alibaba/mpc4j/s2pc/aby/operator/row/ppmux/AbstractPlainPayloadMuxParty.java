@@ -5,7 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +55,9 @@ public abstract class AbstractPlainPayloadMuxParty extends AbstractTwoPartyPto i
         initState();
     }
 
-    protected void setPtoInput(SquareZ2Vector xi, long[] yi) {
+    protected void setPtoInput(SquareZ2Vector xi, long[] yi, int validBitLen) {
+        assert validBitLen >= Long.SIZE;
+        zl = ZlFactory.createInstance(envType, validBitLen);
         assert zl.getL() >= Long.SIZE;
         if (yi != null) {
             MathPreconditions.checkEqual("xi.num", "yi.num", xi.getNum(), yi.length);
@@ -63,5 +67,15 @@ public abstract class AbstractPlainPayloadMuxParty extends AbstractTwoPartyPto i
         byteL = zl.getByteL();
         inputBits = xi;
         inputPayloads = yi;
+    }
+    protected void setPtoInput(SquareZ2Vector xi, BitVector[] yi, int validBitLen) {
+        zl = ZlFactory.createInstance(envType, validBitLen);
+        if (yi != null) {
+            MathPreconditions.checkEqual("xi.num", "yi[0].num", xi.getNum(), yi[0].bitNum());
+        }
+        num = xi.getNum();
+        MathPreconditions.checkPositiveInRangeClosed("num", num, maxNum);
+        byteL = zl.getByteL();
+        inputBits = xi;
     }
 }

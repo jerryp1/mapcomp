@@ -1,8 +1,7 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
+package edu.alibaba.mpc4j.s2pc.aby.operator.group;
 
+import edu.alibaba.mpc4j.common.circuit.z2.MpcZ2Vector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
@@ -10,43 +9,36 @@ import gnu.trove.list.linked.TIntLinkedList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class OneSideGroupUtils {
+import static edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.AbstractAmos22OneSideGroupParty.getPlainBitVectors;
+
+public class GroupUtils {
 
     /**
      * get the flags representing which rows store the group aggregation results
      *
-     * @param groupFlag if the i-th row is the last one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @param groupFlag if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      */
     public static int[] getResPosFlag(boolean[] groupFlag) {
         TIntList list = new TIntLinkedList();
         int index = groupFlag.length - 1;
         while (index >= 0) {
-            int curr = index - 1;
-            while (curr >= 0 && (!groupFlag[curr])) {
-                curr--;
+            if(groupFlag[index]){
+                list.add(index);
+                index--;
+            }else{
+                int curr = index - 1;
+                while (curr > 0 && (!groupFlag[curr])) {
+                    curr--;
+                }
+                list.add(GroupUtils.rightMostChildOfLeftSubTreeOfCommonAncestor(curr, index));
+                index = curr - 1;
             }
-            if (curr == -1) {
-                list.add(0);
-            } else {
-                list.add(OneSideGroupUtils.rightMostChildOfLeftSubTreeOfCommonAncestor(curr + 1, index));
-            }
-            index = curr;
         }
-        int[] res = new int[list.size()];
-        IntStream.range(0, list.size()).forEach(i -> res[i] = list.get(list.size() - 1 - i));
-        return res;
+        list.sort();
+        return list.toArray();
     }
 
-    public static SquareZ2Vector[][] getPos(SquareZ2Vector[] data, int[] startIndex, int num, int skipLen, boolean parallel){
-        SquareZ2Vector[][] res = new SquareZ2Vector[2][data.length];
-        IntStream intStream = parallel ? IntStream.range(0, data.length).parallel() : IntStream.range(0, data.length);
-        intStream.forEach(i -> {
-            res[0][i] = data[i].getPointsWithFixedSpace(startIndex[0], num, skipLen);
-            res[1][i] = data[i].getPointsWithFixedSpace(startIndex[1], num, skipLen);
-        });
-        return res;
-    }
     public static SquareZ2Vector[] getPos(SquareZ2Vector[] data, int startIndex, int num, int skipLen, boolean parallel){
         SquareZ2Vector[] res = new SquareZ2Vector[data.length];
         IntStream intStream = parallel ? IntStream.range(0, data.length).parallel() : IntStream.range(0, data.length);
@@ -59,18 +51,20 @@ public class OneSideGroupUtils {
         intStream.forEach(i -> target[i].setPointsWithFixedSpace(source[i], startIndex, num, skipLen));
     }
 
-    public static BitVector crossZeroAndOne(int dataNum, boolean oddIsZero){
-        byte a;
-        if(oddIsZero){
-            a = (byte) ((dataNum & 1) == 0 ? 0b01010101 : 0b10101010);
-        }else{
-            a = (byte) ((dataNum & 1) == 1 ? 0b01010101 : 0b10101010);
+    public static MpcZ2Vector[] extendData(MpcZ2Vector data, int copyNum){
+        return IntStream.range(0, copyNum).mapToObj(i -> data).toArray(MpcZ2Vector[]::new);
+    }
+
+    public static int[] getResPosFlag(BitVector groupFlag) {
+        BitVector[][] params = getPlainBitVectors(groupFlag);
+        BitVector r = params[params.length - 1][0];
+        TIntList updateIndexes = new TIntLinkedList();
+        for(int i = 0; i < groupFlag.bitNum(); i++){
+            if(r.get(i)){
+                updateIndexes.add(i);
+            }
         }
-        int byteLen = CommonUtils.getByteLength(dataNum);
-        byte[] bytes = new byte[byteLen];
-        Arrays.fill(bytes, a);
-        bytes[0] &= (byte) ((1<<(dataNum & 7)) - 1);
-        return BitVectorFactory.create(dataNum, bytes);
+        return Arrays.stream(updateIndexes.toArray()).sorted().toArray();
     }
 
     /**

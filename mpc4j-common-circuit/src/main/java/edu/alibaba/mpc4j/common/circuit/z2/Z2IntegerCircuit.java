@@ -147,7 +147,7 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     }
 
     /**
-     * x ≤ y.
+     * x ≤ y. compare for data without sign bit, which means the values of data in [0, 2^l - 1];
      *
      * @param xiArray xi array.
      * @param yiArray yi array.
@@ -157,7 +157,7 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
     public MpcZ2Vector leq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         checkInputs(xiArray, yiArray);
         MpcZ2Vector[] result = sub(xiArray, yiArray);
-        return result[0];
+        return mux(new MpcZ2Vector[]{result[0]} , new MpcZ2Vector[]{yiArray[0]}, party.xor(xiArray[0], yiArray[0]))[0];
     }
 
     public MpcZ2Vector[] leq(MpcZ2Vector[][] xiArray, MpcZ2Vector[][] yiArray) throws MpcAbortException {

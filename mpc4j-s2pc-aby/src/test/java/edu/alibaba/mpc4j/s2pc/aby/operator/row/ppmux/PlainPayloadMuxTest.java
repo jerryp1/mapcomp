@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -41,10 +43,6 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
      * large num
      */
     private static final int LARGE_NUM = 1 << 18;
-    /**
-     * default Zl
-     */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -52,7 +50,7 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            PlainMuxType.Xxx23.name(), new Xxx23PlainPayloadMuxConfig.Builder(DEFAULT_ZL).build()
+            PlainMuxType.Xxx23.name(), new Xxx23PlainPayloadMuxConfig.Builder(false).build()
         });
 
         return configurations;
@@ -134,7 +132,7 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
             PlainPayloadMuxSenderThread senderThread = new PlainPayloadMuxSenderThread(sender, shareX0, y);
-            PlainPayloadMuxReceiverThread receiverThread = new PlainPayloadMuxReceiverThread(receiver, shareX1);
+            PlainPayloadMuxReceiverThread receiverThread = new PlainPayloadMuxReceiverThread(receiver, shareX1, 64, false);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -149,6 +147,41 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
             SquareZlVector shareZ0 = senderThread.getZ0();
             SquareZlVector shareZ1 = receiverThread.getZ1();
             assertOutput(x0, x1, y, shareZ0, shareZ1);
+            printAndResetRpc(time);
+            LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // destroy
+        new Thread(sender::destroy).start();
+        new Thread(receiver::destroy).start();
+
+        SecureRandom secureRandom = new SecureRandom();
+        int randomBitLen = secureRandom.nextInt(64) + 1;
+        BitVector[] value = IntStream.range(0, randomBitLen).mapToObj(i -> BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
+        // init the protocol
+        sender = PlainPlayloadMuxFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        receiver = PlainPlayloadMuxFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        sender.setParallel(parallel);
+        receiver.setParallel(parallel);
+        try {
+            LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
+            PlainPayloadMuxSenderThread senderThread = new PlainPayloadMuxSenderThread(sender, shareX0, value);
+            PlainPayloadMuxReceiverThread receiverThread = new PlainPayloadMuxReceiverThread(receiver, shareX1, randomBitLen, true);
+            StopWatch stopWatch = new StopWatch();
+            // execute the protocol
+            stopWatch.start();
+            senderThread.start();
+            receiverThread.start();
+            senderThread.join();
+            receiverThread.join();
+            stopWatch.stop();
+            long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            // verify
+            SquareZ2Vector[] shareZ0 = senderThread.getZ0Binary();
+            SquareZ2Vector[] shareZ1 = receiverThread.getZ1Binary();
+            assertOutput(x0, x1, value, shareZ0, shareZ1);
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException e) {
@@ -172,6 +205,14 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
             } else {
                 Assert.assertEquals(z[i].longValue(), 0);
             }
+        }
+    }
+
+    private void assertOutput(BitVector x0, BitVector x1, BitVector[] y, SquareZ2Vector[] z0, SquareZ2Vector[] z1) {
+        BitVector[] res = IntStream.range(0, z0.length).mapToObj(i -> z0[i].getBitVector().xor(z1[i].getBitVector())).toArray(BitVector[]::new);
+        BitVector x = x0.xor(x1);
+        for(int i = 0; i < y.length; i++){
+            assert Arrays.equals(res[i].getBytes(), (y[i].and(x)).getBytes());
         }
     }
 }
