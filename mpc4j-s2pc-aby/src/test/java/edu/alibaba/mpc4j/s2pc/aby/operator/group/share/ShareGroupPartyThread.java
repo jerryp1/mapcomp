@@ -1,19 +1,18 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
+package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
 
-public class OneSideGroupPartyThread extends Thread {
-    public OneSideGroupParty party;
+public class ShareGroupPartyThread extends Thread {
+    public ShareGroupParty party;
     public SquareZ2Vector[][] xiArrays;
     public SquareZ2Vector[] validFlags;
     public AggTypes[] aggTypes;
-    public BitVector groupFlag;
+    public SquareZ2Vector groupFlag;
     public SquareZ2Vector[][] res;
 
-    OneSideGroupPartyThread(OneSideGroupParty party, SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, BitVector groupFlag) {
+    ShareGroupPartyThread(ShareGroupParty party, SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, SquareZ2Vector groupFlag) {
         this.party = party;
         this.xiArrays = xiArrays;
         this.validFlags = validFlags;
@@ -34,5 +33,4 @@ public class OneSideGroupPartyThread extends Thread {
             e.printStackTrace();
         }
     }
-
 }

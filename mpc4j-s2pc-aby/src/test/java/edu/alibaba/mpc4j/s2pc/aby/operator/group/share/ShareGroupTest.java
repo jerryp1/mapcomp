@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
+package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -8,9 +8,9 @@ import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.OneSideGroupType;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.AbstractAmos22OneSideGroupParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupUtils;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupFactory.ShareGroupType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.amos22.Amos22ShareGroupConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @RunWith(Parameterized.class)
-public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
+public class ShareGroupTest extends AbstractTwoPartyPtoTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShareGroupTest.class);
     private static final int ATTR_NUM = 2;
     /**
      * bitLen
@@ -48,14 +48,14 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
         for (int bitLen : bitLens) {
             configurations.add(new Object[]{
-                OneSideGroupType.AMOS22_ONE_SIDE.name() + "_bitLen_" + bitLen,
+                ShareGroupType.AMOS22_SHARE.name() + "_bitLen_" + bitLen,
                 bitLen,
-                new Amos22OneSideGroupConfig.Builder(false).build(),
+                new Amos22ShareGroupConfig.Builder(false).build(),
             });
             configurations.add(new Object[]{
-                OneSideGroupType.AMOS22_ONE_SIDE.name() + "_silent_bitLen_" + bitLen,
+                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
                 bitLen,
-                new Amos22OneSideGroupConfig.Builder(true).build(),
+                new Amos22ShareGroupConfig.Builder(true).build(),
             });
         }
         return configurations;
@@ -64,27 +64,17 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * the config
      */
-    private final OneSideGroupConfig config;
+    private final ShareGroupConfig config;
 
     /**
      * the domainBitLen
      */
     private final int domainBitLen;
 
-    public OneSideGroupTest(String name, int domainBitLen, OneSideGroupConfig config) {
+    public ShareGroupTest(String name, int domainBitLen, ShareGroupConfig config) {
         super(name);
         this.domainBitLen = domainBitLen;
         this.config = config;
-    }
-
-    @Test
-    public void testTmp(){
-        BitVector r = BitVectorFactory.createRandom(1<<20, new SecureRandom());
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        BitVector[][] res = AbstractAmos22OneSideGroupParty.getPlainBitVectors(r);
-        long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        LOGGER.info(String.valueOf(time));
     }
 
     @Test
@@ -136,8 +126,8 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     }
 
     private void testPto(int attrNum, int listSize, int domainBitLen, boolean parallel) {
-        OneSideGroupParty sender = OneSideGroupFactory.createSender(firstRpc, secondRpc.ownParty(), config);
-        OneSideGroupParty receiver = OneSideGroupFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
+        ShareGroupParty sender = ShareGroupFactory.createSender(firstRpc, secondRpc.ownParty(), config);
+        ShareGroupParty receiver = ShareGroupFactory.createReceiver(secondRpc, firstRpc.ownParty(), config);
         sender.setParallel(parallel);
         receiver.setParallel(parallel);
         int randomTaskId = Math.abs(SECURE_RANDOM.nextInt());
@@ -157,8 +147,8 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
                 aggTypes[i] = secureRandom.nextBoolean() ? AggTypes.MIN : AggTypes.MAX;
                 data[i] = IntStream.range(0, domainBitLen).mapToObj(j ->
                     BitVectorFactory.createRandom(listSize, secureRandom)).toArray(BitVector[]::new);
-                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
-//                validFlag[i] = BitVectorFactory.createOnes(listSize);
+//                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
+                validFlag[i] = BitVectorFactory.createOnes(listSize);
                 f0[i] = BitVectorFactory.createRandom(listSize, secureRandom);
                 f1[i] = f0[i].xor(validFlag[i]);
                 BitVector[] tmp = IntStream.range(0, domainBitLen).mapToObj(j ->
@@ -173,12 +163,14 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
             int possibleGroupNum = Math.max(listSize>>2, 1);
             IntStream.range(0, possibleGroupNum).forEach(i -> groupFlag.set(secureRandom.nextInt(listSize), true));
             groupFlag.set(0, true);
+            BitVector g0 = BitVectorFactory.createRandom(listSize, secureRandom);
+            BitVector g1 = g0.xor(groupFlag);
 //            groupFlag.set(listSize - 1, true);
 
-            OneSideGroupPartyThread senderThread = new OneSideGroupPartyThread(sender, s0,
-                Arrays.stream(f0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, null);
-            OneSideGroupPartyThread receiverThread = new OneSideGroupPartyThread(receiver, s1,
-                Arrays.stream(f1).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, groupFlag);
+            ShareGroupPartyThread senderThread = new ShareGroupPartyThread(sender, s0,
+                Arrays.stream(f0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, SquareZ2Vector.create(g0, false));
+            ShareGroupPartyThread receiverThread = new ShareGroupPartyThread(receiver, s1,
+                Arrays.stream(f1).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, SquareZ2Vector.create(g1, false));
             StopWatch stopWatch = new StopWatch();
             // start
             stopWatch.start();
@@ -191,9 +183,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            int[] pos = receiver.getResPosFlag(groupFlag);
-//            int[] pos1 = GroupUtils.getResPosFlag()
-
+            int[] pos = GroupUtils.getResPosFlag(groupFlag);
             SquareZ2Vector[][] senderOutput = senderThread.getGroupRes();
             SquareZ2Vector[][] receiverOutput = receiverThread.getGroupRes();
             BitVector[][] res = IntStream.range(0, attrNum).mapToObj(attrIndex -> IntStream.range(0, domainBitLen).mapToObj(i ->
