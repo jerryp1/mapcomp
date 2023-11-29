@@ -5,12 +5,15 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterParty;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.AbstractPrefixGroupAggregator;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -23,6 +26,7 @@ import java.util.stream.IntStream;
  * @date 2023/11/1
  */
 public abstract class AbstractPrefixMaxAggregator extends AbstractPrefixGroupAggregator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPrefixMaxAggregator.class);
     /**
      * Zl greater party;
      */
@@ -55,5 +59,21 @@ public abstract class AbstractPrefixMaxAggregator extends AbstractPrefixGroupAgg
     @Override
     public PrefixAggTypes getAggType() {
         return PrefixAggTypes.MAX;
+    }
+
+    @Override
+    protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
+        SquareZ2Vector groupIndicator2 = z2cParty.not(groupIndicator1);
+        groupIndicator2.getBitVector().shiftLeftUnChangeNum(1);
+
+        SquareZlVector data = b2aParty.b2a(aggField);
+        // generate prefix sum nodes.
+        genNodes(data, groupIndicator2);
+        // prefix-computation
+        prefixTree.addPrefix(num);
+        // obtain agg fields
+        SquareZlVector res1 = zlMuxParty.mux(groupIndicator1, SquareZlVector.create(zl, Arrays.stream(nodes)
+            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new), false));
+        return a2bParty.a2b(res1);
     }
 }

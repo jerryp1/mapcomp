@@ -6,8 +6,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.AbstractPrefixSumAggregator;
@@ -29,8 +33,9 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         zlcParty = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         zlMuxParty = ZlMuxFactory.createSender(senderRpc, receiverParty, config.getZlMuxConfig());
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
-        plainBitMuxParty = PlainBitMuxFactory.createSender(senderRpc, receiverParty, config.getPlainBitMuxConfig());
-
+        a2bParty = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
+        b2aParty = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
+        z2MuxParty = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
 //        addSubPtos(z2cParty);
 //        addSubPtos(zlcParty);
 //        addSubPtos(zlMuxParty);
@@ -51,8 +56,10 @@ public class Xxx23PrefixSumSender extends AbstractPrefixSumAggregator {
         z2cParty.init(maxL * maxNum);
         zlcParty.init(1);
         zlMuxParty.init(maxNum);
-        plainBitMuxParty.init(maxNum);
         shuffleParty.init(maxNum);
+        a2bParty.init(maxL, maxNum);
+        b2aParty.init(maxL, maxNum);
+        z2MuxParty.init(maxNum);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

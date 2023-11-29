@@ -4,12 +4,18 @@ import edu.alibaba.mpc4j.common.circuit.prefix.PrefixTreeFactory.PrefixTreeTypes
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.greater.zl.ZlGreaterFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
@@ -73,6 +79,9 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
      * plain output
      */
     private boolean plainOutput;
+    private final B2aConfig b2aConfig;
+    private final A2bConfig a2bConfig;
+    private final Z2MuxConfig z2MuxConfig;
 
     private Xxx23PrefixMaxConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.zlcConfig, builder.zlMuxConfig,
@@ -88,7 +97,9 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
         osnConfig = builder.osnConfig;
         zl = builder.zl;
         plainOutput = builder.plainOutput;
-
+        b2aConfig = builder.b2aConfig;
+        a2bConfig = builder.a2bConfig;
+        z2MuxConfig = builder.z2MuxConfig;
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -147,6 +158,18 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
         return plainOutput;
     }
 
+    public Z2MuxConfig getZ2MuxConfig() {
+        return z2MuxConfig;
+    }
+
+    public B2aConfig getB2aConfig() {
+        return b2aConfig;
+    }
+
+    public A2bConfig getA2bConfig() {
+        return a2bConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<Xxx23PrefixMaxConfig> {
         /**
          * Z2 circuit config.
@@ -193,6 +216,10 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
          */
         private boolean plainOutput;
 
+        private B2aConfig b2aConfig;
+        private A2bConfig a2bConfig;
+        private Z2MuxConfig z2MuxConfig;
+
         public Builder(Zl zl, boolean silent) {
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
@@ -204,6 +231,9 @@ public class Xxx23PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements
             prefixTreeType = PrefixTreeTypes.BRENT_KUNG;
             needShuffle = false;
             this.zl = zl;
+            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         @Override

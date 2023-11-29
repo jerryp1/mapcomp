@@ -330,6 +330,12 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
+    public void shiftLeftUnChangeNum(int bit){
+        MathPreconditions.checkGreaterOrEqual("bit >= 0", bit, 0);
+        bigInteger = bigInteger.shiftLeft(bit).and(BigInteger.ONE.shiftLeft(this.bitNum).subtract(BigInteger.ONE));
+    }
+
+    @Override
     public BitVector[] splitWithPadding(int[] bitNums){
         BitVector[] res = new BitVector[bitNums.length];
         byte[] src = getBytes();

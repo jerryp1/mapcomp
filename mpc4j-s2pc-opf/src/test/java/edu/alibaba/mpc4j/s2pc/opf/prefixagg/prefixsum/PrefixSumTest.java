@@ -2,10 +2,14 @@ package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
@@ -20,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -139,10 +144,16 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         Vector<byte[]> groupShares1 = IntStream.range(0, num).mapToObj(i ->
             BytesUtils.xor(groupings[i], groupShares0.elementAt(i))).collect(Collectors.toCollection(Vector::new));
 
-        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
-        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
+//        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
+//            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
+//        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
+//            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
+
+        SecureRandom secureRandom = new SecureRandom();
+        BitVector[] originDataVec = ZlDatabase.create(zl.getL(), aggs).bitPartition(EnvType.STANDARD, true);
+        BitVector[] agg0 = IntStream.range(0, originDataVec.length).mapToObj(i -> BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
+        SquareZ2Vector[] aggShares0 = Arrays.stream(agg0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] aggShares1 = IntStream.range(0, agg0.length).mapToObj(i -> SquareZ2Vector.create(agg0[i].xor(originDataVec[i]), false)).toArray(SquareZ2Vector[]::new);
 
         // init the protocol
         PrefixAggParty sender = PrefixSumFactory.createPrefixSumSender(firstRpc, secondRpc.ownParty(), config);
@@ -187,7 +198,10 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
         // result
         List<BigInteger> resultGroup = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(shareZ0.getGroupings().elementAt(i), shareZ1.getGroupings().elementAt(i)))
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger).collect(Collectors.toList());
-        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
+//        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
+        BitVector[] aggVec = IntStream.range(0, zl.getL()).mapToObj(i -> shareZ0.getAggsBinary()[i].getBitVector().xor(shareZ1.getAggsBinary()[i].getBitVector())).toArray(BitVector[]::new);
+        List<BigInteger> resultAgg = Arrays.stream(ZlDatabase.create(EnvType.STANDARD, true, aggVec).getBigIntegerData()).collect(Collectors.toList());
+
         Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
         // result
         Assert.assertEquals(trueMap, resultMap);

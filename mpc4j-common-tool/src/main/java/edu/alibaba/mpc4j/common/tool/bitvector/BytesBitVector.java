@@ -374,6 +374,14 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
+    public void shiftLeftUnChangeNum(int bit){
+        MathPreconditions.checkGreaterOrEqual("bit >= 0", bit, 0);
+        BytesUtils.shiftLefti(bytes, bit);
+        byte andNum = (byte) ((bitNum & 7) == 0 ? 255 : (1<<(bitNum & 7)) - 1);
+        bytes[0] &= andNum;
+    }
+
+    @Override
     public BitVector[] splitWithPadding(int[] bitNums){
         BitVector[] res = new BitVector[bitNums.length];
         byte[] src = getBytes();

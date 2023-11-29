@@ -2,16 +2,21 @@ package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.amos22.Amos22PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -22,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -43,7 +49,7 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 12;
+    private static final int LARGE_NUM = 1 << 10;
     /**
      * default Zl
      */
@@ -57,10 +63,16 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+//        // default zl
+//        configurations.add(new Object[]{
+//            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
+//        });
+
         // default zl
         configurations.add(new Object[]{
-            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
+            PrefixMaxTypes.AMOS22.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Amos22PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
         });
 
         return configurations;
@@ -142,10 +154,16 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         Vector<byte[]> groupShares1 = IntStream.range(0, num).mapToObj(i ->
             BytesUtils.xor(groupings[i], groupShares0.elementAt(i))).collect(Collectors.toCollection(Vector::new));
 
-        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
-        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
+        SecureRandom secureRandom = new SecureRandom();
+        BitVector[] originDataVec = ZlDatabase.create(zl.getL(), aggs).bitPartition(EnvType.STANDARD, true);
+        BitVector[] agg0 = IntStream.range(0, originDataVec.length).mapToObj(i -> BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
+        SquareZ2Vector[] aggShares0 = Arrays.stream(agg0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] aggShares1 = IntStream.range(0, agg0.length).mapToObj(i -> SquareZ2Vector.create(agg0[i].xor(originDataVec[i]), false)).toArray(SquareZ2Vector[]::new);
+
+//        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
+//            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
+//        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
+//            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
 
         // init the protocol
         PrefixAggParty sender = PrefixMaxFactory.createPrefixMaxSender(firstRpc, secondRpc.ownParty(), config);
@@ -190,8 +208,16 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         // result
         List<BigInteger> resultGroup = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(shareZ0.getGroupings().elementAt(i), shareZ1.getGroupings().elementAt(i)))
             .map(BigIntegerUtils::byteArrayToNonNegBigInteger).collect(Collectors.toList());
-        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
-        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
+        BitVector[] aggVec = IntStream.range(0, zl.getL()).mapToObj(i -> shareZ0.getAggsBinary()[i].getBitVector().xor(shareZ1.getAggsBinary()[i].getBitVector())).toArray(BitVector[]::new);
+        List<BigInteger> resultAgg = Arrays.stream(ZlDatabase.create(EnvType.STANDARD, true, aggVec).getBigIntegerData()).collect(Collectors.toList());
+        BitVector flag = shareZ0.getIndicator().getBitVector().xor(shareZ1.getIndicator().getBitVector());
+        int[] indexes = IntStream.range(0, flag.bitNum()).filter(flag::get).toArray();
+        Map<BigInteger, BigInteger> resultMap = new HashMap<>();
+        for(int i = 0; i < indexes.length; i++){
+            resultMap.put(resultGroup.get(indexes[i]), resultAgg.get(indexes[i]));
+        }
+
+//        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
         // result
         Assert.assertEquals(trueMap, resultMap);
     }
@@ -209,4 +235,33 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         }
         return map;
     }
+
+//    private void assertOutput(byte[][] groupings, BigInteger[] aggs, PrefixAggOutput shareZ0, PrefixAggOutput shareZ1) {
+//        int num = aggs.length;
+//        // true
+//        List<BigInteger> trueGroup = IntStream.range(0, num).mapToObj(i -> BigIntegerUtils.byteArrayToNonNegBigInteger(groupings[i])).collect(Collectors.toList());
+//        List<BigInteger> trueAgg = Arrays.asList(aggs);
+//        Map<BigInteger, BigInteger> trueMap = genTrue(trueGroup, trueAgg);
+//        // result
+//        List<BigInteger> resultGroup = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(shareZ0.getGroupings().elementAt(i), shareZ1.getGroupings().elementAt(i)))
+//            .map(BigIntegerUtils::byteArrayToNonNegBigInteger).collect(Collectors.toList());
+//        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
+//        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
+//        // result
+//        Assert.assertEquals(trueMap, resultMap);
+//    }
+//
+//    private Map<BigInteger, BigInteger> genTrue(List<BigInteger> trueGroup, List<BigInteger> trueAgg) {
+//        int num = trueAgg.size();
+//        Map<BigInteger, BigInteger> map = new HashMap<>();
+//        for (int i = 0; i < num; i++) {
+//            BigInteger key = trueGroup.get(i);
+//            if (map.containsKey(key)) {
+//                map.put(key, map.get(key).compareTo(trueAgg.get(i)) < 0 ? trueAgg.get(i) : map.get(key));
+//            } else {
+//                map.put(key, trueAgg.get(i));
+//            }
+//        }
+//        return map;
+//    }
 }

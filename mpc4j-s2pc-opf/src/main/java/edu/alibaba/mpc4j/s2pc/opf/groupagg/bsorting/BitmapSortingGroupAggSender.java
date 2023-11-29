@@ -219,7 +219,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
-        SquareZlVector otherAggB2a = b2a();
+//        SquareZlVector otherAggB2a = b2a();
+        SquareZ2Vector[] otherAggB2a = getAggAttr();
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
         // ### test
 //        zlcSender.revealOther(otherAggB2a);
@@ -262,7 +263,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // transpose
         piG0 = TransposeUtils.transposeMergeToVector(Arrays.stream(permB).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
 
-        revealOtherLong(piG0);
+//        revealOtherLong(piG0);
     }
 
     private void permute1() throws MpcAbortException {
@@ -319,10 +320,22 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         return zlMuxSender.mux(e, b2aSender.b2a(transposed));
     }
 
-    private void aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+//    private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
+//        PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, null);
+//        // reveal
+////        zlcSender.revealOther(agg.getAggs());
+//        z2cSender.revealOther(agg.getAggsBinary());
+//        revealOtherGroup(agg.getGroupings());
+//        z2cSender.revealOther(agg.getIndicator());
+//
+//        Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
+//    }
+
+    private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, null);
         // reveal
-        zlcSender.revealOther(agg.getAggs());
+        //        zlcSender.revealOther(agg.getAggs());
+        z2cSender.revealOther(agg.getAggsBinary());
         revealOtherGroup(agg.getGroupings());
         z2cSender.revealOther(agg.getIndicator());
 

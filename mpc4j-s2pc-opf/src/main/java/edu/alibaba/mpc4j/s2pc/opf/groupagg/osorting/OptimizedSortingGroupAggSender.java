@@ -163,8 +163,9 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
-        SquareZlVector otherAggB2a = b2a();
-        // ### test
+//        SquareZlVector otherAggB2a = b2a();
+        SquareZ2Vector[] otherAggB2a = getAggAttr();
+//        // ### test
 //        zlcSender.revealOther(otherAggB2a);
 //        revealOtherGroup(mergedTwoGroup);
         // agg
@@ -260,10 +261,11 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         return b2aSender.b2a(transposed);
     }
 
-    private void aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+    private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, flag);
         // reveal
-        zlcSender.revealOther(agg.getAggs());
+        //        zlcSender.revealOther(agg.getAggs());
+        z2cSender.revealOther(agg.getAggsBinary());
         revealOtherGroup(agg.getGroupings());
         z2cSender.revealOther(agg.getIndicator());
 
