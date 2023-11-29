@@ -93,6 +93,15 @@ public class SbitmapMainUtils {
         return PropertiesUtils.readBoolean(properties, "silent");
     }
 
+    public static boolean setSenderAgg(Properties properties) {
+        String readString = properties.getProperty("sender_agg");
+        if (readString == null) {
+            return false;
+        } else {
+            return "true".equals(readString);
+        }
+    }
+
     public static Zl setZl(Properties properties) {
         int l = PropertiesUtils.readInt(properties, "max_l");
         return ZlFactory.createInstance(EnvType.STANDARD, l);

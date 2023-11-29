@@ -99,6 +99,7 @@ public class SbitmapStarter {
     private boolean silent;
     private String inputDir;
     private String outputDir;
+    private boolean senderAgg;
 
     public SbitmapStarter() {
         setSchema();
@@ -151,6 +152,8 @@ public class SbitmapStarter {
         totalRound = SbitmapMainUtils.setTotalRound(properties);
         // silent
         silent = SbitmapMainUtils.setSilent(properties);
+        // silent
+        senderAgg = SbitmapMainUtils.setSenderAgg(properties);
         // zl
         zl = SbitmapMainUtils.setZl(properties);
         // output_dir
@@ -182,14 +185,15 @@ public class SbitmapStarter {
         if (receiver) {
             DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(receiverSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
-            long[] agg = inputDataFrame.intVector("agg").stream().mapToLong(i -> i).toArray();
+            long[] agg = senderAgg ? null : inputDataFrame.intVector("agg").stream().mapToLong(i -> i).toArray();
             SquareZ2Vector e = genE(inputDataFrame);
             groupAggInputData = new GroupAggInputData(groups, agg, e);
         } else {
             DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(senderSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
+            long[] agg = senderAgg ? inputDataFrame.intVector("agg").stream().mapToLong(i -> i).toArray() : null;
             SquareZ2Vector e = genE(inputDataFrame);
-            groupAggInputData = new GroupAggInputData(groups, null, e);
+            groupAggInputData = new GroupAggInputData(groups, agg, e);
         }
     }
 
@@ -283,7 +287,7 @@ public class SbitmapStarter {
         StructField groupField = new StructField("group", DataTypes.StringType);
         StructField aggField = new StructField("agg", DataTypes.IntegerType);
         StructField eField = new StructField("e", DataTypes.IntegerType);
-        senderSchema = new StructType(groupField, eField);
+        senderSchema = new StructType(groupField,aggField, eField);
         receiverSchema = new StructType(groupField, aggField, eField);
     }
 
