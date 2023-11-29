@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
+
 /**
  * Trivial sorting-based group aggregation sender.
  *
@@ -147,9 +149,19 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         // share and merge group shares
         share(groupField);
         // sort
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
         sort();
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // apply permutation to agg
+        stopWatch.start();
         apply();
+        stopWatch.stop();
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // b2a
 //        SquareZlVector receiverAggAs = b2a();
         SquareZ2Vector[] receiverAggAs = getAggAttr();
@@ -157,7 +169,13 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
 //        zlcSender.revealOther(otherAggB2a);
 //        revealOtherGroup(mergedGroups);
         // agg
+        stopWatch.start();
+        aggTripleNum = TRIPLE_NUM;
         aggregation(mergedGroups, receiverAggAs, e);
+        stopWatch.stop();
+        aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        aggTripleNum = TRIPLE_NUM - aggTripleNum;
+        stopWatch.reset();
         return null;
     }
 

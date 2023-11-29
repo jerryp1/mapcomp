@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
+
 /**
  * Optimized sorting-based group aggregation sender.
  *
@@ -153,13 +155,31 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupField, aggField, interFlagE);
         // osn1
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
         osn1(groupField);
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // pSorting using e and receiver's group
+        stopWatch.start();
         pSorter();
+        stopWatch.stop();
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute
+        stopWatch.start();
         permute1();
+        stopWatch.stop();
+        groupStep3Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         // permute
+        stopWatch.start();
         permute2();
+        stopWatch.stop();
+        groupStep4Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+        stopWatch.reset();
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
@@ -169,7 +189,13 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
 //        zlcSender.revealOther(otherAggB2a);
 //        revealOtherGroup(mergedTwoGroup);
         // agg
+        stopWatch.start();
+        aggTripleNum = TRIPLE_NUM;
         aggregation(mergedTwoGroup, otherAggB2a, e);
+        stopWatch.stop();
+        aggTripleNum = TRIPLE_NUM - aggTripleNum;
+        aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         return null;
     }
 

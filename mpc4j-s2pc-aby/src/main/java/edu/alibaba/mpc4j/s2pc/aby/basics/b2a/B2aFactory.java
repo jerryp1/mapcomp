@@ -90,7 +90,7 @@ public class B2aFactory {
             case IDEAL:
             case TRUSTED_DEALER:
             case SEMI_HONEST:
-                return new Dsz15B2aConfig.Builder(zl, silent).build();
+                return new TupleB2aConfig.Builder(zl, silent).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }
