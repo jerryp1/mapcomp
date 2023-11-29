@@ -114,7 +114,7 @@ public class RingLwe {
         long maxRandom = 0xFFFFFFFFFFFFFFFFL;
 
         // Fill the destination buffer with fresh randomness
-        prng.generate(destByteCount, destination);
+        prng.generate(destination);
 
         // 逐步处理每一个多项式
         // RNS 下，1个Poly 被 分解为 k 个
@@ -182,8 +182,9 @@ public class RingLwe {
 
     private static int cbd(UniformRandomGenerator prng) {
         byte[] x = new byte[6];
-        prng.generate(6, x);
-        x[2] &= 0x1F; // 0001 1111
+        prng.generate( x);
+        // 0001 1111
+        x[2] &= 0x1F;
         x[5] &= 0x1F;
         return Common.hammingWeight(x[0]) + Common.hammingWeight(x[1]) + Common.hammingWeight(x[2])
             - Common.hammingWeight(x[3]) - Common.hammingWeight(x[4]) - Common.hammingWeight(x[5]);
@@ -464,7 +465,7 @@ public class RingLwe {
         UniformRandomGenerator bootstrapPrng = parms.getRandomGeneratorFactory().create();
         // Sample a public seed for generating uniform randomness
         long[] publicPrngSeed = new long[UniformRandomGeneratorFactory.PRNG_SEED_UINT64_COUNT];
-        bootstrapPrng.generate(UniformRandomGeneratorFactory.PRNG_SEED_BYTE_COUNT, publicPrngSeed);
+        bootstrapPrng.generate(publicPrngSeed);
         // Set up a new default PRNG for expanding u from the seed sampled above
         UniformRandomGenerator ciphertextPrng = UniformRandomGeneratorFactory.defaultFactory().create(publicPrngSeed);
         // Generate ciphertext: (c[0], c[1]) = ([-(as+ e)]_q, a) in BFV/CKKS
