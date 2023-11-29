@@ -13,6 +13,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap.BitmapPermGenConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
@@ -88,6 +90,7 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
      * Zl
      */
     private final Zl zl;
+    private final Z2MuxConfig z2MuxConfig;
 
     private BitmapSortingGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
@@ -108,6 +111,7 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
         this.permGenConfig = builder.permGenConfig;
         this.a2bConfig = builder.a2bConfig;
         this.zl = builder.zl;
+        z2MuxConfig = builder.z2MuxConfig;
     }
 
     @Override
@@ -178,6 +182,10 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
         return zl;
     }
 
+    public Z2MuxConfig getZ2MuxConfig() {
+        return z2MuxConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BitmapSortingGroupAggConfig> {
         /**
          * Osn config.
@@ -231,6 +239,7 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
          * Zl
          */
         private final Zl zl;
+        private final Z2MuxConfig z2MuxConfig;
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
@@ -246,6 +255,7 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
             permGenConfig = new BitmapPermGenConfig.Builder(zl, silent).build();
             a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
+            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         @Override

@@ -14,6 +14,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndFactory;
@@ -70,6 +72,7 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
      * Zl
      */
     private final Zl zl;
+    private final Z2MuxParty z2MuxParty;
     protected List<String> senderDistinctGroup;
     protected List<String> receiverDistinctGroup;
     protected List<String> totalDistinctGroup;
@@ -81,7 +84,9 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         plainAndSender = PlainAndFactory.createSender(senderRpc, receiverParty, config.getPlainAndConfig());
         zlMaxSender = ZlMaxFactory.createSender(senderRpc, receiverParty, config.getZlMaxConfig());
-        plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(senderRpc,receiverParty,config.getPlainPayloadMuxConfig());
+        plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(senderRpc, receiverParty, config.getPlainPayloadMuxConfig());
+        z2MuxParty = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
+        addMultipleSubPtos(zlMuxSender, z2cSender, zlcSender, plainAndSender, zlMaxSender, plainPayloadMuxReceiver, z2MuxParty);
 //        addMultipleSubPtos(zlMuxSender);
 //        addMultipleSubPtos(zlcSender);
 //        addSubPtos(plainAndSender);
@@ -104,6 +109,9 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         zlcSender.init(1);
         zlMaxSender.init(maxL, maxNum);
         plainPayloadMuxReceiver.init(maxNum);
+        long totalMuxNum = ((long) maxNum) <<(senderGroupBitLength + receiverGroupBitLength);
+        int maxMuxInput = (int) Math.min(Integer.MAX_VALUE, totalMuxNum);
+        z2MuxParty.init(maxMuxInput);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
         receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
@@ -148,14 +156,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         stopWatch.reset();
 
 
-
         BigInteger[] result = new BigInteger[totalGroupNum];
+        // AND with e with mux
+        allBitmapShare = z2MuxParty.mux(e, allBitmapShare);
         for (int i = 0; i < totalGroupNum; i++) {
             stopWatch.start();
-            // AND with e
-            allBitmapShare[i] = z2cSender.and(allBitmapShare[i], e);
+//            // AND with e
+//            allBitmapShare[i] = z2cSender.and(allBitmapShare[i], e);
             // MUX with bitmap
-            SquareZlVector bitmapWithAgg =  plainPayloadMuxReceiver.mux(allBitmapShare[i],null,zl.getL());
+            SquareZlVector bitmapWithAgg = plainPayloadMuxReceiver.mux(allBitmapShare[i], null, zl.getL());
             stopWatch.stop();
             groupStep2Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();

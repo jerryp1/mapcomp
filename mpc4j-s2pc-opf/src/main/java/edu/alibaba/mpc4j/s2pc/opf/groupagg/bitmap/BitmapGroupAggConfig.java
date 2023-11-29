@@ -9,6 +9,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndConfig;
@@ -57,6 +59,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
      * Zl
      */
     private final Zl zl;
+    private final Z2MuxConfig z2MuxConfig;
 
     private BitmapGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.zlMuxConfig,
@@ -71,6 +74,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         this.z2cConfig = builder.z2cConfig;
         this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
         this.zl = builder.zl;
+        this.z2MuxConfig = builder.z2MuxConfig;
     }
 
     @Override
@@ -121,6 +125,10 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
         return plainPayloadMuxConfig;
     }
 
+    public Z2MuxConfig getZ2MuxConfig() {
+        return z2MuxConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BitmapGroupAggConfig> {
         /**
          * Zl mux config.
@@ -151,6 +159,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
          * Zl
          */
         private final Zl zl;
+        private final Z2MuxConfig z2MuxConfig;
 
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
@@ -160,6 +169,7 @@ public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements
             zlMaxConfig = ZlMaxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,silent);
+            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.zl = zl;
         }
 

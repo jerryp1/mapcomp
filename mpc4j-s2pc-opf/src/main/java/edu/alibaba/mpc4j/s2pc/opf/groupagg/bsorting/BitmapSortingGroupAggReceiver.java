@@ -7,7 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
@@ -26,6 +25,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -34,7 +35,6 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggPtoDesc.PtoStep;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -117,6 +117,7 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
      * A2b receiver
      */
     private final A2bParty a2bReceiver;
+    private final Z2MuxParty z2MuxParty;
     /**
      * Own bit split.
      */
@@ -152,6 +153,9 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         permutationReceiver = PermutationFactory.createReceiver(receiverRpc, senderParty, config.getPermutationConfig());
         permGenReceiver = PermGenFactory.createReceiver(receiverRpc, senderParty, config.getPermGenConfig());
         a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
+        z2MuxParty = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
+        addMultipleSubPtos(osnReceiver, zlMuxReceiver, sharedPermutationReceiver, prefixAggReceiver, z2cReceiver, zlcReceiver,
+            b2aReceiver, plainPayloadMuxSender, reversePermutationSender, permutationReceiver, permGenReceiver, a2bReceiver, z2MuxParty);
 //        addSubPtos(osnSender);
 //        addSubPtos(zlMuxReceiver);
 //        addSubPtos(sharedPermutationReceiver);
@@ -184,6 +188,9 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         permGenReceiver.init(maxNum, senderGroupNum);
         a2bReceiver.init(maxL, maxNum);
         plainPayloadMuxSender.init(maxNum);
+        long totalMuxNum = ((long) maxNum) <<(senderGroupBitLength);
+        int maxMuxInput = (int) Math.min(Integer.MAX_VALUE, totalMuxNum);
+        z2MuxParty.init(maxMuxInput);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -273,9 +280,10 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
 //      // and
-        for (int i = 0; i < senderGroupNum; i++) {
-            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
-        }
+        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+//        for (int i = 0; i < senderGroupNum; i++) {
+//            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
+//        }
 //        BitVector test = z2cReceiver.revealOwn(e);
 //        System.out.println();
     }

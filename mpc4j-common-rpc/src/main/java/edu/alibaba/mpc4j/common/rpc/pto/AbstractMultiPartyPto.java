@@ -31,7 +31,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     /**
      * display log level.
      */
-    private static final int DISPLAY_LOG_LEVEL = 1;
+    private static final int DISPLAY_LOG_LEVEL = 2;
     /**
      * maximal number of sub-protocols. Note that some protocols would have many levels (e.g., PSU based on SKE).
      */
@@ -165,7 +165,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     public void addTreeLevel(int rowLevel, int taskId, int parentTreeId) {
 //        MathPreconditions.checkNonNegativeInRange("rowLevel", rowLevel, MAX_SUB_PROTOCOL_NUM);
         treeLevel++;
-        MathPreconditions.checkNonNegativeInRange("treeLevel", treeLevel, MAX_TREE_LEVEL);
+//        MathPreconditions.checkNonNegativeInRange("treeLevel", treeLevel, MAX_TREE_LEVEL);
         this.rowLevel = rowLevel;
         this.taskId = taskId;
         treeId = (int) Math.pow(MAX_SUB_PROTOCOL_NUM, treeLevel) * (rowLevel + 1) + parentTreeId;

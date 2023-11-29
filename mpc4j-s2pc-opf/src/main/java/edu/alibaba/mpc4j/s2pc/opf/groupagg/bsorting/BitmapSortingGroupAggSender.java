@@ -24,6 +24,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -107,6 +109,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
      * A2b sender.
      */
     private final A2bParty a2bSender;
+    private final Z2MuxParty z2MuxParty;
     /**
      * Own bit split.
      */
@@ -138,6 +141,9 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         permutationSender = PermutationFactory.createSender(senderRpc, receiverParty, config.getPermutationConfig());
         permGenSender = PermGenFactory.createSender(senderRpc, receiverParty, config.getPermGenConfig());
         a2bSender = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
+        z2MuxParty = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
+        addMultipleSubPtos(osnSender, zlMuxSender, sharedPermutationSender, prefixAggSender, z2cSender, zlcSender,
+            b2aSender, plainPayloadMuxReceiver, reversePermutationReceiver, permutationSender, permGenSender, a2bSender, z2MuxParty);
 //        addSubPtos(osnReceiver);
 //        addSubPtos(zlMuxSender);
 //        addSubPtos(sharedPermutationSender);
@@ -168,6 +174,9 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         permGenSender.init(maxNum, senderGroupNum);
         a2bSender.init(maxL, maxNum);
         plainPayloadMuxReceiver.init(maxNum);
+        long totalMuxNum = ((long) maxNum) <<(senderGroupBitLength);
+        int maxMuxInput = (int) Math.min(Integer.MAX_VALUE, totalMuxNum);
+        z2MuxParty.init(maxMuxInput);
 
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
@@ -248,9 +257,10 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         e = transposed[0];
         // and
-        for (int i = 0; i < senderGroupNum; i++) {
-            senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
-        }
+        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+//        for (int i = 0; i < senderGroupNum; i++) {
+//            senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
+//        }
 //        z2cSender.revealOther(e);
 //        System.out.println(123);
     }
