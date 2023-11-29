@@ -430,13 +430,13 @@ public class RnsTool {
      * This is the Step S0 of Algorithm 3 in the BEHZ16 paper. The reason for multiplying m_tilde is shown in Lemma 4.
      *
      * @param input          the ciphertext ct in base q = (q_1, ..., q_k).
-     * @param inputPos       start index of input array.
-     * @param inputN         coefficient count of input RNS.
-     * @param inputK         coefficient modulus size of input RNS iter.
-     * @param destination    the output ciphertext ct * m_tilde in base {B, m_sk, m_tilde}.
-     * @param destinationPos start index of destination array to overwrite.
-     * @param destinationN   coefficient count of destination RNS iter.
-     * @param destinationK   coefficient modulus size of destination RNS iter.
+     * @param inputPos       start index of input ciphertext.
+     * @param inputN         coefficient count of input ciphertext.
+     * @param inputK         coefficient modulus size of input ciphertext.
+     * @param destination    the destination ciphertext ct * m_tilde in base {B, m_sk, m_tilde}.
+     * @param destinationPos start index of destination ciphertext.
+     * @param destinationN   coefficient count of destination ciphertext.
+     * @param destinationK   coefficient modulus size of destination ciphertext.
      */
     public void fastBConvMTildeRnsIter(
         long[] input, int inputPos, int inputN, int inputK,
@@ -483,19 +483,19 @@ public class RnsTool {
     }
 
     /**
-     * Small Montgomery Reduction mod q.
+     * The implementation of the function SmRq, i.e., Small Montgomery Reduction mod q.
      * <p>The input is the ciphertext c'' in base {B_sk, m_tilde}. </p>
      * <p>The output (written in destination) is the ciphertext c' in base {B_sk}. </p>
      * This is the Step S1 of Algorithm 3 in the BEHZ16 paper. The detail is shown in Algorithm 2 of the BEHZ16 paper.
      *
      * @param input          the ciphertext c'' in base {B_sk, m_tilde}.
-     * @param inputPos       start index of input array.
-     * @param inputN         coeff count of input RNS iter.
-     * @param inputK         coeff modulus size of input RNS iter.
-     * @param destination    the output ciphertext c' in base {B_sk}.
-     * @param destinationPos start index of destination array to overwrite.
-     * @param destinationN   coeff count of destination RNS iter.
-     * @param destinationK   coeff modulus size of destination RNS iter.
+     * @param inputPos       start index of input ciphertext.
+     * @param inputN         coefficient count of input ciphertext.
+     * @param inputK         coefficient modulus size of input ciphertext.
+     * @param destination    the destination ciphertext c' in base {B_sk}.
+     * @param destinationPos start index of destination ciphertext.
+     * @param destinationN   coefficient count of destination ciphertext.
+     * @param destinationK   coefficient modulus size of destination ciphertext.
      */
     public void smMrqRnsIter(
         long[] input, int inputPos, int inputN, int inputK,
@@ -543,19 +543,19 @@ public class RnsTool {
     }
 
     /**
-     * Fast RNS floor.
+     * The implementation of the function fastRNSFloor, i.e., fast RNS floor.
      * <p>The input is the ciphertext a in base {q, B_sk}.</p>
      * <p>The output is the ciphertext a in base B_sk.</p>
      * This is the Step S3 of Algorithm 3 in the BEHZ16 paper. The detail is shown in Lemma 5 of the BEHZ16 paper.
      *
      * @param input          the ciphertext a in base {q, B_sk}.
-     * @param inputPos       start index of input array.
-     * @param inputN         coeff count of input RNS iter.
-     * @param inputK         coeff modulus size of input RNS iter.
+     * @param inputPos       start index of input ciphertext.
+     * @param inputN         coefficient count of input ciphertext.
+     * @param inputK         coefficient modulus size of input ciphertext.
      * @param destination    the ciphertext a in base B_sk.
-     * @param destinationPos start index of destination array to overwrite.
-     * @param destinationN   coeff count of destination RNS iter.
-     * @param destinationK   coeff modulus size of destination RNS iter.
+     * @param destinationPos start index of destination ciphertext.
+     * @param destinationN   coefficient count of destination ciphertext.
+     * @param destinationK   coefficient modulus size of destination ciphertext.
      */
     public void fastFloorRnsIter(
         long[] input, int inputPos, int inputN, int inputK,
@@ -594,10 +594,20 @@ public class RnsTool {
     }
 
     /**
+     * The implementation of the function FastBconvSK, i.e., fast base conversion from B_sk to q.
+     * <p>The input is the ciphertext x in base B_sk.</p>
+     * <p>The output is the ciphertext x in base q.</p>
+     * This is the Step S4 of Algorithm 3 in the BEHZ16 paper. The detail is shown in Lemma 6 of the BEHZ16 paper.
      * Ref Lemma 6 the equation (13) in BEHZ16
      *
-     * @param input       in base Bsk
-     * @param destination in base q
+     * @param input          the ciphertext x in base B_sk.
+     * @param inputPos       start index of input ciphertext.
+     * @param inputN         coefficient count of input ciphertext.
+     * @param inputK         coefficient modulus size of input ciphertext.
+     * @param destination    the ciphertext x in base q.
+     * @param destinationPos start index of destination ciphertext.
+     * @param destinationN   coefficient count of destination ciphertext.
+     * @param destinationK   coefficient modulus size of destination ciphertext.
      */
     public void fastBConvSkRnsIter(
         long[] input, int inputPos, int inputN, int inputK,
@@ -611,35 +621,29 @@ public class RnsTool {
         int baseQSize = baseQ.getSize();
         int baseBSize = baseB.getSize();
 
-        // Fast convert B -> q; input is in Bsk but we only use B
-        // 处理 [0, baseBSize * N)
+        // FastBcov(x, B, q)
         int inputInBaseB = 0;
         baseBToQConv.fastConvertArrayRnsIter(
             input, inputPos + inputInBaseB, coeffCount, baseBSize,
             destination, destinationPos, destinationN, destinationK
         );
 
-        // Compute alpha_sk
-        // Fast convert B -> {m_sk}; input is in Bsk but we only use B
+        // Compute α_{sk, x}, Fast convert B -> {m_sk}; input is in Bsk but we only use B
         long[] temp = new long[coeffCount];
-        // Compute alpha_sk
-        // Fast convert B -> {m_sk}; input is in Bsk but we only use B
+        // FastBonv(x, B, {m_sk})
         baseBToMskConv.fastConvertArrayRnsIter(
             input, inputPos + inputInBaseB, coeffCount, baseBSize,
             temp, 0, coeffCount, 1
         );
-        // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
-        // Note: input_sk is allocated in input[base_B_size]
+        // α_{sk, x} = [(FastBonv(x, B, {m_sk}) - x_{sk}) · B^{-1}]_{m_{sk}}, where B in inv_prod_B_mod_m_sk
         long[] alphaSk = new long[coeffCount];
+        // we first compute |(FastBonv(x, B, {m_sk}) - x_{sk}) · B^{-1}|_{m_{sk}}
         for (int i = 0; i < coeffCount; i++) {
-            // It is not necessary for the negation to be reduced modulo the small prime
             alphaSk[i] = UintArithmeticSmallMod.multiplyUintMod(
                 temp[i] + (mSk.getValue() - input[inputPos + baseBSize * coeffCount + i]), invProdBModMsk, mSk
             );
         }
-        // alpha_sk is now ready for the Shenoy-Kumaresan conversion; however, note that our
-        // alpha_sk here is not a centered reduction, so we need to apply a correction below.
-
+        // α_{sk, x} is now ready for the Shenoy-Kumaresan conversion.
         long mSkDiv2 = mSk.getValue() >>> 1;
         for (int i = 0; i < baseQSize; i++) {
             MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
@@ -649,7 +653,7 @@ public class RnsTool {
             negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
 
             for (int j = 0; j < coeffCount; j++) {
-                // Correcting alpha_sk since it represents a negative value
+                // convert |·|_{m_{sk}} to [·]_{m_{sk}}, then compute |FastBcov(x, B, q) - α_{sk, x} · M|_{q_i}
                 if (alphaSk[j] > mSkDiv2) {
                     destination[destinationPos + i * coeffCount + j] =
                         UintArithmeticSmallMod.multiplyAddUintMod(
@@ -657,6 +661,7 @@ public class RnsTool {
                             destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
                         );
                 } else {
+                    // directly compute |FastBcov(x, B, q) - α_{sk, x} · M|_{q_i}
                     destination[destinationPos + i * coeffCount + j] = UintArithmeticSmallMod.multiplyAddUintMod(
                         alphaSk[j], negProdBModQElt, destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
                     );
