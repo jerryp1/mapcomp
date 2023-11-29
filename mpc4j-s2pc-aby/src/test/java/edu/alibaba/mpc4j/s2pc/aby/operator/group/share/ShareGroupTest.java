@@ -41,7 +41,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 12;
+    private static final int LARGE_SIZE = 1 << 16;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

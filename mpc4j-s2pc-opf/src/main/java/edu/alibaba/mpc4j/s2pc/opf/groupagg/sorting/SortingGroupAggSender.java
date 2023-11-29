@@ -30,7 +30,6 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggPtoDesc.PtoSte
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
@@ -195,9 +194,22 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // prepare psorter input, with shared e and group of receiver
         SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (receiverGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        // psorter
-        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
-            null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+
+
+        SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + 1];
+        sortInput[0] = psorterInput[7];
+        System.arraycopy(psorterInput, 8, sortInput, 1, receiverGroupBitLength);
+        // sort
+        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{sortInput},
+                null, PlainZ2Vector.createOnes(1), true, false))
+            .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        psorterInput[7] = sortInput[0];
+        System.arraycopy(sortInput, 1, psorterInput, 8, receiverGroupBitLength);
+
+//        // psorter
+//        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
+//            null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+
         // ### test
         for (int i = 0; i < piGiVector.length; i++) {
             z2cSender.revealOther(piGiVector[i]);

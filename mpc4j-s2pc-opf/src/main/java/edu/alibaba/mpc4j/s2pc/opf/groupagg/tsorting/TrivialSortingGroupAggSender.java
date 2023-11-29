@@ -176,10 +176,25 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         // transpose
         SquareZ2Vector[] transposedGroup = Arrays.stream(TransposeUtils.transposeSplit(mergedInput, (totalGroupByteLength + 1) * Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+
+        SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + senderGroupBitLength + 1];
+        sortInput[0] = transposedGroup[7];
+        System.arraycopy(transposedGroup, 8, sortInput, 1, senderGroupBitLength);
+        System.arraycopy(transposedGroup, 8 + (senderGroupByteLength<<3), sortInput, 1 + senderGroupBitLength, receiverGroupBitLength);
         // sort
-        SquareZ2Vector[] permsVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{transposedGroup},
-            null, PlainZ2Vector.createOnes(1), true, false))
+        SquareZ2Vector[] permsVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{sortInput},
+                null, PlainZ2Vector.createOnes(1), true, false))
             .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        transposedGroup[7] = sortInput[0];
+        System.arraycopy(sortInput, 1, transposedGroup, 8, senderGroupBitLength);
+        System.arraycopy(sortInput, 1 + senderGroupBitLength, transposedGroup, 8 + (senderGroupByteLength<<3), receiverGroupBitLength);
+
+//        // sort
+//        SquareZ2Vector[] permsVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{transposedGroup},
+//            null, PlainZ2Vector.createOnes(1), true, false))
+//            .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+
+
         // transpose
         perms = TransposeUtils.transposeMergeToVector(Arrays.stream(permsVector).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         // get e and sorted groups from psorter's input.

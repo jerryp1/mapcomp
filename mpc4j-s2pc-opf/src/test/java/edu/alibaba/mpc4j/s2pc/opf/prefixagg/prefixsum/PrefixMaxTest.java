@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
@@ -49,7 +48,7 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 10;
+    private static final int LARGE_NUM = 1 << 12;
     /**
      * default Zl
      */
@@ -63,11 +62,11 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // default zl
-//        configurations.add(new Object[]{
-//            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
-//        });
+        // default zl
+        configurations.add(new Object[]{
+            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
+        });
 
         // default zl
         configurations.add(new Object[]{

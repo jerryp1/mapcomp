@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
@@ -200,9 +199,19 @@ public class SortingGroupAggReceiver extends AbstractGroupAggParty {
         SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedPsorterInput, (receiverGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
 
-        // psorter
-        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
-            null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + 1];
+        sortInput[0] = psorterInput[7];
+        System.arraycopy(psorterInput, 8, sortInput, 1, receiverGroupBitLength);
+        // sort
+        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{sortInput},
+                null, PlainZ2Vector.createOnes(1), true, false))
+            .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
+        psorterInput[7] = sortInput[0];
+        System.arraycopy(sortInput, 1, psorterInput, 8, receiverGroupBitLength);
+
+//        // psorter
+//        SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{psorterInput},
+//            null, PlainZ2Vector.createOnes(1), true, true)).map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
 
         // ### test
         BitVector[] permVector = new BitVector[piGiVector.length];
