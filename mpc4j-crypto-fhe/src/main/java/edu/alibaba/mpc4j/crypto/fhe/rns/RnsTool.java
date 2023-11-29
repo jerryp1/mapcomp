@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
@@ -19,7 +18,7 @@ import edu.alibaba.mpc4j.crypto.fhe.zq.*;
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/util/rns.h#L190
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Liqiang Peng, Weiran Liu
  * @date 2023/8/21
  */
 @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
@@ -33,7 +32,7 @@ public class RnsTool {
      */
     private RnsBase baseQ;
     /**
-     * RNS base B = {p_1, ..., p_{k'}}
+     * RNS base B = {p_1, ..., p_{k'}} for B = p_1 · p_2 ... · p_{k'}.
      */
     private RnsBase baseB;
     /**
@@ -505,9 +504,11 @@ public class RnsTool {
         assert inputN == coeffCount;
         assert destination != null;
         assert destinationN == coeffCount;
-        // input in base {B_sk, m_tilde}
+        /*
+         * Require: Input in base {B_sk, m_tilde}
+         * Ensure: Output in base B_sk
+         */
         assert inputK == baseBskMTilde.getSize();
-        // output in base {B_sk}
         assert destinationK == baseBsk.getSize();
 
         int baseBskSize = baseBsk.getSize();
@@ -565,13 +566,15 @@ public class RnsTool {
         assert inputN == coeffCount;
         assert destination != null;
         assert destinationN == coeffCount;
-        // the input ciphertext a is in base {q, B_sk}.
+        /*
+         * Require: Input in base {q, B_sk}
+         * Ensure: Output in base B_sk
+         */
         assert inputK == baseQ.getSize() + baseBsk.getSize();
-        // the output ciphertext is in base B_sk.
         assert destinationK == baseBsk.getSize();
         int baseQSize = baseQ.getSize();
         int baseBskSize = baseBsk.getSize();
-        // Convert q -> B_sk, invoke FactBCov(|a|_q, q, B_sk).
+        // FactBCov(|a|_q, q, B_sk)
         int inputInBaseQ = 0;
         baseQToBskConv.fastConvertArrayRnsIter(
             input, inputPos + inputInBaseQ, inputN, baseQ.getSize(),
@@ -617,18 +620,19 @@ public class RnsTool {
         assert inputK == baseBsk.getSize();
         assert destinationK == baseQ.getSize();
         assert destinationN == coeffCount;
-
+        /*
+         * Require: Input in base B_sk
+         * Ensure: Output in base q
+         */
         int baseQSize = baseQ.getSize();
         int baseBSize = baseB.getSize();
-
         // FastBcov(x, B, q)
         int inputInBaseB = 0;
         baseBToQConv.fastConvertArrayRnsIter(
             input, inputPos + inputInBaseB, coeffCount, baseBSize,
             destination, destinationPos, destinationN, destinationK
         );
-
-        // Compute α_{sk, x}, Fast convert B -> {m_sk}; input is in Bsk but we only use B
+        // Compute α_{sk, x}, Fast convert B -> {m_sk}; input is in B_sk, but we only use B
         long[] temp = new long[coeffCount];
         // FastBonv(x, B, {m_sk})
         baseBToMskConv.fastConvertArrayRnsIter(
@@ -636,6 +640,8 @@ public class RnsTool {
             temp, 0, coeffCount, 1
         );
         // α_{sk, x} = [(FastBonv(x, B, {m_sk}) - x_{sk}) · B^{-1}]_{m_{sk}}, where B in inv_prod_B_mod_m_sk
+        // Take the m_sk part of input, subtract from temp, and multiply by inv_prod_B_mod_m_sk_
+        // Note: input_sk is allocated in input[base_B_size]
         long[] alphaSk = new long[coeffCount];
         // we first compute |(FastBonv(x, B, {m_sk}) - x_{sk}) · B^{-1}|_{m_{sk}}
         for (int i = 0; i < coeffCount; i++) {
@@ -643,9 +649,11 @@ public class RnsTool {
                 temp[i] + (mSk.getValue() - input[inputPos + baseBSize * coeffCount + i]), invProdBModMsk, mSk
             );
         }
-        // α_{sk, x} is now ready for the Shenoy-Kumaresan conversion.
+        // α_{sk, x} is now ready for the Shenoy-Kumaresan conversion; however, note that our
+        // α_{sk, x} here is not a centered reduction, so we need to apply a correction below.
         long mSkDiv2 = mSk.getValue() >>> 1;
         for (int i = 0; i < baseQSize; i++) {
+            // Set up the multiplication helpers
             MultiplyUintModOperand prodBModQElt = new MultiplyUintModOperand();
             prodBModQElt.set(prodBModQ[i], baseQ.getBase(i));
 
@@ -653,7 +661,8 @@ public class RnsTool {
             negProdBModQElt.set(baseQ.getBase(i).getValue() - prodBModQ[i], baseQ.getBase(i));
 
             for (int j = 0; j < coeffCount; j++) {
-                // convert |·|_{m_{sk}} to [·]_{m_{sk}}, then compute |FastBcov(x, B, q) - α_{sk, x} · M|_{q_i}
+                // Correcting α_sk since it represents a negative value
+                // then compute |FastBcov(x, B, q) - α_{sk, x} · M|_{q_i}
                 if (alphaSk[j] > mSkDiv2) {
                     destination[destinationPos + i * coeffCount + j] =
                         UintArithmeticSmallMod.multiplyAddUintMod(
@@ -661,7 +670,9 @@ public class RnsTool {
                             destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
                         );
                 } else {
+                    // No correction needed
                     // directly compute |FastBcov(x, B, q) - α_{sk, x} · M|_{q_i}
+                    // It is not necessary for the negation to be reduced modulo the small prime
                     destination[destinationPos + i * coeffCount + j] = UintArithmeticSmallMod.multiplyAddUintMod(
                         alphaSk[j], negProdBModQElt, destination[destinationPos + i * coeffCount + j], baseQ.getBase(i)
                     );
@@ -671,317 +682,234 @@ public class RnsTool {
     }
 
     /**
-     * 输入是一个 polyIter, 长度 size * k * N, 函数处理的是一个 RnsIter, 用 startIndex 表示处理的是哪一个 RnsIter
+     * Divides and round the last q_k.
+     * <p>The input is (ct mod q_1, ct mod q_2, ..., ct mod q_k).</p>
+     * <p>The output is (ct mod q_1, ct mod q_2, ..., ct mod q_{k - 1}), but (ct mod q_k) is not removed.</p>
      *
-     * @param polyIter
-     * @param polyIterCoeffCount
-     * @param polyCoeffModulusSize
-     * @param startIndex
+     * @param poly ciphertext.
+     * @param pos  start index of the ciphertext.
+     * @param n    coefficient count of ciphertext.
+     * @param k    coefficient modulus size of ciphertext.
      */
-    public void divideAndRoundQLastInplace(long[] polyIter, int polyIterCoeffCount, int polyCoeffModulusSize, int startIndex) {
-
-        assert polyIterCoeffCount == coeffCount;
-        assert polyCoeffModulusSize == baseQ.getSize();
+    public void divideAndRoundQLastInplace(long[] poly, int pos, int n, int k) {
+        assert n == coeffCount;
+        assert k == baseQ.getSize();
 
         int baseQSize = baseQ.getSize();
-        // 注意起点的计算
-        int lastInputIndex = startIndex + (baseQSize - 1) * coeffCount;
+        // the position of (ct mod q_k)
+        int lastInputIndex = pos + (baseQSize - 1) * n;
 
-        // Add (qi-1)/2 to change from flooring to rounding
+        // add (q_k - 1) / 2 to (ct mod q_k) to change from flooring to rounding
         Modulus lastModulus = baseQ.getBase(baseQSize - 1);
         long half = lastModulus.getValue() >>> 1;
-        // 注意这里的函数签名，利用 startIndex 避免 new array
-        // 这里本质上是在处理 lastInput
         PolyArithmeticSmallMod.addPolyScalarCoeffMod(
-            polyIter,
-            lastInputIndex,
-            coeffCount,
-            half,
-            lastModulus,
-            polyIter,
-            lastInputIndex);
-
+            poly, lastInputIndex, coeffCount, half, lastModulus, poly, lastInputIndex
+        );
         for (int i = 0; i < baseQSize - 1; i++) {
             long[] temp = new long[coeffCount];
-
-            // (ct mod qk) mod qi
-            PolyArithmeticSmallMod.moduloPolyCoeff(polyIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
-
+            // (ct mod q_k) mod q_i
+            PolyArithmeticSmallMod.moduloPolyCoeff(poly, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
             // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
             long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
             PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
-
-            // (ct mod qi) - (ct mod qk) mod qi
-            // [i * N, (i+1) * N) is current ct
-            // 注意起点的计算
-            PolyArithmeticSmallMod.subPolyCoeffMod(polyIter, startIndex + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), polyIter, startIndex + i * coeffCount);
-
-            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-            // [i * N, (i+1) * N) is current ct
-            // 注意起点的计算
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(polyIter, startIndex + i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), polyIter, startIndex + i * coeffCount);
+            // (ct mod q_i) - (ct mod q_k) mod q_i, where (ct mod q_i) is in [i * N, (i + 1) * N)
+            PolyArithmeticSmallMod.subPolyCoeffMod(
+                poly, pos + i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), poly, pos + i * coeffCount
+            );
+            // (ct mod q_i) = q_k^(-1) * ((ct mod q_i) - (ct mod q_k)) mod q_i,
+            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
+                poly, pos + i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), poly, pos + i * coeffCount
+            );
         }
-    }
-
-
-    public void divideAndRoundQLastInplace(RnsIter input) {
-
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert input.getRnsBaseSize() == baseQ.getSize();
-
-        int baseQSize = baseQ.getSize();
-//        long[] lastInput = input.getCoeffIter(baseQSize - 1);
-        int lastInputIndex = (baseQSize - 1) * coeffCount;
-
-        // Add (qi-1)/2 to change from flooring to rounding
-        Modulus lastModulus = baseQ.getBase(baseQSize - 1);
-        long half = lastModulus.getValue() >>> 1;
-        // 注意这里的函数签名，利用 startIndex 避免 new array
-        // 这里本质上是在处理 lastInput
-        PolyArithmeticSmallMod.addPolyScalarCoeffMod(input.coeffIter, lastInputIndex, coeffCount, half, lastModulus, input.coeffIter, lastInputIndex);
-
-        for (int i = 0; i < baseQSize - 1; i++) {
-            long[] temp = new long[coeffCount];
-
-            // (ct mod qk) mod qi
-            PolyArithmeticSmallMod.moduloPolyCoeff(input.coeffIter, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
-
-            // Subtract rounding correction here; the negative sign will turn into a plus in the next subtraction
-            long halfMod = UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-            PolyArithmeticSmallMod.subPolyScalarCoeffMod(temp, coeffCount, halfMod, baseQ.getBase(i), temp);
-
-            // (ct mod qi) - (ct mod qk) mod qi
-            // [i * N, (i+1) * N) is current ct
-            PolyArithmeticSmallMod.subPolyCoeffMod(input.coeffIter, i * coeffCount, temp, 0, coeffCount, baseQ.getBase(i), input.coeffIter, i * coeffCount);
-
-            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-            // [i * N, (i+1) * N) is current ct
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(input.coeffIter, i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), input.coeffIter, i * coeffCount);
-        }
-
     }
 
     /**
-     * compute round(poly * q'/q)
-     * 输入是一个 polyIter: size * k * N , 这个 function 处理其中的一个 RnsIter, startIndex 指定哪一个RnsIter
+     * Divides and round the last q_k, where ct is in NTT form.
+     * <p>The input is (ct mod q_1, ct mod q_2, ..., ct mod q_k) in NTT form.</p>
+     * <p>The output is (ct mod q_1, ct mod q_2, ..., ct mod q_{k - 1}) in NTT form, but (ct mod q_k) is not removed.</p>
      *
-     * @param polyIter                 poly iter.
-     * @param polyIterCoeffCount       coeff count,
-     * @param polyIterCoeffModulusSize coeff modulus size.
-     * @param startIndex               start index.
-     * @param rnsNttTables             NTT tables.
+     * @param poly         ciphertext.
+     * @param pos          start index of ciphertext.
+     * @param n            coefficient count of ciphertext.
+     * @param k            coefficient modulus size of ciphertext.
+     * @param rnsNttTables NTT tables.
      */
-    public void divideAndRoundQLastNttInplace(long[] polyIter, int polyIterCoeffCount, int polyIterCoeffModulusSize, int startIndex, NttTables[] rnsNttTables) {
-        assert polyIter != null;
-        assert polyIterCoeffCount == coeffCount;
-        // todo: need this check and the in-parameter?
-        assert polyIterCoeffModulusSize == rnsNttTables.length;
-        assert rnsNttTables != null;
+    public void divideAndRoundQLastNttInplace(long[] poly, int pos, int n, int k, NttTables[] rnsNttTables) {
+        assert poly != null;
+        assert n == coeffCount;
+        assert k == rnsNttTables.length;
+
         int baseQSize = baseQ.getSize();
-        // 注意起点, poly_{start_index} mod q_k
-        int lastInputIndex = startIndex + (baseQSize - 1) * coeffCount;
-        // convert to non-NTT form, modulus switching operation needs the ciphertext be in coefficient value
-        NttTool.inverseNttNegacyclicHarvey(polyIter, lastInputIndex, rnsNttTables[baseQSize - 1]);
-        // Add (qk-1)/2 to change from flooring to rounding
+        // the position of (ct mod q_k)
+        int lastInputIndex = pos + (baseQSize - 1) * coeffCount;
+
+        // convert to non-NTT form, modulus switching operation needs the ciphertext be in coefficient form
+        NttTool.inverseNttNegacyclicHarvey(poly, lastInputIndex, rnsNttTables[baseQSize - 1]);
+
+        // add (q_k - 1) / 2 to change from flooring to rounding
         Modulus lastModulus = baseQ.getBase(baseQSize - 1);
         long half = lastModulus.getValue() >>> 1;
-        // c + (qk - 1)/2
-        PolyArithmeticSmallMod.addPolyScalarCoeffMod(polyIter, lastInputIndex, coeffCount, half, lastModulus, polyIter, lastInputIndex);
-        for (int i = 0; i < baseQSize - 1; i++) {
-            long[] temp = new long[coeffCount];
-            if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                PolyArithmeticSmallMod.moduloPolyCoeff(
-                    polyIter,
-                    lastInputIndex,
-                    coeffCount,
-                    baseQ.getBase(i),
-                    temp,
-                    0
-                );
-            } else {
-                System.arraycopy(polyIter, lastInputIndex, temp, 0, coeffCount);
-            }
-            // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
-            long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
-            for (int j = 0; j < coeffCount; j++) {
-                temp[j] += negHalfMod;
-            }
-            long qiLazy;
-            if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
-                // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
-                // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
-                qiLazy = baseQ.getBase(i).getValue() << 2;
-                // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
-            } else {
-                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perform one reduction
-                // from [0, 4*qi) to [0, 2*qi) after ntt.
-                qiLazy = baseQ.getBase(i).getValue() << 1;
-                // temp 就是 单个 CoeffIter， 直接调用
-                NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
-                // 对 temp 做第一次 reduce
-                for (int j = 0; j < coeffCount; j++) {
-                    // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
-                    // = 0 时, temp[j] 不变
-                    // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
-                    temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
-                }
-            }
-            // Lazy subtraction again, results in [0, 2*qi_lazy),
-            // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
-            for (int j = 0; j < coeffCount; j++) {
-                polyIter[startIndex + i * coeffCount + j] += (qiLazy - temp[j]);
-            }
-            // qk^(-1) * ct' mod qi
-            // 注意这里的函数签名
-            PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                polyIter,
-                startIndex + i * coeffCount,
-                coeffCount,
-                invQLastModQ[i],
-                baseQ.getBase(i),
-                polyIter,
-                startIndex + i * coeffCount
-            );
-        }
-    }
-
-    public void divideAndRoundQLastNttInplace(RnsIter input, NttTables[] rnsNttTables) {
-
-        assert input != null;
-        assert input.getPolyModulusDegree() == coeffCount;
-        assert rnsNttTables != null;
-
-        int baseQSize = baseQ.getSize();
-        int lastInputIndex = (baseQSize - 1) * coeffCount;
-
-        // convert to non-NTT form
-        NttTool.inverseNttNegacyclicHarvey(
-            input.coeffIter,
-            lastInputIndex,
-            rnsNttTables[baseQSize - 1]
+        PolyArithmeticSmallMod.addPolyScalarCoeffMod(
+            poly, lastInputIndex, coeffCount, half, lastModulus, poly, lastInputIndex
         );
-
-        // Add (qi-1)/2 to change from flooring to rounding
-        Modulus lastModulus = baseQ.getBase(baseQSize - 1);
-        long half = lastModulus.getValue() >>> 1;
-        // 注意这里的函数签名，利用 startIndex 避免 new array
-        // 这里本质上是在处理 lastInput
-        PolyArithmeticSmallMod.addPolyScalarCoeffMod(input.coeffIter, lastInputIndex, coeffCount, half, lastModulus, input.coeffIter, lastInputIndex);
-
         for (int i = 0; i < baseQSize - 1; i++) {
             long[] temp = new long[coeffCount];
-
+            // (ct mod q_k) mod q_i
             if (baseQ.getBase(i).getValue() < lastModulus.getValue()) {
-                PolyArithmeticSmallMod.moduloPolyCoeff(
-                    input.coeffIter,
-                    lastInputIndex,
-                    coeffCount,
-                    baseQ.getBase(i),
-                    temp,
-                    0
-                );
+                PolyArithmeticSmallMod.moduloPolyCoeff(poly, lastInputIndex, coeffCount, baseQ.getBase(i), temp, 0);
             } else {
-                System.arraycopy(input.coeffIter, lastInputIndex, temp, 0, coeffCount);
+                System.arraycopy(poly, lastInputIndex, temp, 0, coeffCount);
             }
-
-            // Lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4*qi input.
+            // lazy subtraction here. ntt_negacyclic_harvey_lazy can take 0 < x < 4 * q_i input.
             long negHalfMod = baseQ.getBase(i).getValue() - UintArithmeticSmallMod.barrettReduce64(half, baseQ.getBase(i));
             for (int j = 0; j < coeffCount; j++) {
                 temp[j] += negHalfMod;
             }
             long qiLazy;
             if (Constants.USER_MOD_BIT_COUNT_MAX <= 60) {
-                // Since SEAL uses at most 60-bit moduli, 8*qi < 2^63.
-                // This ntt_negacyclic_harvey_lazy results in [0, 4*qi).
-
+                // Since SEAL uses at most 60-bit moduli, 8 * qi < 2^63,
+                // this ntt_negacyclic_harvey_lazy results in [0, 4 * q_i).
                 qiLazy = baseQ.getBase(i).getValue() << 2;
-                // temp 就是 单个 CoeffIter， 直接调用
                 NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
             } else {
-                // 2^60 < pi < 2^62, then 4*pi < 2^64, we perfrom one reduction
-                // from [0, 4*qi) to [0, 2*qi) after ntt.
+                // 2^60 < pi < 2^62, then 4 * pi < 2^64,
+                // we perform one reduction from [0, 4 * q_i) to [0, 2 * q_i) after NTT.
                 qiLazy = baseQ.getBase(i).getValue() << 1;
-                // temp 就是 单个 CoeffIter， 直接调用
                 NttTool.nttNegacyclicHarveyLazy(temp, rnsNttTables[i]);
-
-                // 对 temp 做第一次 reduce
+                // from lazy NTT to correct result
                 for (int j = 0; j < coeffCount; j++) {
-                    // -1 = 0xFFFFFFFF..FF，等于 -1 时 temp[j] -= qiLazy
-                    // = 0 时, temp[j] 不变
-                    // 其实就是 temp[j] -= (temp[j] >= qiLazy ? qiLazy: 0)
                     temp[j] -= (qiLazy & (temp[j] >= qiLazy ? -1 : 0));
                 }
             }
-            // Lazy subtraction again, results in [0, 2*qi_lazy),
-            // The reduction [0, 2*qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
+            // Lazy subtraction again, results in [0, 2 * qi_lazy),
+            // The reduction [0, 2 * qi_lazy) -> [0, qi) is done implicitly in multiply_poly_scalar_coeffmod.
             for (int j = 0; j < coeffCount; j++) {
-                input.coeffIter[i * coeffCount + j] += (qiLazy - temp[j]);
+                poly[pos + i * coeffCount + j] += (qiLazy - temp[j]);
             }
-
-            // qk^(-1) * ((ct mod qi) - (ct mod qk)) mod qi
-            // 注意这里的函数签名
+            // q_k^(-1) * ct' mod q_i
             PolyArithmeticSmallMod.multiplyPolyScalarCoeffMod(
-                input.coeffIter,
-                i * coeffCount,
-                coeffCount,
-                invQLastModQ[i],
-                baseQ.getBase(i),
-                input.coeffIter,
-                i * coeffCount
+                poly, pos + i * coeffCount, coeffCount, invQLastModQ[i], baseQ.getBase(i), poly, pos + i * coeffCount
             );
         }
     }
 
-    public void decryptModT(long[] phase, int inN, int inK, long[] destination) {
+    /**
+     * Compute decryption mod t.
+     *
+     * @param phase       ciphertext.
+     * @param n           coefficient count of ciphertext.
+     * @param k           coefficient modulus size of ciphertext.
+     * @param destination destination.
+     */
+    public void decryptModT(long[] phase, int n, int k, long[] destination) {
         // Use exact base conversion rather than convert the base through the compose API
-        baseQToTConv.exactConvertArray(phase, inN, inK, destination);
+        baseQToTConv.exactConvertArray(phase, n, k, destination);
     }
 
+    /**
+     * Gets |(q_k)^{-1}|_t.
+     *
+     * @return |(q_k)^{-1}|_t.
+     */
     public long getInvQLastModT() {
         return invQLastModT;
     }
 
+    /**
+     * Gets RNS base converter B --> {m_sk}.
+     *
+     * @return RNS base converter B --> {m_sk}.
+     */
     public BaseConverter getBaseBToMskConv() {
         return baseBToMskConv;
     }
 
+    /**
+     * Gets m_tilde.
+     *
+     * @return m_tilde.
+     */
     public Modulus getMTilde() {
         return mTilde;
     }
 
+    /**
+     * Gets RNS base B = {p_1, ..., p_{k'}} for B = p_1 · p_2 ... · p_{k'}.
+     *
+     * @return RNS base B = {p_1, ..., p_{k'}}.
+     */
     public RnsBase getBaseB() {
         return baseB;
     }
 
+    /**
+     * Gets γ, an integer co-prime to {q_1, ..., q_k}, γ ≡ 1 (mod 2n).
+     *
+     * @return γ.
+     */
     public Modulus getGamma() {
         return gamma;
     }
 
-    public Modulus getMSk() {
+    /**
+     * Gets m_sk.
+     *
+     * @return m_sk.
+     */
+    public Modulus getMsk() {
         return mSk;
     }
 
+    /**
+     * Gets plaintext modulus t.
+     *
+     * @return plaintext modulus t.
+     */
     public Modulus getT() {
         return t;
     }
 
+    /**
+     * Gets RNS base {B_sk, m_tilde}.
+     *
+     * @return RNS base {B_sk, m_tilde}.
+     */
     public RnsBase getBaseBskMTilde() {
         return baseBskMTilde;
     }
 
+    /**
+     * Gets RNS base q = (q_1, ..., q_k) for q = q_1 · q_2 ... · q_k.
+     *
+     * @return RNS base q = (q_1, ..., q_k).
+     */
     public RnsBase getBaseQ() {
         return baseQ;
     }
 
+    /**
+     * Gets RNS base B_sk = {B, m_sk}.
+     *
+     * @return RNS base B_sk.
+     */
     public RnsBase getBaseBsk() {
         return baseBsk;
     }
 
+    /**
+     * Gets |q_k^{-1}|_{q_1}, |q_k^{-1}|_{q_2}, ..., |q_k^{-1}|_{q_{k-1}}.
+     *
+     * @return |q_k^{-1}|_{q_1}, |q_k^{-1}|_{q_2}, ..., |q_k^{-1}|_{q_{k-1}}.
+     */
     public MultiplyUintModOperand[] getInvQLastModQ() {
         return invQLastModQ;
     }
 
+    /**
+     * Gets NTT tables for RNS base {B, m_sk}.
+     *
+     * @return NTT tables for RNS base {B, m_sk}.
+     */
     public NttTables[] getBaseBskNttTables() {
         return baseBskNttTables;
     }

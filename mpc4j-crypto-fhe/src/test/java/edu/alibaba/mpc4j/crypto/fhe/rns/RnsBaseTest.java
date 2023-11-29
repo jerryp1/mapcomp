@@ -11,13 +11,13 @@ import java.util.Arrays;
 /**
  * RnsBase Test.
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/17
  */
 public class RnsBaseTest {
 
     @Test
-    public void create() {
+    public void testCreate() {
         // throw exception
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0}));
         Assert.assertThrows(IllegalArgumentException.class, () -> new RnsBase(new long[]{0, 3}));
@@ -32,7 +32,7 @@ public class RnsBaseTest {
     }
 
     @Test
-    public void arrayAccess() {
+    public void testArrayAccess() {
         RnsBase rnsBase = new RnsBase(new long[]{2});
         Assert.assertEquals(1, rnsBase.getSize());
         Assert.assertEquals(new Modulus(2), rnsBase.getBase(0));
@@ -50,7 +50,7 @@ public class RnsBaseTest {
 
 
     @Test
-    public void copy() {
+    public void testCopy() {
         RnsBase rnsBase = new RnsBase(new long[]{3, 4});
         RnsBase rnsBase1 = new RnsBase(rnsBase);
         Assert.assertEquals(rnsBase.getSize(), rnsBase1.getSize());
@@ -63,7 +63,7 @@ public class RnsBaseTest {
     }
 
     @Test
-    public void contains() {
+    public void testContains() {
         RnsBase rnsBase = new RnsBase(new long[]{2, 3, 5, 13});
         Assert.assertTrue(rnsBase.contains(2));
         Assert.assertTrue(rnsBase.contains(3));
@@ -76,7 +76,7 @@ public class RnsBaseTest {
     }
 
     @Test
-    public void isSubBaseOf() {
+    public void testIsSubBaseOf() {
         RnsBase base = new RnsBase(new long[]{2});
         RnsBase base2 = new RnsBase(new long[]{2});
         Assert.assertTrue(base.isSubBaseOf(base2));
@@ -108,7 +108,7 @@ public class RnsBaseTest {
 
 
     @Test
-    public void extend() {
+    public void testExtend() {
         RnsBase base = new RnsBase(new long[]{3});
         RnsBase base2 = base.extend(5);
         Assert.assertEquals(2, base2.getSize());
@@ -142,7 +142,7 @@ public class RnsBaseTest {
 
 
     @Test
-    public void drop() {
+    public void testDrop() {
         RnsBase base = new RnsBase(new long[]{3, 5, 7, 11});
 
         RnsBase base2 = base.drop();
@@ -171,59 +171,39 @@ public class RnsBaseTest {
         Assert.assertThrows(RuntimeException.class, () -> base4.drop(7).drop(11).drop(3));
     }
 
-
-    private void rnsTest1(RnsBase base, long[] in, long[] out) {
-        long[] inCopy = Arrays.copyOf(in, in.length);
-        base.decompose(inCopy);
-        Assert.assertArrayEquals(inCopy, out);
-
-        base.compose(inCopy);
-        Assert.assertArrayEquals(inCopy, in);
-    }
-
-    private void rnsTest2(RnsBase base, int count, long[] in, long[] out) {
-        long[] inCopy = Arrays.copyOf(in, in.length);
-        base.decomposeArray(inCopy, count);
-        Assert.assertArrayEquals(inCopy, out);
-
-        base.composeArray(inCopy, count);
-        Assert.assertArrayEquals(inCopy, in);
-    }
-
-
     @Test
-    public void composeDecomposeArray() {
+    public void testComposeDecomposeArray() {
         {
             RnsBase base = new RnsBase(new long[]{2});
-            rnsTest2(base, 1, new long[]{0}, new long[]{0});
-            rnsTest2(base, 1, new long[]{1}, new long[]{1});
+            testRns2(base, 1, new long[]{0}, new long[]{0});
+            testRns2(base, 1, new long[]{1}, new long[]{1});
         }
 
         {
             RnsBase base = new RnsBase(new long[]{5});
-            rnsTest2(base, 3, new long[]{0, 1, 2}, new long[]{0, 1, 2});
+            testRns2(base, 3, new long[]{0, 1, 2}, new long[]{0, 1, 2});
         }
 
         {
             RnsBase base = new RnsBase(new long[]{3, 5});
-            rnsTest2(base, 1, new long[]{0, 0}, new long[]{0, 0});
-            rnsTest2(base, 1, new long[]{2, 0}, new long[]{2, 2});
-            rnsTest2(base, 1, new long[]{7, 0}, new long[]{1, 2});
+            testRns2(base, 1, new long[]{0, 0}, new long[]{0, 0});
+            testRns2(base, 1, new long[]{2, 0}, new long[]{2, 2});
+            testRns2(base, 1, new long[]{7, 0}, new long[]{1, 2});
 
-            rnsTest2(base, 2, new long[]{0, 0, 0, 0}, new long[]{0, 0, 0, 0});
-            rnsTest2(base, 2, new long[]{1, 0, 2, 0}, new long[]{1, 2, 1, 2});
-            rnsTest2(base, 2, new long[]{7, 0, 8, 0}, new long[]{1, 2, 2, 3});
+            testRns2(base, 2, new long[]{0, 0, 0, 0}, new long[]{0, 0, 0, 0});
+            testRns2(base, 2, new long[]{1, 0, 2, 0}, new long[]{1, 2, 1, 2});
+            testRns2(base, 2, new long[]{7, 0, 8, 0}, new long[]{1, 2, 2, 3});
         }
 
         {
             RnsBase base = new RnsBase(new long[]{3, 5, 7});
-            rnsTest2(base, 1, new long[]{0, 0, 0}, new long[]{0, 0, 0});
-            rnsTest2(base, 1, new long[]{2, 0, 0}, new long[]{2, 2, 2});
-            rnsTest2(base, 1, new long[]{7, 0, 0}, new long[]{1, 2, 0});
-            rnsTest2(base, 2, new long[]{0, 0, 0, 0, 0, 0}, new long[]{0, 0, 0, 0, 0, 0});
-            rnsTest2(base, 2, new long[]{1, 0, 0, 2, 0, 0}, new long[]{1, 2, 1, 2, 1, 2});
-            rnsTest2(base, 2, new long[]{7, 0, 0, 8, 0, 0}, new long[]{1, 2, 2, 3, 0, 1});
-            rnsTest2(base, 3, new long[]{7, 0, 0, 8, 0, 0, 9, 0, 0}, new long[]{1, 2, 0, 2, 3, 4, 0, 1, 2});
+            testRns2(base, 1, new long[]{0, 0, 0}, new long[]{0, 0, 0});
+            testRns2(base, 1, new long[]{2, 0, 0}, new long[]{2, 2, 2});
+            testRns2(base, 1, new long[]{7, 0, 0}, new long[]{1, 2, 0});
+            testRns2(base, 2, new long[]{0, 0, 0, 0, 0, 0}, new long[]{0, 0, 0, 0, 0, 0});
+            testRns2(base, 2, new long[]{1, 0, 0, 2, 0, 0}, new long[]{1, 2, 1, 2, 1, 2});
+            testRns2(base, 2, new long[]{7, 0, 0, 8, 0, 0}, new long[]{1, 2, 2, 3, 0, 1});
+            testRns2(base, 3, new long[]{7, 0, 0, 8, 0, 0, 9, 0, 0}, new long[]{1, 2, 0, 2, 3, 4, 0, 1, 2});
         }
 
         {
@@ -239,7 +219,7 @@ public class RnsBaseTest {
                 {0xEEEEEEEEEEL, 0xFFFFFFFFFFL},
             };
             RnsBase base = new RnsBase(primes);
-            rnsTest2(base, 3, inValues, new long[]{
+            testRns2(base, 3, inValues, new long[]{
                 UintArithmeticSmallMod.moduloUint(inValuesT[0], 2, primes[0]),
                 UintArithmeticSmallMod.moduloUint(inValuesT[1], 2, primes[0]),
                 UintArithmeticSmallMod.moduloUint(inValuesT[2], 2, primes[0]),
@@ -257,7 +237,7 @@ public class RnsBaseTest {
                 0xCCCCCCCCCCL, 0xDDDDDDDDDDL,
                 0xEEEEEEEEEEL, 0xFFFFFFFFFFL};
             RnsBase base = new RnsBase(primes);
-            rnsTest2(base, 3, inValues, new long[]{
+            testRns2(base, 3, inValues, new long[]{
                 UintArithmeticSmallMod.moduloUint(inValues, 0, 2, primes[0]),
                 UintArithmeticSmallMod.moduloUint(inValues, 2, 2, primes[0]),
                 UintArithmeticSmallMod.moduloUint(inValues, 4, 2, primes[0]),
@@ -267,64 +247,80 @@ public class RnsBaseTest {
                 UintArithmeticSmallMod.moduloUint(inValues, 4, 2, primes[1])
             });
         }
-
-
     }
 
     @Test
-    public void composeDecompose() {
+    public void testComposeDecompose() {
         RnsBase base = new RnsBase(new long[]{2});
-        rnsTest1(base, new long[]{0}, new long[]{0});
-        rnsTest1(base, new long[]{1}, new long[]{1});
+        testRns1(base, new long[]{0}, new long[]{0});
+        testRns1(base, new long[]{1}, new long[]{1});
 
         base = new RnsBase(new long[]{5});
-        rnsTest1(base, new long[]{0}, new long[]{0});
-        rnsTest1(base, new long[]{1}, new long[]{1});
-        rnsTest1(base, new long[]{2}, new long[]{2});
-        rnsTest1(base, new long[]{3}, new long[]{3});
-        rnsTest1(base, new long[]{4}, new long[]{4});
+        testRns1(base, new long[]{0}, new long[]{0});
+        testRns1(base, new long[]{1}, new long[]{1});
+        testRns1(base, new long[]{2}, new long[]{2});
+        testRns1(base, new long[]{3}, new long[]{3});
+        testRns1(base, new long[]{4}, new long[]{4});
 
         base = new RnsBase(new long[]{3, 5});
-        rnsTest1(base, new long[]{0, 0}, new long[]{0, 0});
-        rnsTest1(base, new long[]{1, 0}, new long[]{1, 1});
-        rnsTest1(base, new long[]{2, 0}, new long[]{2, 2});
-        rnsTest1(base, new long[]{3, 0}, new long[]{0, 3});
-        rnsTest1(base, new long[]{4, 0}, new long[]{1, 4});
-        rnsTest1(base, new long[]{5, 0}, new long[]{2, 0});
-        rnsTest1(base, new long[]{8, 0}, new long[]{2, 3});
-        rnsTest1(base, new long[]{12, 0}, new long[]{0, 2});
-        rnsTest1(base, new long[]{14, 0}, new long[]{2, 4});
+        testRns1(base, new long[]{0, 0}, new long[]{0, 0});
+        testRns1(base, new long[]{1, 0}, new long[]{1, 1});
+        testRns1(base, new long[]{2, 0}, new long[]{2, 2});
+        testRns1(base, new long[]{3, 0}, new long[]{0, 3});
+        testRns1(base, new long[]{4, 0}, new long[]{1, 4});
+        testRns1(base, new long[]{5, 0}, new long[]{2, 0});
+        testRns1(base, new long[]{8, 0}, new long[]{2, 3});
+        testRns1(base, new long[]{12, 0}, new long[]{0, 2});
+        testRns1(base, new long[]{14, 0}, new long[]{2, 4});
 
         base = new RnsBase(new long[]{2, 3, 5});
-        rnsTest1(base, new long[]{0, 0, 0}, new long[]{0, 0, 0});
-        rnsTest1(base, new long[]{1, 0, 0}, new long[]{1, 1, 1});
-        rnsTest1(base, new long[]{2, 0, 0}, new long[]{0, 2, 2});
-        rnsTest1(base, new long[]{3, 0, 0}, new long[]{1, 0, 3});
-        rnsTest1(base, new long[]{4, 0, 0}, new long[]{0, 1, 4});
-        rnsTest1(base, new long[]{5, 0, 0}, new long[]{1, 2, 0});
-        rnsTest1(base, new long[]{10, 0, 0}, new long[]{0, 1, 0});
-        rnsTest1(base, new long[]{11, 0, 0}, new long[]{1, 2, 1});
-        rnsTest1(base, new long[]{16, 0, 0}, new long[]{0, 1, 1});
-        rnsTest1(base, new long[]{27, 0, 0}, new long[]{1, 0, 2});
-        rnsTest1(base, new long[]{29, 0, 0}, new long[]{1, 2, 4});
+        testRns1(base, new long[]{0, 0, 0}, new long[]{0, 0, 0});
+        testRns1(base, new long[]{1, 0, 0}, new long[]{1, 1, 1});
+        testRns1(base, new long[]{2, 0, 0}, new long[]{0, 2, 2});
+        testRns1(base, new long[]{3, 0, 0}, new long[]{1, 0, 3});
+        testRns1(base, new long[]{4, 0, 0}, new long[]{0, 1, 4});
+        testRns1(base, new long[]{5, 0, 0}, new long[]{1, 2, 0});
+        testRns1(base, new long[]{10, 0, 0}, new long[]{0, 1, 0});
+        testRns1(base, new long[]{11, 0, 0}, new long[]{1, 2, 1});
+        testRns1(base, new long[]{16, 0, 0}, new long[]{0, 1, 1});
+        testRns1(base, new long[]{27, 0, 0}, new long[]{1, 0, 2});
+        testRns1(base, new long[]{29, 0, 0}, new long[]{1, 2, 4});
 
         base = new RnsBase(new long[]{13, 37, 53, 97});
-        rnsTest1(base, new long[]{0, 0, 0, 0}, new long[]{0, 0, 0, 0});
-        rnsTest1(base, new long[]{1, 0, 0, 0}, new long[]{1, 1, 1, 1});
-        rnsTest1(base, new long[]{2, 0, 0, 0}, new long[]{2, 2, 2, 2});
-        rnsTest1(base, new long[]{12, 0, 0, 0}, new long[]{12, 12, 12, 12});
-        rnsTest1(base, new long[]{321, 0, 0, 0}, new long[]{9, 25, 3, 30});
+        testRns1(base, new long[]{0, 0, 0, 0}, new long[]{0, 0, 0, 0});
+        testRns1(base, new long[]{1, 0, 0, 0}, new long[]{1, 1, 1, 1});
+        testRns1(base, new long[]{2, 0, 0, 0}, new long[]{2, 2, 2, 2});
+        testRns1(base, new long[]{12, 0, 0, 0}, new long[]{12, 12, 12, 12});
+        testRns1(base, new long[]{321, 0, 0, 0}, new long[]{9, 25, 3, 30});
 
         // large number
         Modulus[] primes = Numth.getPrimes(1024 * 2, 60, 4);
         long[] inValues = new long[]{0xAAAAAAAAAAAL, 0xBBBBBBBBBBL, 0xCCCCCCCCCCL, 0xDDDDDDDDDDL};
         RnsBase base1 = new RnsBase(primes);
 
-        rnsTest1(base1, inValues, new long[]{
+        testRns1(base1, inValues, new long[]{
             UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[0]),
             UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[1]),
             UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[2]),
             UintArithmeticSmallMod.moduloUint(inValues, inValues.length, primes[3])
         });
+    }
+
+    private void testRns1(RnsBase base, long[] in, long[] out) {
+        long[] inCopy = Arrays.copyOf(in, in.length);
+        base.decompose(inCopy);
+        Assert.assertArrayEquals(inCopy, out);
+
+        base.compose(inCopy);
+        Assert.assertArrayEquals(inCopy, in);
+    }
+
+    private void testRns2(RnsBase base, int count, long[] in, long[] out) {
+        long[] inCopy = Arrays.copyOf(in, in.length);
+        base.decomposeArray(inCopy, count);
+        Assert.assertArrayEquals(inCopy, out);
+
+        base.composeArray(inCopy, count);
+        Assert.assertArrayEquals(inCopy, in);
     }
 }

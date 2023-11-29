@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.zq.Common;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
@@ -22,7 +21,7 @@ import java.util.stream.IntStream;
  * The implementation is from https://github.com/microsoft/SEAL/blob/main/native/src/seal/util/rns.h#L129
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/19
  */
 public class BaseConverter {

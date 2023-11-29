@@ -387,15 +387,15 @@ public class Encryptor {
                         // temp in ciphertext RnsBase
                         rnsTool.divideAndRoundQLastNttInplace(
                             temp.getData(),
+                            temp.indexAt(i),
                             temp.getPolyModulusDegree(),
                             temp.getCoeffModulusSize(),
-                            temp.indexAt(i),
                             prevContextData.getSmallNttTables()
                         );
                     } else if (parms.getScheme() != SchemeType.BGV) {
                         // bfv switch-to-next
                         rnsTool.divideAndRoundQLastInplace(
-                            temp.getData(), temp.getPolyModulusDegree(), temp.getCoeffModulusSize(), temp.indexAt(i)
+                            temp.getData(), temp.indexAt(i), temp.getPolyModulusDegree(), temp.getCoeffModulusSize()
                         );
                     } else {
                         // bgv switch-to-next

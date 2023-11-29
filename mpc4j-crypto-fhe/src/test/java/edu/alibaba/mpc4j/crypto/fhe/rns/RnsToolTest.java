@@ -1,6 +1,6 @@
 package edu.alibaba.mpc4j.crypto.fhe.rns;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
+import edu.alibaba.mpc4j.crypto.fhe.iterator.PolyIterator;
 import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIterator;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.ntt.NttTables;
@@ -13,15 +13,18 @@ import org.junit.Test;
 /**
  * Rns Tool Test.
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/8/22
  */
+@SuppressWarnings("PointlessArithmeticExpression")
 public class RnsToolTest {
-
+    /**
+     * max number of loops
+     */
     private static final int MAX_LOOP_NUM = 10;
 
     @Test
-    public void initialize() {
+    public void testInitialize() {
         int polyModulusDegree = 32;
         int coeffBaseCount = 4;
         int primeBitCount = 20;
@@ -35,7 +38,7 @@ public class RnsToolTest {
     }
 
     @Test
-    public void exactScaleAndRound() {
+    public void testExactScaleAndRound() {
         // This function computes [round(t/q * |input|_q)]_t exactly using the gamma-correction technique.
         for (int i = 0; i < MAX_LOOP_NUM; i++) {
             int coeffCount = 2;
@@ -78,7 +81,7 @@ public class RnsToolTest {
 
 
     @Test
-    public void fastBConvMTilde() {
+    public void testFastBConvMTilde() {
         Modulus plainT = new Modulus(0);
         RnsTool rnsTool;
         {
@@ -144,7 +147,7 @@ public class RnsToolTest {
     }
 
     @Test
-    public void smMrq() {
+    public void testSmMrq() {
         // This function assumes the input is in base Bsk U {m_tilde}. If the input is
         // |[c*m_tilde]_q + qu|_m for m in Bsk U {m_tilde}, then the output is c' in Bsk
         // such that c' = c mod q. In other words, this function cancels the extra multiples
@@ -262,7 +265,7 @@ public class RnsToolTest {
     }
 
     @Test
-    public void fastFloor() {
+    public void testFastFloor() {
         // This function assumes the input is in base q U Bsk. It outputs an approximation of
         // the value divided by q floored in base Bsk. The approximation has absolute value up
         // to k-1, where k is the number of primes in the base q.
@@ -363,7 +366,7 @@ public class RnsToolTest {
     }
 
     @Test
-    public void fastBConvSk() {
+    public void testFastBConvSk() {
         Modulus plainT = new Modulus(2);
         RnsTool rnsTool;
         {
@@ -420,17 +423,16 @@ public class RnsToolTest {
     }
 
     @Test
-    public void divideAndRoundQLastInplace() {
+    public void testDivideAndRoundQLastInplace() {
         RnsTool rnsTool;
         {
-            int polyModulusDegree = 2;
+            int n = 2;
             Modulus plainT = new Modulus(0);
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{13, 7}), plainT);
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{13, 7}), plainT);
+            int k = rnsTool.getBaseQ().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            long[] in = PolyIterator.allocateZeroPoly(1, n, k);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(0, in[0]);
             Assert.assertEquals(0, in[1]);
 
@@ -439,7 +441,7 @@ public class RnsToolTest {
             in[1] = 2;
             in[2] = 1;
             in[3] = 2;
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(0, in[0]);
             Assert.assertEquals(0, in[1]);
 
@@ -448,7 +450,7 @@ public class RnsToolTest {
             in[1] = 11;
             in[2] = 4;
             in[3] = 3;
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(4, in[0]);
             Assert.assertEquals(3, in[1]);
 
@@ -457,19 +459,19 @@ public class RnsToolTest {
             in[1] = 2;
             in[2] = 5;
             in[3] = 1;
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(3, in[0]);
             Assert.assertEquals(2, in[1]);
         }
+
         {
-            int polyModulusDegree = 2;
+            int n = 2;
             Modulus plainT = new Modulus(0);
-            rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{3, 5, 7, 11}), plainT);
+            rnsTool = new RnsTool(n, new RnsBase(new long[]{3, 5, 7, 11}), plainT);
+            int k = rnsTool.getBaseQ().getSize();
 
-            long[] in = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-            RnsIter inIter = new RnsIter(in, polyModulusDegree);
-
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            long[] in = PolyIterator.allocateZeroPoly(1, n, k);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(0, in[0]);
             Assert.assertEquals(0, in[1]);
             Assert.assertEquals(0, in[2]);
@@ -486,7 +488,7 @@ public class RnsToolTest {
             in[5] = 2;
             in[6] = 1;
             in[7] = 2;
-            rnsTool.divideAndRoundQLastInplace(inIter);
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertEquals(0, in[0]);
             Assert.assertEquals(0, in[1]);
             Assert.assertEquals(0, in[2]);
@@ -503,8 +505,7 @@ public class RnsToolTest {
             in[5] = 0;
             in[6] = 5;
             in[7] = 4;
-            rnsTool.divideAndRoundQLastInplace(inIter);
-
+            rnsTool.divideAndRoundQLastInplace(in, 0, n, k);
             Assert.assertTrue((3 + 2 - in[0]) % 3 <= 1);
             Assert.assertTrue((3 + 0 - in[1]) % 3 <= 1);
             Assert.assertTrue((5 + 0 - in[2]) % 5 <= 1);
@@ -515,27 +516,24 @@ public class RnsToolTest {
     }
 
     @Test
-    public void divideAndRoundQLastNttInplace() {
-
+    public void testDivideAndRoundQLastNttInplace() {
         // This function approximately divides the input values by the last prime in the base q.
         // Input is in base q; the last RNS component becomes invalid.
         // note that the last RNS component becomes invalid. So in the following test,
         // we drop the last RNS component.
-
         RnsTool rnsTool;
 
-        int polyModulusDegree = 2;
+        int n = 2;
         NttTables[] nttTables = new NttTables[]{
-                new NttTables(1, new Modulus(53)),
-                new NttTables(1, new Modulus(13)),
+            new NttTables(1, new Modulus(53)),
+            new NttTables(1, new Modulus(13)),
         };
         Modulus plainT = new Modulus(0);
-        // no throw
-        rnsTool = new RnsTool(polyModulusDegree, new RnsBase(new long[]{53, 13}), plainT);
+        rnsTool = new RnsTool(n, new RnsBase(new long[]{53, 13}), plainT);
+        int k = rnsTool.getBaseQ().getSize();
 
-        long[] in = new long[polyModulusDegree * rnsTool.getBaseQ().getSize()];
-        RnsIter inIter = new RnsIter(in, polyModulusDegree);
-        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        long[] in = PolyIterator.allocateZeroPoly(1, n, k);
+        rnsTool.divideAndRoundQLastNttInplace(in, 0, n, k, nttTables);
         Assert.assertEquals(0, in[0]);
         Assert.assertEquals(0, in[1]);
 
@@ -545,10 +543,9 @@ public class RnsToolTest {
         in[2] = 1;
         in[3] = 2;
         NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
-
+        NttTool.nttNegacyclicHarvey(in, n, nttTables[1]);
         // We expect to get a zero output also in this case
-        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        rnsTool.divideAndRoundQLastNttInplace(in, 0, n, k, nttTables);
         NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
         Assert.assertEquals(0, in[0]);
         Assert.assertEquals(0, in[1]);
@@ -559,13 +556,14 @@ public class RnsToolTest {
         in[2] = 4;
         in[3] = 12;
         NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
-
+        NttTool.nttNegacyclicHarvey(in, n, nttTables[1]);
         // We expect to get a zero output also in this case
-        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        rnsTool.divideAndRoundQLastNttInplace(in, 0, n, k, nttTables);
         NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
-        Assert.assertTrue((53 + 1 - in[0]) % 53 <= 1); // in[0] = 0, round(4/13) = 0
-        Assert.assertTrue((53 + 2 - in[1]) % 53 <= 1); // in[1] = 1, round(12/13) = 1
+        // in[0] = 0, round(4/13) = 0
+        Assert.assertTrue((53 + 1 - in[0]) % 53 <= 1);
+        // in[1] = 1, round(12/13) = 1
+        Assert.assertTrue((53 + 2 - in[1]) % 53 <= 1);
 
         // Input array (25, 35)
         in[0] = 25;
@@ -573,13 +571,14 @@ public class RnsToolTest {
         in[2] = 12;
         in[3] = 9;
         NttTool.nttNegacyclicHarvey(in, 0, nttTables[0]);
-        NttTool.nttNegacyclicHarvey(in, polyModulusDegree, nttTables[1]);
-
+        NttTool.nttNegacyclicHarvey(in, n, nttTables[1]);
         // We expect to get a zero output also in this case
-        rnsTool.divideAndRoundQLastNttInplace(inIter, nttTables);
+        rnsTool.divideAndRoundQLastNttInplace(in, 0, n, k, nttTables);
         NttTool.inverseNttNegacyclicHarvey(in, 0, nttTables[0]);
-        Assert.assertTrue((53 + 2 - in[0]) % 53 <= 1); // round(25/13) = 2
-        Assert.assertTrue((53 + 3 - in[1]) % 53 <= 1);// round(35/13) = 3
+        // round(25/13) = 2
+        Assert.assertTrue((53 + 2 - in[0]) % 53 <= 1);
+        // round(35/13) = 3
+        Assert.assertTrue((53 + 3 - in[1]) % 53 <= 1);
     }
 }
 

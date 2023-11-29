@@ -1,6 +1,5 @@
 package edu.alibaba.mpc4j.crypto.fhe.rq;
 
-import edu.alibaba.mpc4j.crypto.fhe.iterator.RnsIter;
 import edu.alibaba.mpc4j.crypto.fhe.modulus.Modulus;
 import edu.alibaba.mpc4j.crypto.fhe.zq.*;
 
@@ -640,30 +639,6 @@ public class PolyArithmeticSmallMod {
                 int jOffset = rOffset + j * n;
                 tempScalar.set(UintArithmeticSmallMod.barrettReduce64(scalar, currentModulus), currentModulus);
                 multiplyPolyScalarCoeffMod(poly, jOffset, n, tempScalar, modulus[j], polyR, jOffset);
-            }
-        }
-    }
-
-    /**
-     * // TODO: remove in the future.
-     *
-     * @param poly             input polly in Rns
-     * @param coeffModulusSize N
-     * @param scalar           scalar
-     * @param modulus          modulus
-     * @param result           (poly * scalar) mod mosulus
-     */
-    public static void multiplyPolyScalarCoeffMod(RnsIter poly, int coeffModulusSize, long scalar, Modulus[] modulus, RnsIter result) {
-        assert coeffModulusSize > 0;
-        assert coeffModulusSize == modulus.length;
-
-        int polyModulusDegree = poly.getPolyModulusDegree();
-        for (int i = 0; i < coeffModulusSize; i++) {
-            assert !modulus[i].isZero();
-            MultiplyUintModOperand curScalar = new MultiplyUintModOperand();
-            curScalar.set(UintArithmeticSmallMod.barrettReduce64(scalar, modulus[i]), modulus[i]);
-            for (int j = 0; j < polyModulusDegree; j++) {
-                result.coeffIter[i * polyModulusDegree + j] = UintArithmeticSmallMod.multiplyUintMod(poly.coeffIter[i * polyModulusDegree + j], curScalar, modulus[i]);
             }
         }
     }

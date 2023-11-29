@@ -583,9 +583,9 @@ public class Evaluator {
                     // 注意起点指向每一个 RnsIter
                     rnsTool.divideAndRoundQLastInplace(
                         encryptedCopy.getData(),
+                        i * encryptedCopy.getPolyModulusDegree() * encryptedCopy.getCoeffModulusSize(),
                         encryptedCopy.getPolyModulusDegree(),
-                        encryptedCopy.getCoeffModulusSize(),
-                        i * encryptedCopy.getPolyModulusDegree() * encryptedCopy.getCoeffModulusSize()
+                        encryptedCopy.getCoeffModulusSize()
                     );
                 }
                 break;
