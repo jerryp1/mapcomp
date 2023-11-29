@@ -4,11 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory;
@@ -99,6 +97,7 @@ public class SbitmapStarter {
     private int[] testDataNums;
 
     private boolean silent;
+    private String outputDir;
 
     public SbitmapStarter(Properties properties) {
         this.properties = properties;
@@ -114,7 +113,9 @@ public class SbitmapStarter {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
         String tab = "Data Num(bits)\t" + "Time(ms)\t" +
-            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num\tMix Time\tMix Triple";
+            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num\t" +
+            "GrS1Time\tGrS2Time\tGrS3Time\tGrS4Time\tGrS5Time\tAggTime\t" +
+            "GroupTripleNum\tAggTripleNum";
         printWriter.println(tab);
         // connect
         ownRpc.connect();
@@ -158,10 +159,12 @@ public class SbitmapStarter {
         silent = SbitmapMainUtils.setSilent(properties);
         // zl
         zl = SbitmapMainUtils.setZl(properties);
+        // zl
+        outputDir = SbitmapMainUtils.setOutputDir(properties);
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
-        String dataFileLength = "./dataset/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
+        String dataFileLength = "./" + outputDir + "/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
         if (receiver) {
             DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(receiverSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
@@ -185,7 +188,9 @@ public class SbitmapStarter {
 
     protected void writeInfo(PrintWriter printWriter, int num,
                              Double time,
-                             long packetNum, long payloadByteLength, long sendByteLength) {
+                             long packetNum, long payloadByteLength, long sendByteLength,
+                             long grS1Time,long grS2Time,long grS3Time,long grS4Time,long grS5Time,long aggTime,
+                             long groupTripleNum, long aggTripleNum) {
         String information = num + "\t" +
             // time
              (Objects.isNull(time) ? "N/A" : time)
@@ -195,7 +200,9 @@ public class SbitmapStarter {
             + "\t" + payloadByteLength
             // send byte length
             + "\t" + sendByteLength
-            + "\t" + TRIPLE_NUM + "\t" + MIX_TIME_AGG + "\t" + MIX_TRIPLE_AGG;
+            + "\t" + TRIPLE_NUM
+            + "\t" + grS1Time + "\t" + grS2Time + "\t"+ grS3Time + "\t"+ grS4Time + "\t"+ grS5Time + "\t"+ aggTime
+            + "\t" + groupTripleNum + "\t" + aggTripleNum;
         printWriter.println(information);
         TRIPLE_NUM = 0;
         MIX_TIME_AGG = 0;
@@ -220,7 +227,9 @@ public class SbitmapStarter {
         ptoRunner.run();
         ptoRunner.stop();
         writeInfo(printWriter, num, ptoRunner.getTime(), ptoRunner.getPacketNum(),
-            ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength()
+            ptoRunner.getPayloadByteLength(), ptoRunner.getSendByteLength(),
+            ptoRunner.getGroupStep1Time(), ptoRunner.getGroupStep2Time(), ptoRunner.getGroupStep3Time(), ptoRunner.getGroupStep4Time(), ptoRunner.getGroupStep5Time(),
+            ptoRunner.getAggTime(), ptoRunner.getGroupTripleNum(), ptoRunner.getAggTripleNum()
         );
     }
 

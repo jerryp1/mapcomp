@@ -98,35 +98,13 @@ public class SbitmapMainUtils {
         return ZlFactory.createInstance(EnvType.STANDARD, l);
     }
 
+    public static String setOutputDir(Properties properties) {
+        return  PropertiesUtils.readString(properties, "output_dir");
+    }
+
     public static GroupAggTypes setGroupAggTypes(Properties properties) {
         String groupAggTypes = PropertiesUtils.readString(properties, "group_agg_type");
         return GroupAggTypes.valueOf(groupAggTypes.toUpperCase());
-    }
-
-    /**
-     * 设置LDP列映射。
-     *
-     * @param properties 配置项。
-     * @param schema     元数据信息。
-     * @return LDP列映射。
-     */
-    public static Map<String, Boolean> setLdpColumnsMap(Properties properties, StructType schema) {
-        LOGGER.info("-----set LDP columns-----");
-        int ncols = schema.length();
-        int[] dpColumns = PropertiesUtils.readIntArray(properties, "ldp_columns");
-        Preconditions.checkArgument(dpColumns.length == ncols, "# ldp_column must match column_num");
-        Arrays.stream(dpColumns).forEach(value ->
-            Preconditions.checkArgument(
-                value == 0 || value == 1,
-                "Invalid ldp_column: %s, only support 0 or 1", value)
-        );
-
-        return IntStream.range(0, ncols)
-            .boxed()
-            .collect(Collectors.toMap(
-                schema::fieldName,
-                columnIndex -> (dpColumns[columnIndex] == 1)
-            ));
     }
 
     /**

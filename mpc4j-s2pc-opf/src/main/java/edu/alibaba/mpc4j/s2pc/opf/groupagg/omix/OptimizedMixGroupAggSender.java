@@ -87,6 +87,10 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
 
     private PrefixAggTypes aggType;
 
+    private SquareZ2Vector[] aggZ2;
+
+    private SquareZ2Vector[] bitmapShares;
+
     public OptimizedMixGroupAggSender(Rpc senderRpc, Party receiverParty, OptimizedMixGroupAggConfig config) {
         super(OptimizedMixGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
@@ -156,14 +160,21 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         }
     }
 
-    public GroupAggOut groupAggOpti(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
-        StopWatch stopWatch = new StopWatch();
+    public GroupAggOut groupAggOpti(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
         assert aggField == null;
-        setPtoInput(groupField, aggField, e);
+        setPtoInput(groupField, aggField, intersFlagE);
+        // group
+        group();
+        // agg
+        agg();
+        return null;
+    }
+
+    private void group() throws MpcAbortException {
         // gen bitmap
-        Vector<byte[]> bitmaps = genBitmap(groupField, e);
+        Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
         // osn
-        long tempTripleNum = TRIPLE_NUM;
+        groupTripleNum = TRIPLE_NUM;
         stopWatch.start();
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         stopWatch.stop();
@@ -172,41 +183,39 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         stopWatch.reset();
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
-        SquareZ2Vector[] bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
+        bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
         e = transposed[transposed.length - 1];
 
         // mul1
         stopWatch.start();
-        SquareZ2Vector[] mul1 = plainPayloadMuxReceiver.muxB(e, null, zl.getL());
+        aggZ2 = plainPayloadMuxReceiver.muxB(e, null, zl.getL());
         stopWatch.stop();
         MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        groupTripleNum = TRIPLE_NUM - tempTripleNum;
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+    }
 
+    private void agg() throws MpcAbortException {
         long tripleNum = TRIPLE_NUM;
+        aggTripleNum = TRIPLE_NUM;
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
-            tempTripleNum = TRIPLE_NUM;
-            SquareZ2Vector[] mul = z2MuxSender.mux(bitmapShares[i], mul1);
+            SquareZ2Vector[] mul = z2MuxSender.mux(bitmapShares[i], aggZ2);
+            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.stop();
-            groupTripleNum += TRIPLE_NUM - tempTripleNum;
-            groupStep3Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
             MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // prefix agg
             stopWatch.start();
-            tempTripleNum = TRIPLE_NUM;
             aggregate(mul, e);
             stopWatch.stop();
-            aggTripleNum += TRIPLE_NUM - tempTripleNum;
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
         }
         MIX_TRIPLE_AGG = TRIPLE_NUM - tripleNum;
-        return null;
+        aggTripleNum = TRIPLE_NUM - aggTripleNum;
     }
 
     private void aggregate(SquareZ2Vector[] agg, SquareZ2Vector e) throws MpcAbortException {

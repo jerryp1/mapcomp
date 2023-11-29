@@ -61,6 +61,15 @@ public class GroupAggregationPtoRunner {
 
     private Properties properties;
 
+    private long groupStep1Time;
+    private long groupStep2Time;
+    private long groupStep3Time;
+    private long groupStep4Time;
+    private long groupStep5Time;
+    private long aggTime;
+    private long groupTripleNum;
+    private long aggTripleNum;
+
     public GroupAggregationPtoRunner(GroupAggParty party, GroupAggConfig groupAggConfig, int totalRound,
                                      GroupAggInputData groupAggInputData, Properties properties) {
         this.party = party;
@@ -94,6 +103,15 @@ public class GroupAggregationPtoRunner {
             stopWatch.reset();
             LOGGER.info("Round {}: Slave Time = {}ms", round, time);
             totalTime += time;
+            // record info
+            groupStep1Time = party.getGroupStep1Time();
+            groupStep2Time = party.getGroupStep2Time();
+            groupStep3Time = party.getGroupStep3Time();
+            groupStep4Time = party.getGroupStep4Time();
+            groupStep5Time = party.getGroupStep5Time();
+            aggTime = party.getAggTime();
+            groupTripleNum = party.getGroupTripleNum();
+            aggTripleNum = party.getAggTripleNum();
         }
         totalPacketNum = slaveRpc.getSendDataPacketNum();
         totalPayloadByteLength = slaveRpc.getPayloadByteLength();
@@ -119,6 +137,38 @@ public class GroupAggregationPtoRunner {
 
     public long getSendByteLength() {
         return totalSendByteLength / totalRound;
+    }
+
+    public long getGroupStep1Time() {
+        return groupStep1Time;
+    }
+
+    public long getGroupStep2Time() {
+        return groupStep2Time;
+    }
+
+    public long getGroupStep3Time() {
+        return groupStep3Time;
+    }
+
+    public long getGroupStep4Time() {
+        return groupStep4Time;
+    }
+
+    public long getGroupStep5Time() {
+        return groupStep5Time;
+    }
+
+    public long getAggTime() {
+        return aggTime;
+    }
+
+    public long getGroupTripleNum() {
+        return groupTripleNum;
+    }
+
+    public long getAggTripleNum() {
+        return aggTripleNum;
     }
 }
 
