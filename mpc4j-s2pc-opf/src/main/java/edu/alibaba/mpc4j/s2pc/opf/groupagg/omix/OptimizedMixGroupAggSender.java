@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
@@ -36,6 +37,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import org.apache.commons.lang3.time.StopWatch;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -161,10 +163,13 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
     }
 
     public GroupAggOut groupAggOpti(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
-        assert aggField == null;
         setPtoInput(groupField, aggField, intersFlagE);
         // group
-        group();
+        if (aggField == null) {
+            group();
+        } else {
+            groupWithAgg();
+        }
         // agg
         agg();
         return null;
@@ -196,39 +201,74 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
     }
 
+    private void groupWithAgg() throws MpcAbortException {
+        // gen bitmap
+        Vector<byte[]> bitmaps = genBitmapWithAgg(groupAttr, e, aggAttr);
+        // osn
+        groupTripleNum = TRIPLE_NUM;
+        stopWatch.start();
+        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, payloadByteLen);
+        stopWatch.stop();
+        OSN_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
+        bitmapShares = Arrays.stream(transposed, 0, senderGroupNum).toArray(SquareZ2Vector[]::new);
+        e = transposed[senderGroupNum];
+        // get aggs
+        aggZ2 = new SquareZ2Vector[Long.SIZE];
+        System.arraycopy(transposed, CommonUtils.getByteLength(senderGroupNum + 1) * Byte.SIZE, aggZ2, 0, Long.SIZE);
+
+        // mul1
+        stopWatch.start();
+        aggZ2 = z2MuxSender.mux(e, aggZ2);
+        stopWatch.stop();
+        MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+    }
+
     private void agg() throws MpcAbortException {
         long tripleNum = TRIPLE_NUM;
         aggTripleNum = TRIPLE_NUM;
+        SquareZ2Vector[][] mul = new SquareZ2Vector[senderGroupNum][];
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
-            SquareZ2Vector[] mul = z2MuxSender.mux(bitmapShares[i], aggZ2);
+            mul[i] = z2MuxSender.mux(bitmapShares[i], aggZ2);
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.stop();
             MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            // prefix agg
-            stopWatch.start();
-            aggregate(mul, e);
-            stopWatch.stop();
-            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
         }
+        // prefix agg
+        stopWatch.start();
+        aggregate(mul, e);
+        stopWatch.stop();
+        aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
         MIX_TRIPLE_AGG = TRIPLE_NUM - tripleNum;
         aggTripleNum = TRIPLE_NUM - aggTripleNum;
     }
 
-    private void aggregate(SquareZ2Vector[] agg, SquareZ2Vector e) throws MpcAbortException {
+    private void aggregate(SquareZ2Vector[][] agg, SquareZ2Vector e) throws MpcAbortException {
         // agg
         maxAgg(agg, e);
     }
 
-    private void maxAgg(SquareZ2Vector[] aggField, SquareZ2Vector e) throws MpcAbortException {
+    private void maxAgg(SquareZ2Vector[][] aggField, SquareZ2Vector e) throws MpcAbortException {
+        AggTypes[] types = IntStream.range(0,senderGroupNum).mapToObj(i -> AggTypes.MAX).toArray(AggTypes[]::new);
+        SquareZ2Vector[] es = IntStream.range(0, senderGroupNum).mapToObj(i -> e).toArray(SquareZ2Vector[]::new);
 
-        SquareZ2Vector[] aggResultZ2Share = oneSideGroupSender.groupAgg(aggField, e, AggTypes.MAX, null);
+        SquareZ2Vector[][] aggResultZ2Share = oneSideGroupSender.groupAgg(aggField, es, types, null);
         // reveal
-        for (int i = 0; i < zl.getL(); i++) {
-            z2cSender.revealOther(aggResultZ2Share[i]);
+        for (int j = 0; j < senderGroupNum; j++) {
+            for (int i = 0; i < zl.getL(); i++) {
+                z2cSender.revealOther(aggResultZ2Share[j][i]);
+            }
         }
     }
 
@@ -244,6 +284,25 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
             BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
             return bytes;
+        }).collect(Collectors.toCollection(Vector::new));
+    }
+
+    /**
+     * Generate horizontal bitmaps.
+     *
+     * @param group group.
+     * @return vertical bitmaps.
+     */
+    private Vector<byte[]> genBitmapWithAgg(String[] group, SquareZ2Vector e, long[] aggAtt) {
+        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        return IntStream.range(0, group.length).mapToObj(i -> {
+            ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
+            byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
+            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
+            BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
+            buffer.put(bytes);
+            buffer.put(LongUtils.longToByteArray(aggAtt[i]));
+            return buffer.array();
         }).collect(Collectors.toCollection(Vector::new));
     }
 

@@ -11,14 +11,14 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -34,8 +34,6 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgReceiver;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -46,8 +44,6 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
  * Mix group aggregation receiver.
@@ -80,6 +76,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      * Prefix aggregation party.
      */
     private final PrefixAggParty prefixAggReceiver;
+    private final B2aParty b2aReceiver;
 //    private final Z2MuxParty z2MuxReceiver;
     /**
      * Prefix aggregation type.
@@ -104,6 +101,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
+        b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
 //        z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
 //        addMultipleSubPtos(osnReceiver);
 //        addMultipleSubPtos(plainPayloadMuxSender);
@@ -129,6 +127,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         z2cReceiver.init(maxNum);
         zlcReceiver.init(1);
         prefixAggReceiver.init(maxL, maxNum);
+        b2aReceiver.init(maxL, maxNum);
 //        z2MuxReceiver.init(maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
@@ -148,7 +147,11 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
         setPtoInput(groupField, aggField, intersFlagE);
         // group
-        group();
+        if (aggField != null) {
+            group();
+        } else {
+            groupWithSenderAgg();
+        }
         // agg
         return agg();
     }
@@ -169,6 +172,30 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         e = SquareZ2Vector.create(transposed[transposed.length - 1].getBitVector().xor(e.getBitVector()), false);
         // mul1
         aggZl = plainPayloadMuxSender.mux(e, aggAttr, 64);
+    }
+
+    private void groupWithSenderAgg() throws MpcAbortException {
+        // obtain sorting permutation
+        int[] perms = obtainPerms(groupAttr);
+        // apply perms to group and agg
+        groupAttr = GroupAggUtils.applyPermutation(groupAttr, perms);
+//        aggAttr = GroupAggUtils.applyPermutation(aggAttr, perms);
+        e = GroupAggUtils.applyPermutation(e, perms);
+        // osn
+        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(perms, payloadByteLen);
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
+        // bitmap
+        bitmapShares = Arrays.stream(transposed, 0, senderGroupNum).toArray(SquareZ2Vector[]::new);
+        // xor own share to meet permutation
+        e = SquareZ2Vector.create(transposed[senderGroupNum].getBitVector().xor(e.getBitVector()), false);
+        // get aggs
+        SquareZ2Vector[] aggZ2 = new SquareZ2Vector[Long.SIZE];
+        System.arraycopy(transposed, CommonUtils.getByteLength(senderGroupNum + 1) * Byte.SIZE, aggZ2, 0, Long.SIZE);
+        aggZl = b2aReceiver.b2a(aggZ2);
+        // mul1
+        aggZl = zlMuxReceiver.mux(e, aggZl);
     }
 
     private GroupAggOut agg() throws MpcAbortException {

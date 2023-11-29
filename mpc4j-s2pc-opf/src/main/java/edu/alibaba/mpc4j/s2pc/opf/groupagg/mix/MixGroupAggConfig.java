@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.mix;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
@@ -54,6 +56,7 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
     private final PrefixAggConfig prefixAggConfig;
 
     private final Z2MuxConfig z2MuxConfig;
+    private final B2aConfig b2aConfig;
     /**
      * Zl
      */
@@ -62,7 +65,7 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
     private MixGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
             builder.plainPayloadMuxConfig, builder.prefixAggConfig, builder.z2cConfig,
-            builder.zlcConfig, builder.z2MuxConfig);
+            builder.zlcConfig, builder.z2MuxConfig, builder.b2aConfig);
         this.osnConfig = builder.osnConfig;
         this.z2cConfig = builder.z2cConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
@@ -70,6 +73,7 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
         this.prefixAggConfig = builder.prefixAggConfig;
         this.zlcConfig = builder.zlcConfig;
         this.z2MuxConfig = builder.z2MuxConfig;
+        this.b2aConfig = builder.b2aConfig;
         this.zl = builder.zl;
     }
 
@@ -105,6 +109,10 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
 
     public Z2MuxConfig getZ2MuxConfig() {
         return z2MuxConfig;
+    }
+
+    public B2aConfig getB2aConfig() {
+        return b2aConfig;
     }
 
     @Override
@@ -147,6 +155,7 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
          */
         private final PrefixAggConfig prefixAggConfig;
         private final Z2MuxConfig z2MuxConfig;
+        private final B2aConfig b2aConfig;
         /**
          * Zl
          */
@@ -160,6 +169,7 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
         }
 
