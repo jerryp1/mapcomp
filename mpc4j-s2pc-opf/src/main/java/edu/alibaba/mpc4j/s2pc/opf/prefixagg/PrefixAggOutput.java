@@ -22,6 +22,10 @@ public class PrefixAggOutput {
      */
     private SquareZlVector aggs;
     /**
+     * secret shares of aggregation fields.
+     */
+    private SquareZ2Vector[] aggsBinary;
+    /**
      * secret shares of group indicator
      */
     private SquareZ2Vector indicator;
@@ -38,12 +42,23 @@ public class PrefixAggOutput {
         this.num = aggs.getNum();
     }
 
+    public PrefixAggOutput(Vector<byte[]> groupings, SquareZ2Vector[] aggs, SquareZ2Vector indicator) {
+        Preconditions.checkArgument(groupings.size() == aggs[0].getNum(), "size of input not match");
+        this.groupings = groupings;
+        this.aggsBinary = aggs;
+        this.indicator = indicator;
+        this.num = aggs[0].getNum();
+    }
+
     public Vector<byte[]> getGroupings() {
         return groupings;
     }
 
     public SquareZlVector getAggs() {
         return aggs;
+    }
+    public SquareZ2Vector[] getAggsBinary() {
+        return aggsBinary;
     }
 
     public SquareZ2Vector getIndicator() {
@@ -53,6 +68,11 @@ public class PrefixAggOutput {
     public void setAggs(SquareZlVector aggs) {
         Preconditions.checkArgument(aggs.getNum()== num, "size of input not correct");
         this.aggs = aggs;
+    }
+
+    public void setAggsBinary(SquareZ2Vector[] aggs) {
+        Preconditions.checkArgument(aggs[0].getNum()== num, "size of input not correct");
+        this.aggsBinary = aggs;
     }
 
     public int getNum() {

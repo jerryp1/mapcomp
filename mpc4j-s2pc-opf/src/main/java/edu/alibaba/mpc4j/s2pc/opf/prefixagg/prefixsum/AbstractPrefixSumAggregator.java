@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.AbstractPrefixGroupAggregator;
@@ -47,6 +48,22 @@ public abstract class AbstractPrefixSumAggregator extends AbstractPrefixGroupAgg
         SquareZ2Vector groupIndicatorOut = z2cParty.and(groupIndicator1bc, groupIndicator2bc);
         return IntStream.range(0, num).mapToObj(i ->
             new PrefixAggNode(sumOut.getZlVector().getElement(i), groupIndicatorOut.getBitVector().get(i))).toArray(PrefixAggNode[]::new);
+    }
+
+    @Override
+    protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
+        SquareZ2Vector groupIndicator2 = z2cParty.not(groupIndicator1);
+        groupIndicator2.getBitVector().shiftLeftUnChangeNum(1);
+
+        SquareZlVector data = b2aParty.b2a(aggField);
+        // generate prefix sum nodes.
+        genNodes(data, groupIndicator2);
+        // prefix-computation
+        prefixTree.addPrefix(num);
+        // obtain agg fields
+        SquareZlVector res1 = zlMuxParty.mux(groupIndicator1, SquareZlVector.create(zl, Arrays.stream(nodes)
+            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new), false));
+        return a2bParty.a2b(res1);
     }
 
     @Override

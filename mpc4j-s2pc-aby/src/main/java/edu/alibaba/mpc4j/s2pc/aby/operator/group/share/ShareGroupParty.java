@@ -16,6 +16,8 @@ public interface ShareGroupParty extends TwoPartyPto {
      */
     void init(int attrNum, int maxNum, int maxBitNum) throws MpcAbortException;
 
+    SquareZ2Vector getFlag(SquareZ2Vector groupFlag) throws MpcAbortException;
+
     /**
      * Executes the protocol.
      *
@@ -27,7 +29,7 @@ public interface ShareGroupParty extends TwoPartyPto {
      * @throws MpcAbortException the protocol failure aborts.
      */
     default SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, SquareZ2Vector groupFlag) throws MpcAbortException{
-        return groupAgg(new SquareZ2Vector[][]{xiArrays}, new SquareZ2Vector[]{validFlags}, new AggTypes[]{aggTypes}, groupFlag)[0];
+        return groupAgg(new SquareZ2Vector[][]{xiArrays}, validFlags == null ? null : new SquareZ2Vector[]{validFlags}, new AggTypes[]{aggTypes}, groupFlag)[0];
     }
 
     /**

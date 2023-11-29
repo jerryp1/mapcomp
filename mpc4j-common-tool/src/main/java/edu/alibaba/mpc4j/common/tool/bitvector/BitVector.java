@@ -171,6 +171,7 @@ public interface BitVector {
     void extendLength(int targetBitLength);
 
     BitVector shiftRight(int bit);
+    void shiftLeftUnChangeNum(int bit);
 
 
     BitVector[] splitWithPadding(int[] bitNums);

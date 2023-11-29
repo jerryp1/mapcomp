@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,6 +138,11 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         return result;
     }
 
+    protected SquareZ2Vector[] getAggAttr() throws MpcAbortException {
+        // b2a, transfer agg to arithmetic share
+        return Arrays.stream(TransposeUtils.transposeSplit(aggShare, Long.SIZE))
+            .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+    }
 
     protected int[] obtainPerms(String[] keys) {
         Tuple[] tuples = IntStream.range(0, num).mapToObj(j -> new Tuple(keys[j], j)).toArray(Tuple[]::new);

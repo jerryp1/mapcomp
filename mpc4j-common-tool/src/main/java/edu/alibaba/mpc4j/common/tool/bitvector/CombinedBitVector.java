@@ -262,6 +262,11 @@ public class CombinedBitVector implements BitVector {
     }
 
     @Override
+    public void shiftLeftUnChangeNum(int bit){
+        innerBitVector.shiftLeftUnChangeNum(bit);
+    }
+
+    @Override
     public BitVector[] splitWithPadding(int[] bitNums){
         BitVector[] res = innerBitVector.splitWithPadding(bitNums);
         return Arrays.stream(res).map(CombinedBitVector::create).toArray(BitVector[]::new);

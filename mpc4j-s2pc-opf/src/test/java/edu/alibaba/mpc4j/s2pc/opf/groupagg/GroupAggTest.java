@@ -10,9 +10,13 @@ import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+//import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -60,28 +64,52 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // bitmap && sum
+//        // bitmap && sum
+//        configurations.add(new Object[]{
+//            "BITMAP_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+//        });
+//
+//        // bitmap && max
+//        configurations.add(new Object[]{
+//            "BITMAP_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+//        });
+
+        // Bitmap-assisted sort && sum
         configurations.add(new Object[]{
-            "BITMAP_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            "Bitmap-assisted SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
         });
 
-        // bitmap && max
+        // Bitmap-assisted sort && max
         configurations.add(new Object[]{
-            "BITMAP_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            "Bitmap-assisted SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
         });
 
-        // mix && sum
+//        // Optimized Mix sort && sum
+//        configurations.add(new Object[]{
+//            "Optimized Mix SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+//        });
+//
+//        // Optimized Mix sort && max
+//        configurations.add(new Object[]{
+//            "Optimized Mix SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+//        });
+
+        // Optimized sort && sum
         configurations.add(new Object[]{
-            "MIX_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            "Optimized SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
         });
 
-        // mix && max
+        // Optimized sort && max
         configurations.add(new Object[]{
-            "MIX_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new MixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            "Optimized SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
         });
 
         // sort && sum
@@ -94,6 +122,18 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             "SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+        });
+
+        // Trivial sort && sum
+        configurations.add(new Object[]{
+            "Trivial SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+        });
+
+        // Trivial sort && max
+        configurations.add(new Object[]{
+            "Trivial SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
         });
 
         return configurations;
@@ -233,9 +273,9 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         // verify
         Assert.assertEquals(trueMap, resultMap);
         System.out.println("##mix_矩阵转置总时间：" + TransposeUtils.TRANSPORT_TIME+"ms");
-        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME+"ms");
-        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME+"ms");
-        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME+"ms");
+//        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME+"ms");
+//        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME+"ms");
+//        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME+"ms");
         System.out.println("##bitmap_agg总时间：" + BitmapGroupAggSender.AGG_TIME+"ms");
 
     }

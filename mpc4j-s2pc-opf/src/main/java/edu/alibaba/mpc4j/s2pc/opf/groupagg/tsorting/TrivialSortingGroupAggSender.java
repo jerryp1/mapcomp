@@ -151,12 +151,13 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         // apply permutation to agg
         apply();
         // b2a
-        SquareZlVector otherAggB2a = b2a();
-        // ### test
-        zlcSender.revealOther(otherAggB2a);
-        revealOtherGroup(mergedGroups);
+//        SquareZlVector receiverAggAs = b2a();
+        SquareZ2Vector[] receiverAggAs = getAggAttr();
+//        // ### test
+//        zlcSender.revealOther(otherAggB2a);
+//        revealOtherGroup(mergedGroups);
         // agg
-        aggregation(mergedGroups, otherAggB2a, e);
+        aggregation(mergedGroups, receiverAggAs, e);
         return null;
     }
 
@@ -207,10 +208,11 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         return b2aSender.b2a(transposed);
     }
 
-    private void aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+    private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, flag);
         // reveal
-        zlcSender.revealOther(agg.getAggs());
+//        zlcSender.revealOther(agg.getAggs());
+        z2cSender.revealOther(agg.getAggsBinary());
         revealOtherGroup(agg.getGroupings());
         z2cSender.revealOther(agg.getIndicator());
 

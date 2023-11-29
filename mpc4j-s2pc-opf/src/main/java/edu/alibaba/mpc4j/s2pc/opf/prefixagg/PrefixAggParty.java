@@ -24,6 +24,50 @@ public interface PrefixAggParty extends TwoPartyPto {
      */
     void init(int maxL, int maxNum) throws MpcAbortException;
 
+//    /**
+//     * Executes the protocol.
+//     *
+//     * @param groupField the field of group by.
+//     * @param aggField   the field of aggregatioin.
+//     * @return the party's output.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField) throws MpcAbortException;
+//
+//    /**
+//     * Executes the protocol. Assume groupField is hold by receiver.
+//     *
+//     * @param groupField the field of group by.
+//     * @param aggField   the field of aggregatioin.
+//     * @param flag       the flag to indicate the validity of elements.
+//     * @return the party's output.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+//
+//
+//    /**
+//     * Executes the protocol. Assume groupField is hold by receiver.
+//     *
+//     * @param groupField the field of group by.
+//     * @param aggField   the field of aggregatioin.
+//     * @return the party's output.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField) throws MpcAbortException;
+//
+//    /**
+//     * Executes the protocol. Assume groupField is hold by receiver.
+//     *
+//     * @param groupField the field of group by.
+//     * @param aggField   the field of aggregatioin.
+//     * @param flag       the flag to indicate the validity of elements.
+//     * @return the party's output.
+//     * @throws MpcAbortException the protocol failure aborts.
+//     */
+//    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+
+
     /**
      * Executes the protocol.
      *
@@ -32,7 +76,7 @@ public interface PrefixAggParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField) throws MpcAbortException;
+    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZ2Vector[] aggField) throws MpcAbortException;
 
     /**
      * Executes the protocol. Assume groupField is hold by receiver.
@@ -43,7 +87,7 @@ public interface PrefixAggParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+    PrefixAggOutput agg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException;
 
 
     /**
@@ -54,7 +98,7 @@ public interface PrefixAggParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField) throws MpcAbortException;
+    PrefixAggOutput agg(String[] groupField, SquareZ2Vector[] aggField) throws MpcAbortException;
 
     /**
      * Executes the protocol. Assume groupField is hold by receiver.
@@ -65,7 +109,8 @@ public interface PrefixAggParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    PrefixAggOutput agg(String[] groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException;
+    PrefixAggOutput agg(String[] groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException;
+
 
     PrefixAggTypes getAggType();
 

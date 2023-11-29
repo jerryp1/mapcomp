@@ -1,6 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
@@ -25,7 +26,7 @@ class PrefixAggPartyThread extends Thread {
     /**
      * num
      */
-    private final SquareZlVector aggs;
+    private final SquareZ2Vector[] aggs;
     /**
      * l
      */
@@ -39,11 +40,19 @@ class PrefixAggPartyThread extends Thread {
      */
     private PrefixAggOutput shareZ;
 
-    PrefixAggPartyThread(PrefixAggParty prefixAggParty, Vector<byte[]> groups, SquareZlVector aggs) {
+//    PrefixAggPartyThread(PrefixAggParty prefixAggParty, Vector<byte[]> groups, SquareZlVector aggs) {
+//        this.prefixAggParty = prefixAggParty;
+//        this.groups = groups;
+//        this.aggs = aggs;
+//        this.l = aggs.getZl().getL();
+//        this.num = groups.size();
+//    }
+
+    PrefixAggPartyThread(PrefixAggParty prefixAggParty, Vector<byte[]> groups, SquareZ2Vector[] aggs) {
         this.prefixAggParty = prefixAggParty;
         this.groups = groups;
         this.aggs = aggs;
-        this.l = aggs.getZl().getL();
+        this.l = aggs.length;
         this.num = groups.size();
     }
 

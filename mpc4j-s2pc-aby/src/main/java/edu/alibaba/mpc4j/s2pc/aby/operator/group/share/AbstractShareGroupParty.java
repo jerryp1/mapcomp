@@ -34,8 +34,10 @@ public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implem
                 MathPreconditions.checkEqual("dataNum", "each.bitNum()", dataNum, each.bitNum());
             }
         }
-        for(SquareZ2Vector each : validFlags){
-            MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
+        if(validFlags != null){
+            for(SquareZ2Vector each : validFlags){
+                MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
+            }
         }
         MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
     }

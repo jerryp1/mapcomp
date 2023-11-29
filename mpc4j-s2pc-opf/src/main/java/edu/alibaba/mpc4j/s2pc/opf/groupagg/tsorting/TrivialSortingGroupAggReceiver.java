@@ -14,6 +14,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
@@ -166,10 +167,11 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         // apply permutation to agg
         apply(aggAttr);
         // b2a
-        SquareZlVector receiverAggAs = b2a();
-        // ### test
-        String[] groupResult = revealBothGroup(mergedGroups);
-        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
+//        SquareZlVector receiverAggAs = b2a();
+        SquareZ2Vector[] receiverAggAs = getAggAttr();
+//        // ### test
+//        String[] groupResult = revealBothGroup(mergedGroups);
+//        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
         return aggregation(mergedGroups, receiverAggAs, e);
     }
@@ -226,7 +228,7 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         return b2aReceiver.b2a(transposed);
     }
 
-    private GroupAggOut aggregation(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+    private GroupAggOut aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         switch (prefixAggType) {
             case SUM:
@@ -238,12 +240,13 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         }
     }
 
-    private GroupAggOut sumAgg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
-        Zl zl = aggField.getZl();
+    private GroupAggOut sumAgg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
         // reveal
-        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
+        BitVector[] tmpAgg = z2cReceiver.revealOwn(agg.getAggsBinary());
+        ZlVector aggResult = ZlVector.create(zl, ZlDatabase.create(envType, parallel, tmpAgg).getBigIntegerData());
+//        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
         BitVector indicator = z2cReceiver.revealOwn(agg.getIndicator());
         // subtraction
@@ -255,12 +258,14 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         return new GroupAggOut(tureGroup, result);
     }
 
-    private GroupAggOut maxAgg(Vector<byte[]> groupField, SquareZlVector aggField, SquareZ2Vector flag) throws MpcAbortException {
+    private GroupAggOut maxAgg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
         // reveal
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
-        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
+        BitVector[] tmpAgg = z2cReceiver.revealOwn(agg.getAggsBinary());
+        ZlVector aggResult = ZlVector.create(zl, ZlDatabase.create(envType, parallel, tmpAgg).getBigIntegerData());
+//        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
         BitVector groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
         // filter

@@ -38,6 +38,8 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
     private SquareZ2Vector[] resultData;
     private SquareZ2Vector[] inputDataProcessed;
 
+    private SquareZ2Vector resFlag;
+
     protected AbstractAmos22ShareGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, Amos22ShareGroupConfig config, GroupPartyTypes partyTypes) {
         super(ptoDesc, rpc, otherParty, config);
         if (partyTypes.equals(GroupPartyTypes.RECEIVER)) {
@@ -65,6 +67,14 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);
+    }
+
+    @Override
+    public SquareZ2Vector getFlag(SquareZ2Vector groupFlag) throws MpcAbortException {
+        if(resFlag == null){
+            getShareBitVectors(groupFlag);
+        }
+        return resFlag;
     }
 
     public SquareZ2Vector[][] getShareBitVectors(SquareZ2Vector groupFlag) throws MpcAbortException {
@@ -112,6 +122,7 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         }
         resF.getBitVector().set(dataNum - 1, groupFlag.getBitVector().get(dataNum - 1));
         flagsInEachRound[levelNum] = new SquareZ2Vector[]{resF};
+        resFlag = resF;
         return flagsInEachRound;
     }
 
