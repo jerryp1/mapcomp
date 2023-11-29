@@ -52,7 +52,7 @@ public class SbitmapStarter {
     /**
      * Configuration properties.
      */
-    protected final Properties properties;
+    protected Properties properties;
     /**
      * Task type.
      */
@@ -100,9 +100,12 @@ public class SbitmapStarter {
     private String inputDir;
     private String outputDir;
 
-    public SbitmapStarter(Properties properties) {
-        this.properties = properties;
+    public SbitmapStarter() {
         setSchema();
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     public void start() throws IOException, MpcAbortException, URISyntaxException {
@@ -118,8 +121,7 @@ public class SbitmapStarter {
             "GrS1Time\tGrS2Time\tGrS3Time\tGrS4Time\tGrS5Time\tAggTime\t" +
             "GroupTripleNum\tAggTripleNum";
         printWriter.println(tab);
-        // connect
-        ownRpc.connect();
+
         // Full secure
         for (int numBitLen:testDataNums) {
             int num = 1 << numBitLen;
@@ -130,19 +132,10 @@ public class SbitmapStarter {
         // clean
         printWriter.close();
         fileWriter.close();
-        ownRpc.disconnect();
+
     }
 
     public void init() throws IOException, URISyntaxException {
-        // set rpc
-        ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "sender", "receiver");
-        if (ownRpc.ownParty().getPartyId() == 0) {
-            receiver = false;
-            otherParty = ownRpc.getParty(1);
-        } else {
-            receiver = true;
-            otherParty = ownRpc.getParty(0);
-        }
         // set dataset name
         datasetName = SbitmapMainUtils.setDatasetName(properties);
         // set aggregation type
@@ -164,6 +157,24 @@ public class SbitmapStarter {
         outputDir = SbitmapMainUtils.setOutputDir(properties);
         // input_dir
         inputDir = SbitmapMainUtils.setInputDir(properties);
+    }
+
+    public void initRpc() {
+        // set rpc
+        ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "sender", "receiver");
+        if (ownRpc.ownParty().getPartyId() == 0) {
+            receiver = false;
+            otherParty = ownRpc.getParty(1);
+        } else {
+            receiver = true;
+            otherParty = ownRpc.getParty(0);
+        }
+        // connect
+        ownRpc.connect();
+    }
+
+    public void stopRpc() {
+        ownRpc.disconnect();
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
