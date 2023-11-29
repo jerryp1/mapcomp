@@ -97,6 +97,7 @@ public class SbitmapStarter {
     private int[] testDataNums;
 
     private boolean silent;
+    private String inputDir;
     private String outputDir;
 
     public SbitmapStarter(Properties properties) {
@@ -106,7 +107,7 @@ public class SbitmapStarter {
 
     public void start() throws IOException, MpcAbortException, URISyntaxException {
         // output file format：bitmap_sum_s1_r2_s/r.output
-        String filePath = "./result/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
+        String filePath =  "./"+ outputDir + "/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
             "s" + senderGroupBitLength + "_" + "r" + receiverGroupBitLength + "_" +
             ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +"_"+ SbitmapMainUtils.getCurrentTime() +  ".out";
         FileWriter fileWriter = new FileWriter(filePath);
@@ -159,12 +160,14 @@ public class SbitmapStarter {
         silent = SbitmapMainUtils.setSilent(properties);
         // zl
         zl = SbitmapMainUtils.setZl(properties);
-        // zl
+        // output_dir
         outputDir = SbitmapMainUtils.setOutputDir(properties);
+        // input_dir
+        inputDir = SbitmapMainUtils.setInputDir(properties);
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
-        String dataFileLength = "./" + outputDir + "/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
+        String dataFileLength = "./" + inputDir + "/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
         if (receiver) {
             DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(receiverSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);

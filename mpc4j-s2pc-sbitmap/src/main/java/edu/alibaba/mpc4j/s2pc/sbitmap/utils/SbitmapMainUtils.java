@@ -102,6 +102,10 @@ public class SbitmapMainUtils {
         return  PropertiesUtils.readString(properties, "output_dir");
     }
 
+    public static String setInputDir(Properties properties) {
+        return  PropertiesUtils.readString(properties, "input_dir");
+    }
+
     public static GroupAggTypes setGroupAggTypes(Properties properties) {
         String groupAggTypes = PropertiesUtils.readString(properties, "group_agg_type");
         return GroupAggTypes.valueOf(groupAggTypes.toUpperCase());
