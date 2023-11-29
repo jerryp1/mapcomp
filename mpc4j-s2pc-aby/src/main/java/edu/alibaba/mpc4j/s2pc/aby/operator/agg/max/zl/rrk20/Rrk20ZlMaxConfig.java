@@ -45,8 +45,8 @@ public class Rrk20ZlMaxConfig extends AbstractMultiPartyPtoConfig implements ZlM
          */
         private final ZlGreaterConfig zlGreaterConfig;
 
-        public Builder(Zl zl) {
-            zlGreaterConfig = ZlGreaterFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true, zl);
+        public Builder(Zl zl, boolean silent) {
+            zlGreaterConfig = ZlGreaterFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent, zl);
         }
 
         @Override

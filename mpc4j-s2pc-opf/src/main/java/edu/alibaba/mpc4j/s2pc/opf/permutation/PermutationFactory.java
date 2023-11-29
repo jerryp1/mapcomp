@@ -87,11 +87,11 @@ public class PermutationFactory {
      * @param securityModel the security model.
      * @return a default config.
      */
-    public static PermutationConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
+    public static PermutationConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PermutationConfig.Builder(zl).build();
+                return new Xxx23PermutationConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -105,11 +105,11 @@ public class PermutationFactory {
      * @param securityModel the security model.
      * @return a default config.
      */
-    public static PermutationConfig createDefaultReverseConfig(SecurityModel securityModel, Zl zl) {
+    public static PermutationConfig createDefaultReverseConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bPermutationConfig.Builder(zl).build();
+                return new Xxx23bPermutationConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:

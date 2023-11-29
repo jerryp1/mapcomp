@@ -82,7 +82,7 @@ public class ZlGreaterFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrk20ZlGreaterConfig.Builder(zl).build();
+                return new Rrk20ZlGreaterConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:

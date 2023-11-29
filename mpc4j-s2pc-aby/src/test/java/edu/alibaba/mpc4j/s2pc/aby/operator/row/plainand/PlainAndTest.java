@@ -42,6 +42,10 @@ public class PlainAndTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -49,7 +53,7 @@ public class PlainAndTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            PlainAndType.Xxx23.name(), new Xxx23PlainAndConfig.Builder(DEFAULT_ZL).build()
+            PlainAndType.Xxx23.name(), new Xxx23PlainAndConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;

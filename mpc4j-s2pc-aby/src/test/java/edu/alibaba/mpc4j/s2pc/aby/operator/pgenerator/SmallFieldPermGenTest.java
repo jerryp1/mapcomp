@@ -55,9 +55,9 @@ public class SmallFieldPermGenTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         // AHI+22 default zl
-        Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(DEFAULT_ZL).build();
+        Bit2aConfig bit2aConfig = new Kvh21Bit2aConfig.Builder(DEFAULT_ZL, true).build();
         configurations.add(new Object[]{
-            PermGenTypes.AHI22_SMALL_FIELD.name(), new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build()
+            PermGenTypes.AHI22_SMALL_FIELD.name(), new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, true).build()
         });
 
         return configurations;

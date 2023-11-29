@@ -146,7 +146,6 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
-        assert aggField != null;
         setPtoInput(groupField, aggField, intersFlagE);
         // group
         group();

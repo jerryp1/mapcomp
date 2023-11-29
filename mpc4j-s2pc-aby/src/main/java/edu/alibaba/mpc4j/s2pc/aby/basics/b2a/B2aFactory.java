@@ -85,12 +85,12 @@ public class B2aFactory {
      * @param zl zl.
      * @return a default config.
      */
-    public static B2aConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
+    public static B2aConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case TRUSTED_DEALER:
             case SEMI_HONEST:
-                return new Dsz15B2aConfig.Builder(zl).build();
+                return new Dsz15B2aConfig.Builder(zl, silent).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }

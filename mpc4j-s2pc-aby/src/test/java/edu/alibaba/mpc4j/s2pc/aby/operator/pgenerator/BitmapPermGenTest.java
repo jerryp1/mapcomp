@@ -46,7 +46,10 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     private static final int[] BIT_NUMS = new int[]{4, 8, 16};
 
     private static final int[] ZLS = new int[]{19, 24};
-
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -55,12 +58,12 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         for(int zl : ZLS) {
             Zl tmpZl = ZlFactory.createInstance(EnvType.STANDARD, zl);
             configurations.add(new Object[]{
-                PermGenTypes.AHI22_BITMAP.name() + "_" + zl, new BitmapPermGenConfig.Builder(tmpZl).setSilent(false).build()
+                PermGenTypes.AHI22_BITMAP.name() + "_" + zl, new BitmapPermGenConfig.Builder(tmpZl, silent).setSilent(false).build()
             });
 
             // AHI+22 default zl
             configurations.add(new Object[]{
-                PermGenTypes.AHI22_BITMAP.name() + "_silent" + "_" + zl, new BitmapPermGenConfig.Builder(tmpZl).setSilent(true).build()
+                PermGenTypes.AHI22_BITMAP.name() + "_silent" + "_" + zl, new BitmapPermGenConfig.Builder(tmpZl, silent).setSilent(true).build()
             });
         }
 

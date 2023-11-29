@@ -44,6 +44,10 @@ public class PlainBitMuxTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Long.SIZE);
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -51,7 +55,7 @@ public class PlainBitMuxTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            PlainBitMuxType.Xxx23.name(), new Xxx23PlainBitMuxConfig.Builder(DEFAULT_ZL).build()
+            PlainBitMuxType.Xxx23.name(), new Xxx23PlainBitMuxConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;

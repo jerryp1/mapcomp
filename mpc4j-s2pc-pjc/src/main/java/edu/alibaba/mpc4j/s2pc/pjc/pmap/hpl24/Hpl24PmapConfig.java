@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cConfig;
@@ -134,12 +135,12 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
             plpsiconfig = new Rs21PlpsiConfig.Builder(silent).build();
             osnConfig = new Gmr21OsnConfig.Builder(silent).build();
             bitLen = Long.SIZE;
-            bit2aConfig = new Kvh21Bit2aConfig.Builder(ZlFactory.createInstance(EnvType.STANDARD, bitLen)).build();
-            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build();
+            bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
+            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             z2cConfig = new Rrg21Z2cConfig.Builder().build();
             permutationConfig = new Xxx23SharedPermutationConfig.Builder(silent).build();
             invPermutationConfig = new Xxx23bSharedPermutationConfig.Builder(silent).build();
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen));
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
         }
 
         public Builder setPlpsiconfig(PlpsiConfig plpsiconfig) {
@@ -152,18 +153,18 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
             return this;
         }
 
-        public Builder setBitLength(int bitLen) {
+        public Builder setBitLength(int bitLen, boolean silent) {
             this.bitLen = bitLen;
-            bit2aConfig = new Kvh21Bit2aConfig.Builder(ZlFactory.createInstance(EnvType.STANDARD, bitLen)).build();
-            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build();
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen));
+            bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
+            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             return this;
         }
 
-        public Builder setBit2aConfig(Bit2aConfig bit2aConfig) {
+        public Builder setBit2aConfig(Bit2aConfig bit2aConfig, boolean silent) {
             bitLen = bit2aConfig.getZl().getL();
             this.bit2aConfig = bit2aConfig;
-            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig).build();
+            smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             return this;
         }
 

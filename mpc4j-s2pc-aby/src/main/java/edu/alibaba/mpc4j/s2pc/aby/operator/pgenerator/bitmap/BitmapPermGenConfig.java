@@ -91,11 +91,11 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
          */
         private ZlMuxConfig zlMuxConfig;
 
-        public Builder(Zl zl) {
-            this.bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+        public Builder(Zl zl, boolean silent) {
+            this.bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setZlcConfig(ZlcConfig zlcConfig) {

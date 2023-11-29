@@ -76,12 +76,12 @@ public class A2bFactory {
      * @param zl zl.
      * @return a default config.
      */
-    public static A2bConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
+    public static A2bConfig createDefaultConfig(SecurityModel securityModel, Zl zl, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case TRUSTED_DEALER:
             case SEMI_HONEST:
-                return new Dsz15A2bConfig.Builder(zl).build();
+                return new Dsz15A2bConfig.Builder(zl, silent).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }

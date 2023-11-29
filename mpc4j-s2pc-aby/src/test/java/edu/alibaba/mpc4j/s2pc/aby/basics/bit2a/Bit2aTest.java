@@ -49,6 +49,10 @@ public class Bit2aTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -56,22 +60,22 @@ public class Bit2aTest extends AbstractTwoPartyPtoTest {
 
         // KVH+21 small zl
         configurations.add(new Object[]{
-            Bit2aTypes.KVH21.name(), new Kvh21Bit2aConfig.Builder(SMALL_ZL).build()
+            Bit2aTypes.KVH21.name(), new Kvh21Bit2aConfig.Builder(SMALL_ZL, silent).build()
         });
 
         // KVH+21 default zl
         configurations.add(new Object[]{
-            Bit2aTypes.KVH21.name(), new Kvh21Bit2aConfig.Builder(DEFAULT_ZL).build()
+            Bit2aTypes.KVH21.name(), new Kvh21Bit2aConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         // Tuple small zl
         configurations.add(new Object[]{
-            Bit2aTypes.TUPLE.name(), new TupleBit2aConfig.Builder(SMALL_ZL).build()
+            Bit2aTypes.TUPLE.name(), new TupleBit2aConfig.Builder(SMALL_ZL, silent).build()
         });
 
         // Tuple default zl
         configurations.add(new Object[]{
-            Bit2aTypes.TUPLE.name(), new TupleBit2aConfig.Builder(DEFAULT_ZL).build()
+            Bit2aTypes.TUPLE.name(), new TupleBit2aConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;

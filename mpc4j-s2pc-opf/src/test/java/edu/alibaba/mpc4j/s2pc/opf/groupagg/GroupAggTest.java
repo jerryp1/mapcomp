@@ -12,7 +12,8 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
-//import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
@@ -33,6 +34,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.*;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
+import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
  * Group aggregation Test.
@@ -46,94 +50,110 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1000;
+    private static final int DEFAULT_NUM = 1 << 8;
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 6;
+    private static final int LARGE_NUM = 1 << 2;
     /**
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 64);
 
-    private static final int DEFAULT_GROUP_BIT_LENGTH = 2;
+    private static final int SENDER_GROUP_BIT_LEN = 1;
+    private static final int RECEIVER_GROUP_BIT_LEN = 2;
+//    private static final int DEFAULT_GROUP_BIT_LENGTH = 1;
 
     private static final int LARGE_GROUP_BIT_LENGTH = 8;
+
+    private static boolean silent = false;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // bitmap && sum
+        // bitmap && sum
 //        configurations.add(new Object[]{
 //            "BITMAP_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
 //        });
 //
-//        // bitmap && max
+////        // bitmap && max
 //        configurations.add(new Object[]{
 //            "BITMAP_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+//            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
 
-        // Bitmap-assisted sort && sum
+        // mix && sum
         configurations.add(new Object[]{
-            "Bitmap-assisted SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            "MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
         });
 
-        // Bitmap-assisted sort && max
+        // mix && max
         configurations.add(new Object[]{
-            "Bitmap-assisted SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            "MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
         });
-
-//        // Optimized Mix sort && sum
-//        configurations.add(new Object[]{
-//            "Optimized Mix SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
-//        });
 //
-//        // Optimized Mix sort && max
-//        configurations.add(new Object[]{
-//            "Optimized Mix SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
-//        });
-
-        // Optimized sort && sum
+//        // o_mix && sum
         configurations.add(new Object[]{
-            "Optimized SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            "O_MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
         });
-
-        // Optimized sort && max
+////
+        // o_mix && max
         configurations.add(new Object[]{
-            "Optimized SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            "O_MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
         });
-
+//
         // sort && sum
         configurations.add(new Object[]{
             "SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
         });
 
         // sort && max
         configurations.add(new Object[]{
             "SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new SortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
         });
 
-        // Trivial sort && sum
+        //  o_sort && sum
         configurations.add(new Object[]{
-            "Trivial SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.SUM).build()
+            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
         });
 
-        // Trivial sort && max
+//        // o_sort && max
         configurations.add(new Object[]{
-            "Trivial SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, true, PrefixAggTypes.MAX).build()
+            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+        });
+//
+////        // b_sort && sum
+        configurations.add(new Object[]{
+            "B_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
+////
+//        // b_sort && max
+        configurations.add(new Object[]{
+            "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+        });
+
+        // t_sort && sum
+        configurations.add(new Object[]{
+            "T_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
+
+        // t_sort && max
+        configurations.add(new Object[]{
+            "T-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
         });
 
         return configurations;
@@ -189,43 +209,45 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         testPto(DEFAULT_NUM, false);
     }
 
-//    @Test
+    //    @Test
 //    public void testParallelDefaultNum() {
 //        testPto(DEFAULT_NUM, true);
 //    }
 //
-//    @Test
-//    public void testLargeNum() {
-//        testPto(LARGE_NUM, false);
-//    }
+    @Test
+    public void testLargeNum() {
+        testPto(LARGE_NUM, false);
+    }
 //
 //    @Test
 //    public void testParallelLargeNum() {
 //        testPto(LARGE_NUM, true);
 //    }
 
-    private void testPto(int num, boolean parallel) {
-        testPto(num, DEFAULT_GROUP_BIT_LENGTH, parallel);
-//        testPto(num, LARGE_GROUP_BIT_LENGTH, parallel);
-    }
+//    private void testPto(int num, boolean parallel) {
+//        testPto(num, parallel);
+////        testPto(num, LARGE_GROUP_BIT_LENGTH, parallel);
+//    }
 
-    private void testPto(int num, int groupBitLength, boolean parallel) {
+    private void testPto(int num, boolean parallel) {
         // input
-        String[] senderGroup = genRandomInputGroup(groupBitLength, num);
-        String[] receiverGroup = genRandomInputGroup(groupBitLength, num);
+        String[] senderGroup = genRandomInputGroup(SENDER_GROUP_BIT_LEN, num);
+        String[] receiverGroup = genRandomInputGroup(RECEIVER_GROUP_BIT_LEN, num);
         long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> i).toArray();
 
 //        long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> SECURE_RANDOM.nextInt(32) + 1).toArray();
 
-        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-        SquareZ2Vector e1 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-        BitVector e = e0.getBitVector().xor(e1.getBitVector());
-
-//        BitVector e = BitVectorFactory.createOnes(num);
+        // random e
 //        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
-//        SquareZ2Vector e1 = SquareZ2Vector.create(e.xor(e0.getBitVector()), false);
+//        SquareZ2Vector e1 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
+//        BitVector e = e0.getBitVector().xor(e1.getBitVector());
+//
+        // all true
+        BitVector e = BitVectorFactory.createOnes(num);
+        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
+        SquareZ2Vector e1 = SquareZ2Vector.create(e.xor(e0.getBitVector()), false);
 
-        Properties properties = genProperties(num, groupBitLength, groupBitLength);
+        Properties properties = genProperties(num, SENDER_GROUP_BIT_LEN, RECEIVER_GROUP_BIT_LEN);
 
         // init the protocol
         GroupAggParty sender = GroupAggFactory.createSender(firstRpc, secondRpc.ownParty(), config);
@@ -272,12 +294,17 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
             Arrays.asList(groupAggOut.getAggregationResult()));
         // verify
         Assert.assertEquals(trueMap, resultMap);
-        System.out.println("##mix_矩阵转置总时间：" + TransposeUtils.TRANSPORT_TIME+"ms");
-//        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME+"ms");
-//        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME+"ms");
-//        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME+"ms");
-        System.out.println("##bitmap_agg总时间：" + BitmapGroupAggSender.AGG_TIME+"ms");
-
+        System.out.println("##mix_矩阵转置总时间：" + TransposeUtils.TRANSPORT_TIME + "ms");
+        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME + "ms");
+        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME + "ms");
+        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME + "ms");
+        System.out.println("##bitmap_agg总时间：" + BitmapGroupAggSender.AGG_TIME + "ms");
+        System.out.println("##需要的三元组数量：" + TRIPLE_NUM);
+        TRIPLE_NUM = 0;
+        System.out.println("##需要的mix三元组数量：" + MIX_TRIPLE_AGG);
+        MIX_TRIPLE_AGG = 0;
+        System.out.println("##mix time：" + MIX_TIME_AGG);
+        MIX_TIME_AGG = 0;
     }
 
     private Map<String, BigInteger> getAggResultMap(List<String> group, List<BigInteger> agg) {
@@ -286,9 +313,11 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         for (int i = 0; i < num; i++) {
             String key = group.get(i);
             if (map.containsKey(key)) {
+                // sum
                 if (type.equals(PrefixAggTypes.SUM)) {
                     map.put(key, map.get(key).add(agg.get(i)));
                 } else {
+                    // max
                     map.put(key, map.get(key).compareTo(agg.get(i)) < 0 ? agg.get(i) : map.get(key));
                 }
 

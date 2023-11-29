@@ -33,8 +33,8 @@ public class Rrk20Z2MuxConfig extends AbstractMultiPartyPtoConfig implements Z2M
          */
         private CotConfig cotConfig;
 
-        public Builder() {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        public Builder(boolean silent) {
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

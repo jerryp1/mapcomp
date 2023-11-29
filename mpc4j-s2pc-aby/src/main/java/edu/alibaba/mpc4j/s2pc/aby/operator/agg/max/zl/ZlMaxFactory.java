@@ -82,7 +82,7 @@ public class ZlMaxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrk20ZlMaxConfig.Builder(zl).build();
+                return new Rrk20ZlMaxConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:

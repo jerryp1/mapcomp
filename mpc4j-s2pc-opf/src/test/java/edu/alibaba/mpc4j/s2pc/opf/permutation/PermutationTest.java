@@ -50,6 +50,10 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl LARGE_ZL = ZlFactory.createInstance(EnvType.STANDARD, BLOCK_BIT_LENGTH);
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -57,22 +61,22 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
 
         // Xxx23 default zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(DEFAULT_ZL).build()
+            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         // Xxx23 large zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL).build()
+            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL, silent).build()
         });
 
         // Xxx23b default zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(DEFAULT_ZL).build()
+            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         // Xxx23b large zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(LARGE_ZL).build()
+            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(LARGE_ZL, silent).build()
         });
 
         return configurations;

@@ -37,21 +37,15 @@ public class HardcodeB2aTupleConfig extends AbstractMultiPartyPtoConfig implemen
 
     public static class Builder implements org.apache.commons.lang3.builder.Builder<HardcodeB2aTupleConfig> {
         /**
-         * core multiplication triple generator config
-         */
-        private Z2CoreMtgConfig coreMtgConfig;
-        /**
          * zl
          */
         private Zl zl;
 
         public Builder(Zl zl) {
-            coreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
             this.zl = zl;
         }
 
         public Builder setCoreMtgConfig(Z2CoreMtgConfig coreMtgConfig) {
-            this.coreMtgConfig = coreMtgConfig;
             return this;
         }
 

@@ -81,6 +81,6 @@ public class PmapConfigUtils {
         }else{
             plpsiConfig = new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(peqtConfig).build();
         }
-        return new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(plpsiConfig).setBitLength(bitLen).build();
+        return new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(plpsiConfig).setBitLength(bitLen, silent).build();
     }
 }

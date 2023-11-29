@@ -37,6 +37,7 @@ public class Z2MuxFactory implements PtoFactory {
      */
     public static Z2MuxParty createSender(Rpc senderRpc, Party receiverParty, Z2MuxConfig config) {
         Z2MuxType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20Z2MuxSender(senderRpc, receiverParty, (Rrk20Z2MuxConfig) config);
@@ -55,6 +56,7 @@ public class Z2MuxFactory implements PtoFactory {
      */
     public static Z2MuxParty createReceiver(Rpc receiverRpc, Party senderParty, Z2MuxConfig config) {
         Z2MuxType type = config.getPtoType();
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case RRK20:
                 return new Rrk20Z2MuxReceiver(receiverRpc, senderParty, (Rrk20Z2MuxConfig) config);
@@ -74,7 +76,7 @@ public class Z2MuxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrk20Z2MuxConfig.Builder()
+                return new Rrk20Z2MuxConfig.Builder(silent)
                     .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:

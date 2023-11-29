@@ -85,9 +85,9 @@ public class TupleBit2aConfig extends AbstractMultiPartyPtoConfig implements Bit
          */
         private final Zl zl;
 
-        public Builder(Zl zl) {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        public Builder(Zl zl, boolean silent) {
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             b2aTupleConfig = B2aTupleFactory.createDefaultConfig(zl);
             this.zl = zl;
         }

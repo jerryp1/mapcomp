@@ -49,6 +49,10 @@ public class ZlMaxTest extends AbstractTwoPartyPtoTest {
      * current Zl
      */
     private final Zl zl;
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -57,12 +61,12 @@ public class ZlMaxTest extends AbstractTwoPartyPtoTest {
         // RRK+20, default zl
         configurations.add(new Object[]{
                 ZlMaxFactory.ZlMaxType.RRK20.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new Rrk20ZlMaxConfig.Builder(DEFAULT_ZL).build()
+            new Rrk20ZlMaxConfig.Builder(DEFAULT_ZL, silent).build()
         });
         // RRK+20, small zl
         configurations.add(new Object[]{
                 ZlMaxFactory.ZlMaxType.RRK20.name() + " (l = " + SMALL_ZL.getL() + ")",
-            new Rrk20ZlMaxConfig.Builder(SMALL_ZL).build()
+            new Rrk20ZlMaxConfig.Builder(SMALL_ZL, silent).build()
         });
 
         return configurations;

@@ -49,6 +49,10 @@ public class ZlMuxTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    /**
+     * silent
+     */
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -56,11 +60,11 @@ public class ZlMuxTest extends AbstractTwoPartyPtoTest {
 
         // RRG+21
         configurations.add(new Object[]{
-            ZlMuxType.RRG21.name(), new Rrg21ZlMuxConfig.Builder().build()
+            ZlMuxType.RRG21.name(), new Rrg21ZlMuxConfig.Builder(silent).build()
         });
         // RRK+20
         configurations.add(new Object[]{
-            ZlMuxType.RRK20.name(), new Rrk20ZlMuxConfig.Builder().build()
+            ZlMuxType.RRK20.name(), new Rrk20ZlMuxConfig.Builder(silent).build()
         });
 
         return configurations;

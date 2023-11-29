@@ -45,7 +45,7 @@ public class Alsz13Z2CoreMtgConfig extends AbstractMultiPartyPtoConfig implement
         private NcCotConfig ncCotConfig;
 
         public Builder() {
-            ncCotConfig = NcCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            ncCotConfig = NcCotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
         }
 
         public Builder setNcCotConfig(NcCotConfig ncCotConfig) {

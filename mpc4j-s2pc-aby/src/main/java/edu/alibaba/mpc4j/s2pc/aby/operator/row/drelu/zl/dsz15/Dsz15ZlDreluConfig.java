@@ -56,9 +56,9 @@ public class Dsz15ZlDreluConfig extends AbstractMultiPartyPtoConfig implements Z
          */
         private final Z2cConfig z2cConfig;
 
-        public Builder(Zl zl) {
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        public Builder(Zl zl, boolean silent) {
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl,silent);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         @Override

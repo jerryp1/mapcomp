@@ -50,6 +50,10 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     private static final int[] DEFAULT_SIZE_PAIR_1 = new int[]{120, 99};
     private static final int[] DEFAULT_SIZE_PAIR_2 = new int[]{200, 20};
     private static final int[] DEFAULT_SIZE_PAIR_3 = new int[]{LARGE_SIZE, DEFAULT_SMALL_SIZE};
+    /**
+     * silent
+     */
+    private static final boolean silent = false;
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -58,39 +62,39 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
 
         configurations.add(new Object[]{
             PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
-            new PidBasedPmapConfig.Builder(false).build(),
+            new PidBasedPmapConfig.Builder(silent).build(),
         });
 
         configurations.add(new Object[]{
             PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
-            new PidBasedPmapConfig.Builder(false).setPidConfig(
+            new PidBasedPmapConfig.Builder(silent).setPidConfig(
                 new Gmr21MpPidConfig.Builder().setPsuConfig(
                     new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
         });
 
         configurations.add(new Object[]{
             PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
-            new PidBasedPmapConfig.Builder(false).setPidConfig(
+            new PidBasedPmapConfig.Builder(silent).setPidConfig(
                 new Bkms20ByteEccPidConfig.Builder().build()).build(),
         });
 
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
                 PmapType.HPL24.name() + "_silent_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(true).setBitLength(bitLen).build(),
+                new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
             });
 
             configurations.add(new Object[]{
                 PmapType.HPL24.name()+ "_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(false).setBitLength(bitLen).build(),
+                new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
             });
 
             configurations.add(new Object[]{
                 PmapType.HPL24.name()+ "_naive_peqt_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(false).setPlpsiconfig(
-                    new Rs21PlpsiConfig.Builder(false).setPeqtConfig(
+                new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(
+                    new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(
                         new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()).build())
-                    .setBitLength(bitLen).build(),
+                    .setBitLength(bitLen, silent).build(),
             });
         }
         return configurations;

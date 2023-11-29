@@ -40,7 +40,7 @@ public class Rrg21Z2cConfig extends AbstractMultiPartyPtoConfig implements Z2cCo
         private CotConfig cotConfig;
 
         public Builder() {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {

@@ -75,10 +75,10 @@ public class Rrk20ZlGreaterConfig extends AbstractMultiPartyPtoConfig implements
          */
         private final ZlDreluConfig zlDreluConfig;
 
-        public Builder(Zl zl) {
+        public Builder(Zl zl, boolean silent) {
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl,true);
+            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl,silent);
         }
 
         @Override

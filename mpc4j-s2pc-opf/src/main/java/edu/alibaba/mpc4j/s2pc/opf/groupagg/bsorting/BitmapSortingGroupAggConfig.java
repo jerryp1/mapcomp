@@ -238,13 +238,13 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
             sharedPermutationConfig = SharedPermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            b2aConfig = new TupleB2aConfig.Builder(zl).build();
+            b2aConfig = new TupleB2aConfig.Builder(zl, silent).build();
             plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
-            reversePermutationConfig = PermutationFactory.createDefaultReverseConfig(SecurityModel.SEMI_HONEST, zl);
-            permutationConfig = PermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            permGenConfig = new BitmapPermGenConfig.Builder(zl).build();
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            reversePermutationConfig = PermutationFactory.createDefaultReverseConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            permutationConfig = PermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            permGenConfig = new BitmapPermGenConfig.Builder(zl, silent).build();
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
         }
 

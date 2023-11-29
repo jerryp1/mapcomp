@@ -52,6 +52,10 @@ public class A2bTest extends AbstractTwoPartyPtoTest {
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    /**
+     * silent
+     */
+    private static boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -59,12 +63,12 @@ public class A2bTest extends AbstractTwoPartyPtoTest {
 
         // DSZ15 small zl
         configurations.add(new Object[]{
-            B2aTypes.DSZ15.name(), new Dsz15A2bConfig.Builder(SMALL_ZL).build()
+            B2aTypes.DSZ15.name(), new Dsz15A2bConfig.Builder(SMALL_ZL, silent).build()
         });
 
         // DSZ15 default zl
         configurations.add(new Object[]{
-            B2aTypes.DSZ15.name(), new Dsz15A2bConfig.Builder(DEFAULT_ZL).build()
+            B2aTypes.DSZ15.name(), new Dsz15A2bConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;

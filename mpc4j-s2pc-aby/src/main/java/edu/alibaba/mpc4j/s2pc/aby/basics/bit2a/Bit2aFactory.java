@@ -87,12 +87,12 @@ public class Bit2aFactory {
      *
      * @return a default config.
      */
-    public static Bit2aConfig createDefaultConfig(SecurityModel securityModel, Zl zl) {
+    public static Bit2aConfig createDefaultConfig(SecurityModel securityModel, Zl zl,boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case TRUSTED_DEALER:
             case SEMI_HONEST:
-                return new TupleBit2aConfig.Builder(zl).build();
+                return new TupleBit2aConfig.Builder(zl, silent).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }

@@ -83,7 +83,7 @@ public class PlainAndFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PlainAndConfig.Builder(zl)
+                return new Xxx23PlainAndConfig.Builder(zl, silent)
                     .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:

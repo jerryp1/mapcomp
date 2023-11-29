@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
@@ -30,6 +31,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import org.apache.commons.lang3.time.StopWatch;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -129,8 +131,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
-        StopWatch stopWatch = new StopWatch();
-        assert aggField == null;
         setPtoInput(groupField, aggField, intersFlagE);
         // group
         group();
@@ -140,6 +140,32 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     }
 
     private void group() throws MpcAbortException {
+        // gen bitmap
+        Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
+        // osn
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
+        OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        OSN_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        bitmapShares = Arrays.stream(transposed, 0, transposed.length - 1).toArray(SquareZ2Vector[]::new);
+        e = transposed[transposed.length - 1];
+
+        // mul1
+        stopWatch.start();
+        aggZl = plainPayloadMuxReceiver.mux(e, null, 64);
+        stopWatch.stop();
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        groupTripleNum = TRIPLE_NUM - groupTripleNum;
+    }
+
+    private void groupWithSenderPayload() throws MpcAbortException {
         // gen bitmap
         Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
         // osn
@@ -204,6 +230,24 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
             return bytes;
+        }).collect(Collectors.toCollection(Vector::new));
+    }
+
+    /**
+     * Generate horizontal bitmaps.
+     *
+     * @param group group.
+     * @return vertical bitmaps.
+     */
+    private Vector<byte[]> genBitmap2(String[] group, SquareZ2Vector e, long[] aggAtt) {
+        return IntStream.range(0, group.length).mapToObj(i -> {
+            ByteBuffer buffer = ByteBuffer.allocate(CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES);
+            byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
+            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
+            BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
+            buffer.put(buffer);
+            buffer.put(LongUtils.longToByteArray(aggAtt[i]));
+            return buffer.array();
         }).collect(Collectors.toCollection(Vector::new));
     }
 

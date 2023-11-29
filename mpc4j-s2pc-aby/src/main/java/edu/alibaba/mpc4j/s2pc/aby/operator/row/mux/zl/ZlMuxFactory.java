@@ -91,7 +91,7 @@ public class ZlMuxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Rrg21ZlMuxConfig.Builder()
+                return new Rrg21ZlMuxConfig.Builder(silent)
                     .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:

@@ -95,11 +95,11 @@ public class Ahi22SmallFieldPermGenConfig extends AbstractMultiPartyPtoConfig im
          */
         private ZlMuxConfig zlMuxConfig;
 
-        public Builder(Bit2aConfig bit2aConfig) {
+        public Builder(Bit2aConfig bit2aConfig, boolean silent) {
             this.bit2aConfig = bit2aConfig;
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, bit2aConfig.getZl());
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 
         public Builder setZlcConfig(ZlcConfig zlcConfig) {

@@ -52,8 +52,8 @@ public class Xxx23PlainBitMuxConfig extends AbstractMultiPartyPtoConfig implemen
          */
         private final Zl zl;
 
-        public Builder(Zl zl) {
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+        public Builder(Zl zl, boolean silent) {
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.zl = zl;
         }
 

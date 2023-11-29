@@ -179,9 +179,9 @@ public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig 
             sharedPermutationConfig = SharedPermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            b2aConfig = new TupleB2aConfig.Builder(zl).build();
+            b2aConfig = new TupleB2aConfig.Builder(zl, silent).build();
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
-            permutationConfig = PermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            permutationConfig = PermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
         }
 

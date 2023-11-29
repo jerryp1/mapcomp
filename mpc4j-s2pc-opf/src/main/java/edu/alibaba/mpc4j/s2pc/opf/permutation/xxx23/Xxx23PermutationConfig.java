@@ -120,13 +120,13 @@ public class Xxx23PermutationConfig extends AbstractMultiPartyPtoConfig implemen
          */
         private final Zl zl;
 
-        public Builder(Zl zl) {
+        public Builder(Zl zl, boolean silent) {
             this.zl = zl;
-            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
         }
 
         @Override

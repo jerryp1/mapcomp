@@ -213,8 +213,8 @@ public class Xxx23PrefixSumConfig extends AbstractMultiPartyPtoConfig implements
             prefixTreeType = PrefixTreeTypes.BRENT_KUNG;
             needShuffle = false;
             this.zl = zl;
-            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
-            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
+            b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
         }
 

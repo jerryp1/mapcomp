@@ -62,7 +62,7 @@ public class Dsz15OtZlCoreMtgConfig extends AbstractMultiPartyPtoConfig implemen
         public Builder(Zl zl) {
             super();
             this.zl = zl;
-            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, true);
+            cotConfig = CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
         }
 
         public Builder setCotConfig(CotConfig cotConfig) {
