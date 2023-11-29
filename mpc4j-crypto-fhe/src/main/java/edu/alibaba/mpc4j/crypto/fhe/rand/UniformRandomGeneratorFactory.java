@@ -3,11 +3,12 @@ package edu.alibaba.mpc4j.crypto.fhe.rand;
 import java.util.Arrays;
 
 /**
+ * Uniform random generator factory.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/randomgen.h#L411
  * </p>
  *
- * @author Qixian Zhou
+ * @author Qixian Zhou, Weiran Liu
  * @date 2023/9/19
  */
 public class UniformRandomGeneratorFactory {

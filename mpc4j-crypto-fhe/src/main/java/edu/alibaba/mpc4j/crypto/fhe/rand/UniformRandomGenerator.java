@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
+ * Uniform random generator. Compared with SEAL implementation, we directly use SecureRandom in Java.
  * <p>
  * The implementation is from https://github.com/microsoft/SEAL/blob/v4.0.0/native/src/seal/randomgen.h#L313
  * </p>
