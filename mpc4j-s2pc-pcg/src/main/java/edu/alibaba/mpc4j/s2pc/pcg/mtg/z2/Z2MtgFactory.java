@@ -4,6 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgReceiver;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgSender;
@@ -143,9 +144,9 @@ public class Z2MtgFactory implements PtoFactory {
      * @return a default config.
      */
     public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new CacheZ2MtgConfig.Builder(securityModel).build();
-//        return new HardcodeZ2MtgConfig.Builder(securityModel)
-//            .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
-//            .build();
+//        return new CacheZ2MtgConfig.Builder(securityModel).build();
+        return new HardcodeZ2MtgConfig.Builder(securityModel)
+            .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
+            .build();
     }
 }
