@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
@@ -191,9 +192,20 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector interFlagE) throws MpcAbortException {
-        assert aggField == null;
         // set input
         setPtoInput(groupField, aggField, interFlagE);
+        // group
+        if (aggField == null) {
+            group();
+        } else {
+            groupWithSenderAgg();
+        }
+        // agg
+        agg();
+        return null;
+    }
+
+    private void group() throws MpcAbortException {
         // bitmap
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
@@ -225,6 +237,43 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         stopWatch.stop();
         groupStep5Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
+    }
+
+    private void groupWithSenderAgg() throws MpcAbortException {
+        // bitmap
+        stopWatch.start();
+        groupTripleNum = TRIPLE_NUM;
+        bitmap();
+        stopWatch.stop();
+        groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // sort, output pig0
+        stopWatch.start();
+        sort();
+        stopWatch.stop();
+        groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
+        stopWatch.start();
+        permute1WithSenderAgg();
+        stopWatch.stop();
+        groupStep3Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute2, permute sender's group using rho
+        stopWatch.start();
+        permute2WithSenderAgg();
+        stopWatch.stop();
+        groupStep4Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute3, permute e
+        stopWatch.start();
+        permute3();
+        stopWatch.stop();
+        groupStep5Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+    }
+
+    private void agg() throws MpcAbortException {
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
@@ -243,9 +292,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         aggTripleNum = TRIPLE_NUM - aggTripleNum;
-        return null;
     }
-
 
     private void bitmap() throws MpcAbortException {
         // gen bitmap
@@ -286,9 +333,29 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         rho = split.get(2);
     }
 
+    private void permute1WithSenderAgg() throws MpcAbortException {
+        // permute
+        Vector<byte[]> output = reversePermutationReceiver.permute(piG0, receiverGroupByteLength + Integer.BYTES);
+        // split
+        List<Vector<byte[]>> split = GroupAggUtils.split(output, new int[]{receiverGroupByteLength, Integer.BYTES});
+        receiverGroupShare = split.get(0);
+        rho = split.get(1);
+    }
+
     private void permute2() throws MpcAbortException {
         senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
         senderGroupShare = permutationSender.permute(rho, senderGroupShare);
+    }
+
+    private void permute2WithSenderAgg() throws MpcAbortException {
+        senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
+        aggShare = Arrays.stream(aggAttr).mapToObj(LongUtils::longToByteArray).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> input = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(senderGroupByteLength + Long.BYTES)
+            .put(senderGroupShare.get(i)).put(aggShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> output = permutationSender.permute(rho, input);
+        List<Vector<byte[]>> split = GroupAggUtils.split(output,new int[]{senderGroupByteLength,  Long.BYTES});
+        senderGroupShare = split.get(0);
+        aggShare = split.get(1);
     }
 
     private void permute3() throws MpcAbortException {

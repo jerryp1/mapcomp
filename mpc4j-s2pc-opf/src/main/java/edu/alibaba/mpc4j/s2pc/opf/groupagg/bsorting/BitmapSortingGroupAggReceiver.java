@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -202,10 +203,20 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupAttr, final long[] aggAttr, final SquareZ2Vector interFlagE) throws MpcAbortException {
-        assert aggAttr != null;
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
+        // group
+        if (aggAttr != null) {
+            group();
+        } else {
+            groupWithSenderAgg();
+        }
 
+        // agg
+        return agg();
+    }
+
+    private void group() throws MpcAbortException {
         // bitmap
         stopWatch.start();
         bitmap();
@@ -241,6 +252,47 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         stopWatch.stop();
         long permute3T = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
+    }
+
+    private void groupWithSenderAgg() throws MpcAbortException {
+        // bitmap
+        stopWatch.start();
+        bitmapWithSenderAgg();
+        LOGGER.info("bitmap done");
+        stopWatch.stop();
+        long bitmapT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // sort
+        stopWatch.start();
+        sort();
+        LOGGER.info("sorting done");
+        stopWatch.stop();
+        long sortT = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
+        stopWatch.start();
+        permute1WithSenderAgg();
+        LOGGER.info("permute1 done");
+        stopWatch.stop();
+        long permute1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute2, permute sender's group using rho
+        stopWatch.start();
+        permute2WithSenderAgg();
+        LOGGER.info("permute2 done");
+        stopWatch.stop();
+        long permute2T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        // permute3, permute e
+        stopWatch.start();
+        permute3();
+        LOGGER.info("permute3 done");
+        stopWatch.stop();
+        long permute3T = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+    }
+
+    private GroupAggOut agg() throws MpcAbortException {
         // merge group
         Vector<byte[]> mergedTwoGroup = mergeGroup();
         // b2a
@@ -260,7 +312,7 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         stopWatch.stop();
         long agg1T = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        LOGGER.info("bitmapT:{},sortT:{},permute1T:{},permute2T:{},permute3:{},b2aT:{},aggT:{}",bitmapT,sortT,permute1T,permute2T,permute3T,b2aT,agg1T);
+//        LOGGER.info("bitmapT:{},sortT:{},permute1T:{},permute2T:{},permute3:{},b2aT:{},aggT:{}",bitmapT,sortT,permute1T,permute2T,permute3T,b2aT,agg1T);
         return out;
     }
 
@@ -271,6 +323,28 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         // apply perms to group and agg
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, sigmaB);
         aggAttr = GroupAggUtils.applyPermutation(aggAttr, sigmaB);
+        e = GroupAggUtils.applyPermutation(e, sigmaB);
+        // osn
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, CommonUtils.getByteLength(senderGroupNum + 1));
+        // transpose
+        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
+        // xor own share to meet permutation
+        e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
+//      // and
+        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+//        for (int i = 0; i < senderGroupNum; i++) {
+//            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
+//        }
+//        BitVector test = z2cReceiver.revealOwn(e);
+//        System.out.println();
+    }
+
+    private void bitmapWithSenderAgg() throws MpcAbortException {
+        // obtain sorting permutation
+        sigmaB = obtainPerms(groupAttr);
+        // apply perms to group and agg
+        groupAttr = GroupAggUtils.applyPermutation(groupAttr, sigmaB);
         e = GroupAggUtils.applyPermutation(e, sigmaB);
         // osn
         OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, CommonUtils.getByteLength(senderGroupNum + 1));
@@ -312,8 +386,27 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         rho = split.get(2);
     }
 
+    private void permute1WithSenderAgg() throws MpcAbortException {
+        // permute receiver's group,agg and sigmaB
+        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
+        Vector<byte[]> input = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Integer.BYTES)
+            .put(groupBytes.get(i)).putInt(sigmaB[i]).array()).collect(Collectors.toCollection(Vector::new));
+        Vector<byte[]> output = reversePermutationSender.permute(piG0, input);
+        // split
+        List<Vector<byte[]>> split = GroupAggUtils.split(output, new int[]{receiverGroupByteLength, Integer.BYTES});
+        receiverGroupShare = split.get(0);
+        rho = split.get(1);
+    }
+
     private void permute2() throws MpcAbortException {
         senderGroupShare = permutationReceiver.permute(rho, senderGroupByteLength);
+    }
+
+    private void permute2WithSenderAgg() throws MpcAbortException {
+        Vector<byte[]> output = permutationReceiver.permute(rho, senderGroupByteLength + Long.BYTES);
+        List<Vector<byte[]>> split = GroupAggUtils.split(output,new int[]{senderGroupByteLength,  Long.BYTES});
+        senderGroupShare = split.get(0);
+        aggShare = split.get(1);
     }
 
     private void permute3() throws MpcAbortException {
