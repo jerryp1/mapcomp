@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 
 public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGroupParty implements OneSideGroupParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAmos22OneSideGroupParty.class);
+    private final int maxBitLenOneBatch;
     private final Z2cParty z2cParty;
     private final Z2IntegerCircuit z2IntegerCircuit;
     private final PlainBitMuxParty plainBitMuxParty;
@@ -39,14 +40,15 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
     private SquareZ2Vector[] sValues;
     private SquareZ2Vector[] resultData;
     private SquareZ2Vector[] inputDataProcessed;
+    private BitVector[][] params;
 
     @Override
     public int[] getResPosFlag(BitVector groupFlag) {
         BitVector[][] params = getPlainBitVectors(groupFlag);
         BitVector r = params[params.length - 1][0];
         TIntList updateIndexes = new TIntLinkedList();
-        for(int i = 0; i < groupFlag.bitNum(); i++){
-            if(r.get(i)){
+        for (int i = 0; i < groupFlag.bitNum(); i++) {
+            if (r.get(i)) {
                 updateIndexes.add(i);
             }
         }
@@ -63,6 +65,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
             plainBitMuxParty = PlainBitMuxFactory.createSender(rpc, otherParty, config.getPlainBitMuxConfig());
         }
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
+        maxBitLenOneBatch = config.getMaxBitLenOneBatch();
         addMultipleSubPtos(z2cParty, plainBitMuxParty);
     }
 
@@ -82,7 +85,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
         logPhaseInfo(PtoState.INIT_END);
     }
 
-    public static BitVector[][] getPlainBitVectors(BitVector groupFlag){
+    public static BitVector[][] getPlainBitVectors(BitVector groupFlag) {
         int dataNum = groupFlag.bitNum();
         BitVector gFlag = groupFlag.copy();
         // 为了放置最后一组数据没有更新，强制将最后一个group flag置为1
@@ -105,14 +108,14 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
             resF.setPointsWithFixedSpace(a, childGroupLen - 1, mergeNum, parentLen);
             gFlag.setPointsWithFixedSpace(leftF.or(rightF), 0, mergeNum, parentLen);
             // 3.1.1 计算得到fv的flag
-            if(mergeNum == 1){
+            if (mergeNum == 1) {
                 fIntoMux = rightF.copy();
-            }else{
-                if((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen){
+            } else {
+                if ((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen) {
                     // 当前merge得到的最后一个节点应该是右节点
                     fIntoMux = leftF.copy();
                     fIntoMux.setPointsWithFixedSpace(rightF.getPointsWithFixedSpace(0, mergeNum / 2, 2), 0, mergeNum / 2, 2);
-                }else{
+                } else {
                     fIntoMux = rightF.copy();
                     fIntoMux.setPointsWithFixedSpace(leftF.getPointsWithFixedSpace(1, mergeNum / 2, 2), 1, mergeNum / 2, 2);
                 }
@@ -122,7 +125,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
 //            LOGGER.info("fIntoMux:{}", fIntoMux);
 //            LOGGER.info("gFlag after:{}", gFlag);
         }
-        if(groupFlag.get(dataNum - 1)){
+        if (groupFlag.get(dataNum - 1)) {
             resF.set(dataNum - 1, true);
         }
         flagsInEachRound[levelNum] = new BitVector[]{resF};
@@ -134,28 +137,48 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                                        AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException {
         setInputs(xiArrays, validFlags, aggTypes, groupFlag);
         logPhaseInfo(PtoState.PTO_BEGIN);
+        params = groupFlag != null ? getPlainBitVectors(groupFlag) : null;
+        int eachOneBitLen = xiArrays[0].length * xiArrays[0][0].bitNum();
+        int numInEachBatch = Math.max(Math.min(maxBitLenOneBatch / eachOneBitLen, xiArrays.length), 1);
+        int batchNum = xiArrays.length / numInEachBatch + (xiArrays.length % numInEachBatch > 0 ? 1 : 0);
+        SquareZ2Vector[][] res = new SquareZ2Vector[xiArrays.length][];
+        for (int i = 0, copyStartIndex = 0; i < batchNum; i++, copyStartIndex += numInEachBatch) {
+            int copyEndIndex = Math.min(copyStartIndex + numInEachBatch, xiArrays.length);
+            LOGGER.info("processing one side group op in batch: {} / {}, each batch has {} parallel group", i, batchNum, copyEndIndex - copyStartIndex);
+            SquareZ2Vector[][] tmp = groupAggBatch(
+                Arrays.copyOfRange(xiArrays, copyStartIndex, copyEndIndex),
+                Arrays.copyOfRange(validFlags, copyStartIndex, copyEndIndex),
+                Arrays.copyOfRange(aggTypes, copyStartIndex, copyEndIndex), groupFlag);
+            System.arraycopy(tmp, 0, res, copyStartIndex, tmp.length);
+        }
+        logPhaseInfo(PtoState.PTO_END);
+        return res;
+    }
 
+
+    private SquareZ2Vector[][] groupAggBatch(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags,
+                                             AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException {
         stopWatch.start();
         // 1. 先计算真实的值
         BitVector[][] zerosAndOnes = new BitVector[2][];
         zerosAndOnes[0] = IntStream.range(0, dimLen).mapToObj(i ->
-                BitVectorFactory.createZeros(dataNum)).toArray(BitVector[]::new);
+            BitVectorFactory.createZeros(dataNum)).toArray(BitVector[]::new);
         zerosAndOnes[1] = IntStream.range(0, dimLen).mapToObj(i ->
-                BitVectorFactory.createOnes(dataNum)).toArray(BitVector[]::new);
+            BitVectorFactory.createOnes(dataNum)).toArray(BitVector[]::new);
         BitVector[] perpValue = IntStream.range(0, xiArrays.length).mapToObj(i ->
                 aggTypes[i].equals(AggTypes.MAX) ? zerosAndOnes[0] : zerosAndOnes[1])
             .flatMap(Arrays::stream).toArray(BitVector[]::new);
-        if(validFlags != null){
+        if (validFlags != null) {
             SquareZ2Vector[] validFs = new SquareZ2Vector[dimLen * xiArrays.length];
-            for(int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen){
-                for(int j = startPos; j < startPos + dimLen; j++){
+            for (int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen) {
+                for (int j = startPos; j < startPos + dimLen; j++) {
                     validFs[j] = validFlags[i];
                 }
             }
             SquareZ2Vector[] perpShare = (SquareZ2Vector[]) z2cParty.setPublicValues(perpValue);
             SquareZ2Vector[] originValues = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
             inputDataProcessed = z2cParty.xor(z2cParty.and(validFs, z2cParty.xor(perpShare, originValues)), perpShare);
-        }else{
+        } else {
             inputDataProcessed = Arrays.stream(xiArrays).flatMap(Arrays::stream).toArray(SquareZ2Vector[]::new);
         }
 //        if(groupFlag != null){
@@ -172,10 +195,10 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
             SquareZ2Vector.createZeros(dataNum, false)).toArray(SquareZ2Vector[]::new);
         // 2. 计算p值和s值
         SquareZ2Vector[] fe = null;
-        if(groupFlag != null){
+        if (groupFlag != null) {
             BitVector[] fePlain = Arrays.stream(perpValue).map(x -> x.and(groupFlag)).toArray(BitVector[]::new);
             fe = z2cParty.shareOwn(fePlain);
-        }else{
+        } else {
             fe = z2cParty.shareOther(IntStream.range(0, perpValue.length).map(i -> dataNum).toArray());
         }
         int rightChildNum = dataNum / 2 + (dataNum % 2);
@@ -186,7 +209,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
         SquareZ2Vector[] rightV = GroupUtils.getPos(inputDataProcessed, 1, rightChildNum, 2, parallel);
         SquareZ2Vector[] rightFe = GroupUtils.getPos(fe, 1, rightChildNum, 2, parallel);
         BitVector rightF = null;
-        if(groupFlag != null){
+        if (groupFlag != null) {
             rightF = groupFlag.getPointsWithFixedSpace(1, rightChildNum, 2);
         }
         SquareZ2Vector[] rightFv = plainBitMuxParty.mux(rightF, rightV);
@@ -239,7 +262,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
 
             // 得到op结果
             SquareZ2Vector[] leqFlagExtend = new SquareZ2Vector[attrNum * dimLen];
-            for(int i = 0; i < attrNum; i++){
+            for (int i = 0; i < attrNum; i++) {
                 z2cParty.xori(leqRes[i], aggTypes[i].equals(AggTypes.MAX) ? SquareZ2Vector.createZeros(mergeNum) : SquareZ2Vector.createOnes(mergeNum));
                 Arrays.fill(leqFlagExtend, i * dimLen, i * dimLen + dimLen, leqRes[i]);
             }
@@ -249,22 +272,22 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
             GroupUtils.setPos(resultData, vPrime, childGroupLen - 1, mergeNum, parentLen, parallel);
             // 3.4 先计算出fv
             SquareZ2Vector[] fv = plainBitMuxParty.mux(fIntoMux, v);
-            if(mergeNum == 1){
+            if (mergeNum == 1) {
                 // 3.5 如果只更新一个，那么说明自己已经是左节点了，这时候更新p是没有意义的
                 SquareZ2Vector[] sr = GroupUtils.getPos(sValues, parentLen - 1, mergeNum, parentLen, parallel);
                 SquareZ2Vector[] leftV = GroupUtils.getPos(v, 0, 1, 2, parallel);
-                for(int i = 0; i < sr.length; i++){
+                for (int i = 0; i < sr.length; i++) {
                     z2cParty.xori(sr[i], fv[i]);
                     z2cParty.xori(sr[i], leftV[i]);
                 }
                 GroupUtils.setPos(sValues, sr, parentLen - 1, mergeNum, parentLen, parallel);
-            }else{
+            } else {
                 // 3.5 更新p和s
                 SquareZ2Vector[] pl = GroupUtils.getPos(pValues, 0, mergeNum, parentLen, parallel);
                 SquareZ2Vector[] sr = GroupUtils.getPos(sValues, parentLen - 1, mergeNum, parentLen, parallel);
 
                 SquareZ2Vector[] leftVRightVPrime, leftVPrimeRightV;
-                if((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen){
+                if ((mergeNum & 1) == 0 || dataNum % parentLen > childGroupLen) {
                     // 最后一个节点是右节点
                     SquareZ2Vector[] leftV = GroupUtils.getPos(v, 0, mergeNum / 2, 2, parallel);
                     SquareZ2Vector[] leftVPrime = GroupUtils.getPos(vPrime, 0, mergeNum / 2, 2, parallel);
@@ -272,7 +295,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                     leftVPrimeRightV = Arrays.copyOf(v, v.length);
                     GroupUtils.setPos(leftVRightVPrime, leftV, 0, mergeNum / 2, 2, parallel);
                     GroupUtils.setPos(leftVPrimeRightV, leftVPrime, 0, mergeNum / 2, 2, parallel);
-                }else{
+                } else {
                     SquareZ2Vector[] rightV = GroupUtils.getPos(v, 1, mergeNum / 2, 2, parallel);
                     SquareZ2Vector[] rightVPrime = GroupUtils.getPos(vPrime, 1, mergeNum / 2, 2, parallel);
                     leftVRightVPrime = Arrays.copyOf(v, v.length);
@@ -280,7 +303,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                     GroupUtils.setPos(leftVRightVPrime, rightVPrime, 1, mergeNum / 2, 2, parallel);
                     GroupUtils.setPos(leftVPrimeRightV, rightV, 1, mergeNum / 2, 2, parallel);
                 }
-                for(int i = 0; i < pl.length; i++){
+                for (int i = 0; i < pl.length; i++) {
                     z2cParty.xori(pl[i], fv[i]);
                     z2cParty.xori(sr[i], fv[i]);
                     z2cParty.xori(pl[i], leftVPrimeRightV[i]);

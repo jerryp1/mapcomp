@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
-    private static final int ATTR_NUM = 2;
+    private static final int ATTR_NUM = 3;
     /**
      * bitLen
      */
@@ -41,7 +41,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 57474;
+    private static final int LARGE_SIZE = 1 << 13;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -78,8 +78,8 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     }
 
     @Test
-    public void testTmp(){
-        BitVector r = BitVectorFactory.createRandom(1<<20, new SecureRandom());
+    public void testTmp() {
+        BitVector r = BitVectorFactory.createRandom(1 << 20, new SecureRandom());
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         BitVector[][] res = AbstractAmos22OneSideGroupParty.getPlainBitVectors(r);
@@ -170,7 +170,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
             });
             BitVector groupFlag = BitVectorFactory.createZeros(listSize);
             // 设置group flag，保证最后一个bit是1
-            int possibleGroupNum = Math.max(listSize>>2, 1);
+            int possibleGroupNum = Math.max(listSize >> 2, 1);
             IntStream.range(0, possibleGroupNum).forEach(i -> groupFlag.set(secureRandom.nextInt(listSize), true));
             groupFlag.set(0, true);
 //            groupFlag.set(listSize - 1, true);
@@ -208,13 +208,13 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
         }
     }
 
-    public void assertOutput(BitVector[][] data, BitVector groupFlag, BitVector[] validFlag, BitVector[][] res, AggTypes[] type, int[] targetIndexes){
+    public void assertOutput(BitVector[][] data, BitVector groupFlag, BitVector[] validFlag, BitVector[][] res, AggTypes[] type, int[] targetIndexes) {
         boolean[] gFlag = BinaryUtils.byteArrayToBinary(groupFlag.getBytes(), groupFlag.bitNum());
         BigInteger[] nullValue = Arrays.stream(type).map(x -> x.equals(AggTypes.MAX) ? BigInteger.ZERO : BigInteger.ONE.shiftLeft(data[0].length).subtract(BigInteger.ONE)).toArray(BigInteger[]::new);
         BigInteger[][] origin = IntStream.range(0, data.length).mapToObj(i -> {
             BitVector[] x = data[i];
             BigInteger[] tmp = ZlDatabase.create(EnvType.STANDARD, true, x).getBigIntegerData();
-            for(int j = 0; j < gFlag.length; j++){
+            for (int j = 0; j < gFlag.length; j++) {
                 tmp[j] = validFlag[i].get(j) ? tmp[j] : nullValue[i];
             }
             return tmp;
@@ -230,18 +230,18 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
 //        LOGGER.info("resData:{}", Arrays.deepToString(resData));
 
         BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
-        for(int i = 0; i < groupFlag.bitNum(); i++){
-            for(int j = 0; j < data.length; j++){
-                if(type[j].equals(AggTypes.MAX)){
+        for (int i = 0; i < groupFlag.bitNum(); i++) {
+            for (int j = 0; j < data.length; j++) {
+                if (type[j].equals(AggTypes.MAX)) {
                     tmp[j] = tmp[j].compareTo(origin[j][i]) > 0 ? tmp[j] : origin[j][i];
-                }else{
+                } else {
                     tmp[j] = tmp[j].compareTo(origin[j][i]) < 0 ? tmp[j] : origin[j][i];
                 }
             }
-            if(i + 1 == groupFlag.bitNum() || gFlag[i + 1]){
-                for(int j = 0; j < data.length; j++){
+            if (i + 1 == groupFlag.bitNum() || gFlag[i + 1]) {
+                for (int j = 0; j < data.length; j++) {
                     BigInteger compRes = resData[j][targetIndexes[groupIndex]];
-                    if(compRes.compareTo(tmp[j]) != 0){
+                    if (compRes.compareTo(tmp[j]) != 0) {
                         LOGGER.info("i:{}", i);
                         LOGGER.info("should be:{}", compRes);
                         LOGGER.info("res is:{}", tmp[j]);

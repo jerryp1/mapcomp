@@ -19,10 +19,13 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
      * plain Bit Mux Config
      */
     private final PlainBitMuxConfig plainBitMuxConfig;
+    private final int maxBitLenOneBatch;
+
     private Amos22OneSideGroupConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.plainBitMuxConfig);
         z2cConfig = builder.z2cConfig;
         plainBitMuxConfig = builder.plainBitMuxConfig;
+        maxBitLenOneBatch = builder.maxBitLenOneBatch;
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -31,6 +34,10 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
 
     public PlainBitMuxConfig getPlainBitMuxConfig() {
         return plainBitMuxConfig;
+    }
+
+    public int getMaxBitLenOneBatch() {
+        return maxBitLenOneBatch;
     }
 
     @Override
@@ -47,10 +54,16 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
          * plain Bit Mux Config
          */
         private final PlainBitMuxConfig plainBitMuxConfig;
+        private int maxBitLenOneBatch;
 
         public Builder(boolean silent) {
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, null, silent);
+            maxBitLenOneBatch = 1 << 20;
+        }
+
+        public void setMaxBitLenOneBatch(int maxBitLenOneBatch) {
+            this.maxBitLenOneBatch = maxBitLenOneBatch;
         }
 
         @Override
