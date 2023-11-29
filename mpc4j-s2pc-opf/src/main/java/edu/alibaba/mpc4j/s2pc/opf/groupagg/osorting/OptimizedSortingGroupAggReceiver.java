@@ -276,8 +276,9 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
 
         // ### test
 //        String[] doubSortedReceiverGroup = revealGroup(receiverGroupShare, receiverGroupBitLength);
-        e = SquareZ2Vector.createZeros(num, false);
-        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
+        e = psorterInput[7];
+//        e = SquareZ2Vector.createZeros(num, false);
+//        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOwn.get(0).get(i)[0] & 1) == 1));
 
         // ### test
 //        BitVector bit3 = z2cReceiver.revealOwn(e);

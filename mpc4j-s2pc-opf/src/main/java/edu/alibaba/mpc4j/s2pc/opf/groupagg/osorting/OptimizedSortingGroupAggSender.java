@@ -238,9 +238,9 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         receiverGroupShare = splitOther.get(1);
         // ### test
 //        revealOtherGroup(receiverGroupShare);
-
-        e = SquareZ2Vector.createZeros(num, false);
-        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOther.get(0).get(i)[0] & 1) == 1));
+        e = psorterInput[7];
+//        e = SquareZ2Vector.createZeros(num, false);
+//        IntStream.range(0, num).forEach(i -> e.getBitVector().set(i, (splitOther.get(0).get(i)[0] & 1) == 1));
 //        z2cSender.revealOther(e);
     }
 
