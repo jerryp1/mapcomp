@@ -26,6 +26,8 @@ import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
@@ -165,7 +167,8 @@ public class TripleTestStarter {
     private Z2MtgConfig genZ2MtgConfig() {
         switch (z2MtgType){
             case OFFLINE:
-                return new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
+                Z2CoreMtgConfig z2CoreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
+                return new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).setCoreMtgConfig(z2CoreMtgConfig).build();
             case CACHE:
                 return new CacheZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
             default:
