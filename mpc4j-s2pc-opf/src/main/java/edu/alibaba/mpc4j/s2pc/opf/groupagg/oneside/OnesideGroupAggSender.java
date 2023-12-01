@@ -75,11 +75,7 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
 
     private final B2aParty b2aSender;
 
-//    private final Z2MuxParty z2MuxSender;
-
     protected List<String> senderDistinctGroup;
-
-    private SquareZ2Vector[] bitmapShares;
 
     private SquareZlVector aggZl;
 
@@ -167,22 +163,21 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
 
     private void groupWithSenderAgg() throws MpcAbortException {
         // gen bitmap
-        Vector<byte[]> bitmaps = genBitmapWithAgg(groupAttr, e, aggAttr);
+        Vector<byte[]> osnInput = genOsnInput(e, aggAttr);
         // osn
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
-        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
-        OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, payloadByteLen);
+        int payloadByteLen = CommonUtils.getByteLength(1) + Long.BYTES;
+        OsnPartyOutput osnPartyOutput = osnSender.osn(osnInput, payloadByteLen);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
-        bitmapShares = Arrays.stream(transposed, 0, senderGroupNum).toArray(SquareZ2Vector[]::new);
-        e = transposed[senderGroupNum];
+        e = transposed[0];
         // get aggs
         SquareZ2Vector[] aggZ2 = new SquareZ2Vector[Long.SIZE];
-        System.arraycopy(transposed, CommonUtils.getByteLength(senderGroupNum + 1) * Byte.SIZE, aggZ2, 0, Long.SIZE);
+        System.arraycopy(transposed, Byte.SIZE, aggZ2, 0, Long.SIZE);
         aggZl = b2aSender.b2a(aggZ2);
 
         // mul1
@@ -223,16 +218,14 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
     /**
      * Generate horizontal bitmaps.
      *
-     * @param group group.
      * @return vertical bitmaps.
      */
-    private Vector<byte[]> genBitmapWithAgg(String[] group, SquareZ2Vector e, long[] aggAtt) {
+    private Vector<byte[]> genOsnInput(SquareZ2Vector e, long[] aggAtt) {
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
-        return IntStream.range(0, group.length).mapToObj(i -> {
+        return IntStream.range(0, num).mapToObj(i -> {
             ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
-            byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
-            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
-            BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
+            byte[] bytes = new byte[1];
+            BinaryUtils.setBoolean(bytes, 0, e.getBitVector().get(i));
             buffer.put(bytes);
             buffer.put(LongUtils.longToByteArray(aggAtt[i]));
             return buffer.array();

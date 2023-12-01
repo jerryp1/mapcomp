@@ -139,8 +139,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         logPhaseInfo(PtoState.INIT_END);
     }
 
-//    public static long MIX_TIME_AGG = 0;
-//    public static long MIX_TRIPLE_AGG = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
@@ -178,20 +176,17 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         int[] perms = obtainPerms(groupAttr);
         // apply perms to group and agg
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, perms);
-//        aggAttr = GroupAggUtils.applyPermutation(aggAttr, perms);
         e = GroupAggUtils.applyPermutation(e, perms);
         // osn
-        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        int payloadByteLen = CommonUtils.getByteLength(1) + Long.BYTES;
         OsnPartyOutput osnPartyOutput = osnReceiver.osn(perms, payloadByteLen);
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
-        // bitmap
-        bitmapShares = Arrays.stream(transposed, 0, senderGroupNum).toArray(SquareZ2Vector[]::new);
         // xor own share to meet permutation
-        e = SquareZ2Vector.create(transposed[senderGroupNum].getBitVector().xor(e.getBitVector()), false);
+        e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
         // get aggs
         SquareZ2Vector[] aggZ2 = new SquareZ2Vector[Long.SIZE];
-        System.arraycopy(transposed, CommonUtils.getByteLength(senderGroupNum + 1) * Byte.SIZE, aggZ2, 0, Long.SIZE);
+        System.arraycopy(transposed, Byte.SIZE, aggZ2, 0, Long.SIZE);
         aggZl = b2aReceiver.b2a(aggZ2);
         // mul1
         aggZl = zlMuxReceiver.mux(e, aggZl);
