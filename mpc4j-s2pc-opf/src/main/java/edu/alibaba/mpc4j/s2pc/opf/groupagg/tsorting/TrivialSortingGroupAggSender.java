@@ -147,7 +147,7 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupField, aggField, interFlagE);
         // share and merge group shares
-        share(groupField);
+        share();
         // sort
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
@@ -179,11 +179,23 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         return null;
     }
 
-    private void share(String[] groups) {
-        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groups);
-        Vector<byte[]> senderGroupShare = shareOwn(groupBytes);
-        Vector<byte[]> receiverGroupShare = shareOther();
-        mergedGroups = mergeGroup(senderGroupShare, receiverGroupShare);
+    private void share() {
+        if (senderGroupBitLength == 0 && receiverGroupBitLength == 0) {
+            throw new IllegalArgumentException("group should be set");
+        }
+        // sender == 0
+        if (senderGroupBitLength != 0) {
+            Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
+            mergedGroups =  shareOwn(groupBytes);
+            if (receiverGroupBitLength != 0) {
+                Vector<byte[]> receiverGroupShare = shareOther();
+                mergedGroups = mergeGroup(mergedGroups, receiverGroupShare);
+            }
+        // receiver == 0
+        } else {
+            mergedGroups = shareOther();
+        }
+
     }
 
     private void sort() throws MpcAbortException {
@@ -195,8 +207,10 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         SquareZ2Vector[] transposedGroup = Arrays.stream(TransposeUtils.transposeSplit(mergedInput, (totalGroupByteLength + 1) * Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
 
-        SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + senderGroupBitLength + 1];
+        SquareZ2Vector[] sortInput = new SquareZ2Vector[totalGroupBitLength + 1];
+        // e
         sortInput[0] = transposedGroup[7];
+        // group
         System.arraycopy(transposedGroup, 8, sortInput, 1, senderGroupBitLength);
         System.arraycopy(transposedGroup, 8 + (senderGroupByteLength<<3), sortInput, 1 + senderGroupBitLength, receiverGroupBitLength);
         // sort

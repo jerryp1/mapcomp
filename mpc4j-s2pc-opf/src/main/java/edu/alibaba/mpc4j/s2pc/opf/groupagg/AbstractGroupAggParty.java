@@ -77,7 +77,6 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     protected long groupTripleNum;
     protected long aggTripleNum;
 
-
     protected AbstractGroupAggParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, GroupAggConfig config) {
         super(ptoDesc, rpc, otherParty, config);
         zl = config.getZl();

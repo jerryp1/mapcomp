@@ -160,7 +160,7 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
         // share and merge groups
-        share(groupAttr);
+        share();
         // sort
         sort();
         // apply permutation to agg
@@ -175,11 +175,21 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         return aggregation(mergedGroups, receiverAggAs, e);
     }
 
-    private void share(String[] groups) {
-        Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groups);
-        Vector<byte[]> senderGroupShare = shareOther();
-        Vector<byte[]> receiverGroupShare = shareOwn(groupBytes);
-        mergedGroups = mergeGroup(senderGroupShare, receiverGroupShare);
+    private void share() {
+        if (senderGroupBitLength == 0 && receiverGroupBitLength == 0) {
+            throw new IllegalArgumentException("group should be set");
+        }
+        if (senderGroupBitLength != 0) {
+            mergedGroups =  shareOther();
+            if (receiverGroupBitLength != 0) {
+                Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
+                Vector<byte[]> receiverGroupShare = shareOwn(groupBytes);
+                mergedGroups = mergeGroup(mergedGroups, receiverGroupShare);
+            }
+        } else {
+            Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
+            mergedGroups =  shareOwn(groupBytes);
+        }
     }
 
     private void sort() throws MpcAbortException {
