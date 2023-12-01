@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
+import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -17,6 +18,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
@@ -32,6 +35,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -75,9 +79,15 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
 
     private final B2aParty b2aSender;
 
+    private final ZlDreluParty zlDreluSender;
+
     protected List<String> senderDistinctGroup;
 
     private SquareZlVector aggZl;
+
+    private boolean q11;
+
+    private SquareZlVector sumZl;
 
     public OnesideGroupAggSender(Rpc senderRpc, Party receiverParty, OneSideGroupAggConfig config) {
         super(OnesideGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -88,6 +98,7 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         prefixAggSender = PrefixAggFactory.createPrefixAggSender(senderRpc, receiverParty, config.getPrefixAggConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
+        zlDreluSender = ZlDreluFactory.createSender(senderRpc, receiverParty, config.getZlDreluConfig());
 //        z2MuxSender = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
 //        addMultipleSubPtos(osnSender);
 //        addMultipleSubPtos(plainPayloadMuxReceiver);
@@ -112,9 +123,11 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         zlcSender.init(1);
         prefixAggSender.init(maxL, maxNum);
         b2aSender.init(maxL, maxNum);
+        zlDreluSender.init(maxL, maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
+        q11 = PropertiesUtils.readBoolean(properties, "q11", false);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -126,6 +139,9 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
         setPtoInput(groupField, aggField, intersFlagE);
+        if (q11) {
+            getSum();
+        }
         if (aggField == null) {
             // receiver has groups
             group();
@@ -136,6 +152,12 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         // agg
         agg();
         return null;
+    }
+
+    private void getSum() throws MpcAbortException {
+        SquareZlVector mul = plainPayloadMuxReceiver.mux(e, aggAttr, Long.SIZE);
+        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a, b) -> zl.add(a,b));
+        sumZl = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i->sum).toArray(BigInteger[]::new),false);
     }
 
     private void group() throws MpcAbortException {
@@ -195,7 +217,13 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         stopWatch.start();
         PrefixAggOutput outputs = prefixAggSender.agg((String[]) null, aggZl);
         z2cSender.revealOther(outputs.getIndicator());
-        zlcSender.revealOther(outputs.getAggs());
+        // if q13 then compare
+        SquareZlVector aggTemp = outputs.getAggs();
+        if (q11) {
+            SquareZ2Vector compare = zlDreluSender.drelu(zlcSender.sub(aggTemp, sumZl));
+            z2cSender.revealOther(compare);
+        }
+        zlcSender.revealOther(aggTemp);
         stopWatch.stop();
         aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

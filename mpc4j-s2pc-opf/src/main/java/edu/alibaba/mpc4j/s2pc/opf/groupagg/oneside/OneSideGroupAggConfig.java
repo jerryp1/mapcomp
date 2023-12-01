@@ -9,6 +9,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.drelu.zl.ZlDreluFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
@@ -57,6 +59,7 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
 
     private final Z2MuxConfig z2MuxConfig;
     private final B2aConfig b2aConfig;
+    private final ZlDreluConfig zlDreluConfig;
     /**
      * Zl
      */
@@ -65,7 +68,8 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
     private OneSideGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
             builder.plainPayloadMuxConfig, builder.prefixAggConfig, builder.z2cConfig,
-            builder.zlcConfig, builder.z2MuxConfig, builder.b2aConfig);
+            builder.zlcConfig, builder.z2MuxConfig, builder.b2aConfig,
+            builder.zlDreluConfig);
         this.osnConfig = builder.osnConfig;
         this.z2cConfig = builder.z2cConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
@@ -74,6 +78,7 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
         this.zlcConfig = builder.zlcConfig;
         this.z2MuxConfig = builder.z2MuxConfig;
         this.b2aConfig = builder.b2aConfig;
+        this.zlDreluConfig = builder.zlDreluConfig;
         this.zl = builder.zl;
     }
 
@@ -129,6 +134,10 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
         return z2cConfig;
     }
 
+    public ZlDreluConfig getZlDreluConfig() {
+        return zlDreluConfig;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<OneSideGroupAggConfig> {
         /**
          * Osn config.
@@ -156,6 +165,7 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
         private final PrefixAggConfig prefixAggConfig;
         private final Z2MuxConfig z2MuxConfig;
         private final B2aConfig b2aConfig;
+        private final ZlDreluConfig zlDreluConfig;
         /**
          * Zl
          */
@@ -170,6 +180,7 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,zl,silent);
             this.zl = zl;
         }
 
