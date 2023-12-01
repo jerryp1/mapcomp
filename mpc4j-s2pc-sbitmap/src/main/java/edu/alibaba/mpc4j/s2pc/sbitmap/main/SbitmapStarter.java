@@ -16,6 +16,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OneSideGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
@@ -268,6 +269,8 @@ public class SbitmapStarter {
                 return new TrivialSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case B_SORTING:
                 return new BitmapSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case ONE_SIDE:
+                return new OneSideGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + groupAggType.name());
         }

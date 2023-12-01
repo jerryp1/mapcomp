@@ -18,6 +18,9 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OneSideGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OnesideGroupAggReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OnesideGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggSender;
@@ -54,6 +57,7 @@ public class GroupAggFactory {
         O_SORTING,
         T_SORTING,
         B_SORTING,
+        ONE_SIDE,
     }
 
     /**
@@ -81,6 +85,8 @@ public class GroupAggFactory {
                 return new TrivialSortingGroupAggSender(senderRpc, receiverParty, (TrivialSortingGroupAggConfig) config);
             case B_SORTING:
                 return new BitmapSortingGroupAggSender(senderRpc, receiverParty, (BitmapSortingGroupAggConfig) config);
+            case ONE_SIDE:
+                return new OnesideGroupAggSender(senderRpc, receiverParty, (OneSideGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -111,6 +117,8 @@ public class GroupAggFactory {
                 return new TrivialSortingGroupAggReceiver(receiverRpc, senderParty, (TrivialSortingGroupAggConfig) config);
             case B_SORTING:
                 return new BitmapSortingGroupAggReceiver(receiverRpc, senderParty, (BitmapSortingGroupAggConfig) config);
+            case ONE_SIDE:
+                return new OnesideGroupAggReceiver(receiverRpc, senderParty, (OneSideGroupAggConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + type.name());
         }
