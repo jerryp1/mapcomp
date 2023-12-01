@@ -87,10 +87,6 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
 
     private SquareZlVector aggZl;
 
-    private boolean havingState;
-
-    private boolean dummyPayload;
-
     private SquareZlVector sumZl;
 
     public OnesideGroupAggSender(Rpc senderRpc, Party receiverParty, OneSideGroupAggConfig config) {
@@ -130,9 +126,6 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         zlDreluSender.init(maxL, maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
-
-        havingState = PropertiesUtils.readBoolean(properties, HAVING_STATE, false);
-        dummyPayload = PropertiesUtils.readBoolean(properties, DUMMY_PAYLOAD, false);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

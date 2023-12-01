@@ -95,9 +95,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
 
     private SquareZlVector aggZl;
 
-    private boolean havingState;
-
-    private boolean dummyPayload;
 
     private SquareZlVector sumZl;
 

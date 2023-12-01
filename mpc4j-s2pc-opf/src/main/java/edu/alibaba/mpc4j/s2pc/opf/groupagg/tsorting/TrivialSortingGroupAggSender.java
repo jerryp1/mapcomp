@@ -13,6 +13,8 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -21,8 +23,11 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
@@ -38,6 +43,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationParty;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -89,6 +95,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
      * Permutation sender.
      */
     private final PermutationSender permutationSender;
+    private final PlainPayloadMuxParty plainPayloadMuxReceiver;
+    private final A2bParty a2bSender;
     /**
      * Z2 integer circuit.
      */
@@ -102,6 +110,11 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
      */
     private Vector<byte[]> perms;
 
+//    private SquareZlVector sumZl;
+
+    private SquareZ2Vector[] sumZ2;
+
+
     public TrivialSortingGroupAggSender(Rpc senderRpc, Party receiverParty, TrivialSortingGroupAggConfig config) {
         super(TrivialSortingGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnReceiver = OsnFactory.createReceiver(senderRpc, receiverParty, config.getOsnConfig());
@@ -113,6 +126,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         permutationReceiver = PermutationFactory.createReceiver(senderRpc, receiverParty, config.getPermutationConfig());
         sharedPermutationSender = SharedPermutationFactory.createSender(senderRpc, receiverParty, config.getSharedPermutationConfig());
         permutationSender = PermutationFactory.createSender(senderRpc, receiverParty, config.getPermutationConfig());
+        a2bSender = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
+        plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(senderRpc, receiverParty, config.getPlainPayloadMuxConfig());
 //        addSubPtos(osnReceiver);
 //        addSubPtos(zlMuxSender);
 //        addSubPtos(sharedPermutationSender);
@@ -140,6 +155,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         permutationReceiver.init(maxL, maxNum);
         sharedPermutationSender.init(maxNum);
         permutationSender.init(maxL, maxNum);
+        plainPayloadMuxReceiver.init(maxNum);
+        a2bSender.init(maxL, maxNum);
 
 
         stopWatch.stop();
@@ -154,6 +171,10 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector interFlagE) throws MpcAbortException {
         // set input
         setPtoInput(groupField, aggField, interFlagE);
+        // having state
+        if (havingState) {
+            getSum();
+        }
         // share and merge group shares
         share();
         // sort
@@ -189,6 +210,13 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         aggTripleNum = TRIPLE_NUM - aggTripleNum;
         stopWatch.reset();
         return null;
+    }
+
+    private void getSum() throws MpcAbortException {
+        SquareZlVector mul = plainPayloadMuxReceiver.mux(e, null, Long.SIZE);
+        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a, b) -> zl.add(a,b));
+        SquareZlVector sumZl = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i->sum).toArray(BigInteger[]::new),false);
+        sumZ2 = a2bSender.a2b(sumZl);
     }
 
     private void share() {
@@ -276,14 +304,21 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
-        PrefixAggOutput agg = prefixAggSender.agg(groupField, aggField, flag);
+        PrefixAggOutput outputs = prefixAggSender.agg(groupField, aggField, flag);
+        z2cSender.revealOther(outputs.getIndicator());
         // reveal
-//        zlcSender.revealOther(agg.getAggs());
-        z2cSender.revealOther(agg.getAggsBinary());
-        revealOtherGroup(agg.getGroupings());
-        z2cSender.revealOther(agg.getIndicator());
+//        zlcSender.revealOther(outputs.getAggs());
+        // if q11 then compare
+        SquareZ2Vector[] aggTemp = outputs.getAggsBinary();
+        if (havingState) {
+            SquareZ2Vector compare = (SquareZ2Vector) z2IntegerCircuit.sub(aggTemp, sumZ2)[0];
+            z2cSender.revealOther(compare);
+        }
+        // reveal
+        z2cSender.revealOther(aggTemp);
+        revealOtherGroup(outputs.getGroupings());
 
-        Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
+        Preconditions.checkArgument(outputs.getNum() == num, "size of outputs not correct");
     }
 
     protected Vector<byte[]> shareOwn(Vector<byte[]> input) {

@@ -15,6 +15,8 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -25,6 +27,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.AbstractGroupAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggOut;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggUtils;
@@ -95,6 +99,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
      * Permutation receiver.
      */
     private final PermutationReceiver permutationReceiver;
+    private final PlainPayloadMuxParty plainPayloadMuxSender;
+    private final A2bParty a2bReceiver;
     /**
      * Z2 integer circuit.
      */
@@ -112,6 +118,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
      */
     private Vector<byte[]> perms;
 
+    private SquareZ2Vector[] sumZ2;
+
     public TrivialSortingGroupAggReceiver(Rpc receiverRpc, Party senderParty, TrivialSortingGroupAggConfig config) {
         super(TrivialSortingGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnSender = OsnFactory.createSender(receiverRpc, senderParty, config.getOsnConfig());
@@ -123,6 +131,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         permutationSender = PermutationFactory.createSender(receiverRpc, senderParty, config.getPermutationConfig());
         sharedPermutationReceiver = SharedPermutationFactory.createReceiver(receiverRpc, senderParty, config.getSharedPermutationConfig());
         permutationReceiver = PermutationFactory.createReceiver(receiverRpc, senderParty, config.getPermutationConfig());
+        plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
+        a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
 //        addSubPtos(osnSender);
 //        addSubPtos(zlMuxReceiver);
 //        addSubPtos(sharedPermutationReceiver);
@@ -152,6 +162,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         permutationSender.init(maxL, maxNum);
         sharedPermutationReceiver.init(maxNum);
         permutationReceiver.init(maxL, maxNum);
+        plainPayloadMuxSender.init(maxNum);
+        a2bReceiver.init(maxL, maxNum);
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -165,6 +177,9 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     public GroupAggOut groupAgg(String[] groupAttr, final long[] aggAttr, final SquareZ2Vector interFlagE) throws MpcAbortException {
         // set input
         setPtoInput(groupAttr, aggAttr, interFlagE);
+        if (havingState) {
+            getSum();
+        }
         // share and merge groups
         share();
         // sort
@@ -183,6 +198,13 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 //        ZlVector zlVector = zlcReceiver.revealOwn(receiverAggAs);
         // aggregation
         return aggregation(mergedGroups, receiverAggAs, e);
+    }
+
+    private void getSum() throws MpcAbortException {
+        SquareZlVector mul = plainPayloadMuxSender.mux(e, aggAttr, Long.SIZE);
+        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a,b) -> zl.add(a,b));
+        SquareZlVector sumZl = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i->sum).toArray(BigInteger[]::new),false);
+        sumZ2 = a2bReceiver.a2b(sumZl);
     }
 
     private void share() {
@@ -277,12 +299,18 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     private GroupAggOut sumAgg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
+        BitVector indicator = z2cReceiver.revealOwn(agg.getIndicator());
+        SquareZ2Vector[] aggTemp = agg.getAggsBinary();
+        if (havingState) {
+            SquareZ2Vector compare = (SquareZ2Vector) z2IntegerCircuit.sub(aggTemp, sumZ2)[0];
+            BitVector c = z2cReceiver.revealOwn(compare);
+            indicator = c.and(indicator);
+        }
         // reveal
-        BitVector[] tmpAgg = z2cReceiver.revealOwn(agg.getAggsBinary());
+        BitVector[] tmpAgg = z2cReceiver.revealOwn(aggTemp);
         ZlVector aggResult = ZlVector.create(zl, ZlDatabase.create(envType, parallel, tmpAgg).getBigIntegerData());
 //        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
-        BitVector indicator = z2cReceiver.revealOwn(agg.getIndicator());
         // subtraction
         int[] indexes = obtainIndexes(indicator);
         BigInteger[] result = aggResult.getElements();
@@ -296,12 +324,18 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
         // reveal
+        BitVector groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
+        SquareZ2Vector[] aggTemp = agg.getAggsBinary();
+        if (havingState) {
+            SquareZ2Vector compare = (SquareZ2Vector) z2IntegerCircuit.sub(aggTemp, sumZ2)[0];
+            BitVector c = z2cReceiver.revealOwn(compare);
+            groupIndicator = c.and(groupIndicator);
+        }
         Preconditions.checkArgument(agg.getNum() == num, "size of output not correct");
-        BitVector[] tmpAgg = z2cReceiver.revealOwn(agg.getAggsBinary());
+        BitVector[] tmpAgg = z2cReceiver.revealOwn(aggTemp);
         ZlVector aggResult = ZlVector.create(zl, ZlDatabase.create(envType, parallel, tmpAgg).getBigIntegerData());
 //        ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         String[] tureGroup = revealBothGroup(agg.getGroupings());
-        BitVector groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
         // filter
         int[] indexes = obtainIndexes(groupIndicator);
         BigInteger[] filteredAgg = new BigInteger[indexes.length];

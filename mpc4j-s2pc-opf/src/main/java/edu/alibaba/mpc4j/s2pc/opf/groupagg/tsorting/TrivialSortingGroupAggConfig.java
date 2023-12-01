@@ -3,6 +3,8 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.tuple.TupleB2aConfig;
@@ -12,6 +14,9 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
@@ -64,6 +69,14 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
      */
     private final PermutationConfig permutationConfig;
     /**
+     * A2b config
+     */
+    private final A2bConfig a2bConfig;
+    /**
+     * Plain payload mux config.
+     */
+    private final PlainPayloadMuxConfig plainPayloadMuxConfig;
+    /**
      * Zl zl.
      */
     private final Zl zl;
@@ -71,7 +84,8 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
     private TrivialSortingGroupAggConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
             builder.sharedPermutationConfig, builder.z2cConfig,
-            builder.zlcConfig, builder.b2aConfig, builder.permutationConfig);
+            builder.zlcConfig, builder.b2aConfig, builder.permutationConfig,
+            builder.a2bConfig, builder.plainPayloadMuxConfig);
         this.osnConfig = builder.osnConfig;
         this.zlMuxConfig = builder.zlMuxConfig;
         this.sharedPermutationConfig = builder.sharedPermutationConfig;
@@ -80,6 +94,8 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
         this.zlcConfig = builder.zlcConfig;
         this.b2aConfig = builder.b2aConfig;
         this.permutationConfig = builder.permutationConfig;
+        this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
+        this.a2bConfig = builder.a2bConfig;
         this.zl = builder.zl;
     }
 
@@ -121,9 +137,16 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
         return zlcConfig;
     }
 
+    public A2bConfig getA2bConfig() {
+        return a2bConfig;
+    }
 
     public PermutationConfig getPermutationConfig() {
         return permutationConfig;
+    }
+
+    public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
+        return plainPayloadMuxConfig;
     }
 
     @Override
@@ -170,6 +193,14 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
          */
         private final PermutationConfig permutationConfig;
         /**
+         * Plain payload mux config.
+         */
+        private final PlainPayloadMuxConfig plainPayloadMuxConfig;
+        /**
+         * A2b config
+         */
+        private final A2bConfig a2bConfig;
+        /**
          * Zl
          */
         private final Zl zl;
@@ -183,6 +214,8 @@ public class TrivialSortingGroupAggConfig extends AbstractMultiPartyPtoConfig im
             b2aConfig = new TupleB2aConfig.Builder(zl, silent).build();
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
             permutationConfig = PermutationFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
+            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  silent);
+            a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
         }
 

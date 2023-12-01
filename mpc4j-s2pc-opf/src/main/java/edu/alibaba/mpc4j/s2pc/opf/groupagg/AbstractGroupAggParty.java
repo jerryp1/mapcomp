@@ -24,6 +24,9 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.DUMMY_PAYLOAD;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.HAVING_STATE;
+
 /**
  * Abstract shuffle sender.
  *
@@ -77,6 +80,10 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
     protected long groupTripleNum;
     protected long aggTripleNum;
 
+    protected boolean havingState;
+
+    protected boolean dummyPayload;
+
     protected AbstractGroupAggParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, GroupAggConfig config) {
         super(ptoDesc, rpc, otherParty, config);
         zl = config.getZl();
@@ -95,6 +102,9 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         totalGroupNum = senderGroupNum * receiverGroupNum;
         maxL = PropertiesUtils.readInt(properties, CommonConstants.MAX_L);
         maxNum = PropertiesUtils.readInt(properties, CommonConstants.MAX_NUM);
+
+        havingState = PropertiesUtils.readBoolean(properties, HAVING_STATE, false);
+        dummyPayload = PropertiesUtils.readBoolean(properties, DUMMY_PAYLOAD, false);
     }
 
     protected void setInitInput(int maxNum) {
