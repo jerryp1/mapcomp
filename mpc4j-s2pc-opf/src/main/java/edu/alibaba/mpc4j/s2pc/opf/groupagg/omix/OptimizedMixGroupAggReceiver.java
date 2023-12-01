@@ -233,8 +233,8 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         String[] groupResult = new String[senderGroupNum * groupIndex.length];
         for (int i = 0; i < senderGroupNum; i++) {
             for (int j = 0; j < groupIndex.length; j++) {
-                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
-                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
+//                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
+//                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
             }
         }
         return new GroupAggOut(groupResult, aggResult);
