@@ -246,7 +246,7 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         System.arraycopy(psorterInput, 8, sortInput, 1, receiverGroupBitLength);
         // sort
         SquareZ2Vector[] piGiVector = Arrays.stream(z2IntegerCircuit.psort(new SquareZ2Vector[][]{sortInput},
-                null, PlainZ2Vector.createOnes(1), true, false))
+                null, PlainZ2Vector.createOnes(1), true, true))
             .map(v -> (SquareZ2Vector) v).toArray(SquareZ2Vector[]::new);
         psorterInput[7] = sortInput[0];
         System.arraycopy(sortInput, 1, psorterInput, 8, receiverGroupBitLength);
