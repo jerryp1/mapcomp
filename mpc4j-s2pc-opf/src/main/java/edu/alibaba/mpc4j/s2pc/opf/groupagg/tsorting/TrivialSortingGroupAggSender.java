@@ -284,11 +284,19 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
 
     private void applyWithSenderAgg() throws MpcAbortException {
         // apply permutation to plain agg
+        int byteLen = dummyPayload ? 2 * Long.BYTES : Long.BYTES;
         aggShare = IntStream.range(0, num).mapToObj(i ->
-            ByteBuffer.allocate(Long.BYTES)
+            ByteBuffer.allocate(byteLen)
                 .put(LongUtils.longToByteArray(aggAttr[i])).array())
             .collect(Collectors.toCollection(Vector::new));
         aggShare = permutationSender.permute(perms, aggShare);
+        if (dummyPayload) {
+            aggShare = aggShare.stream().map(v -> {
+                byte[] bytes = new byte[Long.BYTES];
+                System.arraycopy(v, 0, bytes,0,Long.BYTES);
+                return bytes;
+            }).collect(Collectors.toCollection(Vector::new));
+        }
     }
 
     private Vector<byte[]> mergeGroup(Vector<byte[]> senderGroupShare, Vector<byte[]> receiverGroupShare) {
@@ -305,6 +313,9 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
 
     private void aggregation(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         PrefixAggOutput outputs = prefixAggSender.agg(groupField, aggField, flag);
+        if (dummyPayload) {
+            prefixAggSender.agg(groupField, aggField, flag);
+        }
         z2cSender.revealOther(outputs.getIndicator());
         // reveal
 //        zlcSender.revealOther(outputs.getAggs());

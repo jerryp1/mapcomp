@@ -139,8 +139,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
-        havingState = PropertiesUtils.readBoolean(properties, HAVING_STATE, false);
-        dummyPayload = PropertiesUtils.readBoolean(properties, DUMMY_PAYLOAD, false);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

@@ -233,7 +233,6 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
         SquareZ2Vector[] transposedGroup = Arrays.stream(TransposeUtils.transposeSplit(mergedInput, (totalGroupByteLength + 1) * Byte.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
 
-
         SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + senderGroupBitLength + 1];
         sortInput[0] = transposedGroup[7];
         System.arraycopy(transposedGroup, 8, sortInput, 1, senderGroupBitLength);
@@ -268,7 +267,16 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private void applyWithSenderAgg() throws MpcAbortException {
-        aggShare = permutationReceiver.permute(perms, Long.BYTES);
+        int byteLen = dummyPayload ? 2 * Long.BYTES : Long.BYTES;
+        aggShare = permutationReceiver.permute(perms, byteLen);
+
+        if (dummyPayload) {
+            aggShare = aggShare.stream().map(v -> {
+                byte[] bytes = new byte[Long.BYTES];
+                System.arraycopy(v, 0, bytes,0,Long.BYTES);
+                return bytes;
+            }).collect(Collectors.toCollection(Vector::new));
+        }
     }
 
 
@@ -299,6 +307,9 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     private GroupAggOut sumAgg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
+        if (dummyPayload) {
+            prefixAggReceiver.agg(groupField, aggField, flag);
+        }
         BitVector indicator = z2cReceiver.revealOwn(agg.getIndicator());
         SquareZ2Vector[] aggTemp = agg.getAggsBinary();
         if (havingState) {
@@ -323,6 +334,9 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     private GroupAggOut maxAgg(Vector<byte[]> groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException {
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField, flag);
+        if (dummyPayload) {
+            prefixAggReceiver.agg(groupField, aggField, flag);
+        }
         // reveal
         BitVector groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
         SquareZ2Vector[] aggTemp = agg.getAggsBinary();
