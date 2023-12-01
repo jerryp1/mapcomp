@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
@@ -30,6 +31,7 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
@@ -84,6 +86,10 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
      */
     private final SharedPermutationParty sharedPermutationSender;
     /**
+     * Permutation sender.
+     */
+    private final PermutationSender permutationSender;
+    /**
      * Z2 integer circuit.
      */
     private final Z2IntegerCircuit z2IntegerCircuit;
@@ -106,6 +112,7 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
         permutationReceiver = PermutationFactory.createReceiver(senderRpc, receiverParty, config.getPermutationConfig());
         sharedPermutationSender = SharedPermutationFactory.createSender(senderRpc, receiverParty, config.getSharedPermutationConfig());
+        permutationSender = PermutationFactory.createSender(senderRpc, receiverParty, config.getPermutationConfig());
 //        addSubPtos(osnReceiver);
 //        addSubPtos(zlMuxSender);
 //        addSubPtos(sharedPermutationSender);
@@ -132,6 +139,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         b2aSender.init(maxL, maxNum);
         permutationReceiver.init(maxL, maxNum);
         sharedPermutationSender.init(maxNum);
+        permutationSender.init(maxL, maxNum);
+
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -143,7 +152,6 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector interFlagE) throws MpcAbortException {
-        assert aggField == null;
         // set input
         setPtoInput(groupField, aggField, interFlagE);
         // share and merge group shares
@@ -157,7 +165,11 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         stopWatch.reset();
         // apply permutation to agg
         stopWatch.start();
-        apply();
+        if (aggField == null) {
+            apply();
+        } else {
+            applyWithSenderAgg();
+        }
         stopWatch.stop();
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -195,7 +207,6 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         } else {
             mergedGroups = shareOther();
         }
-
     }
 
     private void sort() throws MpcAbortException {
@@ -241,6 +252,15 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     private void apply() throws MpcAbortException {
         // apply permutation to plain agg
         aggShare = permutationReceiver.permute(perms, Long.BYTES);
+    }
+
+    private void applyWithSenderAgg() throws MpcAbortException {
+        // apply permutation to plain agg
+        aggShare = IntStream.range(0, num).mapToObj(i ->
+            ByteBuffer.allocate(Long.BYTES)
+                .put(LongUtils.longToByteArray(aggAttr[i])).array())
+            .collect(Collectors.toCollection(Vector::new));
+        aggShare = permutationSender.permute(perms, aggShare);
     }
 
     private Vector<byte[]> mergeGroup(Vector<byte[]> senderGroupShare, Vector<byte[]> receiverGroupShare) {
