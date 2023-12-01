@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.DUMMY_PAYLOAD;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.HAVING_STATE;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 
@@ -85,7 +87,9 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
 
     private SquareZlVector aggZl;
 
-    private boolean q11;
+    private boolean havingState;
+
+    private boolean dummyPayload;
 
     private SquareZlVector sumZl;
 
@@ -127,7 +131,8 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
-        q11 = PropertiesUtils.readBoolean(properties, "q11", false);
+        havingState = PropertiesUtils.readBoolean(properties, HAVING_STATE, false);
+        dummyPayload = PropertiesUtils.readBoolean(properties, DUMMY_PAYLOAD, false);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -139,7 +144,7 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
         setPtoInput(groupField, aggField, intersFlagE);
-        if (q11) {
+        if (havingState) {
             getSum();
         }
         if (aggField == null) {
@@ -189,7 +194,8 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         // osn
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
-        int payloadByteLen = CommonUtils.getByteLength(1) + Long.BYTES;
+        int payloadByteLen = dummyPayload ? CommonUtils.getByteLength(1) + 2 * Long.BYTES :
+            CommonUtils.getByteLength(1) +  Long.BYTES;
         OsnPartyOutput osnPartyOutput = osnSender.osn(osnInput, payloadByteLen);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -209,6 +215,10 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
+
+        if (dummyPayload) {
+            zlMuxSender.mux(e, b2aSender.b2a(aggZ2));
+        }
     }
 
     private void agg() throws MpcAbortException {
@@ -216,10 +226,13 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         // prefix agg
         stopWatch.start();
         PrefixAggOutput outputs = prefixAggSender.agg((String[]) null, aggZl);
+        if (dummyPayload) {
+            prefixAggSender.agg((String[]) null, aggZl);
+        }
         z2cSender.revealOther(outputs.getIndicator());
-        // if q13 then compare
+        // if q11 then compare
         SquareZlVector aggTemp = outputs.getAggs();
-        if (q11) {
+        if (havingState) {
             SquareZ2Vector compare = zlDreluSender.drelu(zlcSender.sub(aggTemp, sumZl));
             z2cSender.revealOther(compare);
         }
@@ -249,7 +262,8 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
      * @return vertical bitmaps.
      */
     private Vector<byte[]> genOsnInput(SquareZ2Vector e, long[] aggAtt) {
-        int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        int payloadByteLen = dummyPayload ? CommonUtils.getByteLength(senderGroupNum + 1) + 2 * Long.BYTES :
+            CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
         return IntStream.range(0, num).mapToObj(i -> {
             ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
             byte[] bytes = new byte[1];

@@ -48,6 +48,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.DUMMY_PAYLOAD;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.HAVING_STATE;
+
 /**
  * Mix group aggregation receiver. Receiver is assumed to always has group attributes.
  *
@@ -88,13 +91,13 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
 
     private BitVector groupIndicator;
 
-    private String[] resultReceiverGroup;
-
     protected List<String> senderDistinctGroup;
 
     private SquareZlVector aggZl;
 
-    private boolean q11;
+    private boolean havingState;
+
+    private boolean dummyPayload;
 
     private SquareZlVector sumZl;
 
@@ -139,7 +142,8 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
-        q11 = PropertiesUtils.readBoolean(properties, "q11", false);
+        havingState = PropertiesUtils.readBoolean(properties, HAVING_STATE, false);
+        dummyPayload = PropertiesUtils.readBoolean(properties, DUMMY_PAYLOAD, false);
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -152,7 +156,7 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
         setPtoInput(groupField, aggField, intersFlagE);
-        if (q11) {
+        if (havingState) {
             getSum();
         }
         if (aggField != null) {
@@ -196,7 +200,8 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, perms);
         e = GroupAggUtils.applyPermutation(e, perms);
         // osn
-        int payloadByteLen = CommonUtils.getByteLength(1) + Long.BYTES;
+        int payloadByteLen = dummyPayload ? CommonUtils.getByteLength(1) + 2 * Long.BYTES :
+            CommonUtils.getByteLength(1) + Long.BYTES;
         OsnPartyOutput osnPartyOutput = osnReceiver.osn(perms, payloadByteLen);
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
@@ -208,6 +213,9 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         aggZl = b2aReceiver.b2a(aggZ2);
         // mul1
         aggZl = zlMuxReceiver.mux(e, aggZl);
+        if (dummyPayload) {
+            zlMuxReceiver.mux(e, b2aReceiver.b2a(aggZ2));
+        }
     }
 
     private GroupAggOut agg() throws MpcAbortException {
@@ -244,11 +252,14 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         Zl zl = aggField.getZl();
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField);
+        if (dummyPayload) {
+            PrefixAggOutput dummy = prefixAggReceiver.agg(groupField, aggField);
+        }
         // reveal
         groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
-        // if q13 then compare
+        // if q11 then compare
         SquareZlVector aggTemp = agg.getAggs();
-        if (q11) {
+        if (havingState) {
             SquareZ2Vector compare = zlDreluReceiver.drelu(zlcReceiver.sub(aggTemp, sumZl));
             BitVector c = z2cReceiver.revealOwn(compare);
             groupIndicator = groupIndicator.and(c);
@@ -262,14 +273,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         }
         return ZlVector.create(zl, result);
     }
-
-//    private ZlVector maxAgg(String[] groupField, SquareZlVector aggField) throws MpcAbortException {
-//        // agg
-//        PrefixAggOutput prefixAggOutput = prefixAggReceiver.agg(groupField, aggField);
-//        // reveal
-//        groupIndicator = z2cReceiver.revealOwn(prefixAggOutput.getIndicator());
-//        return zlcReceiver.revealOwn(prefixAggOutput.getAggs());
-//    }
 
     private int[] obtainIndexes(BitVector input) {
         return IntStream.range(0, num).filter(input::get).toArray();
