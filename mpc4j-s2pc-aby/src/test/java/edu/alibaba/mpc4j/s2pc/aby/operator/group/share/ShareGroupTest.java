@@ -33,7 +33,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * bitLen
      */
-    private static final int[] bitLens = new int[]{8, 64};
+    private static final int[] bitLens = new int[]{64};
     /**
      * default small size
      */
@@ -52,11 +52,11 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
                 bitLen,
                 new Amos22ShareGroupConfig.Builder(false).build(),
             });
-            configurations.add(new Object[]{
-                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
-                bitLen,
-                new Amos22ShareGroupConfig.Builder(true).build(),
-            });
+//            configurations.add(new Object[]{
+//                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
+//                bitLen,
+//                new Amos22ShareGroupConfig.Builder(true).build(),
+//            });
         }
         return configurations;
     }

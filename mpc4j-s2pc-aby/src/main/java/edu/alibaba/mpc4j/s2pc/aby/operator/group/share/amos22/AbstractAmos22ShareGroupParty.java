@@ -209,7 +209,9 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
     }
 
     private SquareZ2Vector[][] commonIter(AggTypes[] aggTypes, SquareZ2Vector groupFlag, int attrNum) throws MpcAbortException {
+        stopWatch.start();
         SquareZ2Vector[][] params = getShareBitVectors(groupFlag);
+        logStepInfo(PtoState.PTO_STEP, 0, 111, resetAndGetTime(), "compute Flag");
 //        if(groupFlag != null){
 //            BitVector[] pPlain = z2cParty.revealOwn(pValues);
 //            BitVector[] sPlain = z2cParty.revealOwn(sValues);

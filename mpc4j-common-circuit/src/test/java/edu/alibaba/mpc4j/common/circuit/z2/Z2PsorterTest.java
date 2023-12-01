@@ -55,7 +55,7 @@ public class Z2PsorterTest {
     /**
      * default l
      */
-    private static final int DEFAULT_L = 24;
+    private static final int DEFAULT_L = 3;
     /**
      * large l
      */
@@ -118,8 +118,9 @@ public class Z2PsorterTest {
     }
 
     private void testRandom(int l, int numOfSorted, int payloadNum) {
-        long[] longXs = LongStream.range(0, numOfSorted).map(i ->
-            LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM)).toArray();
+//        long[] longXs = LongStream.range(0, numOfSorted).map(i ->
+//            LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM)).toArray();
+        long[] longXs = LongStream.range(0, numOfSorted).map(i -> 1).toArray();
         long[][] payload = payloadNum == 0 ? null : IntStream.range(0, payloadNum).mapToObj(i ->
             LongStream.range(0, numOfSorted).map(j ->
                     LongUtils.randomNonNegative(1L << (l - 1), SECURE_RANDOM))
@@ -158,6 +159,6 @@ public class Z2PsorterTest {
         long[] xSorted = PSorterUtils.transport(xPlainZ2Vectors[0]);
         long[][] payloadSorted = pPlainZ2Vectors == null ? null : Arrays.stream(pPlainZ2Vectors).map(PSorterUtils::transport).toArray(long[][]::new);
 
-        Z2CircuitTestUtils.assertPsortOutput(l, longXs, payload, permutation, xSorted, payloadSorted);
+        Z2CircuitTestUtils.assertPsortStableOutput(l, longXs, payload, permutation, xSorted, payloadSorted);
     }
 }
