@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -332,7 +331,19 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
 //      // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+
+
+        int number = 1<<8;
+        int start = 0;
+        SquareZ2Vector[] muxRes = new SquareZ2Vector[senderBitmapShares.length];
+        while(start < senderBitmapShares.length){
+            SquareZ2Vector[] current = Arrays.copyOfRange(senderBitmapShares, start, Math.min(start + number, senderBitmapShares.length));
+            SquareZ2Vector[] tmp = z2MuxParty.mux(e, current);
+            System.arraycopy(tmp, 0, muxRes, start, tmp.length);
+            start += number;
+        }
+        senderBitmapShares = muxRes;
+//        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
 //        }
@@ -354,7 +365,17 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
 //      // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+
+        int number = 1<<8;
+        int start = 0;
+        SquareZ2Vector[] muxRes = new SquareZ2Vector[senderBitmapShares.length];
+        while(start < senderBitmapShares.length){
+            SquareZ2Vector[] current = Arrays.copyOfRange(senderBitmapShares, start, Math.min(start + number, senderBitmapShares.length));
+            SquareZ2Vector[] tmp = z2MuxParty.mux(e, current);
+            System.arraycopy(tmp, 0, muxRes, start, tmp.length);
+            start += number;
+        }
+        senderBitmapShares = muxRes;
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
 //        }

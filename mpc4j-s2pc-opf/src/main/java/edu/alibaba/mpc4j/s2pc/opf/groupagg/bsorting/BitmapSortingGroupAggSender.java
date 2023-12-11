@@ -304,7 +304,17 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         e = transposed[0];
         // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+        int number = 1<<8;
+        int start = 0;
+        SquareZ2Vector[] muxRes = new SquareZ2Vector[senderBitmapShares.length];
+        while(start < senderBitmapShares.length){
+            SquareZ2Vector[] current = Arrays.copyOfRange(senderBitmapShares, start, Math.min(start + number, senderBitmapShares.length));
+            SquareZ2Vector[] tmp = z2MuxParty.mux(e, current);
+            System.arraycopy(tmp, 0, muxRes, start, tmp.length);
+            start += number;
+        }
+        senderBitmapShares = muxRes;
+//        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
 //        }

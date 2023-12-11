@@ -38,12 +38,6 @@ public class ZlVector implements RingVector {
             pos += vectors[i].elements.length;
         }
         return ZlVector.create(vectors[0].getZl(), mergeElements);
-//        ZlVector mergeVector = ZlVector.createEmpty(vectors[0].getZl());
-//        for (ZlVector vector : vectors) {
-//            MathPreconditions.checkPositive("vector.num", vector.getNum());
-//            mergeVector.merge(vector);
-//        }
-//        return mergeVector;
     }
 
     /**
@@ -62,19 +56,6 @@ public class ZlVector implements RingVector {
             startPos += nums[i];
         }
         return Arrays.stream(spRes).map(x -> ZlVector.create(mergeVector.getZl(), x)).toArray(ZlVector[]::new);
-//        BigInteger[] subElements = new BigInteger[splitNum];
-//        BigInteger[] remainElements = new BigInteger[num - splitNum];
-//        System.arraycopy(elements, 0, subElements, 0, splitNum);
-//        System.arraycopy(elements, splitNum, remainElements, 0, num - splitNum);
-//        elements = remainElements;
-//        return ZlVector.create(zl, subElements);
-//
-//        ZlVector[] vectors = new ZlVector[nums.length];
-//        for (int index = 0; index < nums.length; index++) {
-//            vectors[index] = mergeVector.split(nums[index]);
-//        }
-//        MathPreconditions.checkEqual("final mergeVector.num", "0", mergeVector.getNum(), 0);
-//        return vectors;
     }
 
     /**

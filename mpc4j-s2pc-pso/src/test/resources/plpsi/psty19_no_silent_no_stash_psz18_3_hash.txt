@@ -5,9 +5,9 @@ pto_type = PLPSI
 element_byte_length = 16
 
 # parties log set size (log(n))
-server_log_set_size = 12,10
-client_log_set_size = 12,10
-log_set_size = 12,10
+server_log_set_size = 6,8
+client_log_set_size = 6,8
+log_set_size = 6,8
 payload_bit_length = 64, 72, 80, 84
 is_binary_share = true
 
