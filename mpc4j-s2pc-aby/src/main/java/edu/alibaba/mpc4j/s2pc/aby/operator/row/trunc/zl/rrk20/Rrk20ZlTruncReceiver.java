@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
@@ -77,9 +78,9 @@ public class Rrk20ZlTruncReceiver extends AbstractZlTruncParty {
         SquareZ2Vector one = SquareZ2Vector.createOnes(num);
         drelu.getBitVector().xori(one.getBitVector());
         stopWatch.stop();
-        long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long dreluTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, prepareTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 3, dreluTime);
 
         stopWatch.start();
         int[] choice = IntStream.range(0, num)
@@ -105,15 +106,14 @@ public class Rrk20ZlTruncReceiver extends AbstractZlTruncParty {
             .mapToObj(i -> BigInteger.ONE.shiftLeft(l - s))
             .toArray(BigInteger[]::new);
         ZlVector shift = ZlVector.create(zl, r1);
-        BigInteger[] r2 = rDiv(xi.getZlVector().getElements(), zl.getRangeBound(), s);
-        ZlVector r = ZlVector.create(zl, r2);
+        ZlVector r = rDiv(xi.getZlVector().getElements(), zl.getRangeBound(), s);
         r.setParallel(parallel);
         r.addi(corr.mul(shift));
         SquareZlVector squareZlVector = SquareZlVector.create(r, false);
         stopWatch.stop();
-        long ptoTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        long handleOutputTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 3, ptoTime);
+        logStepInfo(PtoState.PTO_STEP, 3, 3, handleOutputTime);
 
         logPhaseInfo(PtoState.PTO_END);
         return squareZlVector;
@@ -130,33 +130,30 @@ public class Rrk20ZlTruncReceiver extends AbstractZlTruncParty {
 
     private ZlVector handleCorrPayload(List<byte[]> siPayload, LnotReceiverOutput lnotReceiverOutput) {
         byte[][] siArray = siPayload.toArray(new byte[0][]);
-        BigInteger[] rb = new BigInteger[num];
-        BigInteger[] t = new BigInteger[num];
-        for (int index = 0; index < num; index++) {
-            byte[] rv = lnotReceiverOutput.getRb(index);
-            t[index] = zl.createRandom(rv);
-        }
-        ZlVector vector = ZlVector.create(zl, t);
-        for (int index = 0; index < num; index++) {
-            int v = lnotReceiverOutput.getChoice(index);
-            rb[index] = BigIntegerUtils.byteArrayToBigInteger(siArray[v * num + index]);
-        }
-        ZlVector sVector = ZlVector.create(zl, rb);
-        sVector.subi(vector);
-        return sVector;
-    }
-
-    private BigInteger[] rDiv(BigInteger[] input, BigInteger n, int d) {
-        int num = input.length;
-        BigInteger nHalf = n.shiftRight(1);
         IntStream intStream = IntStream.range(0, num);
         intStream = parallel ? intStream.parallel() : intStream;
-        return intStream.mapToObj(index -> {
-            if (input[index].compareTo(nHalf) < 0) {
-                return input[index].shiftRight(d);
+        BigInteger[] t = intStream.
+            mapToObj(index -> zl.createRandom(lnotReceiverOutput.getRb(index)))
+            .toArray(BigInteger[]::new);
+        BigInteger[] rb = IntStream.range(0, num)
+            .mapToObj(index -> {
+                int v = lnotReceiverOutput.getChoice(index);
+                return BigIntegerUtils.byteArrayToBigInteger(siArray[v * num + index]);
+            }).toArray(BigInteger[]::new);
+        return ZlVector.create(zl, rb).sub(ZlVector.create(zl, t));
+    }
+
+    private ZlVector rDiv(BigInteger[] input, BigInteger n, int s) {
+        BigInteger nPrime = n.shiftRight(1);
+        IntStream intStream = IntStream.range(0, num);
+        intStream = parallel ? intStream.parallel() : intStream;
+        BigInteger[] shiftElements =  intStream.mapToObj(index -> {
+            if (input[index].compareTo(nPrime) < 0) {
+                return input[index].shiftRight(s);
             } else {
-                return input[index].subtract(n).shiftRight(d).mod(n);
+                return input[index].subtract(n).shiftRight(s).mod(n);
             }
         }).toArray(BigInteger[]::new);
+        return ZlVector.create(zl, shiftElements);
     }
 }

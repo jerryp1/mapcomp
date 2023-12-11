@@ -18,6 +18,9 @@ import edu.alibaba.mpc4j.s2pc.pir.index.single.mulpir.Alpr21SingleIndexPirServer
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.onionpir.Mcr21SingleIndexPirServer;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.seal4jpir.Acls18SingleIndexPirPureJavaClient;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.seal4jpir.Acls18SingleIndexPirPureJavaConfig;
+import edu.alibaba.mpc4j.s2pc.pir.index.single.seal4jpir.Acls18SingleIndexPirPureJavaServer;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirClient;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirConfig;
 import edu.alibaba.mpc4j.s2pc.pir.index.single.sealpir.Acls18SingleIndexPirServer;
@@ -53,6 +56,11 @@ public class SingleIndexPirFactory implements PtoFactory {
          * XPIR
          */
         XPIR,
+
+        /**
+         * A seal pir with pure Java implementation
+         */
+        SEAL_4J_PIR,
         /**
          * SealPIR
          */
@@ -100,6 +108,8 @@ public class SingleIndexPirFactory implements PtoFactory {
         switch (type) {
             case XPIR:
                 return new Mbfk16SingleIndexPirServer(serverRpc, clientParty, (Mbfk16SingleIndexPirConfig) config);
+            case SEAL_4J_PIR:
+                return new Acls18SingleIndexPirPureJavaServer(serverRpc, clientParty, (Acls18SingleIndexPirPureJavaConfig) config);
             case SEAL_PIR:
                 return new Acls18SingleIndexPirServer(serverRpc, clientParty, (Acls18SingleIndexPirConfig) config);
             case ONION_PIR:
@@ -136,6 +146,8 @@ public class SingleIndexPirFactory implements PtoFactory {
         switch (type) {
             case XPIR:
                 return new Mbfk16SingleIndexPirClient(clientRpc, serverParty, (Mbfk16SingleIndexPirConfig) config);
+            case SEAL_4J_PIR:
+                return new Acls18SingleIndexPirPureJavaClient(clientRpc, serverParty, (Acls18SingleIndexPirPureJavaConfig) config);
             case SEAL_PIR:
                 return new Acls18SingleIndexPirClient(clientRpc, serverParty, (Acls18SingleIndexPirConfig) config);
             case ONION_PIR:

@@ -152,8 +152,7 @@ public class Rr17EcPsiClient<T> extends AbstractPsiClient<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-
-        elementMap = new HashMap<>();
+        elementMap = new HashMap<>(clientElementSize);
         phaseHashBin.insertItems(clientElementArrayList.stream().map(arr -> {
             BigInteger intArr = BigIntegerUtils.byteArrayToNonNegBigInteger(h1.digestToBytes(ObjectUtils.objectToByteArray(arr)));
             elementMap.put(intArr, arr);
@@ -202,7 +201,7 @@ public class Rr17EcPsiClient<T> extends AbstractPsiClient<T> {
 
     private Map<BigInteger, byte[][]> generateTupleHashMap() {
         int encodeInputLength = lcotReceiverOutput.getOutputByteLength() + encodeInputByteLength;
-        Map<BigInteger, byte[][]> map = parallel ? new ConcurrentHashMap<>() : new HashMap<>();
+        Map<BigInteger, byte[][]> map = parallel ? new ConcurrentHashMap<>(binNum) : new HashMap<>(binNum);
         IntStream intStream = parallel ? IntStream.range(0, binNum).parallel() : IntStream.range(0, binNum);
         intStream.forEach(binIndex ->
             IntStream.range(0, binSize).forEach(entryIndex -> {

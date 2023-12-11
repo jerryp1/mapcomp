@@ -131,9 +131,11 @@ public class Rr16PsiClient<T> extends AbstractPsiClient<T> {
         // generate and shuffle the index for 0/1 OT choice bit while waiting the challenge from server
         List<Integer> otZeroList = new LinkedList<>(), otOneList = new LinkedList<>();
         IntStream.range(0, nOt).forEach(index -> {
-            if (choiceBits[index])
+            if (choiceBits[index]) {
                 otOneList.add(index);
-            else otZeroList.add(index);
+            } else {
+                otZeroList.add(index);
+            }
         });
         Collections.shuffle(otZeroList, secureRandom);
         Collections.shuffle(otOneList, secureRandom);
