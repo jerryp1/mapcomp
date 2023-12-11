@@ -8,26 +8,21 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.*;
@@ -36,9 +31,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggPtoDesc.PtoS
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -66,10 +59,6 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
      */
     private final PlainPayloadMuxParty plainPayloadMuxSender;
     /**
-     * Zl mux receiver.
-     */
-    private final ZlMuxParty zlMuxReceiver;
-    /**
      * Z2 circuit receiver.
      */
     private final Z2cParty z2cReceiver;
@@ -78,50 +67,47 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
      */
     private final ZlcParty zlcReceiver;
     /**
-     * Prefix aggregation party.
-     */
-    private final PrefixAggParty prefixAggReceiver;
-    /**
      * group agg receiver.
      */
     private final GroupAggParty groupAggReceiver;
-
+    /**
+     * one side group receiver
+     */
     private final OneSideGroupParty oneSideGroupReceiver;
+    /**
+     * Z2 mux receiver.
+     */
     private final Z2MuxParty z2MuxReceiver;
     /**
      * Prefix aggregation type.
      */
     private final PrefixAggTypes aggType;
-
-    private BitVector groupIndicator;
-
+    /**
+     * Groups of sender.
+     */
     protected List<String> senderDistinctGroup;
     /**
      * indexes of valid position
      */
     private int[] groupIndex;
-
+    /**
+     * Secret shares of bitmap.
+     */
     private SquareZ2Vector[] bitmapShares;
-
+    /**
+     * Aggregation attribute in z2.
+     */
     private SquareZ2Vector[] aggZ2;
 
     public OptimizedMixGroupAggReceiver(Rpc receiverRpc, Party senderParty, OptimizedMixGroupAggConfig config) {
         super(OptimizedMixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
         plainPayloadMuxSender = PlainPlayloadMuxFactory.createSender(receiverRpc, senderParty, config.getPlainPayloadMuxConfig());
-        zlMuxReceiver = ZlMuxFactory.createReceiver(receiverRpc, senderParty, config.getZlMuxConfig());
         z2cReceiver = Z2cFactory.createReceiver(receiverRpc, senderParty, config.getZ2cConfig());
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
-        prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         groupAggReceiver = GroupAggFactory.createReceiver(receiverRpc, senderParty, new MixGroupAggConfig.Builder(config.getZl(), config.isSilent(), config.getAggType()).build());
         oneSideGroupReceiver = OneSideGroupFactory.createReceiver(receiverRpc, senderParty, config.getOneSideGroupConfig());
         z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
-//        addMultipleSubPtos(osnReceiver);
-//        addMultipleSubPtos(plainPayloadMuxSender);
-//        addSubPtos(zlMuxReceiver);
-//        addSubPtos(z2cReceiver);
-//        addSubPtos(zlcReceiver);
-//        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
         aggType = config.getAggType();
     }
@@ -133,13 +119,10 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-
         osnReceiver.init(maxNum);
         plainPayloadMuxSender.init(maxNum);
-        zlMuxReceiver.init(maxNum);
         z2cReceiver.init(maxNum);
         zlcReceiver.init(1);
-        prefixAggReceiver.init(maxL, maxNum);
         if (aggType.equals(PrefixAggTypes.SUM)) {
             groupAggReceiver.init(properties);
         }
@@ -155,9 +138,6 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
-
-//    public static long MIX_TIME_AGG = 0;
-//    public static long MIX_TRIPLE_AGG = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector e) throws MpcAbortException {
@@ -204,7 +184,6 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         int[] perms = obtainPerms(groupAttr);
         // apply perms to group and agg
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, perms);
-//        aggAttr = GroupAggUtils.applyPermutation(aggAttr, perms);
         e = GroupAggUtils.applyPermutation(e, perms);
         // osn
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
@@ -218,7 +197,6 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         aggZ2 = new SquareZ2Vector[Long.SIZE];
         System.arraycopy(transposed, CommonUtils.getByteLength(senderGroupNum + 1) * Byte.SIZE, aggZ2, 0, Long.SIZE);
         // mul1
-//        BitVector[] tranposedLong = TransposeUtils.transposeSplit(aggAttr, zl.getL());
         aggZ2 = z2MuxReceiver.mux(e, aggZ2);
     }
 
@@ -227,21 +205,17 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         for (int i = 0; i < senderGroupNum; i++) {
             mul[i] = z2MuxReceiver.mux(bitmapShares[i], aggZ2);
         }
-        ZlVector[] plainAgg = aggregate(groupAttr, mul,e);
+        ZlVector[] plainAgg = aggregate(groupAttr, mul, e);
         // arrange
         BigInteger[] aggResult = new BigInteger[senderGroupNum * groupIndex.length];
         String[] groupResult = new String[senderGroupNum * groupIndex.length];
         for (int i = 0; i < senderGroupNum; i++) {
             for (int j = 0; j < groupIndex.length; j++) {
-//                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
-//                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
+                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
+                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
             }
         }
         return new GroupAggOut(groupResult, aggResult);
-    }
-
-    private int[] getGroupIndexes(BitVector indicator) {
-        return IntStream.range(0, num).filter(indicator::get).toArray();
     }
 
     private ZlVector[] aggregate(String[] permutedGroup, SquareZ2Vector[][] agg, SquareZ2Vector e) throws MpcAbortException {
@@ -251,15 +225,14 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
 
     private ZlVector[] maxAgg(String[] groupField, SquareZ2Vector[][] aggField, SquareZ2Vector e) throws MpcAbortException {
         // compute indicator
-        groupIndicator = obtainIndicator(groupField);
-
+        BitVector groupIndicator = obtainIndicator(groupField);
         // agg
-        AggTypes[] types = IntStream.range(0,senderGroupNum).mapToObj(i -> AggTypes.MAX).toArray(AggTypes[]::new);
+        AggTypes[] types = IntStream.range(0, senderGroupNum).mapToObj(i -> AggTypes.MAX).toArray(AggTypes[]::new);
         SquareZ2Vector[] es = IntStream.range(0, senderGroupNum).mapToObj(i -> e).toArray(SquareZ2Vector[]::new);
         SquareZ2Vector[][] aggResultZ2Share = oneSideGroupReceiver.groupAgg(aggField, es, types, groupIndicator);
         groupIndex = oneSideGroupReceiver.getResPosFlag(groupIndicator);
         ZlVector[] zlVectors = new ZlVector[senderGroupNum];
-        for (int j = 0;j < senderGroupNum;j++) {
+        for (int j = 0; j < senderGroupNum; j++) {
             // reveal
             BitVector[] aggResultZ2 = new BitVector[zl.getL()];
             for (int i = 0; i < zl.getL(); i++) {
@@ -278,10 +251,6 @@ public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
         IntStream.range(0, x.length - 1).forEach(i -> plainIndicator.set(i + 1, !x[i].equals(x[i + 1])));
         plainIndicator.set(0, true);
         return plainIndicator;
-    }
-
-    private int[] obtainIndexes(BitVector input) {
-        return IntStream.range(0, num).filter(input::get).toArray();
     }
 
     private String[] revealGroup(Vector<byte[]> ownGroup, int bitLength) {

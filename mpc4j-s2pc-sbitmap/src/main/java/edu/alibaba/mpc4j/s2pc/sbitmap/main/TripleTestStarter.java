@@ -46,9 +46,6 @@ import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
-
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender.MIX_TIME_AGG;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender.MIX_TRIPLE_AGG;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -99,7 +96,7 @@ public class TripleTestStarter {
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
         String tab = "Data Num(bits)\t" + "Time(ms)\t" +
-            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num\tMix Time\tMix Triple";
+            "Send Packet Num\tSend Payload Bytes(B)\tSend Total Bytes(B)\tTriple Num";
         printWriter.println(tab);
         // connect
         ownRpc.connect();
@@ -135,7 +132,7 @@ public class TripleTestStarter {
             + "\t" + payloadByteLength
             // send byte length
             + "\t" + sendByteLength
-            + "\t" + TRIPLE_NUM + "\t" + MIX_TIME_AGG + "\t" + MIX_TRIPLE_AGG;
+            + "\t" + TRIPLE_NUM;
         printWriter.println(information);
         TRIPLE_NUM = 0;
     }

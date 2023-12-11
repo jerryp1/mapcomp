@@ -11,8 +11,6 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
@@ -34,10 +32,6 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
      * Osn config.
      */
     private final OsnConfig osnConfig;
-    /**
-     * Zl mux config.
-     */
-    private final ZlMuxConfig zlMuxConfig;
     /**
      * Plain payload mux config.
      */
@@ -72,12 +66,11 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
     private final boolean silent;
 
     private OptimizedMixGroupAggConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.osnConfig, builder.zlMuxConfig,
+        super(SecurityModel.SEMI_HONEST, builder.osnConfig,
             builder.plainPayloadMuxConfig, builder.prefixAggConfig, builder.z2cConfig,
             builder.zlcConfig, builder.oneSideGroupConfig, builder.z2MuxConfig);
         this.osnConfig = builder.osnConfig;
         this.z2cConfig = builder.z2cConfig;
-        this.zlMuxConfig = builder.zlMuxConfig;
         this.plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
         this.prefixAggConfig = builder.prefixAggConfig;
         this.zlcConfig = builder.zlcConfig;
@@ -101,9 +94,6 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
         return plainPayloadMuxConfig;
     }
 
-    public ZlMuxConfig getZlMuxConfig() {
-        return zlMuxConfig;
-    }
 
     public OsnConfig getOsnConfig() {
         return osnConfig;
@@ -149,10 +139,6 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
          */
         private final OsnConfig osnConfig;
         /**
-         * Zl mux config.
-         */
-        private final ZlMuxConfig zlMuxConfig;
-        /**
          * Plain mux config.
          */
         private final PlainPayloadMuxConfig plainPayloadMuxConfig;
@@ -188,12 +174,11 @@ public class OptimizedMixGroupAggConfig extends AbstractMultiPartyPtoConfig impl
         public Builder(Zl zl, boolean silent, PrefixAggTypes type) {
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST, zl, silent, type, true);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             oneSideGroupConfig = OneSideGroupFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,silent);
+            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.zl = zl;
             this.silent = silent;
         }
