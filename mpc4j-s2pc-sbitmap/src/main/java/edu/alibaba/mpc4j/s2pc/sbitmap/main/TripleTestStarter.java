@@ -47,8 +47,8 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender.MIX_TIME_AGG;
+import static edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggSender.MIX_TRIPLE_AGG;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -138,8 +138,6 @@ public class TripleTestStarter {
             + "\t" + TRIPLE_NUM + "\t" + MIX_TIME_AGG + "\t" + MIX_TRIPLE_AGG;
         printWriter.println(information);
         TRIPLE_NUM = 0;
-        MIX_TIME_AGG = 0;
-        MIX_TRIPLE_AGG = 0;
     }
 
 

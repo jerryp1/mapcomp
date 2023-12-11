@@ -76,21 +76,29 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      * Prefix aggregation party.
      */
     private final PrefixAggParty prefixAggReceiver;
+    /**
+     * B2a receiver
+     */
     private final B2aParty b2aReceiver;
-//    private final Z2MuxParty z2MuxReceiver;
     /**
      * Prefix aggregation type.
      */
     private final PrefixAggTypes aggType;
-
+    /**
+     * Group indicator.
+     */
     private BitVector groupIndicator;
-
-    private String[] resultReceiverGroup;
-
+    /**
+     * Sender
+     */
     protected List<String> senderDistinctGroup;
-
+    /**
+     * Secret shares of bitmaps.
+     */
     private SquareZ2Vector[] bitmapShares;
-
+    /**
+     * Aggregation attribute in zl.
+     */
     private SquareZlVector aggZl;
 
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
@@ -102,13 +110,6 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         zlcReceiver = ZlcFactory.createReceiver(receiverRpc, senderParty, config.getZlcConfig());
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
-//        z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
-//        addMultipleSubPtos(osnReceiver);
-//        addMultipleSubPtos(plainPayloadMuxSender);
-//        addSubPtos(zlMuxReceiver);
-//        addSubPtos(z2cReceiver);
-//        addSubPtos(zlcReceiver);
-//        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
         aggType = config.getAggType();
     }
@@ -128,7 +129,6 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         zlcReceiver.init(1);
         prefixAggReceiver.init(maxL, maxNum);
         b2aReceiver.init(maxL, maxNum);
-//        z2MuxReceiver.init(maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
@@ -139,9 +139,6 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
-
-//    public static long MIX_TIME_AGG = 0;
-//    public static long MIX_TRIPLE_AGG = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
@@ -179,7 +176,6 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         int[] perms = obtainPerms(groupAttr);
         // apply perms to group and agg
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, perms);
-//        aggAttr = GroupAggUtils.applyPermutation(aggAttr, perms);
         e = GroupAggUtils.applyPermutation(e, perms);
         // osn
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
@@ -209,11 +205,10 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         // arrange
         BigInteger[] aggResult = new BigInteger[senderGroupNum * groupIndex.length];
         String[] groupResult = new String[senderGroupNum * groupIndex.length];
-        resultReceiverGroup = groupAttr;
         for (int i = 0; i < senderGroupNum; i++) {
             for (int j = 0; j < groupIndex.length; j++) {
-//                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
-//                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(resultReceiverGroup[groupIndex[j]]);
+                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
+                groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
             }
         }
         return new GroupAggOut(groupResult, aggResult);

@@ -50,7 +50,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
  */
 public class MixGroupAggSender extends AbstractGroupAggParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(MixGroupAggSender.class);
-
     /**
      * Osn sender.
      */
@@ -75,17 +74,21 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      * prefix aggregate sender
      */
     private final PrefixAggParty prefixAggSender;
-
+    /**
+     * B2a sender
+     */
     private final B2aParty b2aSender;
-
-//    private final Z2MuxParty z2MuxSender;
-
-    protected List<String> senderDistinctGroup;
-
+    /**
+     * Secret shares of bitmaps.
+     */
     private SquareZ2Vector[] bitmapShares;
-
+    /**
+     * Aggregation attribute in zl.
+     */
     private SquareZlVector aggZl;
-
+    /**
+     * A map relation between group value and its index.
+     */
     private Map<String, Integer> senderGroupMap;
 
     public MixGroupAggSender(Rpc senderRpc, Party receiverParty, MixGroupAggConfig config) {
@@ -97,13 +100,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         zlcSender = ZlcFactory.createSender(senderRpc, receiverParty, config.getZlcConfig());
         prefixAggSender = PrefixAggFactory.createPrefixAggSender(senderRpc, receiverParty, config.getPrefixAggConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
-//        z2MuxSender = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
-//        addMultipleSubPtos(osnSender);
-//        addMultipleSubPtos(plainPayloadMuxReceiver);
-//        addSubPtos(zlMuxSender);
-//        addSubPtos(z2cSender);
-//        addSubPtos(zlcSender);
-//        addSubPtos(prefixAggSender);
     }
 
     @Override
@@ -121,10 +117,9 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         zlcSender.init(1);
         prefixAggSender.init(maxL, maxNum);
         b2aSender.init(maxL, maxNum);
-//        z2MuxSender.init(maxNum);
         // generate distinct group
-        senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
-        senderGroupMap = new HashMap<>();
+        List<String> senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        senderGroupMap = new HashMap<>(senderGroupNum);
         for (int i = 0; i < senderGroupNum; i++) {
             senderGroupMap.put(senderDistinctGroup.get(i), i);
         }
@@ -136,13 +131,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
-
-    public static long OSN_TIME = 0;
-    public static long AGG_TIME = 0;
-    public static long MUX_TIME = 0;
-
-    public static long MIX_TIME_AGG = 0;
-    public static long MIX_TRIPLE_AGG = 0;
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
@@ -168,7 +156,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        OSN_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
@@ -181,7 +168,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         aggZl = plainPayloadMuxReceiver.mux(e, null, 64);
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
     }
@@ -197,7 +183,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, payloadByteLen);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        OSN_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // transpose
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, payloadByteLen * Byte.SIZE);
@@ -214,7 +199,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         aggZl = zlMuxSender.mux(e, aggZl);
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
     }
@@ -222,7 +206,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     private void agg() throws MpcAbortException {
         // temporary array
         PrefixAggOutput[] outputs = new PrefixAggOutput[senderGroupNum];
-        long tripleNum = TRIPLE_NUM;
         aggTripleNum = TRIPLE_NUM;
         LOGGER.info("agg");
         for (int i = 0; i < senderGroupNum; i++) {
@@ -230,7 +213,6 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], aggZl);
             stopWatch.stop();
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            MUX_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // prefix agg
             stopWatch.start();
@@ -239,11 +221,8 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
             zlcSender.revealOther(outputs[i].getAggs());
             stopWatch.stop();
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            AGG_TIME += stopWatch.getTime(TimeUnit.MILLISECONDS);
-            MIX_TIME_AGG += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
         }
-        MIX_TRIPLE_AGG = TRIPLE_NUM - tripleNum;
         aggTripleNum = TRIPLE_NUM - aggTripleNum;
     }
 

@@ -54,8 +54,13 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
      * Prefix aggregate config.
      */
     private final PrefixAggConfig prefixAggConfig;
-
+    /**
+     * Z2 mux config.
+     */
     private final Z2MuxConfig z2MuxConfig;
+    /**
+     * B2a config.
+     */
     private final B2aConfig b2aConfig;
     /**
      * Zl
@@ -154,7 +159,13 @@ public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements Gr
          * Prefix aggregate config.
          */
         private final PrefixAggConfig prefixAggConfig;
+        /**
+         * Z2 mux config.
+         */
         private final Z2MuxConfig z2MuxConfig;
+        /**
+         * B2a config.
+         */
         private final B2aConfig b2aConfig;
         /**
          * Zl
