@@ -82,7 +82,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>edu.alibaba.mpc4j.s2pc.aby.main.OneSideGroupMain</mainClass>
+                            <mainClass>edu.alibaba.mpc4j.s2pc.aby.main.AbyMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -98,5 +98,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

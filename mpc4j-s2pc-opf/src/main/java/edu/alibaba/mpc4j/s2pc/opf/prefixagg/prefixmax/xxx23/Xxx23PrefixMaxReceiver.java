@@ -55,6 +55,7 @@ public class Xxx23PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
         zl = config.getZl();
         needShuffle = config.needShuffle();
         plainOutput = config.isPlainOutput();
+//        addMultipleSubPtos(z2cParty, zlcParty, zlMuxParty, zlGreaterParty, shuffleParty, a2bParty, b2aParty, b2aParty);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class PlpsiMain4Batch {
     /**
      * warmup set size
      */
-    private static final int WARMUP_SET_SIZE = 1 << 10;
+    private static final int WARMUP_SET_SIZE = 1 << 6;
     /**
      * server stop watch
      */

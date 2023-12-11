@@ -27,7 +27,7 @@ public class ShareGroupPartyThread extends Thread {
     @Override
     public void run() {
         try {
-            party.init(xiArrays.length, xiArrays[0][0].getNum(), xiArrays.length);
+            party.init(xiArrays.length, xiArrays[0][0].getNum(), xiArrays[0].length);
             res = party.groupAgg(xiArrays, validFlags, aggTypes, groupFlag);
         } catch (MpcAbortException e) {
             e.printStackTrace();

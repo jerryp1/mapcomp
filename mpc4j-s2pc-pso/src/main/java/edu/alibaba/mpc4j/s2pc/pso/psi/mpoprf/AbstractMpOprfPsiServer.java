@@ -18,7 +18,6 @@ import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSender;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.MpOprfSenderOutput;
 import edu.alibaba.mpc4j.s2pc.opf.oprf.OprfFactory;
 import edu.alibaba.mpc4j.s2pc.pso.psi.AbstractPsiServer;
-import edu.alibaba.mpc4j.s2pc.pso.psi.PsiFactory.PsiType;
 import edu.alibaba.mpc4j.s2pc.pso.psi.PsiUtils;
 import edu.alibaba.mpc4j.s2pc.pso.psi.mpoprf.MpOprfPsiPtoDesc.PtoStep;
 
@@ -82,9 +81,6 @@ public abstract class AbstractMpOprfPsiServer<T> extends AbstractPsiServer<T> {
         logPhaseInfo(PtoState.PTO_BEGIN);
 
         stopWatch.start();
-        /**
-         * PEQT byte length
-         */
         int peqtByteLength = securityModel.equals(SecurityModel.MALICIOUS) | securityModel.equals(SecurityModel.COVERT) ?
             PsiUtils.getMaliciousPeqtByteLength(serverElementSize, clientElementSize) :
             PsiUtils.getSemiHonestPeqtByteLength(serverElementSize, clientElementSize);

@@ -156,8 +156,8 @@ public class Z2IntegerCircuit extends AbstractZ2Circuit {
      */
     public MpcZ2Vector leq(MpcZ2Vector[] xiArray, MpcZ2Vector[] yiArray) throws MpcAbortException {
         checkInputs(xiArray, yiArray);
-        MpcZ2Vector[] result = sub(xiArray, yiArray);
-        return mux(new MpcZ2Vector[]{result[0]} , new MpcZ2Vector[]{yiArray[0]}, party.xor(xiArray[0], yiArray[0]))[0];
+        MpcZ2Vector[] result = sub(yiArray, xiArray);
+        return mux(new MpcZ2Vector[]{party.not(result[0])} , new MpcZ2Vector[]{yiArray[0]}, party.xor(xiArray[0], yiArray[0]))[0];
     }
 
     public MpcZ2Vector[] leq(MpcZ2Vector[][] xiArray, MpcZ2Vector[][] yiArray) throws MpcAbortException {

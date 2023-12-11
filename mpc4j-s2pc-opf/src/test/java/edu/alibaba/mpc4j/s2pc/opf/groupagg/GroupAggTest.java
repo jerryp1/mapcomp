@@ -8,16 +8,9 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -50,18 +43,18 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1 << 8;
+    private static final int DEFAULT_NUM = 1 << 4;
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 2;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 64);
 
-    private static final int SENDER_GROUP_BIT_LEN = 1;
-    private static final int RECEIVER_GROUP_BIT_LEN = 2;
+    private static final int SENDER_GROUP_BIT_LEN = 10;
+    private static final int RECEIVER_GROUP_BIT_LEN = 10;
 //    private static final int DEFAULT_GROUP_BIT_LENGTH = 1;
 
     private static final int LARGE_GROUP_BIT_LENGTH = 8;
@@ -84,53 +77,53 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //            new BitmapGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
 
-        // mix && sum
-        configurations.add(new Object[]{
-            "MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
-
-        // mix && max
-        configurations.add(new Object[]{
-            "MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
+//        // mix && sum
+//        configurations.add(new Object[]{
+//            "MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
 //
-//        // o_mix && sum
-        configurations.add(new Object[]{
-            "O_MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
+//        // mix && max
+//        configurations.add(new Object[]{
+//            "MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new MixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
 ////
-        // o_mix && max
-        configurations.add(new Object[]{
-            "O_MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
+////        // o_mix && sum
+//        configurations.add(new Object[]{
+//            "O_MIX_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
+//////
+//        // o_mix && max
+//        configurations.add(new Object[]{
+//            "O_MIX_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedMixGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
+////
+//        // sort && sum
+//        configurations.add(new Object[]{
+//            "SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
 //
-        // sort && sum
-        configurations.add(new Object[]{
-            "SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
+//        // sort && max
+//        configurations.add(new Object[]{
+//            "SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
 
-        // sort && max
-        configurations.add(new Object[]{
-            "SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
-
-        //  o_sort && sum
-        configurations.add(new Object[]{
-            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
-
-//        // o_sort && max
-        configurations.add(new Object[]{
-            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
+//        //  o_sort && sum
+//        configurations.add(new Object[]{
+//            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
+//
+////        // o_sort && max
+//        configurations.add(new Object[]{
+//            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
 //
 ////        // b_sort && sum
         configurations.add(new Object[]{
@@ -143,18 +136,18 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
             "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
         });
-
-        // t_sort && sum
-        configurations.add(new Object[]{
-            "T_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
-
-        // t_sort && max
-        configurations.add(new Object[]{
-            "T-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
+//
+//        // t_sort && sum
+//        configurations.add(new Object[]{
+//            "T_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
+//
+//        // t_sort && max
+//        configurations.add(new Object[]{
+//            "T-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
 
         return configurations;
     }

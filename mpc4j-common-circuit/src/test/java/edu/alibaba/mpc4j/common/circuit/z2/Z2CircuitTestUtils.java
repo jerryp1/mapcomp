@@ -104,6 +104,35 @@ public class Z2CircuitTestUtils {
         }
     }
 
+    public static void assertPsortStableOutput(int l, long[] longXs, long[][] longPayload, int[] index, long[] sortedX, long[][] sortedPayload) {
+        assert longXs.length == sortedX.length;
+        if(longPayload != null){
+            assert longPayload.length == sortedPayload.length;
+        }
+
+        int numOfSorted = longXs.length;
+        int payloadNum = longPayload != null ? longPayload.length : 0;
+
+        assertValidPermutation(index);
+
+        long current = sortedX[0];
+
+        for (int i = 0; i < numOfSorted; i++) {
+            Assert.assertEquals(longXs[index[i]], sortedX[i]);
+            for (int j = 0; j < payloadNum; j++) {
+                Assert.assertEquals(longPayload[j][index[i]], sortedPayload[j][i]);
+            }
+            if (i > 0) {
+                MathPreconditions.checkGreaterOrEqual("sortedX[i] >= sortedX[i-1]", sortedX[i], sortedX[i - 1]);
+                if(current == sortedX[i]){
+                    MathPreconditions.checkGreater("index[i] >= index[i-1]", index[i], index[i - 1]);
+                }else{
+                    current = sortedX[i];
+                }
+            }
+        }
+    }
+
     public static void assertValidPermutation(int[] index){
         TIntSet set = new TIntHashSet();
         for(int x : index){

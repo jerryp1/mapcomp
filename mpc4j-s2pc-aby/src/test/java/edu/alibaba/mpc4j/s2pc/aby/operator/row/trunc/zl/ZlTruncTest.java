@@ -38,21 +38,31 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Double.SIZE);
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
+        // RRK+20 + silent OT
+        configurations.add(new Object[]{
+            ZlTruncFactory.ZlTruncType.RRK20.name() + " silent OT",
+            new Rrk20ZlTruncConfig.Builder(DEFAULT_ZL, true).build()
+        });
+        // GP23 + silent OT
+        configurations.add(new Object[]{
+            ZlTruncFactory.ZlTruncType.GP23.name() + " silent OT",
+            new Gp23ZlTruncConfig.Builder(true).build()
+        });
         // RRK+20
         configurations.add(new Object[]{
             ZlTruncFactory.ZlTruncType.RRK20.name(),
-            new Rrk20ZlTruncConfig.Builder(DEFAULT_ZL,true).build()
+            new Rrk20ZlTruncConfig.Builder(DEFAULT_ZL, false).build()
         });
         // GP23
         configurations.add(new Object[]{
             ZlTruncFactory.ZlTruncType.GP23.name(),
-            new Gp23ZlTruncConfig.Builder(true).build()
+            new Gp23ZlTruncConfig.Builder(false).build()
         });
 
         return configurations;
@@ -111,7 +121,7 @@ public class ZlTruncTest extends AbstractTwoPartyPtoTest {
                 x1[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
                 x0[i] = new BigInteger(ZlTruncTest.DEFAULT_ZL.getL(), SECURE_RANDOM);
                 x[i] = x0[i].add(x1[i]).mod(n);
-            } while(x[i].compareTo(bound) >= 0 && x[i].subtract(n).abs().compareTo(bound) >= 0);
+            } while (x[i].compareTo(bound) >= 0 && x[i].subtract(n).abs().compareTo(bound) >= 0);
         }
         ZlVector x0Vector = ZlVector.create(ZlTruncTest.DEFAULT_ZL, x0);
         ZlVector x1Vector = ZlVector.create(ZlTruncTest.DEFAULT_ZL, x1);

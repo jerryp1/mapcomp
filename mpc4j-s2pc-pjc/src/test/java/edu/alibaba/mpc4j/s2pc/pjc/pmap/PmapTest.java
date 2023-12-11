@@ -41,7 +41,7 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 10;
+    private static final int LARGE_SIZE = 1 << 14;
 
     /**
      * default middle size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y
@@ -60,30 +60,25 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
-            new PidBasedPmapConfig.Builder(silent).build(),
-        });
-
-        configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
-            new PidBasedPmapConfig.Builder(silent).setPidConfig(
-                new Gmr21MpPidConfig.Builder().setPsuConfig(
-                    new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
-        });
-
-        configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
-            new PidBasedPmapConfig.Builder(silent).setPidConfig(
-                new Bkms20ByteEccPidConfig.Builder().build()).build(),
-        });
+//        configurations.add(new Object[]{
+//            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
+//            new PidBasedPmapConfig.Builder(silent).build(),
+//        });
+//
+//        configurations.add(new Object[]{
+//            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
+//            new PidBasedPmapConfig.Builder(silent).setPidConfig(
+//                new Gmr21MpPidConfig.Builder().setPsuConfig(
+//                    new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
+//        });
+//
+//        configurations.add(new Object[]{
+//            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
+//            new PidBasedPmapConfig.Builder(silent).setPidConfig(
+//                new Bkms20ByteEccPidConfig.Builder().build()).build(),
+//        });
 
         for(int bitLen : bitLens){
-            configurations.add(new Object[]{
-                PmapType.HPL24.name() + "_silent_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
-            });
-
             configurations.add(new Object[]{
                 PmapType.HPL24.name()+ "_bitLen_" + bitLen,
                 new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),

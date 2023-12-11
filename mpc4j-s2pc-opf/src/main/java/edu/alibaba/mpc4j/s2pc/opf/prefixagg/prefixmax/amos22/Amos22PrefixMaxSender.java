@@ -37,6 +37,7 @@ public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zl = config.getZl();
         needShuffle = config.needShuffle();
         plainOutput = config.isPlainOutput();
+//        addMultipleSubPtos(z2cParty, shuffleParty, z2MuxParty, shareGroupParty);
     }
 
     @Override
