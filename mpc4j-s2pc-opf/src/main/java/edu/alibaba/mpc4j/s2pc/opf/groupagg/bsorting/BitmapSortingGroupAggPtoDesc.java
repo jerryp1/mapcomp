@@ -3,12 +3,8 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-import java.io.Serializable;
-
 /**
- * Bitmap assist sorting-based group aggregation protocol description. The protocol comes from the following paper:
- * <p>
- * </p>
+ * Bitmap assist sorting-based group aggregation protocol description.
  *
  * @author Li Peng
  * @date 2023/11/20
@@ -27,22 +23,25 @@ public class BitmapSortingGroupAggPtoDesc implements PtoDesc {
      * protocol step
      */
     enum PtoStep {
-        // sender send group byte length
-        SENDER_SEND_GROUP_BYTE_LENGTH,
-
-        // receiver send group byte length
-        RECEIVER_SEND_GROUP_BYTE_LENGTH,
-
-        SENDER_SEND_BETA,
-
+        /**
+         * send shares
+         */
         SEND_SHARES,
-
+        /**
+         * send bitmap shares
+         */
         SEND_BITMAP_SHARES,
-
+        /**
+         * reveal output
+         */
         REVEAL_OUTPUT,
-
+        /**
+         * test
+         */
         TEST,
-
+        /**
+         * reveal bit
+         */
         REVEAL_BIT,
     }
 
