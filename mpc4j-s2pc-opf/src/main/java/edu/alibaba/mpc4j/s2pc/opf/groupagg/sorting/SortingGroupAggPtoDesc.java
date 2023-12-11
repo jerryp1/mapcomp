@@ -25,20 +25,21 @@ public class SortingGroupAggPtoDesc implements PtoDesc {
      * protocol step
      */
     enum PtoStep {
-        // sender send group byte length
-        SENDER_SEND_GROUP_BYTE_LENGTH,
-
-        // receiver send group byte length
-        RECEIVER_SEND_GROUP_BYTE_LENGTH,
-
-        SENDER_SEND_BETA,
-
+        /**
+         * sender shares.
+         */
         SEND_SHARES,
-
+        /**
+         * reveal output
+         */
         REVEAL_OUTPUT,
-
+        /**
+         * test
+         */
         TEST,
-
+        /**
+         * reveal bit
+         */
         REVEAL_BIT,
     }
 
