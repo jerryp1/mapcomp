@@ -36,7 +36,6 @@ import java.util.stream.IntStream;
  * @date 2023/10/30
  */
 public class PermutableBitonicSorter extends AbstractPermutationSorter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PermutableBitonicSorter.class);
     /**
      * input of sorter
      */
