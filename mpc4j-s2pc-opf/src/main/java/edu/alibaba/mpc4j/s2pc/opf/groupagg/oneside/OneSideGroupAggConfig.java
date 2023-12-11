@@ -26,7 +26,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 
 /**
- * Mix group aggregation config.
+ * One-side group aggregation config.
  *
  * @author Li Peng
  * @date 2023/11/3
@@ -56,9 +56,17 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
      * Prefix aggregate config.
      */
     private final PrefixAggConfig prefixAggConfig;
-
+    /**
+     * Z2 mux config.
+     */
     private final Z2MuxConfig z2MuxConfig;
+    /**
+     * b2a config.
+     */
     private final B2aConfig b2aConfig;
+    /**
+     * Zl drelu config.
+     */
     private final ZlDreluConfig zlDreluConfig;
     /**
      * Zl
@@ -163,8 +171,17 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
          * Prefix aggregate config.
          */
         private final PrefixAggConfig prefixAggConfig;
+        /**
+         * Z2 mux config.
+         */
         private final Z2MuxConfig z2MuxConfig;
+        /**
+         * B2a config.
+         */
         private final B2aConfig b2aConfig;
+        /**
+         * Zl drelu config.
+         */
         private final ZlDreluConfig zlDreluConfig;
         /**
          * Zl
@@ -180,7 +197,7 @@ public class OneSideGroupAggConfig extends AbstractMultiPartyPtoConfig implement
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             b2aConfig = B2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
-            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,zl,silent);
+            zlDreluConfig = ZlDreluFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             this.zl = zl;
         }
 

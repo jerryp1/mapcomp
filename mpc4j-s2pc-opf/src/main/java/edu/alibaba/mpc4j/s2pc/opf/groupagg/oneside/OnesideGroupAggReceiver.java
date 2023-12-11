@@ -10,7 +10,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
-import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
@@ -48,9 +47,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.DUMMY_PAYLOAD;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.HAVING_STATE;
-
 /**
  * Mix group aggregation receiver. Receiver is assumed to always has group attributes.
  *
@@ -82,20 +78,33 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
      * Prefix aggregation party.
      */
     private final PrefixAggParty prefixAggReceiver;
+    /**
+     * B2a receiver.
+     */
     private final B2aParty b2aReceiver;
+    /**
+     * Zl Drelu receiver.
+     */
     private final ZlDreluParty zlDreluReceiver;
     /**
      * Prefix aggregation type.
      */
     private final PrefixAggTypes aggType;
-
+    /**
+     * Group indicator.
+     */
     private BitVector groupIndicator;
-
+    /**
+     * Sender's distinct group.
+     */
     protected List<String> senderDistinctGroup;
-
+    /**
+     * Aggregation attribute in zl.
+     */
     private SquareZlVector aggZl;
-
-
+    /**
+     * Summation in zl.
+     */
     private SquareZlVector sumZl;
 
     public OnesideGroupAggReceiver(Rpc receiverRpc, Party senderParty, OneSideGroupAggConfig config) {
@@ -108,13 +117,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         prefixAggReceiver = PrefixAggFactory.createPrefixAggReceiver(receiverRpc, senderParty, config.getPrefixAggConfig());
         b2aReceiver = B2aFactory.createReceiver(receiverRpc, senderParty, config.getB2aConfig());
         zlDreluReceiver = ZlDreluFactory.createReceiver(receiverRpc, senderParty, config.getZlDreluConfig());
-//        z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
-//        addMultipleSubPtos(osnReceiver);
-//        addMultipleSubPtos(plainPayloadMuxSender);
-//        addSubPtos(zlMuxReceiver);
-//        addSubPtos(z2cReceiver);
-//        addSubPtos(zlcReceiver);
-//        addSubPtos(prefixAggReceiver);
         secureRandom = new SecureRandom();
         aggType = config.getAggType();
     }
@@ -134,8 +136,7 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
         zlcReceiver.init(1);
         prefixAggReceiver.init(maxL, maxNum);
         b2aReceiver.init(maxL, maxNum);
-//        z2MuxReceiver.init(maxNum);
-        zlDreluReceiver.init(maxL,maxNum);
+        zlDreluReceiver.init(maxL, maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
 
@@ -146,7 +147,6 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
 
         logPhaseInfo(PtoState.INIT_END);
     }
-
 
     @Override
     public GroupAggOut groupAgg(String[] groupField, long[] aggField, SquareZ2Vector intersFlagE) throws MpcAbortException {
@@ -167,8 +167,8 @@ public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
 
     private void getSum() throws MpcAbortException {
         SquareZlVector mul = plainPayloadMuxSender.mux(e, aggAttr, Long.SIZE);
-        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a,b) -> zl.add(a,b));
-        sumZl = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i->sum).toArray(BigInteger[]::new),false);
+        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a, b) -> zl.add(a, b));
+        sumZl = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i -> sum).toArray(BigInteger[]::new), false);
     }
 
     private void group() throws MpcAbortException {

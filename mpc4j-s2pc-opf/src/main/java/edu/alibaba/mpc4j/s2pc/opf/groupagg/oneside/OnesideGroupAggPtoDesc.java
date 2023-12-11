@@ -4,9 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Mix group aggregation protocol description. The protocol comes from the following paper:
- * <p>
- * </p>
+ * One-side group aggregation protocol description, which is specially used for one-side TPC-H test.
  *
  * @author Li Peng
  * @date 2023/11/3

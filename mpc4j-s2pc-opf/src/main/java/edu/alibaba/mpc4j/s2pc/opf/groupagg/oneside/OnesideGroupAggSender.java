@@ -9,7 +9,6 @@ import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.b2a.B2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
@@ -42,8 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.DUMMY_PAYLOAD;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.HAVING_STATE;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 
@@ -78,15 +75,25 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
      * prefix aggregate sender
      */
     private final PrefixAggParty prefixAggSender;
-
+    /**
+     * B2a sender.
+     */
     private final B2aParty b2aSender;
-
+    /**
+     * Zl Drelu sender.
+     */
     private final ZlDreluParty zlDreluSender;
-
+    /**
+     * Sender distinct group.
+     */
     protected List<String> senderDistinctGroup;
-
+    /**
+     * Aggregation attribute in zl.
+     */
     private SquareZlVector aggZl;
-
+    /**
+     * Summation in zl.
+     */
     private SquareZlVector sumZl;
 
     public OnesideGroupAggSender(Rpc senderRpc, Party receiverParty, OneSideGroupAggConfig config) {
@@ -99,13 +106,6 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         prefixAggSender = PrefixAggFactory.createPrefixAggSender(senderRpc, receiverParty, config.getPrefixAggConfig());
         b2aSender = B2aFactory.createSender(senderRpc, receiverParty, config.getB2aConfig());
         zlDreluSender = ZlDreluFactory.createSender(senderRpc, receiverParty, config.getZlDreluConfig());
-//        z2MuxSender = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
-//        addMultipleSubPtos(osnSender);
-//        addMultipleSubPtos(plainPayloadMuxReceiver);
-//        addSubPtos(zlMuxSender);
-//        addSubPtos(z2cSender);
-//        addSubPtos(zlcSender);
-//        addSubPtos(prefixAggSender);
     }
 
     @Override
@@ -152,12 +152,6 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         return null;
     }
 
-    private void getSum() throws MpcAbortException {
-        SquareZlVector mul = plainPayloadMuxReceiver.mux(e, aggAttr, Long.SIZE);
-        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a, b) -> zl.add(a,b));
-        sumZl = SquareZlVector.create(zl, IntStream.range(0,num).mapToObj(i->sum).toArray(BigInteger[]::new),false);
-    }
-
     private void group() throws MpcAbortException {
         // gen bitmap
         Vector<byte[]> osnInput = genOsnInput(e);
@@ -188,7 +182,7 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
         int payloadByteLen = dummyPayload ? CommonUtils.getByteLength(1) + 2 * Long.BYTES :
-            CommonUtils.getByteLength(1) +  Long.BYTES;
+            CommonUtils.getByteLength(1) + Long.BYTES;
         OsnPartyOutput osnPartyOutput = osnSender.osn(osnInput, payloadByteLen);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -234,6 +228,12 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
         aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         aggTripleNum = TRIPLE_NUM - aggTripleNum;
+    }
+
+    private void getSum() throws MpcAbortException {
+        SquareZlVector mul = plainPayloadMuxReceiver.mux(e, aggAttr, Long.SIZE);
+        BigInteger sum = Arrays.stream(mul.getZlVector().getElements()).reduce(BigInteger.ZERO, (a, b) -> zl.add(a, b));
+        sumZl = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i -> sum).toArray(BigInteger[]::new), false);
     }
 
     /**
