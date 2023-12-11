@@ -147,8 +147,7 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         return result;
     }
 
-    protected SquareZ2Vector[] getAggAttr() throws MpcAbortException {
-        // b2a, transfer agg to arithmetic share
+    protected SquareZ2Vector[] getAggAttr() {
         return Arrays.stream(TransposeUtils.transposeSplit(aggShare, Long.SIZE))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
     }

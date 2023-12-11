@@ -3,8 +3,6 @@ package edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-import java.io.Serializable;
-
 /**
  * Optimized sorting-based group aggregation protocol description. The protocol comes from the following paper:
  * <p>
@@ -24,23 +22,20 @@ public class OptimizedSortingGroupAggPtoDesc implements PtoDesc {
     private static final String PTO_NAME = "OPTIMIZED_SORTING_GROUP_AGG";
 
     /**
-     * protocol step
+     * protocol step.
      */
     enum PtoStep {
-        // sender send group byte length
-        SENDER_SEND_GROUP_BYTE_LENGTH,
-
-        // receiver send group byte length
-        RECEIVER_SEND_GROUP_BYTE_LENGTH,
-
-        SENDER_SEND_BETA,
-
-        SEND_SHARES,
-
+        /**
+         * reveal output.
+         */
         REVEAL_OUTPUT,
-
+        /**
+         * test.
+         */
         TEST,
-
+        /**
+         * reveal bit.
+         */
         REVEAL_BIT,
     }
 
