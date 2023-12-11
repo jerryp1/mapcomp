@@ -26,13 +26,6 @@ public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
         shuffleParty = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
         z2MuxParty = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
         shareGroupParty = ShareGroupFactory.createReceiver(receiverRpc, senderParty, config.getShareGroupConfig());
-
-//        addSubPtos(z2cParty);
-//        addSubPtos(zlcParty);
-//        addSubPtos(zlMuxParty);
-//        addSubPtos(zlGreaterParty);
-//        addSubPtos(plainBitMuxParty);
-//        addSubPtos(shuffleParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         zl = config.getZl();
         needShuffle = config.needShuffle();
@@ -61,7 +54,7 @@ public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         SquareZ2Vector[] res = shareGroupParty.groupAgg(aggField, null, AggTypes.MAX, groupIndicator1);
         // 将 groupIndicator1 也进行更新。
-        groupIndicator1.getBitVector().setValues(0, shareGroupParty.getFlag(groupIndicator1).getBitVector().getBytes());
+        groupIndicator1.setBitVector(shareGroupParty.getFlag(groupIndicator1).getBitVector());
         return res;
     }
 }

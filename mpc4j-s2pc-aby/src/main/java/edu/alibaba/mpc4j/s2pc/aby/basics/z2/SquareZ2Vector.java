@@ -153,6 +153,16 @@ public class SquareZ2Vector implements MpcZ2Vector {
         // empty
     }
 
+    /**
+     * replace the current bitvector with a new bitvector
+     *
+     * @param bitVector new data
+     */
+    public void setBitVector(BitVector bitVector){
+        assert bitVector.bitNum() == this.bitVector.bitNum();
+        this.bitVector = bitVector;
+    }
+
     @Override
     public SquareZ2Vector copy() {
         SquareZ2Vector clone = new SquareZ2Vector();

@@ -156,14 +156,6 @@ public interface BitVector {
     void noti();
 
     /**
-     * set the values of specific continuous positions.
-     *
-     * @param startByteIndex set the values of bytes[startByteIndex, startByteIndex + data.length].
-     * @param data src data
-     */
-    void setValues(int startByteIndex, byte[] data);
-
-    /**
      * pad zeros in the front of bits to make the valid bit length = targetBitLength
      *
      * @param targetBitLength the target bit length
@@ -173,8 +165,9 @@ public interface BitVector {
     BitVector shiftRight(int bit);
     void shiftLeftUnChangeNum(int bit);
 
-
     BitVector[] splitWithPadding(int[] bitNums);
+
+    void reverseBits();
 
     /**
      * 基于一定间隔，得到部分bit的数据，如果最后一个超出了范围，则取最后一个bit
@@ -192,25 +185,6 @@ public interface BitVector {
             pos = (i == num - 1 && pos >= bitNum()) ? bitNum() - 1 : pos;
             if(get(pos)){
                 res.set(i, true);
-            }
-        }
-        return res;
-    }
-    default BitVector[] getPointsWithFixedSpace(int[] startPos, int num, int skipLen){
-        for(int pos : startPos){
-            MathPreconditions.checkNonNegative("startPos", pos);
-            MathPreconditions.checkGreaterOrEqual("bitNum() > startPos + (num - 2) * skipLen", bitNum(), pos + (num - 2) * skipLen);
-        }
-        MathPreconditions.checkPositive("num", num);
-        MathPreconditions.checkPositive("skipLen", skipLen);
-        BitVector[] res = new BitVector[startPos.length];
-        for(int curr = 0; curr < startPos.length; curr++){
-            res[curr] = BitVectorFactory.createZeros(num);
-            for(int i = 0, pos = startPos[curr]; i < num; i++, pos += skipLen){
-                pos = (i == num - 1 && pos >= bitNum()) ? bitNum() - 1 : pos;
-                if(get(pos)){
-                    res[curr].set(i, true);
-                }
             }
         }
         return res;

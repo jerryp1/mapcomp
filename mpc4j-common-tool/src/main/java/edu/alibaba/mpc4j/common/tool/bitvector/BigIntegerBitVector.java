@@ -307,16 +307,6 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
-    public void setValues(int startByteIndex, byte[] data) {
-        assert startByteIndex >= 0 && data != null;
-        MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
-        int shiftBitNum = bitNum - ((startByteIndex + data.length) << 3);
-        BigInteger andNum = BigInteger.ONE.shiftLeft(data.length<<3).subtract(BigInteger.ONE);
-        BigInteger tmp = bigInteger.shiftRight(shiftBitNum).and(andNum).xor(BigIntegerUtils.byteArrayToNonNegBigInteger(data));
-        bigInteger = bigInteger.xor(tmp.shiftLeft(shiftBitNum));
-    }
-
-    @Override
     public void extendLength(int targetBitLength){
         assert bitNum <= targetBitLength;
         bitNum = targetBitLength;
@@ -333,6 +323,17 @@ public class BigIntegerBitVector implements BitVector {
     public void shiftLeftUnChangeNum(int bit){
         MathPreconditions.checkGreaterOrEqual("bit >= 0", bit, 0);
         bigInteger = bigInteger.shiftLeft(bit).and(BigInteger.ONE.shiftLeft(this.bitNum).subtract(BigInteger.ONE));
+    }
+
+    @Override
+    public void reverseBits(){
+        byte[] bytes = this.getBytes();
+        byte[] res = BytesUtils.reverseBitArray(bytes);
+        int shiftNum = this.bitNum() & 7;
+        if(shiftNum > 0){
+            BytesUtils.shiftRighti(res, shiftNum);
+        }
+        this.bigInteger = BigIntegerUtils.byteArrayToNonNegBigInteger(res);
     }
 
     @Override

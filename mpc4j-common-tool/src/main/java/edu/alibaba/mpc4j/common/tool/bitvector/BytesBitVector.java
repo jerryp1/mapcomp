@@ -342,13 +342,6 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
-    public void setValues(int startByteIndex, byte[] data) {
-        assert startByteIndex >= 0 && data != null;
-        MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
-        System.arraycopy(data, 0, bytes, startByteIndex, data.length);
-    }
-
-    @Override
     public void extendLength(int targetBitLength) {
         assert bitNum <= targetBitLength;
         int targetByteLength = CommonUtils.getByteLength(targetBitLength);
@@ -379,6 +372,17 @@ public class BytesBitVector implements BitVector {
         BytesUtils.shiftLefti(bytes, bit);
         byte andNum = (byte) ((bitNum & 7) == 0 ? 255 : (1<<(bitNum & 7)) - 1);
         bytes[0] &= andNum;
+    }
+
+    @Override
+    public void reverseBits(){
+        byte[] bytes = this.getBytes();
+        byte[] res = BytesUtils.reverseBitArray(bytes);
+        int shiftNum = this.bitNum() & 7;
+        if(shiftNum > 0){
+            BytesUtils.shiftRighti(res, shiftNum);
+        }
+        this.bytes = res;
     }
 
     @Override
