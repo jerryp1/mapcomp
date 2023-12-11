@@ -143,7 +143,7 @@ public class Z2PsorterTest {
         // init the protocol
         PlainZ2cParty party = new PlainZ2cParty();
         Z2IntegerCircuitParty partyThread = new Z2IntegerCircuitParty(party, Z2IntegerOperator.P_SORT, xPlainZ2Vectors, pPlainZ2Vectors, config);
-        partyThread.setPsorterConfig(PlainZ2Vector.createOnes(1), true, false);
+        partyThread.setPsorterConfig(PlainZ2Vector.createOnes(1), true, true);
         StopWatch stopWatch = new StopWatch();
         // execute the circuit
         LOGGER.info("sorting start");
@@ -159,6 +159,6 @@ public class Z2PsorterTest {
         long[] xSorted = PSorterUtils.transport(xPlainZ2Vectors[0]);
         long[][] payloadSorted = pPlainZ2Vectors == null ? null : Arrays.stream(pPlainZ2Vectors).map(PSorterUtils::transport).toArray(long[][]::new);
 
-        Z2CircuitTestUtils.assertPsortOutput(l, longXs, payload, permutation, xSorted, payloadSorted);
+        Z2CircuitTestUtils.assertPsortStableOutput(l, longXs, payload, permutation, xSorted, payloadSorted);
     }
 }

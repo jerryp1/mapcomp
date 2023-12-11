@@ -239,6 +239,11 @@ public class SquareZ2Vector implements MpcZ2Vector {
     }
 
     @Override
+    public void reverseBits(){
+        this.bitVector.reverseBits();
+    }
+
+    @Override
     public SquareZ2Vector[] splitWithPadding(int[] bitLens) {
         BitVector[] splitBitVectors = getBitVector().splitWithPadding(bitLens);
         return Arrays.stream(splitBitVectors).map(x -> create(x, this.isPlain())).toArray(SquareZ2Vector[]::new);

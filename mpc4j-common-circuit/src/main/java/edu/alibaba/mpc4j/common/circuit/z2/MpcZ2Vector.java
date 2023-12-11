@@ -47,6 +47,8 @@ public interface MpcZ2Vector extends MpcVector {
         return result;
     }
 
+    void reverseBits();
+
     /**
      * split inputs with padding zeros into multiple vectors
      *
