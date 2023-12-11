@@ -111,7 +111,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapMain</mainClass>
+                            <mainClass>edu.alibaba.mpc4j.s2pc.sbitmap.main.TripleTestMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

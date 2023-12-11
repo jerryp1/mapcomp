@@ -31,7 +31,8 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
-import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -48,6 +49,8 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
  * @date 2023/11/3
  */
 public class MixGroupAggSender extends AbstractGroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MixGroupAggSender.class);
+
     /**
      * Osn sender.
      */
@@ -82,6 +85,8 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
     private SquareZ2Vector[] bitmapShares;
 
     private SquareZlVector aggZl;
+
+    private Map<String, Integer> senderGroupMap;
 
     public MixGroupAggSender(Rpc senderRpc, Party receiverParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -119,6 +124,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 //        z2MuxSender.init(maxNum);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        senderGroupMap = new HashMap<>();
+        for (int i = 0; i < senderGroupNum; i++) {
+            senderGroupMap.put(senderDistinctGroup.get(i), i);
+        }
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -155,6 +164,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         // osn
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
+        LOGGER.info("osn1");
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -167,6 +177,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
         // mul1
         stopWatch.start();
+        LOGGER.info("mux1");
         aggZl = plainPayloadMuxReceiver.mux(e, null, 64);
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -182,6 +193,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
+        LOGGER.info("osn1");
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, payloadByteLen);
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -198,6 +210,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
 
         // mul1
         stopWatch.start();
+        LOGGER.info("mux1");
         aggZl = zlMuxSender.mux(e, aggZl);
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -211,6 +224,7 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         PrefixAggOutput[] outputs = new PrefixAggOutput[senderGroupNum];
         long tripleNum = TRIPLE_NUM;
         aggTripleNum = TRIPLE_NUM;
+        LOGGER.info("agg");
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
             SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], aggZl);
@@ -240,9 +254,9 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      * @return vertical bitmaps.
      */
     private Vector<byte[]> genBitmap(String[] group, SquareZ2Vector e) {
-        return IntStream.range(0, group.length).mapToObj(i -> {
+        return IntStream.range(0, group.length).parallel().mapToObj(i -> {
             byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
-            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
+            BinaryUtils.setBoolean(bytes, senderGroupMap.get(group[i]), true);
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));
@@ -256,10 +270,10 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
      */
     private Vector<byte[]> genBitmapWithAgg(String[] group, SquareZ2Vector e, long[] aggAtt) {
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
-        return IntStream.range(0, group.length).mapToObj(i -> {
+        return IntStream.range(0, group.length).parallel().mapToObj(i -> {
             ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
             byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
-            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]), true);
+            BinaryUtils.setBoolean(bytes, senderGroupMap.get(group[i]), true);
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
             buffer.put(bytes);
             buffer.put(LongUtils.longToByteArray(aggAtt[i]));

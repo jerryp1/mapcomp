@@ -331,8 +331,21 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
+        int threashold = 500;
+        int unit = 32;
+//        senderBitmapShares = new SquareZ2Vector[senderGroupNum];
+        if (senderGroupNum > threashold) {
+            int num = CommonUtils.getUnitNum(senderGroupNum, unit);
+            for (int i = 0; i < num; i++) {
+                int len = (i == num - 1) ? senderGroupNum  - i * unit : unit;
+                SquareZ2Vector[] temp = new SquareZ2Vector[len];
+                System.arraycopy(senderBitmapShares, i * unit , temp, 0, len);
+                temp = z2MuxParty.mux(e, temp);
+                System.arraycopy(temp, 0 , senderBitmapShares, i * unit, len);
+            }
+        }
 //      // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+//        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
 //        }
@@ -353,8 +366,21 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);
+        int threashold = 500;
+        int unit = 32;
+//        senderBitmapShares = new SquareZ2Vector[senderGroupNum];
+        if (senderGroupNum > threashold) {
+            int num = CommonUtils.getUnitNum(senderGroupNum, unit);
+            for (int i = 0; i < num; i++) {
+                int len = (i == num - 1) ? senderGroupNum  - i * unit : unit;
+                SquareZ2Vector[] temp = new SquareZ2Vector[len];
+                System.arraycopy(senderBitmapShares, i * unit , temp, 0, len);
+                temp = z2MuxParty.mux(e, temp);
+                System.arraycopy(temp, 0 , senderBitmapShares, i * unit, len);
+            }
+        }
 //      // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+//        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cReceiver.and(senderBitmapShares[i], e);
 //        }

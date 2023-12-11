@@ -46,6 +46,8 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationParty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -62,6 +64,8 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
  * @date 2023/11/20
  */
 public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BitmapSortingGroupAggSender.class);
+
     /**
      * Osn sender.
      */
@@ -119,6 +123,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
      * Server distinct groups.
      */
     private List<String> senderDistinctGroup;
+
+    private Map<String, Integer> senderGroupMap;
     /**
      * bitmap shares
      */
@@ -181,6 +187,10 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
 
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
+        senderGroupMap = new HashMap<>();
+        for (int i = 0; i < senderGroupNum; i++) {
+            senderGroupMap.put(senderDistinctGroup.get(i), i);
+        }
 
         stopWatch.stop();
         long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -209,30 +219,35 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // bitmap
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
+        LOGGER.info("bitmap");
         bitmap();
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // sort, output pig0
         stopWatch.start();
+        LOGGER.info("sort");
         sort();
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
         stopWatch.start();
+        LOGGER.info("permute1");
         permute1();
         stopWatch.stop();
         groupStep3Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute2, permute sender's group using rho
         stopWatch.start();
+        LOGGER.info("permute2");
         permute2();
         stopWatch.stop();
         groupStep4Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute3, permute e
         stopWatch.start();
+        LOGGER.info("permute3");
         permute3();
         stopWatch.stop();
         groupStep5Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -243,30 +258,35 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // bitmap
         stopWatch.start();
         groupTripleNum = TRIPLE_NUM;
+        LOGGER.info("bitmap");
         bitmap();
         stopWatch.stop();
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // sort, output pig0
         stopWatch.start();
+        LOGGER.info("sort");
         sort();
         stopWatch.stop();
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute1, permute receiver's group,agg and sigmaB using pig0, output rho
         stopWatch.start();
+        LOGGER.info("permute1");
         permute1WithSenderAgg();
         stopWatch.stop();
         groupStep3Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute2, permute sender's group using rho
         stopWatch.start();
+        LOGGER.info("permute2");
         permute2WithSenderAgg();
         stopWatch.stop();
         groupStep4Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         // permute3, permute e
         stopWatch.start();
+        LOGGER.info("permute3");
         permute3();
         stopWatch.stop();
         groupStep5Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -287,6 +307,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // agg
         stopWatch.start();
         aggTripleNum = TRIPLE_NUM;
+        LOGGER.info("agg");
         aggregation(mergedTwoGroup, otherAggB2a, e);
         stopWatch.stop();
         aggTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -296,15 +317,35 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
 
     private void bitmap() throws MpcAbortException {
         // gen bitmap
+        LOGGER.info("bitmap0");
+
         Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
         // osn
+        LOGGER.info("osn0");
         OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
         // transpose
+        LOGGER.info("transpose0");
         SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         e = transposed[0];
         // and
-        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
+        LOGGER.info("transpose1");
+
+        int threashold = 500;
+        int unit = 32;
+//        senderBitmapShares = new SquareZ2Vector[senderGroupNum];
+        if (senderGroupNum > threashold) {
+            int num = CommonUtils.getUnitNum(senderGroupNum, unit);
+            for (int i = 0; i < num; i++) {
+                int len = (i == num - 1) ? senderGroupNum - i * unit : unit;
+                SquareZ2Vector[] temp = new SquareZ2Vector[len];
+                System.arraycopy(senderBitmapShares, i * unit , temp, 0, len);
+                LOGGER.info("i:" + i);
+                temp = z2MuxParty.mux(e, temp);
+                System.arraycopy(temp, 0 , senderBitmapShares, i * unit, len);
+            }
+        }
+//        senderBitmapShares = z2MuxParty.mux(e, senderBitmapShares);
 //        for (int i = 0; i < senderGroupNum; i++) {
 //            senderBitmapShares[i] = z2cSender.and(senderBitmapShares[i], e);
 //        }
@@ -480,7 +521,7 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
     private Vector<byte[]> genBitmap(String[] group, SquareZ2Vector e) {
         return IntStream.range(0, group.length).mapToObj(i -> {
             byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
-            BinaryUtils.setBoolean(bytes, senderDistinctGroup.indexOf(group[i]) + 1, true);
+            BinaryUtils.setBoolean(bytes, senderGroupMap.get(group[i]) + 1, true);
             BinaryUtils.setBoolean(bytes, 0, e.getBitVector().get(i));
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));
