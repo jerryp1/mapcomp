@@ -6,10 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.SbitmapPtoParty;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapTaskType;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SbitmapTaskType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,8 +84,8 @@ public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {
         super(name);
         this.name = name;
         // set parties
-        sender = SbitmapMainUtils.createParty(taskType, secondRpc, firstRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
-        receiver = SbitmapMainUtils.createParty(taskType, firstRpc, secondRpc.ownParty(), new SbitmapConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
+        sender = SbitmapMainUtils.createParty(taskType, secondRpc, firstRpc.ownParty(), new GroupAggregationConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
+        receiver = SbitmapMainUtils.createParty(taskType, firstRpc, secondRpc.ownParty(), new GroupAggregationConfig.Builder(dataframe.schema(), DEFAULT_ZL).build());
         // set data
         setData(dataframe, senderColumns, receiverColumns);
    }
@@ -137,9 +137,9 @@ public class SbitmapPtoTest extends AbstractTwoPartyPtoTest {
 
         // 执行协议
         SbitmapPartyThread senderThread = new SbitmapPartyThread(sender, senderDataFrame,
-            new SbitmapConfig.Builder(senderDataFrame.schema(), DEFAULT_ZL).build(), receiverDataFrame.size());
+            new GroupAggregationConfig.Builder(senderDataFrame.schema(), DEFAULT_ZL).build(), receiverDataFrame.size());
         SbitmapPartyThread receiverThread = new SbitmapPartyThread(receiver, receiverDataFrame,
-            new SbitmapConfig.Builder(receiverDataFrame.schema(), DEFAULT_ZL).build(), senderDataFrame.size());
+            new GroupAggregationConfig.Builder(receiverDataFrame.schema(), DEFAULT_ZL).build(), senderDataFrame.size());
 
         // 等待线程停止
         try {

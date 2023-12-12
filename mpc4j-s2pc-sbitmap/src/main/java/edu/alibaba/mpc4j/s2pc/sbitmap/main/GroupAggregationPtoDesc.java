@@ -4,12 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Sbitmap protocol description.
+ * Group Aggregation protocol description.
  *
  * @author Li Peng
  * @date 2023/8/3
  */
-public class SbitmapPtoDesc implements PtoDesc {
+public class GroupAggregationPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
@@ -17,7 +17,7 @@ public class SbitmapPtoDesc implements PtoDesc {
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "SBITMAP";
+    private static final String PTO_NAME = "GROUP_AGGREGATION";
 
     /**
      * protocol step
@@ -36,12 +36,12 @@ public class SbitmapPtoDesc implements PtoDesc {
     /**
      * singleton mode
      */
-    private static final SbitmapPtoDesc INSTANCE = new SbitmapPtoDesc();
+    private static final GroupAggregationPtoDesc INSTANCE = new GroupAggregationPtoDesc();
 
     /**
      * private constructor
      */
-    private SbitmapPtoDesc() {
+    private GroupAggregationPtoDesc() {
         // empty
     }
 

@@ -2,7 +2,6 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
 import org.apache.commons.lang3.time.StopWatch;
@@ -13,7 +12,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Sbitmap protocol runner.
+ * Group Aggregation protocol runner.
  *
  * @author Li Peng
  * @date 2023/8/3
@@ -32,10 +31,6 @@ public class GroupAggregationPtoRunner {
      * rpc
      */
     private final Rpc slaveRpc;
-    /**
-     * config
-     */
-    private final GroupAggConfig groupAggConfig;
     /**
      * total round
      */
@@ -57,9 +52,9 @@ public class GroupAggregationPtoRunner {
      */
     private long totalSendByteLength;
 
-    private GroupAggInputData groupAggInputData;
+    private final GroupAggInputData groupAggInputData;
 
-    private Properties properties;
+    private final Properties properties;
 
     private long groupStep1Time;
     private long groupStep2Time;
@@ -70,14 +65,12 @@ public class GroupAggregationPtoRunner {
     private long groupTripleNum;
     private long aggTripleNum;
 
-    public GroupAggregationPtoRunner(GroupAggParty party, GroupAggConfig groupAggConfig, int totalRound,
+    public GroupAggregationPtoRunner(GroupAggParty party, int totalRound,
                                      GroupAggInputData groupAggInputData, Properties properties) {
         this.party = party;
         slaveRpc = party.getRpc();
-        this.groupAggConfig = groupAggConfig;
         stopWatch = new StopWatch();
         this.totalRound = totalRound;
-//        this.ownDataFrame = ownDataFrame;
         this.groupAggInputData = groupAggInputData;
         this.properties = properties;
     }
@@ -101,7 +94,7 @@ public class GroupAggregationPtoRunner {
             // record time
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            LOGGER.info("Round {}: Slave Time = {}ms", round, time);
+            LOGGER.info("Round {}: Time = {}ms", round, time);
             totalTime += time;
             // record info
             groupStep1Time = party.getGroupStep1Time();

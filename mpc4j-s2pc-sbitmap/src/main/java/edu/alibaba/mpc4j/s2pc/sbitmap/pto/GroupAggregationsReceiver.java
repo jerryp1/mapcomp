@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
@@ -35,13 +35,13 @@ import java.util.stream.IntStream;
  */
 public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-    public GroupAggregationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public GroupAggregationsReceiver(Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
         super(ownRpc, otherParty);
-        pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
-        z2cParty= Z2cFactory.createReceiver(ownRpc, otherParty,sbitmapConfig.getZ2cConfig());
-        zlcParty = ZlcFactory.createReceiver(ownRpc,otherParty,sbitmapConfig.getZlcConfig());
-        zlMuxParty = ZlMuxFactory.createReceiver(ownRpc,otherParty,sbitmapConfig.getZlMuxConfig());
-        zlMaxParty = ZlMaxFactory.createReceiver(ownRpc, otherParty, sbitmapConfig.getZlMaxConfig());
+        pidParty = PidFactory.createServer(ownRpc, otherParty, groupAggregationConfig.getPidConfig());
+        z2cParty= Z2cFactory.createReceiver(ownRpc, otherParty, groupAggregationConfig.getZ2cConfig());
+        zlcParty = ZlcFactory.createReceiver(ownRpc,otherParty, groupAggregationConfig.getZlcConfig());
+        zlMuxParty = ZlMuxFactory.createReceiver(ownRpc,otherParty, groupAggregationConfig.getZlMuxConfig());
+        zlMaxParty = ZlMaxFactory.createReceiver(ownRpc, otherParty, groupAggregationConfig.getZlMaxConfig());
     }
 
     /**
@@ -66,7 +66,7 @@ public class GroupAggregationsReceiver extends AbstractSbitmapPtoParty implement
      * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
-    public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
+    public void run(DataFrame dataFrame, GroupAggregationConfig config) throws MpcAbortException {
         // 交换数据长度
         List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
         DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(

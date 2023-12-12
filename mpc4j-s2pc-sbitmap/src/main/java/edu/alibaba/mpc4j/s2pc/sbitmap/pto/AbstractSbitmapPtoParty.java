@@ -9,15 +9,13 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory.ZlMaxType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidParty;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidPartyOutput;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationPtoDesc;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
-import org.apache.commons.math3.util.Precision;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
 import smile.data.vector.StringVector;
@@ -93,7 +91,7 @@ public abstract class AbstractSbitmapPtoParty extends AbstractMultiPartyPto impl
 
 
     public AbstractSbitmapPtoParty(Rpc ownRpc, Party otherParty) {
-        super(SbitmapPtoDesc.getInstance(), new SbitmapPtoConfig(), ownRpc, otherParty);
+        super(GroupAggregationPtoDesc.getInstance(), new SbitmapPtoConfig(), ownRpc, otherParty);
     }
 
     @Override
@@ -101,7 +99,7 @@ public abstract class AbstractSbitmapPtoParty extends AbstractMultiPartyPto impl
     }
 
     @Override
-    public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
+    public void run(DataFrame dataFrame, GroupAggregationConfig config) throws MpcAbortException {
 
     }
 
@@ -110,7 +108,7 @@ public abstract class AbstractSbitmapPtoParty extends AbstractMultiPartyPto impl
 
     }
 
-    protected void setPtoInput(DataFrame dataFrame, SbitmapConfig config) {
+    protected void setPtoInput(DataFrame dataFrame, GroupAggregationConfig config) {
         checkInitialized();
         // 验证DataFrame与配置参数中的schema相同
         assert dataFrame.schema().equals(config.getSchema());

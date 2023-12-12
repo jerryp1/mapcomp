@@ -2,22 +2,17 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.agg.hamming.bcp13.Bcp13ShHammingConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.agg.max.zl.ZlMaxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20EccPidConfig;
 import smile.data.type.StructType;
-
-import java.util.Map;
 
 /**
  * Sbitmap Config
@@ -25,7 +20,7 @@ import java.util.Map;
  * @author Li Peng
  * @date 2023/8/7
  */
-public class SbitmapConfig {
+public class GroupAggregationConfig {
     /**
      * data schema.
      */
@@ -51,7 +46,7 @@ public class SbitmapConfig {
      */
     private final ZlMaxConfig zlMaxConfig;
 
-    private SbitmapConfig(Builder builder) {
+    private GroupAggregationConfig(Builder builder) {
         schema = builder.schema;
         pidConfig = builder.pidConfig;
         z2cConfig = builder.z2cConfig;
@@ -84,7 +79,7 @@ public class SbitmapConfig {
         return zlMaxConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<SbitmapConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<GroupAggregationConfig> {
         /**
          * data schema.
          */
@@ -120,8 +115,8 @@ public class SbitmapConfig {
         }
 
         @Override
-        public SbitmapConfig build() {
-            return new SbitmapConfig(this);
+        public GroupAggregationConfig build() {
+            return new GroupAggregationConfig(this);
         }
     }
 }

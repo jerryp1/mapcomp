@@ -8,10 +8,6 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.main;
  */
 public enum SbitmapSecurityMode {
     /**
-     * 明文
-     */
-    PLAIN,
-    /**
      * Full secure
      */
     FULL_SECURE,

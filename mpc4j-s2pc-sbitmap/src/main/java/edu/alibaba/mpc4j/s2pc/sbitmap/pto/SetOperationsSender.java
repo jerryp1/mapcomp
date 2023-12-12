@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
@@ -25,9 +25,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class SetOperationsSender extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-    public SetOperationsSender(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public SetOperationsSender(Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
         super(ownRpc, otherParty);
-        pidParty = PidFactory.createClient(ownRpc, otherParty, sbitmapConfig.getPidConfig());
+        pidParty = PidFactory.createClient(ownRpc, otherParty, groupAggregationConfig.getPidConfig());
     }
 
     /**
@@ -52,7 +52,7 @@ public class SetOperationsSender extends AbstractSbitmapPtoParty implements Sbit
      * @throws MpcAbortException if the protocol aborts.
      */
     @Override
-    public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
+    public void run(DataFrame dataFrame, GroupAggregationConfig config) throws MpcAbortException {
         // 交换数据长度
         List<byte[]> senderDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
         DataPacketHeader senderDataSizeHeader = new DataPacketHeader(

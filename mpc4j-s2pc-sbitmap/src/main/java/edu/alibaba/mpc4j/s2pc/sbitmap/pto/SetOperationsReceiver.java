@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
 import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapPtoDesc.PtoStep;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapUtils;
 import smile.data.DataFrame;
 
@@ -25,9 +25,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements SbitmapPtoParty {
 
-    public SetOperationsReceiver(Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public SetOperationsReceiver(Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
         super(ownRpc, otherParty);
-        pidParty = PidFactory.createServer(ownRpc, otherParty, sbitmapConfig.getPidConfig());
+        pidParty = PidFactory.createServer(ownRpc, otherParty, groupAggregationConfig.getPidConfig());
     }
 
     /**
@@ -46,13 +46,9 @@ public class SetOperationsReceiver extends AbstractSbitmapPtoParty implements Sb
 
     /**
      * Protocol steps.
-     *
-     * @param dataFrame
-     * @param config
-     * @throws MpcAbortException
      */
     @Override
-    public void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException {
+    public void run(DataFrame dataFrame, GroupAggregationConfig config) throws MpcAbortException {
         // 交换数据长度
         List<byte[]> receiverDataSizePayload = Collections.singletonList(ByteBuffer.allocate(4).putInt(dataFrame.size()).array());
         DataPacketHeader receiverDataSizeHeader = new DataPacketHeader(

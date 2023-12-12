@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.pto;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
 import smile.data.DataFrame;
 
 /**
@@ -22,10 +22,8 @@ public interface SbitmapPtoParty {
     /**
      * Run protocol.
      *
-     * @param dataFrame
-     * @param config
      */
-    void run(DataFrame dataFrame, SbitmapConfig config) throws MpcAbortException;
+    void run(DataFrame dataFrame, GroupAggregationConfig config) throws MpcAbortException;
 
     /**
      * Get rpc.

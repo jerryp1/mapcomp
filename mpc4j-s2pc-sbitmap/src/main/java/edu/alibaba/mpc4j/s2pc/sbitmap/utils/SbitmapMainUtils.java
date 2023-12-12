@@ -7,21 +7,15 @@ import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
-import edu.alibaba.mpc4j.dp.ldp.LdpConfig;
-import edu.alibaba.mpc4j.dp.ldp.nominal.encode.DirectEncodeLdpConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapSecurityMode;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.SbitmapTaskType;
+import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SbitmapTaskType;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.*;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.io.Read;
@@ -195,14 +189,14 @@ public class SbitmapMainUtils {
     }
 
 
-    public static SbitmapPtoParty createParty(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public static SbitmapPtoParty createParty(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
         SbitmapPtoParty party;
         switch (ownRpc.ownParty().getPartyId()) {
             case 0:
-                party = createReceiver(taskType, ownRpc, otherParty, sbitmapConfig);
+                party = createReceiver(taskType, ownRpc, otherParty, groupAggregationConfig);
                 break;
             case 1:
-                party = createSender(taskType, ownRpc, otherParty, sbitmapConfig);
+                party = createSender(taskType, ownRpc, otherParty, groupAggregationConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);
@@ -210,14 +204,14 @@ public class SbitmapMainUtils {
         return party;
     }
 
-    public static SbitmapPtoParty createSender(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig sbitmapConfig) {
+    public static SbitmapPtoParty createSender(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
         SbitmapPtoParty pto;
         switch (taskType) {
             case SET_OPERATIONS:
-                pto = new SetOperationsSender(ownRpc, otherParty, sbitmapConfig);
+                pto = new SetOperationsSender(ownRpc, otherParty, groupAggregationConfig);
                 break;
             case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsSender(ownRpc, otherParty, sbitmapConfig);
+                pto = new GroupAggregationsSender(ownRpc, otherParty, groupAggregationConfig);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid task_type: " + taskType);
@@ -225,7 +219,7 @@ public class SbitmapMainUtils {
         return pto;
     }
 
-    public static SbitmapPtoParty createReceiver(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, SbitmapConfig slaveConfig) {
+    public static SbitmapPtoParty createReceiver(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig slaveConfig) {
         SbitmapPtoParty pto;
         switch (taskType) {
             case SET_OPERATIONS:

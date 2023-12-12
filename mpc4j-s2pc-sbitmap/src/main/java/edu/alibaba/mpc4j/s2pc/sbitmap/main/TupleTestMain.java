@@ -8,6 +8,7 @@ import java.util.Properties;
 
 /**
  * Triple test main class
+ *
  * @author Li Peng
  * @date 2023/11/24
  */
@@ -19,14 +20,10 @@ public class TupleTestMain {
         // read configuration.
         LOGGER.info("read config file");
         int num = Integer.parseInt(args[0]);
-//        String type = args[1];
         Properties properties = PropertiesUtils.loadProperties(args[1]);
-        TupleTestStarter fullSecureProtocol = new TupleTestStarter(num, properties);
-        // data number
-
-        // 这里应该设置测试不同的数据量
-        fullSecureProtocol.init();
-        fullSecureProtocol.start();
+        TupleTestStarter protocol = new TupleTestStarter(num, properties);
+        protocol.init();
+        protocol.start();
         System.exit(0);
     }
 }

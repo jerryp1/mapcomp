@@ -21,6 +21,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConf
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
+import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SbitmapTaskType;
 import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import org.slf4j.Logger;
@@ -72,10 +73,13 @@ public class SbitmapStarter {
      * Group aggregation type.
      */
     protected GroupAggTypes groupAggType;
-
+    /**
+     * Whether current role is receiver.
+     */
     protected boolean receiver;
-
-    private DataFrame inputDataFrame;
+    /**
+     * Aggregation type.
+     */
     private PrefixAggTypes prefixAggType;
     /**
      * Total round fo test.
@@ -85,19 +89,45 @@ public class SbitmapStarter {
      * default Zl
      */
     private Zl zl;
-
+    /**
+     * Input data
+     */
     private GroupAggInputData groupAggInputData;
+    /**
+     * Sender group bit length.
+     */
     private int senderGroupBitLength;
+    /**
+     * Receiver group bit length.
+     */
     private int receiverGroupBitLength;
-
+    /**
+     * Schema used to load data.
+     */
     private StructType senderSchema;
+    /**
+     * Schema used to load data.
+     */
     private StructType receiverSchema;
-
+    /**
+     * Test data nums.
+     */
     private int[] testDataNums;
-
+    /**
+     * Need silent ot.
+     */
     private boolean silent;
+    /**
+     * Directory of input
+     */
     private String inputDir;
+    /**
+     * Directory of output
+     */
     private String outputDir;
+    /**
+     * Sender hold aggregation attribute.
+     */
     private boolean senderAgg;
 
     public SbitmapStarter() {
@@ -110,9 +140,9 @@ public class SbitmapStarter {
 
     public void start() throws IOException, MpcAbortException, URISyntaxException {
         // output file format：bitmap_sum_s1_r2_s/r.output
-        String filePath =  "./"+ outputDir + "/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
+        String filePath = "./" + outputDir + "/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
             "s" + senderGroupBitLength + "_" + "r" + receiverGroupBitLength + "_" +
-            ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +"_"+ SbitmapMainUtils.getCurrentTime() +  ".out";
+            ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") + "_" + SbitmapMainUtils.getCurrentTime() + ".out";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
@@ -123,7 +153,7 @@ public class SbitmapStarter {
         printWriter.println(tab);
 
         // Full secure
-        for (int numBitLen:testDataNums) {
+        for (int numBitLen : testDataNums) {
             int num = 1 << numBitLen;
             setDataSet(numBitLen);
             properties.setProperty("max_num", String.valueOf(num));
@@ -180,7 +210,7 @@ public class SbitmapStarter {
     }
 
     private void setDataSet(int num) throws IOException, URISyntaxException {
-        String dataFileLength = "./" + inputDir + "/" + (receiver?("r" + receiverGroupBitLength):("s"+senderGroupBitLength)) +"_"+ num + ".csv";
+        String dataFileLength = "./" + inputDir + "/" + (receiver ? ("r" + receiverGroupBitLength) : ("s" + senderGroupBitLength)) + "_" + num + ".csv";
         if (receiver) {
             DataFrame inputDataFrame = SbitmapMainUtils.setDataFrame(receiverSchema, dataFileLength);
             String[] groups = inputDataFrame.stringVector("group").stream().toArray(String[]::new);
@@ -206,11 +236,11 @@ public class SbitmapStarter {
     protected void writeInfo(PrintWriter printWriter, int num,
                              Double time,
                              long packetNum, long payloadByteLength, long sendByteLength,
-                             long grS1Time,long grS2Time,long grS3Time,long grS4Time,long grS5Time,long aggTime,
+                             long grS1Time, long grS2Time, long grS3Time, long grS4Time, long grS5Time, long aggTime,
                              long groupTripleNum, long aggTripleNum) {
         String information = num + "\t" +
             // time
-             (Objects.isNull(time) ? "N/A" : time)
+            (Objects.isNull(time) ? "N/A" : time)
             // packet num
             + "\t" + packetNum
             // payload byte length
@@ -218,7 +248,7 @@ public class SbitmapStarter {
             // send byte length
             + "\t" + sendByteLength
             + "\t" + TRIPLE_NUM
-            + "\t" + grS1Time + "\t" + grS2Time + "\t"+ grS3Time + "\t"+ grS4Time + "\t"+ grS5Time + "\t"+ aggTime
+            + "\t" + grS1Time + "\t" + grS2Time + "\t" + grS3Time + "\t" + grS4Time + "\t" + grS5Time + "\t" + aggTime
             + "\t" + groupTripleNum + "\t" + aggTripleNum;
         printWriter.println(information);
         TRIPLE_NUM = 0;
@@ -256,7 +286,7 @@ public class SbitmapStarter {
             case MIX:
                 return new MixGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case O_MIX:
-                return new OptimizedMixGroupAggConfig.Builder(zl,silent,prefixAggType).build();
+                return new OptimizedMixGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case SORTING:
                 return new SortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case O_SORTING:
@@ -279,14 +309,14 @@ public class SbitmapStarter {
         } else {
             party = GroupAggFactory.createReceiver(ownRpc, otherParty, groupAggConfig);
         }
-        return new GroupAggregationPtoRunner(party, groupAggConfig, totalRound, groupAggInputData, properties);
+        return new GroupAggregationPtoRunner(party, totalRound, groupAggInputData, properties);
     }
 
     private void setSchema() {
         StructField groupField = new StructField("group", DataTypes.StringType);
         StructField aggField = new StructField("agg", DataTypes.IntegerType);
         StructField eField = new StructField("e", DataTypes.IntegerType);
-        senderSchema = new StructType(groupField,aggField, eField);
+        senderSchema = new StructType(groupField, aggField, eField);
         receiverSchema = new StructType(groupField, aggField, eField);
     }
 

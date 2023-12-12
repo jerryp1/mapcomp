@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.sbitmap.main;
+package edu.alibaba.mpc4j.s2pc.sbitmap.bitmap;
 
 
 /**
@@ -16,5 +16,4 @@ public enum SbitmapTaskType {
      * Group aggregation.
      */
     GROUP_AGGREGATIONS,
-    ;
 }

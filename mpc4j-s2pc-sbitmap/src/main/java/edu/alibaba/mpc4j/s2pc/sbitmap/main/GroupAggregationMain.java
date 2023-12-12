@@ -15,13 +15,13 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
- * Sbitmap main class.
+ * Group aggregation main class.
  *
  * @author Li Peng
  * @date 2023/8/3
  */
-public class SbitmapMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapMain.class);
+public class GroupAggregationMain {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationMain.class);
 
     public static void main(String[] args) throws Exception {
         PropertiesUtils.loadLog4jProperties();
@@ -29,7 +29,7 @@ public class SbitmapMain {
         LOGGER.info("read config file");
 
         String opt = args[0];
-        switch (opt){
+        switch (opt) {
             case "-s":
                 processSingle(args);
                 break;
@@ -37,11 +37,15 @@ public class SbitmapMain {
                 processMul(args);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid args:"  + opt);
+                throw new IllegalArgumentException("Invalid args:" + opt);
         }
-
     }
 
+    /**
+     * Handle single configuration.
+     *
+     * @param args arguments.
+     */
     private static void processSingle(String[] args) throws IOException, URISyntaxException, MpcAbortException {
         Properties properties = PropertiesUtils.loadProperties(args[1]);
         SbitmapStarter fullSecureProtocol = new SbitmapStarter();
@@ -53,6 +57,11 @@ public class SbitmapMain {
         System.exit(0);
     }
 
+    /**
+     * Handle multiple configurations.
+     *
+     * @param args arguments.
+     */
     private static void processMul(String[] args) throws IOException, URISyntaxException, MpcAbortException {
         List<String> files = listFilesForFolder(new File(args[1]));
         files = files.stream().sorted().collect(Collectors.toList());
@@ -69,6 +78,12 @@ public class SbitmapMain {
         System.exit(0);
     }
 
+    /**
+     * List files for specified folder.
+     *
+     * @param folder folder.
+     * @return files.
+     */
     public static List<String> listFilesForFolder(final File folder) {
         List<String> fileNames = new ArrayList<>();
         for (final File fileEntry : Objects.requireNonNull(folder.listFiles())) {

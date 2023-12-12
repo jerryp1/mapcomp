@@ -5,11 +5,11 @@ import org.junit.Test;
 public class TestLocal {
     @Test
     public void testSender() throws Exception {
-        SbitmapMain.main(new String[]{"/Users/fengdi/Documents/workspace/bitmap/sender_params.txt"});
+        GroupAggregationMain.main(new String[]{"/Users/fengdi/Documents/workspace/bitmap/sender_params.txt"});
     }
 
     @Test
     public void testReceiver() throws Exception {
-        SbitmapMain.main(new String[]{"/Users/fengdi/Documents/workspace/bitmap/receiver_params.txt"});
+        GroupAggregationMain.main(new String[]{"/Users/fengdi/Documents/workspace/bitmap/receiver_params.txt"});
     }
 }

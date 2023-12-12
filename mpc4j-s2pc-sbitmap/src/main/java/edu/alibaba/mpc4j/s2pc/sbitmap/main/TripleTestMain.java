@@ -8,6 +8,7 @@ import java.util.Properties;
 
 /**
  * Triple test main class
+ *
  * @author Li Peng
  * @date 2023/11/24
  */
@@ -21,12 +22,11 @@ public class TripleTestMain {
         int num = Integer.parseInt(args[0]);
         String type = args[1];
         Properties properties = PropertiesUtils.loadProperties(args[2]);
-        TripleTestStarter fullSecureProtocol = new TripleTestStarter(num, type, properties);
+        TripleTestStarter protocol = new TripleTestStarter(num, type, properties);
         // data number
 
-        // 这里应该设置测试不同的数据量
-        fullSecureProtocol.init();
-        fullSecureProtocol.start();
+        protocol.init();
+        protocol.start();
         System.exit(0);
     }
 }
