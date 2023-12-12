@@ -15,8 +15,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.AbstractOneSideGroupParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.GroupPartyTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.GroupPartyTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
@@ -160,11 +160,9 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                                              AggTypes[] aggTypes, BitVector groupFlag) throws MpcAbortException {
         stopWatch.start();
         // 1. 先计算真实的值
-        BitVector[][] zerosAndOnes = new BitVector[2][];
-        zerosAndOnes[0] = IntStream.range(0, dimLen).mapToObj(i ->
-            BitVectorFactory.createZeros(dataNum)).toArray(BitVector[]::new);
-        zerosAndOnes[1] = IntStream.range(0, dimLen).mapToObj(i ->
-            BitVectorFactory.createOnes(dataNum)).toArray(BitVector[]::new);
+        BitVector[][] zerosAndOnes = new BitVector[2][dimLen];
+        Arrays.fill(zerosAndOnes[0], BitVectorFactory.createZeros(dataNum));
+        Arrays.fill(zerosAndOnes[1], BitVectorFactory.createOnes(dataNum));
         BitVector[] perpValue = IntStream.range(0, xiArrays.length).mapToObj(i ->
                 aggTypes[i].equals(AggTypes.MAX) ? zerosAndOnes[0] : zerosAndOnes[1])
             .flatMap(Arrays::stream).toArray(BitVector[]::new);
@@ -223,7 +221,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
     }
 
     private SquareZ2Vector[][] commonIter(AggTypes[] aggTypes, BitVector groupFlag, int attrNum) throws MpcAbortException {
-        BitVector[][] params = groupFlag != null ? getPlainBitVectors(groupFlag) : null;
+//        BitVector[][] params = groupFlag != null ? getPlainBitVectors(groupFlag) : null;
 //        if(groupFlag != null){
 //            BitVector[] pPlain = z2cParty.revealOwn(pValues);
 //            BitVector[] sPlain = z2cParty.revealOwn(sValues);

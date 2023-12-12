@@ -2,7 +2,7 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 
 public class ShareGroupPartyThread extends Thread {
     public ShareGroupParty party;
@@ -11,6 +11,7 @@ public class ShareGroupPartyThread extends Thread {
     public AggTypes[] aggTypes;
     public SquareZ2Vector groupFlag;
     public SquareZ2Vector[][] res;
+    public SquareZ2Vector resFlag;
 
     ShareGroupPartyThread(ShareGroupParty party, SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggTypes, SquareZ2Vector groupFlag) {
         this.party = party;
@@ -20,8 +21,12 @@ public class ShareGroupPartyThread extends Thread {
         this.groupFlag = groupFlag;
     }
 
-    public SquareZ2Vector[][] getGroupRes(){
+    public SquareZ2Vector[][] getGroupRes() {
         return res;
+    }
+
+    public SquareZ2Vector getResFlag() {
+        return resFlag;
     }
 
     @Override
@@ -29,6 +34,7 @@ public class ShareGroupPartyThread extends Thread {
         try {
             party.init(xiArrays.length, xiArrays[0][0].getNum(), xiArrays[0].length);
             res = party.groupAgg(xiArrays, validFlags, aggTypes, groupFlag);
+            resFlag = party.getFlag(groupFlag);
         } catch (MpcAbortException e) {
             e.printStackTrace();
         }

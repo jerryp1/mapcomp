@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupConfig;
 import org.apache.commons.lang3.time.StopWatch;
@@ -92,9 +92,9 @@ public class OneSideGroupMain {
                 // 多线程
                 runParty(ownRpc, otherParty, config, taskId, true, attr, eFlag, bitmap, gFlag, maxBatchNum, printWriter);
                 taskId++;
-//                // 单线程
-//                runParty(ownRpc, otherParty, config, taskId, false, attr, eFlag, bitmap, gFlag, maxBatchNum, printWriter);
-//                taskId++;
+                // 单线程
+                runParty(ownRpc, otherParty, config, taskId, false, attr, eFlag, bitmap, gFlag, maxBatchNum, printWriter);
+                taskId++;
             }
         }
 

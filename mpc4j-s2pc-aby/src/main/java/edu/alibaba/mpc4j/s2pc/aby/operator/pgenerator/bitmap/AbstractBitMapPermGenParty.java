@@ -24,8 +24,13 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
 import java.math.BigInteger;
 import java.util.stream.IntStream;
 
+/**
+ * Permutable bitmap sorter abstract party
+ *
+ * @author Feng Han
+ * @date 2023/10/27
+ */
 public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
-    private static final int MAX_BIT_IN_PARALLEL = 1 << 22;
     /**
      * Bit2a sender.
      */
@@ -42,6 +47,10 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
      * Zl mux sender.
      */
     private final ZlMuxParty zlMuxParty;
+    /**
+     * maximum number of bits in one batch
+     */
+    private final int maxNumInBatch;
 
     protected AbstractBitMapPermGenParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, BitmapPermGenConfig config, PartyTypes partyTypes) {
         super(ptoDesc, rpc, otherParty, config);
@@ -56,6 +65,7 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
             zlcParty = ZlcFactory.createReceiver(rpc, otherParty, config.getZlcConfig());
             zlMuxParty = ZlMuxFactory.createReceiver(rpc, otherParty, config.getZlMuxConfig());
         }
+        maxNumInBatch = config.getMaxNumInBatch();
         addMultipleSubPtos(bit2aParty, zlcParty, zlMuxParty);
         zl = config.getBit2aConfig().getZl();
         byteL = zl.getByteL();
@@ -82,8 +92,8 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         setPtoInput(xiArray);
 
         long total = ((long) xiArray.length) * xiArray[0].bitNum();
-        if (total > MAX_BIT_IN_PARALLEL) {
-            int maxBatchSize = Math.max(MAX_BIT_IN_PARALLEL / xiArray[0].bitNum(), 1);
+        if (total > maxNumInBatch) {
+            int maxBatchSize = Math.max(maxNumInBatch / xiArray[0].bitNum(), 1);
             return sortWithSeq(xiArray, maxBatchSize);
         }
 
@@ -156,12 +166,6 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
 
             stopWatch.start();
             SquareZlVector res = muxMultiIndex(inputBits, indexes);
-//            if(rpc.ownParty().getPartyId() == 0){
-//                BigInteger[] tmpRes = zlcParty.revealOwn(res).getElements();
-//                LOGGER.info("tmpRes:{}", Arrays.toString(tmpRes));
-//            }else{
-//                zlcParty.revealOther(res);
-//            }
             if (currentIndex == null) {
                 currentIndex = res;
             } else {

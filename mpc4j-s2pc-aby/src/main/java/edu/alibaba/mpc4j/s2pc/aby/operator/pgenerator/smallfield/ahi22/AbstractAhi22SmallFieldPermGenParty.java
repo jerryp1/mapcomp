@@ -25,7 +25,7 @@ import java.util.Arrays;
 /**
  * Ahi22 Permutable Sorter abstract party
  *
- * @author Li Peng, Feng Han
+ * @author Feng Han, Li Peng
  * @date 2023/10/25
  */
 public abstract class AbstractAhi22SmallFieldPermGenParty extends AbstractSmallFieldPermGenParty {

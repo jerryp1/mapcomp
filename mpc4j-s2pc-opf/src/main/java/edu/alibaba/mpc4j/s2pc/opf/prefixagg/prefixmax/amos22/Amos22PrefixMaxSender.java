@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
-    private ShareGroupParty shareGroupParty;
+    private final ShareGroupParty shareGroupParty;
 
     public Amos22PrefixMaxSender(Rpc senderRpc, Party receiverParty, Amos22PrefixMaxConfig config) {
         super(Amos22PrefixMaxPtoDesc.getInstance(), senderRpc, receiverParty, config);

@@ -6,10 +6,22 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 
+/**
+ * Abstract group aggregation Party.
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implements ShareGroupParty {
+    /**
+     * the number of tuples
+     */
     protected int dataNum;
+    /**
+     * how many attributes
+     */
     protected int dimLen;
 
     protected AbstractShareGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, ShareGroupConfig config) {

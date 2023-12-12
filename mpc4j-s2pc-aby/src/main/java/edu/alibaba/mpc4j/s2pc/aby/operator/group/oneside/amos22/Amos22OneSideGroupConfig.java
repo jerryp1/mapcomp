@@ -19,6 +19,9 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
      * plain Bit Mux Config
      */
     private final PlainBitMuxConfig plainBitMuxConfig;
+    /**
+     * 一个batch中最多执行多少个bit的运算
+     */
     private final int maxBitLenOneBatch;
 
     private Amos22OneSideGroupConfig(Builder builder) {
@@ -54,12 +57,15 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
          * plain Bit Mux Config
          */
         private final PlainBitMuxConfig plainBitMuxConfig;
+        /**
+         * 一个batch中最多执行多少个bit的运算
+         */
         private int maxBitLenOneBatch;
 
         public Builder(boolean silent) {
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, null, silent);
-            maxBitLenOneBatch = 1 << 28;
+            maxBitLenOneBatch = 1 << 21;
         }
 
         public void setMaxBitLenOneBatch(int maxBitLenOneBatch) {

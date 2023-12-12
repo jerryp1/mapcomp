@@ -78,7 +78,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
     public SquareZ2Vector[] mux(SquareZ2Vector x0, SquareZ2Vector[] y0) throws MpcAbortException {
         setPtoInput(x0, y0);
         logPhaseInfo(PtoState.PTO_BEGIN);
-        LOGGER.info("mux step0");
+//        LOGGER.info("mux step0");
 
         stopWatch.start();
         prepare(x0, y0);
@@ -86,17 +86,17 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 4, prepareTime);
-        LOGGER.info("mux step1");
+//        LOGGER.info("mux step1");
         stopWatch.start();
         // P0 invokes an instance of COT, where P0 is the sender with inputs (s0, s1).
         CotSenderOutput cotSenderOutput = cotSender.send(num);
         // P0 invokes an instance of COT, where P0 is the receiver with inputs x0.
-        LOGGER.info("mux step1.5");
+//        LOGGER.info("mux step1.5");
         byte[] x0Bytes = x0.getBitVector().getBytes();
         boolean[] x0Binary = BinaryUtils.byteArrayToBinary(x0Bytes, num);
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x0Binary);
         stopWatch.stop();
-        LOGGER.info("mux step2");
+//        LOGGER.info("mux step2");
 
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -110,14 +110,14 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         long s0s1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 4, s0s1Time);
-        LOGGER.info("mux step3");
+//        LOGGER.info("mux step3");
 
         DataPacketHeader t0t1Header = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T0_T1.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
-        LOGGER.info("mux step4");
+//        LOGGER.info("mux step4");
 
         stopWatch.start();
         SquareZ2Vector[] z0 = t0t1(cotReceiverOutput, t0t1Payload);
@@ -126,7 +126,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         long t0t1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 4, 4, t0t1Time);
-        LOGGER.info("mux step5");
+//        LOGGER.info("mux step5");
 
         logPhaseInfo(PtoState.PTO_END);
         return z0;
@@ -138,14 +138,14 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
             BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
         byte[][] valueByte = ZlDatabase.create(envType, parallel, r0Z2Vectors).getBytesData();
         // if x0 = 0, P0 sets (s0, s1) = (-r0, -r0 + y0), else, P0 sets (s0, s1) = (-r0 + y0, -r0).
-        LOGGER.info("mux sub step0");
+//        LOGGER.info("mux sub step0");
 
         BitVector x0BitVector = f.getBitVector();
         byte[][] originData = ZlDatabase.create(envType, parallel, Arrays.stream(xi)
             .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new)).getBytesData();
         s0s = new byte[num][];
         s1s = new byte[num][];
-        LOGGER.info("mux sub step1");
+//        LOGGER.info("mux sub step1");
         IntStream indexIntStream = IntStream.range(0, num);
         indexIntStream = parallel ? indexIntStream.parallel() : indexIntStream;
         indexIntStream.forEach(index -> {
@@ -175,7 +175,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
             })
             .collect(Collectors.toList());
         // P0 creates s1
-        LOGGER.info("mux sub step2");
+//        LOGGER.info("mux sub step2");
 
         IntStream s1IntStream = IntStream.range(0, num);
         s1IntStream = parallel ? s1IntStream.parallel() : s1IntStream;
@@ -194,7 +194,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0_S1.ordinal(), extraInfo,
             ownParty().getPartyId(), otherParty().getPartyId()
         );
-        LOGGER.info("mux sub step3");
+//        LOGGER.info("mux sub step3");
 
         rpc.send(DataPacket.fromByteArrayList(s0s1Header, s0s1Payload));
     }
@@ -207,7 +207,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         Prg prg = PrgFactory.createInstance(envType, byteL);
         // Let P0's output be a0
         IntStream t0IntStream = IntStream.range(0, num);
-        LOGGER.info("mux sub step4");
+//        LOGGER.info("mux sub step4");
 
         t0IntStream = parallel ? t0IntStream.parallel() : t0IntStream;
         byte[][] a0s = t0IntStream
@@ -224,7 +224,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
             })
             .toArray(byte[][]::new);
         BitVector[] tmp = ZlDatabase.create(bitLen, a0s).bitPartition(envType, parallel);
-        LOGGER.info("mux sub step5");
+//        LOGGER.info("mux sub step5");
 
         for(int i = 0; i < tmp.length; i++){
             tmp[i].xori(r0Z2Vectors[i]);

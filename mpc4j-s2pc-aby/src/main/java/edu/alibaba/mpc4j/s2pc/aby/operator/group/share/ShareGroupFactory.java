@@ -2,18 +2,36 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.amos22.Amos22ShareGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.amos22.Amos22ShareGroupReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.amos22.Amos22ShareGroupSender;
 
-public class ShareGroupFactory extends GroupFactory {
+/**
+ * group aggregation factory
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
+public class ShareGroupFactory extends GroupTypes {
+    /**
+     * group aggregation type enums.
+     */
     public enum ShareGroupType {
         /**
          * AMOS22
          */
         AMOS22_SHARE,
     }
+
+    /**
+     * Creates a sender.
+     *
+     * @param senderRpc     the sender RPC.
+     * @param receiverParty the receiver party.
+     * @param config        the config.
+     * @return a sender.
+     */
     public static ShareGroupParty createSender(Rpc senderRpc, Party receiverParty, ShareGroupConfig config){
         ShareGroupType type = config.getPtoType();
         switch (type){
@@ -24,6 +42,14 @@ public class ShareGroupFactory extends GroupFactory {
         }
     }
 
+    /**
+     * Creates a receiver.
+     *
+     * @param receiverRpc the receiver RPC.
+     * @param senderParty the sender party.
+     * @param config      the config.
+     * @return a receiver.
+     */
     public static ShareGroupParty createReceiver(Rpc receiverRpc, Party senderParty, ShareGroupConfig config){
         ShareGroupType type = config.getPtoType();
         switch (type){
