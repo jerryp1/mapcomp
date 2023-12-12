@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
@@ -16,8 +15,8 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22Smal
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
@@ -138,8 +137,8 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
             bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             z2cConfig = new Rrg21Z2cConfig.Builder().build();
-            permutationConfig = new Xxx23SharedPermutationConfig.Builder(silent).build();
-            invPermutationConfig = new Xxx23bSharedPermutationConfig.Builder(silent).build();
+            permutationConfig = new Php24SharedPermutationConfig.Builder(silent).build();
+            invPermutationConfig = new Php24bSharedPermutationConfig.Builder(silent).build();
             a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
         }
 

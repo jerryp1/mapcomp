@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxSender;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.php24.Php24PlainPayloadMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.php24.Php24PlainPayloadMuxReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.php24.Php24PlainPayloadMuxSender;
 
 /**
  * Plain mux factory.
@@ -27,9 +27,9 @@ public class PlainPlayloadMuxFactory implements PtoFactory {
      */
     public enum PlainMuxType {
         /**
-         * Xxx23
+         * PHP+24
          */
-        Xxx23,
+        PHP24,
     }
 
     /**
@@ -44,8 +44,8 @@ public class PlainPlayloadMuxFactory implements PtoFactory {
         PlainMuxType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PlainPayloadMuxSender(senderRpc, receiverParty, (Xxx23PlainPayloadMuxConfig) config);
+            case PHP24:
+                return new Php24PlainPayloadMuxSender(senderRpc, receiverParty, (Php24PlainPayloadMuxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainMuxType.class.getSimpleName() + ": " + type.name());
         }
@@ -63,8 +63,8 @@ public class PlainPlayloadMuxFactory implements PtoFactory {
         PlainMuxType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PlainPayloadMuxReceiver(receiverRpc, senderParty, (Xxx23PlainPayloadMuxConfig) config);
+            case PHP24:
+                return new Php24PlainPayloadMuxReceiver(receiverRpc, senderParty, (Php24PlainPayloadMuxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainMuxType.class.getSimpleName() + ": " + type.name());
         }
@@ -81,7 +81,7 @@ public class PlainPlayloadMuxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PlainPayloadMuxConfig.Builder(silent).build();
+                return new Php24PlainPayloadMuxConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

@@ -9,17 +9,14 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * abstract plain mux party.
+ * Abstract plain mux party.
  *
  * @author Li Peng
  * @date 2023/11/5
  */
 public abstract class AbstractPlainPayloadMuxParty extends AbstractTwoPartyPto implements PlainPayloadMuxParty {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPlainPayloadMuxParty.class);
     /**
      * max num
      */
@@ -68,6 +65,7 @@ public abstract class AbstractPlainPayloadMuxParty extends AbstractTwoPartyPto i
         inputBits = xi;
         inputPayloads = yi;
     }
+
     protected void setPtoInput(SquareZ2Vector xi, BitVector[] yi, int validBitLen) {
         zl = ZlFactory.createInstance(envType, validBitLen);
         if (yi != null) {

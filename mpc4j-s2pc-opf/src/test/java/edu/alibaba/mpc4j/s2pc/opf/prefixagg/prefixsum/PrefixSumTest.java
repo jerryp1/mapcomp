@@ -10,11 +10,10 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.php24.Php24PrefixSumConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -65,8 +64,8 @@ public class PrefixSumTest extends AbstractTwoPartyPtoTest {
 
         // default zl
         configurations.add(new Object[]{
-            PrefixSumTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new Xxx23PrefixSumConfig.Builder(DEFAULT_ZL, true).build()
+            PrefixSumTypes.PHP24.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Php24PrefixSumConfig.Builder(DEFAULT_ZL, true).build()
         });
 
         return configurations;

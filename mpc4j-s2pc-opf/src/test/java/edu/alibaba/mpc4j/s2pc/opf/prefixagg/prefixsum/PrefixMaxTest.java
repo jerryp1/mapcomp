@@ -16,6 +16,7 @@ import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.PrefixMaxFactory.PrefixMaxTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.amos22.Amos22PrefixMaxConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.php24.Php24PrefixMaxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,13 +62,13 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // default zl
-//        configurations.add(new Object[]{
-//            PrefixMaxTypes.Xxx23.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new Xxx23PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
-//        });
+        // php24 default zl
+        configurations.add(new Object[]{
+            PrefixMaxTypes.PHP24.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new Php24PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
+        });
 
-        // default zl
+        // amos22 default zl
         configurations.add(new Object[]{
             PrefixMaxTypes.AMOS22.name() + " (l = " + DEFAULT_ZL.getL() + ")",
             new Amos22PrefixMaxConfig.Builder(DEFAULT_ZL, false).build()
@@ -158,11 +159,6 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         SquareZ2Vector[] aggShares0 = Arrays.stream(agg0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
         SquareZ2Vector[] aggShares1 = IntStream.range(0, agg0.length).mapToObj(i -> SquareZ2Vector.create(agg0[i].xor(originDataVec[i]), false)).toArray(SquareZ2Vector[]::new);
 
-//        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-//            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
-//        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-//            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
-
         // init the protocol
         PrefixAggParty sender = PrefixMaxFactory.createPrefixMaxSender(firstRpc, secondRpc.ownParty(), config);
         PrefixAggParty receiver = PrefixMaxFactory.createPrefixMaxReceiver(secondRpc, firstRpc.ownParty(), config);
@@ -211,11 +207,10 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         BitVector flag = shareZ0.getIndicator().getBitVector().xor(shareZ1.getIndicator().getBitVector());
         int[] indexes = IntStream.range(0, flag.bitNum()).filter(flag::get).toArray();
         Map<BigInteger, BigInteger> resultMap = new HashMap<>();
-        for(int i = 0; i < indexes.length; i++){
-            resultMap.put(resultGroup.get(indexes[i]), resultAgg.get(indexes[i]));
+        for (int index : indexes) {
+            resultMap.put(resultGroup.get(index), resultAgg.get(index));
         }
 
-//        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
         // result
         Assert.assertEquals(trueMap, resultMap);
     }
@@ -234,32 +229,4 @@ public class PrefixMaxTest extends AbstractTwoPartyPtoTest {
         return map;
     }
 
-//    private void assertOutput(byte[][] groupings, BigInteger[] aggs, PrefixAggOutput shareZ0, PrefixAggOutput shareZ1) {
-//        int num = aggs.length;
-//        // true
-//        List<BigInteger> trueGroup = IntStream.range(0, num).mapToObj(i -> BigIntegerUtils.byteArrayToNonNegBigInteger(groupings[i])).collect(Collectors.toList());
-//        List<BigInteger> trueAgg = Arrays.asList(aggs);
-//        Map<BigInteger, BigInteger> trueMap = genTrue(trueGroup, trueAgg);
-//        // result
-//        List<BigInteger> resultGroup = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(shareZ0.getGroupings().elementAt(i), shareZ1.getGroupings().elementAt(i)))
-//            .map(BigIntegerUtils::byteArrayToNonNegBigInteger).collect(Collectors.toList());
-//        List<BigInteger> resultAgg = Arrays.asList(shareZ0.getAggs().getZlVector().add(shareZ1.getAggs().getZlVector()).getElements());
-//        Map<BigInteger, BigInteger> resultMap = genTrue(resultGroup, resultAgg);
-//        // result
-//        Assert.assertEquals(trueMap, resultMap);
-//    }
-//
-//    private Map<BigInteger, BigInteger> genTrue(List<BigInteger> trueGroup, List<BigInteger> trueAgg) {
-//        int num = trueAgg.size();
-//        Map<BigInteger, BigInteger> map = new HashMap<>();
-//        for (int i = 0; i < num; i++) {
-//            BigInteger key = trueGroup.get(i);
-//            if (map.containsKey(key)) {
-//                map.put(key, map.get(key).compareTo(trueAgg.get(i)) < 0 ? trueAgg.get(i) : map.get(key));
-//            } else {
-//                map.put(key, trueAgg.get(i));
-//            }
-//        }
-//        return map;
-//    }
 }

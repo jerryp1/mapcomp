@@ -4,14 +4,12 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationSender;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24.Php24PermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24.Php24PermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24.Php24PermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24b.Php24bPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24b.Php24bPermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24b.Php24bPermutationSender;
 
 /**
  * Permutation factory.
@@ -32,13 +30,13 @@ public class PermutationFactory {
      */
     public enum PermutationTypes {
         /**
-         * xxx+23.
+         * PHP+24.
          */
-        XXX23,
+        PHP24,
         /**
-         * xxx+23b.
+         * PHP+24b.
          */
-        XXX23B,
+        PHP24B,
     }
 
     /**
@@ -52,10 +50,10 @@ public class PermutationFactory {
     public static PermutationSender createSender(Rpc senderRpc, Party receiverParty, PermutationConfig config) {
         PermutationTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23PermutationSender(senderRpc, receiverParty, (Xxx23PermutationConfig) config);
-            case XXX23B:
-                return new Xxx23bPermutationSender(senderRpc, receiverParty, (Xxx23bPermutationConfig) config);
+            case PHP24:
+                return new Php24PermutationSender(senderRpc, receiverParty, (Php24PermutationConfig) config);
+            case PHP24B:
+                return new Php24bPermutationSender(senderRpc, receiverParty, (Php24bPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PermutationTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -72,10 +70,10 @@ public class PermutationFactory {
     public static PermutationReceiver createReceiver(Rpc receiverRpc, Party senderParty, PermutationConfig config) {
         PermutationTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23PermutationReceiver(receiverRpc, senderParty, (Xxx23PermutationConfig) config);
-            case XXX23B:
-                return new Xxx23bPermutationReceiver(receiverRpc, senderParty, (Xxx23bPermutationConfig) config);
+            case PHP24:
+                return new Php24PermutationReceiver(receiverRpc, senderParty, (Php24PermutationConfig) config);
+            case PHP24B:
+                return new Php24bPermutationReceiver(receiverRpc, senderParty, (Php24bPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PermutationTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -91,7 +89,7 @@ public class PermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PermutationConfig.Builder(zl, silent).build();
+                return new Php24PermutationConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -109,7 +107,7 @@ public class PermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bPermutationConfig.Builder(zl, silent).build();
+                return new Php24bPermutationConfig.Builder(zl, silent).build();
             case COVERT:
             case MALICIOUS:
             default:

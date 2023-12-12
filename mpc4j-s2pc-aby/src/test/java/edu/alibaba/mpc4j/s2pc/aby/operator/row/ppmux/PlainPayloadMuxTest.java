@@ -1,15 +1,12 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
-import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory.PlainMuxType;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.rrg21.Xxx23PlainPayloadMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.php24.Php24PlainPayloadMuxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,9 +45,9 @@ public class PlainPayloadMuxTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 default zl
+        // Php+24 default zl
         configurations.add(new Object[]{
-            PlainMuxType.Xxx23.name(), new Xxx23PlainPayloadMuxConfig.Builder(false).build()
+            PlainMuxType.PHP24.name(), new Php24PlainPayloadMuxConfig.Builder(false).build()
         });
 
         return configurations;

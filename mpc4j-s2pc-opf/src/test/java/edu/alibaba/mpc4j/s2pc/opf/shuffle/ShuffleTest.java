@@ -8,8 +8,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b.Xxx23bShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24.Php24ShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24b.Php24bShuffleConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,24 +53,24 @@ public class ShuffleTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 large zl
+        // Php+24 large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name(), new Xxx23ShuffleConfig.Builder(false).build()
+            ShuffleTypes.PHP24.name(), new Php24ShuffleConfig.Builder(false).build()
         });
 
-        // Xxx23 large zl
+        // Php+24 large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23.name() + "_silent", new Xxx23ShuffleConfig.Builder(true).build()
+            ShuffleTypes.PHP24.name() + "_silent", new Php24ShuffleConfig.Builder(true).build()
         });
 
-        // Xxx23b large zl
+        // Php+24b large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23b.name(), new Xxx23bShuffleConfig.Builder(false).build()
+            ShuffleTypes.PHP24b.name(), new Php24bShuffleConfig.Builder(false).build()
         });
 
-        // Xxx23b large zl
+        // Php+24b large zl
         configurations.add(new Object[]{
-            ShuffleTypes.XXX23b.name() + "_silent", new Xxx23bShuffleConfig.Builder(true).build()
+            ShuffleTypes.PHP24b.name() + "_silent", new Php24bShuffleConfig.Builder(true).build()
         });
         return configurations;
     }

@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
 
-    private ShareGroupParty shareGroupParty;
+    private final ShareGroupParty shareGroupParty;
 
     public Amos22PrefixMaxReceiver(Rpc receiverRpc, Party senderParty, Amos22PrefixMaxConfig config) {
         super(Amos22PrefixMaxPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -26,18 +26,10 @@ public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
         shuffleParty = ShuffleFactory.createReceiver(receiverRpc, senderParty, config.getShuffleConfig());
         z2MuxParty = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
         shareGroupParty = ShareGroupFactory.createReceiver(receiverRpc, senderParty, config.getShareGroupConfig());
-
-//        addSubPtos(z2cParty);
-//        addSubPtos(zlcParty);
-//        addSubPtos(zlMuxParty);
-//        addSubPtos(zlGreaterParty);
-//        addSubPtos(plainBitMuxParty);
-//        addSubPtos(shuffleParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         zl = config.getZl();
         needShuffle = config.needShuffle();
         plainOutput = config.isPlainOutput();
-//        addMultipleSubPtos(z2cParty, shuffleParty, z2MuxParty, shareGroupParty);
     }
 
     @Override

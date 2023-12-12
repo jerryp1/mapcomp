@@ -68,8 +68,17 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      * Shuffle party.
      */
     protected ShuffleParty shuffleParty;
+    /**
+     * B2a party
+     */
     protected B2aParty b2aParty;
+    /**
+     * A2b party
+     */
     protected A2bParty a2bParty;
+    /**
+     * Z2 mux party.
+     */
     protected Z2MuxParty z2MuxParty;
 
     /**
@@ -193,14 +202,12 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         } else {
             sums = aggWithIndicators(groupIndicator, aggField);
         }
-        // shuffle TODO shuffle indicator
+        // shuffle
         if (needShuffle) {
             List<Vector<byte[]>> shuffledResult = shuffle(groupField, sums);
             groupField = shuffledResult.get(0);
             BitVector[] tmps = ZlDatabase.create(sums.length, shuffledResult.get(1).toArray(new byte[0][])).bitPartition(envType, parallel);
             sums = Arrays.stream(tmps).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
-//            sums = SquareZlVector.create(zl, shuffledResult.get(1).stream()
-//                .map(BigIntegerUtils::byteArrayToNonNegBigInteger).toArray(BigInteger[]::new), false);
         }
         return new PrefixAggOutput(groupField, sums, groupIndicator);
     }
@@ -345,7 +352,7 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     protected List<Vector<byte[]>> shuffle(Vector<byte[]> groupings, SquareZlVector aggs) throws MpcAbortException {
         Vector<byte[]> sumBytes = Arrays.stream(aggs.getZlVector().getElements())
             .map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, zl.getByteL())).collect(Collectors.toCollection(Vector::new));
-//        Vector<byte[]> sumBytes = transposeMergeToVector(Arrays.stream(aggs).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
+        // Vector<byte[]> sumBytes = transposeMergeToVector(Arrays.stream(aggs).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new));
         int[] randomPerms = genRandomPerm(num);
         return shuffleParty.shuffle(Arrays.asList(groupings, sumBytes), randomPerms);
     }

@@ -28,7 +28,7 @@ public class PrefixAggOutput {
     /**
      * secret shares of group indicator
      */
-    private SquareZ2Vector indicator;
+    private final SquareZ2Vector indicator;
     /**
      * number
      */
@@ -68,11 +68,6 @@ public class PrefixAggOutput {
     public void setAggs(SquareZlVector aggs) {
         Preconditions.checkArgument(aggs.getNum()== num, "size of input not correct");
         this.aggs = aggs;
-    }
-
-    public void setAggsBinary(SquareZ2Vector[] aggs) {
-        Preconditions.checkArgument(aggs[0].getNum()== num, "size of input not correct");
-        this.aggsBinary = aggs;
     }
 
     public int getNum() {

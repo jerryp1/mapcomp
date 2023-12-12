@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
 
-    private ShareGroupParty shareGroupParty;
+    private final ShareGroupParty shareGroupParty;
 
     public Amos22PrefixMaxSender(Rpc senderRpc, Party receiverParty, Amos22PrefixMaxConfig config) {
         super(Amos22PrefixMaxPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -26,18 +26,10 @@ public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
         shuffleParty = ShuffleFactory.createSender(senderRpc, receiverParty, config.getShuffleConfig());
         z2MuxParty = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
         shareGroupParty = ShareGroupFactory.createSender(senderRpc, receiverParty, config.getShareGroupConfig());
-
-//        addSubPtos(z2cParty);
-//        addSubPtos(zlcParty);
-//        addSubPtos(zlMuxParty);
-//        addSubPtos(zlGreaterParty);
-//        addSubPtos(plainBitMuxParty);
-//        addSubPtos(shuffleParty);
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         zl = config.getZl();
         needShuffle = config.needShuffle();
         plainOutput = config.isPlainOutput();
-//        addMultipleSubPtos(z2cParty, shuffleParty, z2MuxParty, shareGroupParty);
     }
 
     @Override
@@ -59,7 +51,7 @@ public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
     @Override
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         SquareZ2Vector[] res = shareGroupParty.groupAgg(aggField, null, AggTypes.MAX, groupIndicator1);
-        // 将 groupIndicator1 也进行更新。
+        // update groupIndicator1
         groupIndicator1.getBitVector().setValues(0, shareGroupParty.getFlag(groupIndicator1).getBitVector().getBytes());
         return res;
     }

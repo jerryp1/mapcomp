@@ -23,8 +23,12 @@ import java.util.stream.IntStream;
  * @date 2023/11/9
  */
 public class GroupAggUtils {
+    /**
+     * Get a full set of string of integers from [0,2^bitLength).
+     */
     public static String[] genStringSetFromRange(int bitLength) {
-        Preconditions.checkArgument(bitLength < CommonConstants.MAX_GROUP_BIT_LENGTH, "bit length of group out of range");
+        Preconditions.checkArgument(bitLength < CommonConstants.MAX_GROUP_BIT_LENGTH,
+            "bit length of group out of range");
         int num = 1 << bitLength;
         String[] result = new String[num];
         StringBuilder builder;
@@ -38,17 +42,6 @@ public class GroupAggUtils {
             result[i] = builder.toString();
         }
         return result;
-    }
-
-    /**
-     * merge multiple grouping key into single one
-     *
-     * @param strs strings
-     * @return grouping keys
-     */
-    public static String[] mergeString(String[][] strs) {
-        return IntStream.range(0, strs[0].length).mapToObj(i ->
-            Arrays.stream(strs).map(str -> str[i]).reduce("", String::concat)).toArray(String[]::new);
     }
 
     /**
@@ -112,6 +105,13 @@ public class GroupAggUtils {
         return indicator;
     }
 
+    /**
+     * Transpose osn result.
+     *
+     * @param osnPartyOutput osn party output.
+     * @param l              length.
+     * @return osn party output.
+     */
     public static SquareZ2Vector[] transposeOsnResult(OsnPartyOutput osnPartyOutput, int l) {
         int fullL = CommonUtils.getByteLength(l) * Byte.SIZE;
         Vector<byte[]> osn = osnPartyOutput.getShare();
@@ -148,22 +148,19 @@ public class GroupAggUtils {
         return result;
     }
 
-    public static SquareZ2Vector mergeZ2ShareWithPadding(SquareZ2Vector[] inputs) {
-        BitVector[] temp = Arrays.stream(inputs).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new);
-        return SquareZ2Vector.create(BitVectorFactory.mergeWithPadding(temp), false);
-    }
-
-    public static SquareZ2Vector[] splitZ2ShareWithPadding(SquareZ2Vector input, int[] nums) {
-        return Arrays.stream(input.getBitVector().splitWithPadding(nums)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-    }
-
+    /**
+     * Transfer binary string to corresponding byte array.
+     *
+     * @param binaryString binary string
+     * @return corresponding byte array.
+     */
     public static Vector<byte[]> binaryStringToBytes(String[] binaryString) {
         int bitLength = binaryString[0].length();
         Vector<byte[]> result = new Vector<>(binaryString.length);
         for (String str : binaryString) {
             byte[] bytes = new byte[CommonUtils.getByteLength(bitLength)];
             IntStream.range(0, bitLength).forEach(i -> {
-                if(str.charAt(i) == '1'){
+                if (str.charAt(i) == '1') {
                     BinaryUtils.setBoolean(bytes, i, true);
                 }
             });
@@ -172,6 +169,13 @@ public class GroupAggUtils {
         return result;
     }
 
+    /**
+     * Transfer byte array to corresponding binary string.
+     *
+     * @param bytes     byte array.
+     * @param bitLength bit length of byte array.
+     * @return corresponding binary string.
+     */
     public static String[] bytesToBinaryString(Vector<byte[]> bytes, int bitLength) {
         int byteLength = CommonUtils.getByteLength(bitLength);
 
@@ -187,6 +191,14 @@ public class GroupAggUtils {
         return result;
     }
 
+    /**
+     * Transfer byte array to corresponding binary string.
+     *
+     * @param bytes      byte array.
+     * @param bitLength1 bit length of byte array1.
+     * @param bitLength2 bit length of byte array2.
+     * @return corresponding binary string.
+     */
     public static String[] bytesToBinaryString(Vector<byte[]> bytes, int bitLength1, int bitLength2) {
         int byteLength1 = CommonUtils.getByteLength(bitLength1);
         int byteLength2 = CommonUtils.getByteLength(bitLength2);

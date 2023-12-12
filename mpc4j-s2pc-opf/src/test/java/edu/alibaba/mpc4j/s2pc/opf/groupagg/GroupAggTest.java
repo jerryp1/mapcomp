@@ -12,6 +12,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OneSideGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
@@ -56,11 +57,9 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     private static final int SENDER_GROUP_BIT_LEN = 0;
     private static final int RECEIVER_GROUP_BIT_LEN = 3;
 
-    private static final int LARGE_GROUP_BIT_LENGTH = 8;
-
     private static final boolean silent = false;
 
-    private static final boolean senderAgg = true;
+    private static final boolean senderAgg = false;
 
     private static final boolean havingState = false;
 
@@ -119,16 +118,16 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //        });
 
 //        //  o_sort && sum
-//        configurations.add(new Object[]{
-//            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-//        });
-//
-////        // o_sort && max
-//        configurations.add(new Object[]{
-//            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-//        });
+        configurations.add(new Object[]{
+            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
+
+//        // o_sort && max
+        configurations.add(new Object[]{
+            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+        });
 //
 ////        // b_sort && sum
 //        configurations.add(new Object[]{
@@ -144,10 +143,10 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //
         //
 //        // one-side && sum
-        configurations.add(new Object[]{
-            "ONE-SIDE_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OneSideGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
+//        configurations.add(new Object[]{
+//            "ONE-SIDE_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OneSideGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
 ////
 
 //        // t_sort && sum

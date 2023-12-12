@@ -7,9 +7,9 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.amos22.Amos22PrefixMaxConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.amos22.Amos22PrefixMaxReceiver;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.amos22.Amos22PrefixMaxSender;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.xxx23.Xxx23PrefixMaxSender;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.php24.Php24PrefixMaxConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.php24.Php24PrefixMaxReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixmax.php24.Php24PrefixMaxSender;
 
 /**
  * Prefix max factory.
@@ -30,9 +30,12 @@ public class PrefixMaxFactory {
      */
     public enum PrefixMaxTypes {
         /**
-         * Xxx+23
+         * PHP24
          */
-        Xxx23,
+        PHP24,
+        /**
+         * AMOS22
+         */
         AMOS22,
     }
 
@@ -44,8 +47,8 @@ public class PrefixMaxFactory {
     public static AbstractPrefixMaxAggregator createPrefixMaxSender(Rpc senderRpc, Party receiverParty, PrefixMaxConfig config) {
         PrefixMaxTypes type = config.getPtoType();
         switch (type) {
-            case Xxx23:
-                return new Xxx23PrefixMaxSender(senderRpc, receiverParty, (Xxx23PrefixMaxConfig) config);
+            case PHP24:
+                return new Php24PrefixMaxSender(senderRpc, receiverParty, (Php24PrefixMaxConfig) config);
             case AMOS22:
                 return new Amos22PrefixMaxSender(senderRpc, receiverParty, (Amos22PrefixMaxConfig) config);
             default:
@@ -61,8 +64,8 @@ public class PrefixMaxFactory {
     public static AbstractPrefixMaxAggregator createPrefixMaxReceiver(Rpc receiverRpc, Party senderParty, PrefixMaxConfig config) {
         PrefixMaxTypes type = config.getPtoType();
         switch (type) {
-            case Xxx23:
-                return new Xxx23PrefixMaxReceiver(receiverRpc, senderParty, (Xxx23PrefixMaxConfig) config);
+            case PHP24:
+                return new Php24PrefixMaxReceiver(receiverRpc, senderParty, (Php24PrefixMaxConfig) config);
             case AMOS22:
                 return new Amos22PrefixMaxReceiver(receiverRpc, senderParty, (Amos22PrefixMaxConfig) config);
             default:
@@ -82,7 +85,7 @@ public class PrefixMaxFactory {
             case IDEAL:
             case SEMI_HONEST:
 //                return new Amos22PrefixMaxConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
-                return new Xxx23PrefixMaxConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
+                return new Php24PrefixMaxConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
             case COVERT:
             case MALICIOUS:
             default:
