@@ -48,7 +48,7 @@ public class GroupAggregationMain {
      */
     private static void processSingle(String[] args) throws IOException, URISyntaxException, MpcAbortException {
         Properties properties = PropertiesUtils.loadProperties(args[1]);
-        SbitmapStarter fullSecureProtocol = new SbitmapStarter();
+        GroupAggregationStarter fullSecureProtocol = new GroupAggregationStarter();
         fullSecureProtocol.setProperties(properties);
         fullSecureProtocol.initRpc();
         fullSecureProtocol.init();
@@ -66,7 +66,7 @@ public class GroupAggregationMain {
         List<String> files = listFilesForFolder(new File(args[1]));
         files = files.stream().sorted().collect(Collectors.toList());
         List<Properties> ps = files.stream().map(PropertiesUtils::loadProperties).collect(Collectors.toList());
-        SbitmapStarter fullSecureProtocol = new SbitmapStarter();
+        GroupAggregationStarter fullSecureProtocol = new GroupAggregationStarter();
         fullSecureProtocol.setProperties(ps.get(0));
         fullSecureProtocol.initRpc();
         for (Properties p : ps) {

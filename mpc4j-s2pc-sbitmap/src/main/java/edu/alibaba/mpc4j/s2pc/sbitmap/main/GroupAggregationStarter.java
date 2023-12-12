@@ -21,8 +21,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConf
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
-import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SbitmapTaskType;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.GroupAggInputData;
 import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,16 +46,12 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
  * @author Li Peng
  * @date 2023/8/4
  */
-public class SbitmapStarter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapStarter.class);
+public class GroupAggregationStarter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationStarter.class);
     /**
      * Configuration properties.
      */
     protected Properties properties;
-    /**
-     * Task type.
-     */
-    protected SbitmapTaskType taskType;
     /**
      * Own rpc
      */
@@ -130,7 +125,7 @@ public class SbitmapStarter {
      */
     private boolean senderAgg;
 
-    public SbitmapStarter() {
+    public GroupAggregationStarter() {
         setSchema();
     }
 
@@ -165,7 +160,7 @@ public class SbitmapStarter {
 
     }
 
-    public void init() throws IOException, URISyntaxException {
+    public void init() {
         // set dataset name
         datasetName = SbitmapMainUtils.setDatasetName(properties);
         // set aggregation type

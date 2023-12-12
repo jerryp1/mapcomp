@@ -3,7 +3,7 @@ package edu.alibaba.mpc4j.s2pc.sbitmap.main;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
+import edu.alibaba.mpc4j.s2pc.sbitmap.utils.GroupAggInputData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

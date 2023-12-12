@@ -1,32 +1,25 @@
 package edu.alibaba.mpc4j.s2pc.sbitmap.utils;
 
 import com.google.common.base.Preconditions;
-import edu.alibaba.mpc4j.common.rpc.Party;
-import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
-import edu.alibaba.mpc4j.s2pc.sbitmap.main.GroupAggregationConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.bitmap.SbitmapTaskType;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.*;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
-import smile.data.vector.IntVector;
 import smile.io.Read;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Calendar;
+import java.util.Properties;
 
 /**
  * Sbitmap utilities for main.
@@ -38,7 +31,6 @@ public class SbitmapMainUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SbitmapMainUtils.class);
 
     public static final String ID = "id";
-    public static final String PID = "pid";
 
     /**
      * Private constructor.
@@ -67,10 +59,10 @@ public class SbitmapMainUtils {
     }
 
     /**
-     * 设置总测试轮数。
+     * set rounds of test.
      *
-     * @param properties 配置项。
-     * @return 总测试轮数。
+     * @param properties configuration.
+     * @return rounds.
      */
     public static int setTotalRound(Properties properties) {
         int totalRound = PropertiesUtils.readInt(properties, "total_round");
@@ -97,11 +89,11 @@ public class SbitmapMainUtils {
     }
 
     public static String setOutputDir(Properties properties) {
-        return  PropertiesUtils.readString(properties, "output_dir");
+        return PropertiesUtils.readString(properties, "output_dir");
     }
 
     public static String setInputDir(Properties properties) {
-        return  PropertiesUtils.readString(properties, "input_dir");
+        return PropertiesUtils.readString(properties, "input_dir");
     }
 
     public static GroupAggTypes setGroupAggTypes(Properties properties) {
@@ -110,10 +102,10 @@ public class SbitmapMainUtils {
     }
 
     /**
-     * 设置分组长度。
+     * set group length.
      *
-     * @param properties 配置项。
-     * @return α
+     * @param properties configuration.
+     * @return group length.
      */
     public static int setSenderGroupBitLength(Properties properties) {
         return PropertiesUtils.readInt(properties, "sender_group_bit_length");
@@ -125,112 +117,35 @@ public class SbitmapMainUtils {
     }
 
     /**
-     * 设置分组长度。
+     * set group length.
      *
-     * @param properties 配置项。
-     * @return α
+     * @param properties configuration.
+     * @return group length.
      */
     public static int setReceiverGroupBitLength(Properties properties) {
         return PropertiesUtils.readInt(properties, "receiver_group_bit_length");
     }
 
     /**
-     * 设置分组长度。
+     * set data.
      *
-     * @param properties 配置项。
-     * @return α
+     * @param properties configuration.
+     * @return data.
      */
     public static int[] setTestDataNums(Properties properties) {
         return PropertiesUtils.readIntArray(properties, "test_data_nums");
     }
 
     /**
-     * 设置训练数据集。
+     * set data.
      *
-     * @param schema     元数据信息。
-     * @return 训练数据集。
-     * @throws IOException        如果出现IO异常。
-     * @throws URISyntaxException 如果文件路径有误。
+     * @param schema meta data.
+     * @return data frame
      */
     public static DataFrame setDataFrame(StructType schema, String path) throws IOException, URISyntaxException {
         if (!new File(path).exists()) {
             LOGGER.info("Dataset file not exist, please generate data first.");
         }
         return Read.csv(path, DEFAULT_CSV_FORMAT, schema);
-    }
-
-    /**
-     * Add id column.
-     *
-     * @param dataFrame dataframe.
-     * @return updated dataframe.
-     */
-    public static DataFrame addIdColumn(DataFrame dataFrame) {
-        int size = dataFrame.size();
-        int[] ids = IntStream.range(0, size).toArray();
-        IntVector intVector = IntVector.of(ID, ids);
-        return dataFrame.merge(intVector);
-    }
-
-    /**
-     * Select rows based on the party id.
-     *
-     * @return updated dataframe.
-     */
-    public static int[] selectRows(int rowNum, int partyId) {
-        assert partyId == 0 || partyId == 1 : "party id must be 0 or 1";
-        int num = (int) (rowNum * 0.6);
-        return partyId == 0 ? IntStream.range(0, num - 1).toArray() : IntStream.range(rowNum - num + 1, rowNum).toArray();
-    }
-
-    public static DataFrame setDataset(DataFrame dataFrame, int[] columns, int[] rows) {
-        DataFrame temp = SbitmapMainUtils.addIdColumn(dataFrame.select(columns));
-        return DataFrame.of(Arrays.stream(rows).mapToObj(temp::get).collect(Collectors.toList()));
-    }
-
-
-    public static SbitmapPtoParty createParty(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
-        SbitmapPtoParty party;
-        switch (ownRpc.ownParty().getPartyId()) {
-            case 0:
-                party = createReceiver(taskType, ownRpc, otherParty, groupAggregationConfig);
-                break;
-            case 1:
-                party = createSender(taskType, ownRpc, otherParty, groupAggregationConfig);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid task_type: " + taskType);
-        }
-        return party;
-    }
-
-    public static SbitmapPtoParty createSender(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig groupAggregationConfig) {
-        SbitmapPtoParty pto;
-        switch (taskType) {
-            case SET_OPERATIONS:
-                pto = new SetOperationsSender(ownRpc, otherParty, groupAggregationConfig);
-                break;
-            case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsSender(ownRpc, otherParty, groupAggregationConfig);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid task_type: " + taskType);
-        }
-        return pto;
-    }
-
-    public static SbitmapPtoParty createReceiver(SbitmapTaskType taskType, Rpc ownRpc, Party otherParty, GroupAggregationConfig slaveConfig) {
-        SbitmapPtoParty pto;
-        switch (taskType) {
-            case SET_OPERATIONS:
-                pto = new SetOperationsReceiver(ownRpc, otherParty, slaveConfig);
-                break;
-            case GROUP_AGGREGATIONS:
-                pto = new GroupAggregationsReceiver(ownRpc, otherParty, slaveConfig);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid task_type: " + taskType);
-        }
-        return pto;
     }
 }
