@@ -23,7 +23,6 @@ import java.util.Arrays;
  * @date 2023/11/5
  */
 public abstract class AbstractPlainBitMuxParty extends AbstractTwoPartyPto implements PlainBitMuxParty {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPlainBitMuxParty.class);
     /**
      * max num
      */

@@ -75,7 +75,6 @@ public class TupleBit2aSender extends AbstractBit2aParty {
 
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // cot
         stopWatch.start();
         SquareZlVector result = b2aWithTuple();
         stopWatch.stop();

@@ -4,10 +4,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Hardcode B2a protocol description. The protocol comes from the following paper:
- * <p>
- *
- * </p>
+ * Hardcode B2a protocol description.
  *
  * @author Li Peng
  * @date 2023/11/21
@@ -26,10 +23,7 @@ public class TupleB2aPtoDesc implements PtoDesc {
      * protocol step
      */
     enum PtoStep {
-        // obtain ote keys
-        OBTAIN_OTE_KEYS,
-        // sender send payloads
-        SENDER_SEND_PAYLOADS,
+        // empty
     }
 
     /**

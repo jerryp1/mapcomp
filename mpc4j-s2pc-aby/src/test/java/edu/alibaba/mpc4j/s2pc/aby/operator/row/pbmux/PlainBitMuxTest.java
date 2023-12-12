@@ -124,9 +124,6 @@ public class PlainBitMuxTest extends AbstractTwoPartyPtoTest {
     private void testPto(int num, boolean parallel) {
         // create inputs
         BitVector x = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        SquareZ2Vector shareX0 = SquareZ2Vector.create(x, false);
-//        SquareZ2Vector shareX1 = SquareZ2Vector.create(x1, false);
 
         long[] y = IntStream.range(0, num).map(i -> SECURE_RANDOM.nextInt(Integer.MAX_VALUE)).mapToLong(i -> i).toArray();
         SquareZlVector y0 = SquareZlVector.createRandom(config.getZl(), num, SECURE_RANDOM);

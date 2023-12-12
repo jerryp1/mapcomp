@@ -37,7 +37,6 @@ public class HardcodeB2aTupleReceiver extends AbstractB2aTupleParty {
     @Override
     public B2aTuple generate(int num) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
-        int byteNum = CommonUtils.getByteLength(num);
         B2aTuple b2aTuple = B2aTuple.create(BitVectorFactory.createZeros(num), ZlVector.createZeros(zl, num));
         logPhaseInfo(PtoState.PTO_END);
         return b2aTuple;

@@ -55,7 +55,7 @@ public class A2bTest extends AbstractTwoPartyPtoTest {
     /**
      * silent
      */
-    private static boolean silent = true;
+    private static final boolean silent = true;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
