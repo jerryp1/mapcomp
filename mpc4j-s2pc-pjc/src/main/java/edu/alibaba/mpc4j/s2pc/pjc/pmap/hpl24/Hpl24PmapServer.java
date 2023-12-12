@@ -36,19 +36,52 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * 满足level 2 安全的map server
+ *
+ * @author Feng Han
+ * @date 2023/10/24
+ */
 public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
+    /**
+     * 用来表示置换所需的bit长度
+     */
     private final int bitLen;
+    /**
+     * payload psi server
+     */
     private final PlpsiServer<T, Integer> plpsiServer;
+    /**
+     * payload psi client
+     */
     private final PlpsiClient<T> plpsiClient;
+    /**
+     * osn receiver
+     */
     private final OsnReceiver osnReceiver;
+    /**
+     * osn sender
+     */
     private final OsnSender osnSender;
+    /**
+     * Permutation generator for small field
+     */
     private final PermGenParty smallFieldPermGenSender;
+    /**
+     * z2 compute party
+     */
     private final Z2cParty z2cSender;
-
+    /**
+     * the permutation for osn
+     */
     private int[] osnMap;
-
+    /**
+     * permutation party for secret shared values
+     */
     private final SharedPermutationParty permutationSender, invPermutationSender;
-
+    /**
+     * A2B party
+     */
     private final A2bParty a2bSender;
 
     public Hpl24PmapServer(Rpc serverRpc, Party clientParty, Hpl24PmapConfig config) {
@@ -56,16 +89,12 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         bitLen = config.getBitLen();
         plpsiClient = PlpsiFactory.createClient(serverRpc, clientParty, config.getPlpsiconfig());
         plpsiServer = PlpsiFactory.createServer(serverRpc, clientParty, config.getPlpsiconfig());
-
         osnReceiver = OsnFactory.createReceiver(serverRpc, clientParty, config.getOsnConfig());
         osnSender = OsnFactory.createSender(serverRpc, clientParty, config.getOsnConfig());
         smallFieldPermGenSender = PermGenFactory.createSender(serverRpc, clientParty, config.getPermutableSorterConfig());
-
         z2cSender = Z2cFactory.createSender(serverRpc, clientParty, config.getZ2cConfig());
-
         permutationSender = SharedPermutationFactory.createSender(serverRpc, clientParty, config.getPermutationConfig());
         invPermutationSender = SharedPermutationFactory.createSender(serverRpc, clientParty, config.getInvPermutationConfig());
-
         a2bSender = A2bFactory.createSender(serverRpc, clientParty, config.getA2bConfig());
         addMultipleSubPtos(plpsiClient, plpsiServer, osnReceiver, osnSender, smallFieldPermGenSender, z2cSender, permutationSender, invPermutationSender, a2bSender);
     }
@@ -80,16 +109,12 @@ public class Hpl24PmapServer<T> extends AbstractPmapServer<T> {
         int maxNum = maxServerElementSize < 200 ? 400 : maxServerElementSize << 1;
         plpsiClient.init(maxServerElementSize, maxClientElementSize);
         plpsiServer.init(maxServerElementSize, maxClientElementSize);
-
         osnReceiver.init(maxNum);
         osnSender.init(maxNum);
         smallFieldPermGenSender.init(maxServerElementSize, 2);
-
         z2cSender.init(bitLen * maxServerElementSize);
-
         permutationSender.init(maxServerElementSize);
         invPermutationSender.init(maxServerElementSize);
-
         a2bSender.init(bitLen, maxServerElementSize<<1);
         logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 

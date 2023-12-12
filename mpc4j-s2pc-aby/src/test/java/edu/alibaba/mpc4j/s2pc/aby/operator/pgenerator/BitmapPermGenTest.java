@@ -29,6 +29,12 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+/**
+ * Permutable bitmap sorter test.
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 @RunWith(Parameterized.class)
 public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BitmapPermGenTest.class);
@@ -55,7 +61,7 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        for(int zl : ZLS) {
+        for (int zl : ZLS) {
             Zl tmpZl = ZlFactory.createInstance(EnvType.STANDARD, zl);
             configurations.add(new Object[]{
                 PermGenTypes.AHI22_BITMAP.name() + "_" + zl, new BitmapPermGenConfig.Builder(tmpZl, silent).setSilent(false).build()
@@ -82,56 +88,56 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
 
     @Test
     public void test1Num() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(1, bitNum, false);
         }
     }
 
     @Test
     public void test2Num() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(2, bitNum, false);
         }
     }
 
     @Test
     public void test8Num() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(8, bitNum, false);
         }
     }
 
     @Test
     public void test7Num() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(7, bitNum, false);
         }
     }
 
     @Test
     public void testDefaultNum() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(DEFAULT_NUM, bitNum, false);
         }
     }
 
     @Test
     public void testParallelDefaultNum() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(DEFAULT_NUM, bitNum, true);
         }
     }
 
     @Test
     public void testLargeNum() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(LARGE_NUM, bitNum, false);
         }
     }
 
     @Test
     public void testParallelLargeNum() {
-        for(int bitNum : BIT_NUMS){
+        for (int bitNum : BIT_NUMS) {
             testPto(LARGE_NUM, bitNum, true);
         }
     }
@@ -140,9 +146,9 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
         MathPreconditions.checkGreaterOrEqual("config.getZl().getL() >= LongUtils.ceilLog2(num)", config.getZl().getL(), LongUtils.ceilLog2(num));
         // create inputs
         BitVector[] origin = IntStream.range(0, bitNum).mapToObj(i -> BitVectorFactory.createZeros(num)).toArray(BitVector[]::new);
-        for(int i = 0; i < num; i++){
+        for (int i = 0; i < num; i++) {
             int index = SECURE_RANDOM.nextInt(bitNum + 1);
-            if(index < bitNum){
+            if (index < bitNum) {
                 origin[index].set(i, true);
             }
         }

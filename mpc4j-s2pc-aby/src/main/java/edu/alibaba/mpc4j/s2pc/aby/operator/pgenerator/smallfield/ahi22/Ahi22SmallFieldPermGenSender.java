@@ -5,7 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PartyTypes;
 
 /**
- * Ahi22 Permutable Sorter Sorter.
+ * Ahi22 Permutable Sorter Sender.
  *
  * @author Li Peng
  * @date 2023/10/11

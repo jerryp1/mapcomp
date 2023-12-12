@@ -3,8 +3,14 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.share;
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.pto.TwoPartyPto;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 
+/**
+ * abstract group aggregation party for shared values and flag
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public interface ShareGroupParty extends TwoPartyPto {
     /**
      * inits the protocol.
@@ -16,6 +22,12 @@ public interface ShareGroupParty extends TwoPartyPto {
      */
     void init(int attrNum, int maxNum, int maxBitNum) throws MpcAbortException;
 
+    /**
+     * get the valid flag for result, 1 for valid tuples and 0 for dummy tuples
+     *
+     * @param groupFlag   if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @throws MpcAbortException the protocol failure aborts.
+     */
     SquareZ2Vector getFlag(SquareZ2Vector groupFlag) throws MpcAbortException;
 
     /**

@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
@@ -53,7 +53,7 @@ public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         SquareZ2Vector[] res = shareGroupParty.groupAgg(aggField, null, AggTypes.MAX, groupIndicator1);
         // 将 groupIndicator1 也进行更新。
-        groupIndicator1.getBitVector().setValues(0, shareGroupParty.getFlag(groupIndicator1).getBitVector().getBytes());
+        groupIndicator1.setBitVector(shareGroupParty.getFlag(groupIndicator1).getBitVector());
         return res;
     }
 }

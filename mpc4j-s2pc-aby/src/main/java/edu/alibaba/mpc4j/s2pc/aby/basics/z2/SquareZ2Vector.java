@@ -153,6 +153,16 @@ public class SquareZ2Vector implements MpcZ2Vector {
         // empty
     }
 
+    /**
+     * replace the current bitvector with a new bitvector
+     *
+     * @param bitVector new data
+     */
+    public void setBitVector(BitVector bitVector){
+        assert bitVector.bitNum() == this.bitVector.bitNum();
+        this.bitVector = bitVector;
+    }
+
     @Override
     public SquareZ2Vector copy() {
         SquareZ2Vector clone = new SquareZ2Vector();
@@ -226,6 +236,11 @@ public class SquareZ2Vector implements MpcZ2Vector {
     @Override
     public String toString() {
         return String.format("%s: %s", plain ? "plain" : "secret", bitVector.toString());
+    }
+
+    @Override
+    public void reverseBits(){
+        this.bitVector.reverseBits();
     }
 
     @Override

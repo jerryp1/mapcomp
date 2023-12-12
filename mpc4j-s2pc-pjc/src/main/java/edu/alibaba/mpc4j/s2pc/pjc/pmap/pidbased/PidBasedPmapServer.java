@@ -27,9 +27,20 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.IntStream;
 
+/**
+ * 基于PID的map server
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PidBasedPmapServer<T> extends AbstractPmapServer<T> {
-
+    /**
+     * pid server
+     */
     private final PidParty<T> pidServer;
+    /**
+     * peqt receiver
+     */
     private final PeqtParty peqtReceiver;
 
     public PidBasedPmapServer(Rpc serverRpc, Party clientParty, PidBasedPmapConfig config) {

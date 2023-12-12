@@ -7,10 +7,11 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupUtils;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupFactory.ShareGroupType;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.amos22.Amos22ShareGroupConfig;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.linked.TIntLinkedList;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +30,10 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShareGroupTest.class);
-    private static final int ATTR_NUM = 2;
+    /**
+     * the number of attributes
+     */
+    private static final int ATTR_NUM = 3;
     /**
      * bitLen
      */
@@ -41,7 +45,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     /**
      * 较大数量
      */
-    private static final int LARGE_SIZE = 1 << 16;
+    private static final int LARGE_SIZE = 1 << 14;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -52,11 +56,11 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
                 bitLen,
                 new Amos22ShareGroupConfig.Builder(false).build(),
             });
-//            configurations.add(new Object[]{
-//                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
-//                bitLen,
-//                new Amos22ShareGroupConfig.Builder(true).build(),
-//            });
+            configurations.add(new Object[]{
+                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
+                bitLen,
+                new Amos22ShareGroupConfig.Builder(true).build(),
+            });
         }
         return configurations;
     }
@@ -147,8 +151,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
                 aggTypes[i] = secureRandom.nextBoolean() ? AggTypes.MIN : AggTypes.MAX;
                 data[i] = IntStream.range(0, domainBitLen).mapToObj(j ->
                     BitVectorFactory.createRandom(listSize, secureRandom)).toArray(BitVector[]::new);
-//                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
-                validFlag[i] = BitVectorFactory.createOnes(listSize);
+                validFlag[i] = BitVectorFactory.createRandom(listSize, secureRandom);
                 f0[i] = BitVectorFactory.createRandom(listSize, secureRandom);
                 f1[i] = f0[i].xor(validFlag[i]);
                 BitVector[] tmp = IntStream.range(0, domainBitLen).mapToObj(j ->
@@ -165,8 +168,6 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
             groupFlag.set(0, true);
             BitVector g0 = BitVectorFactory.createRandom(listSize, secureRandom);
             BitVector g1 = g0.xor(groupFlag);
-//            groupFlag.set(listSize - 1, true);
-
             ShareGroupPartyThread senderThread = new ShareGroupPartyThread(sender, s0,
                 Arrays.stream(f0).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new), aggTypes, SquareZ2Vector.create(g0, false));
             ShareGroupPartyThread receiverThread = new ShareGroupPartyThread(receiver, s1,
@@ -183,7 +184,15 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify
-            int[] pos = GroupUtils.getResPosFlag(groupFlag);
+            BitVector resFlag = senderThread.getResFlag().getBitVector().xor(receiverThread.getResFlag().getBitVector());
+            TIntList list = new TIntLinkedList();
+            for (int i = 0; i < resFlag.bitNum(); i++) {
+                if (resFlag.get(i)) {
+                    list.add(i);
+                }
+            }
+            list.sort();
+            int[] pos = list.toArray();
             SquareZ2Vector[][] senderOutput = senderThread.getGroupRes();
             SquareZ2Vector[][] receiverOutput = receiverThread.getGroupRes();
             BitVector[][] res = IntStream.range(0, attrNum).mapToObj(attrIndex -> IntStream.range(0, domainBitLen).mapToObj(i ->
@@ -211,14 +220,6 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
         }).toArray(BigInteger[][]::new);
         BigInteger[][] resData = Arrays.stream(res).map(x -> ZlDatabase.create(EnvType.STANDARD, true, x).getBigIntegerData()).toArray(BigInteger[][]::new);
         int groupIndex = 0;
-
-//        LOGGER.info(Arrays.toString(type));
-//        LOGGER.info("gFlag:{}", Arrays.toString(gFlag));
-//        LOGGER.info("validFlag:{}", Arrays.deepToString(validFlag));
-//        LOGGER.info(Arrays.toString(targetIndexes));
-//        LOGGER.info("origin:{}", Arrays.deepToString(origin));
-//        LOGGER.info("resData:{}", Arrays.deepToString(resData));
-
         BigInteger[] tmp = Arrays.copyOf(nullValue, data.length);
         for (int i = 0; i < groupFlag.bitNum(); i++) {
             for (int j = 0; j < data.length; j++) {
@@ -231,11 +232,6 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
             if (i + 1 == groupFlag.bitNum() || gFlag[i + 1]) {
                 for (int j = 0; j < data.length; j++) {
                     BigInteger compRes = resData[j][targetIndexes[groupIndex]];
-                    if (compRes.compareTo(tmp[j]) != 0) {
-                        LOGGER.info("i:{}", i);
-                        LOGGER.info("should be:{}", compRes);
-                        LOGGER.info("res is:{}", tmp[j]);
-                    }
                     assert compRes.compareTo(tmp[j]) == 0;
                 }
                 groupIndex++;

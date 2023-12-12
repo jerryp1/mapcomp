@@ -1,7 +1,6 @@
 package edu.alibaba.mpc4j.common.circuit.z2;
 
 import edu.alibaba.mpc4j.common.circuit.MpcVector;
-import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 
 import java.util.stream.IntStream;
@@ -48,6 +47,8 @@ public interface MpcZ2Vector extends MpcVector {
         return result;
     }
 
+    void reverseBits();
+
     /**
      * split inputs with padding zeros into multiple vectors
      *
@@ -79,18 +80,6 @@ public interface MpcZ2Vector extends MpcVector {
      * @param skipLen the fixed skip length
      */
     MpcZ2Vector[] getBitsWithSkip(int totalBitNum, int skipLen);
-
-    /**
-     * set the values of specific continuous positions.
-     *
-     * @param startByteIndex set the values of bytes[startByteIndex, startByteIndex + data.length].
-     * @param data src data
-     */
-    default void setValues(int startByteIndex, byte[] data){
-        assert startByteIndex >= 0 && data != null;
-        MathPreconditions.checkGreaterOrEqual("byteNum >= startByteIndex + data.length", byteNum(), startByteIndex + data.length);
-        getBitVector().setValues(startByteIndex, data);
-    }
 
     /**
      * 基于一定间隔，得到部分bit的数据

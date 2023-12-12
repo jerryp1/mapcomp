@@ -20,6 +20,12 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
 import java.util.Properties;
 
+/**
+ * PMAP协议配置项工具类。
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PmapConfigUtils {
 
     private PmapConfigUtils() {

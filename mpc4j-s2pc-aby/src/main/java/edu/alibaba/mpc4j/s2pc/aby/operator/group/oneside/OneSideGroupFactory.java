@@ -2,13 +2,19 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupSender;
 
-public class OneSideGroupFactory extends GroupFactory {
+/**
+ * group aggregation factory
+ *
+ * @author Feng Han
+ * @date 2023/11/06
+ */
+public class OneSideGroupFactory extends GroupTypes {
     /**
      * permutation generator type enums.
      */

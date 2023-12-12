@@ -23,6 +23,7 @@ public abstract class AbstractPermutationSorter extends AbstractZ2Circuit implem
      */
     protected int sortedNum;
     protected boolean needPermutation;
+    protected boolean needStable;
     /**
      * Z2 integer circuit.
      */

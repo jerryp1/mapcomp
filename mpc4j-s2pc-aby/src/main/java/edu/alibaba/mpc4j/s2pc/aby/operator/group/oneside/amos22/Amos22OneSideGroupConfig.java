@@ -6,9 +6,17 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory.OneSideGroupType;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory;
 
+/**
+ * AMOS22 shared group aggregation Config.
+ *
+ * @author Feng Han
+ * @date 2023/11/08
+ */
 public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implements OneSideGroupConfig {
 
     /**
@@ -19,12 +27,20 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
      * plain Bit Mux Config
      */
     private final PlainBitMuxConfig plainBitMuxConfig;
+    /**
+     * Z2 mux circuit config.
+     */
+    private final Z2MuxConfig z2MuxConfig;
+    /**
+     * 一个batch中最多执行多少个bit的运算
+     */
     private final int maxBitLenOneBatch;
 
     private Amos22OneSideGroupConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.plainBitMuxConfig);
         z2cConfig = builder.z2cConfig;
         plainBitMuxConfig = builder.plainBitMuxConfig;
+        z2MuxConfig = builder.z2MuxConfig;
         maxBitLenOneBatch = builder.maxBitLenOneBatch;
     }
 
@@ -34,6 +50,10 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
 
     public PlainBitMuxConfig getPlainBitMuxConfig() {
         return plainBitMuxConfig;
+    }
+
+    public Z2MuxConfig getZ2MuxConfig() {
+        return z2MuxConfig;
     }
 
     public int getMaxBitLenOneBatch() {
@@ -54,11 +74,19 @@ public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implem
          * plain Bit Mux Config
          */
         private final PlainBitMuxConfig plainBitMuxConfig;
+        /**
+         * Z2 mux circuit config.
+         */
+        private final Z2MuxConfig z2MuxConfig;
+        /**
+         * 一个batch中最多执行多少个bit的运算
+         */
         private int maxBitLenOneBatch;
 
         public Builder(boolean silent) {
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.plainBitMuxConfig = PlainBitMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, null, silent);
+            this.z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             maxBitLenOneBatch = 1 << 28;
         }
 

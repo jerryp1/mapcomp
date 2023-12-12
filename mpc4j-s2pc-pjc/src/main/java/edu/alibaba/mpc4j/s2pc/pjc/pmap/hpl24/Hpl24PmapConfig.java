@@ -22,6 +22,12 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
+/**
+ * level 2 secure 的private map协议配置
+ *
+ * @author Feng Han
+ * @date 2023/10/24
+ */
 public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements PmapConfig {
     /**
      * 所需的z2

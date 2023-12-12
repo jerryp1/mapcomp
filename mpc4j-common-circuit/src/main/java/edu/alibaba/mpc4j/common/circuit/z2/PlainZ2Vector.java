@@ -159,6 +159,11 @@ public class PlainZ2Vector implements MpcZ2Vector {
     }
 
     @Override
+    public void reverseBits(){
+        this.bitVector.reverseBits();
+    }
+
+    @Override
     public PlainZ2Vector[] splitWithPadding(int[] bitLens) {
         BitVector[] splitBitVectors = getBitVector().splitWithPadding(bitLens);
         return Arrays.stream(splitBitVectors).map(PlainZ2Vector::create).toArray(PlainZ2Vector[]::new);

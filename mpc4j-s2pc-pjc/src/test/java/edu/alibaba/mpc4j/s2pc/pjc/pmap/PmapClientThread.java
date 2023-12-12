@@ -5,6 +5,12 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+/**
+ * Pmap protocol test.
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 public class PmapClientThread extends Thread {
     /**
      * client

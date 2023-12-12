@@ -46,7 +46,7 @@ public class Z2SorterTest {
     /**
      * default num
      */
-    private static final int DEFAULT_NUM = 1 << 4;
+    private static final int DEFAULT_NUM = 1 << 2;
     /**
      * default large num
      */

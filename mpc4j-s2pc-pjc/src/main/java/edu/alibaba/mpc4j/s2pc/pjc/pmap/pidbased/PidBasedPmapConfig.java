@@ -11,6 +11,12 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
 
+/**
+ * 基于PID的private map协议配置
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PidBasedPmapConfig extends AbstractMultiPartyPtoConfig implements PmapConfig {
     /**
      * private equality test config

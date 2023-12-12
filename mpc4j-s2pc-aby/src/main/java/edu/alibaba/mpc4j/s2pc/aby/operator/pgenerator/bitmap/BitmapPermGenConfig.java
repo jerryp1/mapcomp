@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcConfig;
@@ -16,6 +15,12 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenType
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 
+/**
+ * Permutable bitmap sorter config.
+ *
+ * @author Feng Han
+ * @date 2023/10/20
+ */
 public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements PermGenConfig {
     /**
      * bit2a config.
@@ -33,6 +38,10 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
      * Zl mux config.
      */
     private final ZlMuxConfig zlMuxConfig;
+    /**
+     * maximum number of bits in one batch
+     */
+    private final int maxNumInBatch;
 
     private BitmapPermGenConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.bit2aConfig, builder.zlcConfig, builder.zlMuxConfig);
@@ -40,6 +49,7 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         zlcConfig = builder.zlcConfig;
         z2cConfig = builder.z2cConfig;
         zlMuxConfig = builder.zlMuxConfig;
+        maxNumInBatch = builder.maxNumInBatch;
     }
 
     @Override
@@ -73,6 +83,10 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         return zlMuxConfig;
     }
 
+    public int getMaxNumInBatch() {
+        return maxNumInBatch;
+    }
+
     public static class Builder implements org.apache.commons.lang3.builder.Builder<BitmapPermGenConfig> {
         /**
          * bit2a config.
@@ -90,12 +104,17 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
          * Zl mux config.
          */
         private ZlMuxConfig zlMuxConfig;
+        /**
+         * maximum number of bits in one batch
+         */
+        private int maxNumInBatch;
 
         public Builder(Zl zl, boolean silent) {
             this.bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl, silent);
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            maxNumInBatch = 1<<22;
         }
 
         public Builder setZlcConfig(ZlcConfig zlcConfig) {
@@ -106,6 +125,11 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
         public Builder setSilent(boolean silent){
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            return this;
+        }
+
+        public Builder setBatchSize(int maxNumInBatch){
+            this.maxNumInBatch = maxNumInBatch;
             return this;
         }
 

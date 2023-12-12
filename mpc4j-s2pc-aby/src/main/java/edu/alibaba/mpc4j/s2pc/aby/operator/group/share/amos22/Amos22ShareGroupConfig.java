@@ -9,17 +9,31 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.share.ShareGroupFactory.ShareGr
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 
+/**
+ * AMOS22 shared group aggregation Config.
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public class Amos22ShareGroupConfig extends AbstractMultiPartyPtoConfig implements ShareGroupConfig {
-
     /**
      * Z2 circuit config.
      */
     private final Z2cConfig z2cConfig;
+    /**
+     * Z2 mux circuit config.
+     */
     private final Z2MuxConfig z2MuxConfig;
+    /**
+     * 一个batch中最多执行多少个bit的运算
+     */
+    private final int maxBitLenOneBatch;
+
     private Amos22ShareGroupConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST, builder.z2cConfig, builder.z2MuxConfig);
         z2cConfig = builder.z2cConfig;
         z2MuxConfig = builder.z2MuxConfig;
+        maxBitLenOneBatch = builder.maxBitLenOneBatch;
     }
 
     public Z2cConfig getZ2cConfig() {
@@ -28,6 +42,10 @@ public class Amos22ShareGroupConfig extends AbstractMultiPartyPtoConfig implemen
 
     public Z2MuxConfig getZ2MuxConfig() {
         return z2MuxConfig;
+    }
+
+    public int getMaxBitLenOneBatch() {
+        return maxBitLenOneBatch;
     }
 
     @Override
@@ -40,11 +58,23 @@ public class Amos22ShareGroupConfig extends AbstractMultiPartyPtoConfig implemen
          * Z2 circuit config.
          */
         private final Z2cConfig z2cConfig;
+        /**
+         * Z2 mux circuit config.
+         */
         private final Z2MuxConfig z2MuxConfig;
+        /**
+         * 一个batch中最多执行多少个bit的运算
+         */
+        private int maxBitLenOneBatch;
 
         public Builder(boolean silent) {
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            maxBitLenOneBatch = 1<<28;
+        }
+
+        public void setMaxBitLenOneBatch(int maxBitLenOneBatch) {
+            this.maxBitLenOneBatch = maxBitLenOneBatch;
         }
 
         @Override

@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupFactory.AggTypes;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.OneSideGroupParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;

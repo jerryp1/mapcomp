@@ -27,6 +27,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * payload psi main for a batch
+ *
+ * @author Feng Han
+ * @date 2023/11/24
+ */
 public class PlpsiMain4Batch {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlpsiMain4Batch.class);
     /**

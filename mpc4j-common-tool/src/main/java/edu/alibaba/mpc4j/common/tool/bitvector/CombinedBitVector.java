@@ -247,23 +247,23 @@ public class CombinedBitVector implements BitVector {
     }
 
     @Override
-    public void setValues(int startByteIndex, byte[] data) {
-        innerBitVector.setValues(startByteIndex, data);
-    }
-
-    @Override
     public void extendLength(int targetBitLength) {
         innerBitVector.extendLength(targetBitLength);
     }
 
     @Override
-    public BitVector shiftRight(int bit){
-        return innerBitVector.shiftRight(bit);
+    public BitVector shiftRight(int bitLen){
+        return innerBitVector.shiftRight(bitLen);
     }
 
     @Override
     public void shiftLeftUnChangeNum(int bit){
         innerBitVector.shiftLeftUnChangeNum(bit);
+    }
+
+    @Override
+    public void reverseBits(){
+        this.innerBitVector.reverseBits();
     }
 
     @Override

@@ -24,6 +24,7 @@ public class PSorterUtils {
         BigInteger[] permutationVecTrans = ZlDatabase.create(EnvType.STANDARD, false, permutationVec).getBigIntegerData();
         return Arrays.stream(permutationVecTrans).mapToLong(BigInteger::longValue).toArray();
     }
+
     /**
      * 得到1<<(log2-1)长度的mask的值
      */
@@ -68,11 +69,19 @@ public class PSorterUtils {
             }
         } else {
             return IntStream.range(0, compareResultMask.length).mapToObj(i ->
-                    BitVectorFactory.create(length, BytesUtils.keepLastBits(BytesUtils.shiftRight(compareResultMask[compareResultMask.length - 1 - i], bitShift), length)))
+                    BitVectorFactory.create(length, BytesUtils.keepLastBits(
+                        BytesUtils.shiftRight(compareResultMask[compareResultMask.length - 1 - i], bitShift), length)))
                 .toArray(BitVector[]::new);
         }
     }
 
+    /**
+     * 扩展bit vector: 扩展当前的vector使其变为一个destBitLen长的vector
+     *
+     * @param data       source data
+     * @param destBitLen target bit length
+     * @param skipLen    skip bit length in source data
+     */
     public static byte[] extendBitsWithSkip(MpcZ2Vector data, int destBitLen, int skipLen) {
         MathPreconditions.checkEqual("skipLen", "2^k", 1 << LongUtils.ceilLog2(skipLen), skipLen);
         int destByteNum = CommonUtils.getByteLength(destBitLen);
@@ -101,7 +110,7 @@ public class PSorterUtils {
                 System.arraycopy(srcByte, srcEndIndex - eachByteNum, destByte, destEndIndex - eachPartNum, eachByteNum);
             }
         } else {
-            int andNum = (1<<skipLen) - 1;
+            int andNum = (1 << skipLen) - 1;
             int[] destShiftLeftBit;
             if (skipLen == 4) {
                 destShiftLeftBit = new int[]{0, 0};
@@ -147,6 +156,13 @@ public class PSorterUtils {
         return destByte;
     }
 
+    /**
+     * 将当前bitvector按照指定的间隔取数
+     *
+     * @param data        source data
+     * @param totalBitNum how many bits should be picked out
+     * @param skipLen     skip bit length in source data
+     */
     public static byte[][] getBitsWithSkip(MpcZ2Vector data, int totalBitNum, int skipLen) {
         MathPreconditions.checkEqual("skipLen", "2^k", 1 << LongUtils.ceilLog2(skipLen), skipLen);
         byte[] srcByte = data.getBitVector().getBytes();
@@ -176,8 +192,7 @@ public class PSorterUtils {
                 System.arraycopy(srcByte, srcEndIndex - eachByteNum, destByte[1], destEndIndex - eachByteNum, eachByteNum);
                 System.arraycopy(srcByte, srcEndIndex - eachPartNum, destByte[0], destEndIndex - eachByteNum, eachByteNum);
             }
-        }
-        else {
+        } else {
             int andNum = (1 << skipLen) - 1;
             int[] destShiftLeftBit;
             if (skipLen == 4) {

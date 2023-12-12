@@ -8,6 +8,12 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
+/**
+ * Abstract permutation generator Party.
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implements PermGenParty {
     /**
      * max num
