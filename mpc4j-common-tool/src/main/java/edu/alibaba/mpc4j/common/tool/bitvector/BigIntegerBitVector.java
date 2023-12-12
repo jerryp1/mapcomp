@@ -329,7 +329,7 @@ public class BigIntegerBitVector implements BitVector {
     public void reverseBits(){
         byte[] bytes = this.getBytes();
         byte[] res = BytesUtils.reverseBitArray(bytes);
-        int shiftNum = this.bitNum() & 7;
+        int shiftNum = (this.bitNum() & 7) > 0 ? 8 - (this.bitNum() & 7) : 0;
         if(shiftNum > 0){
             BytesUtils.shiftRighti(res, shiftNum);
         }

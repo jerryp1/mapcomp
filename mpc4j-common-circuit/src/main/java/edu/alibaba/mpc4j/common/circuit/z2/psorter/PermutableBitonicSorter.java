@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -86,9 +84,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         this.dir = dir;
         initMask();
         dealInput(xiArrays, payloadArrays, needPermutation, needStable);
-
         bitonicSort();
-
         return recoverOutput(xiArrays, payloadArrays, needPermutation);
     }
 
@@ -117,6 +113,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         }
         this.payloadArrays = payloadList.isEmpty() ? null : payloadList.toArray(new MpcZ2Vector[0]);
         if (needStable) {
+            // reverse的原因：将index设置为从后往前的，因为后面的升序排序时，只允许前面的分组不满。此时可以利用每个分组前XX个bit相同，且不需要排序的性质，节省开销
             assert this.payloadArrays != null;
             if(party.getParallel()){
                 Arrays.stream(this.xiArray).parallel().forEach(MpcZ2Vector::reverseBits);
@@ -169,6 +166,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         if(needStable || needPermutation){
             MpcZ2Vector[] currentY = new MpcZ2Vector[originPayloadLen];
             System.arraycopy(payloadArrays, 0, currentY, 0, originPayloadLen - log2);
+            assert noUsed != null;
             System.arraycopy(noUsed, 0, currentY, originPayloadLen - log2, noUsed.length);
             if(needStable){
                 System.arraycopy(xiArray, originXiLen, currentY, originPayloadLen - level - 1, level + 1);

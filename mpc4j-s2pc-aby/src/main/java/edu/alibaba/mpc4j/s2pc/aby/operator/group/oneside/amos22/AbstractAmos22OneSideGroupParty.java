@@ -105,7 +105,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
         }
         z2IntegerCircuit = new Z2IntegerCircuit(z2cParty);
         maxBitLenOneBatch = config.getMaxBitLenOneBatch();
-        addMultipleSubPtos(z2cParty, plainBitMuxParty);
+        addMultipleSubPtos(z2cParty, plainBitMuxParty, z2MuxParty);
     }
 
     @Override
@@ -200,12 +200,6 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
                 aggTypes[i].equals(AggTypes.MAX) ? zerosAndOnes[0] : zerosAndOnes[1])
             .flatMap(Arrays::stream).toArray(BitVector[]::new);
         if (validFlags != null) {
-            SquareZ2Vector[] validFs = new SquareZ2Vector[dimLen * xiArrays.length];
-            for (int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen) {
-                for (int j = startPos; j < startPos + dimLen; j++) {
-                    validFs[j] = validFlags[i];
-                }
-            }
             SquareZ2Vector[][] perpMatrix = IntStream.range(0, xiArrays.length).mapToObj(i ->
                 (SquareZ2Vector[]) z2cParty.setPublicValues(Arrays.copyOfRange(perpValue, i * dimLen, i * dimLen + dimLen)))
                 .toArray(SquareZ2Vector[][]::new);
@@ -230,7 +224,7 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
         resultData = IntStream.range(0, perpValue.length).mapToObj(i ->
             SquareZ2Vector.createZeros(dataNum, false)).toArray(SquareZ2Vector[]::new);
         // 2. 计算p值和s值
-        SquareZ2Vector[] fe = null;
+        SquareZ2Vector[] fe;
         if (groupFlag != null) {
             BitVector[] fePlain = Arrays.stream(perpValue).map(x -> x.and(groupFlag)).toArray(BitVector[]::new);
             fe = z2cParty.shareOwn(fePlain);
@@ -280,12 +274,9 @@ public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGro
             MpcZ2Vector[] leqRes = z2IntegerCircuit.leq(inputSl, inputPr);
 
             // 得到op结果
-            SquareZ2Vector[] leqFlagExtend = new SquareZ2Vector[attrNum * dimLen];
             for (int i = 0; i < attrNum; i++) {
                 z2cParty.xori(leqRes[i], aggTypes[i].equals(AggTypes.MAX) ? SquareZ2Vector.createZeros(mergeNum) : SquareZ2Vector.createOnes(mergeNum));
-//                Arrays.fill(leqFlagExtend, i * dimLen, i * dimLen + dimLen, leqRes[i]);
             }
-//            SquareZ2Vector[] v = (SquareZ2Vector[]) z2cParty.mux(sl, pr, leqFlagExtend);
 
             SquareZ2Vector[] flatSlXorPr = IntStream.range(0, sl.length).mapToObj(i ->
                 z2cParty.xor(sl[i], pr[i])).toArray(SquareZ2Vector[]::new);

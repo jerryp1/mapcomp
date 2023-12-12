@@ -187,12 +187,6 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
         SquareZ2Vector[] perpShare = (SquareZ2Vector[]) z2cParty.setPublicValues(perpValue);
 
         if (validFlags != null) {
-            SquareZ2Vector[] validFs = new SquareZ2Vector[dimLen * xiArrays.length];
-            for (int i = 0, startPos = 0; i < xiArrays.length; i++, startPos += dimLen) {
-                for (int j = startPos; j < startPos + dimLen; j++) {
-                    validFs[j] = validFlags[i];
-                }
-            }
             SquareZ2Vector[][] perpMatrix = IntStream.range(0, xiArrays.length).mapToObj(i ->
                 Arrays.copyOfRange(perpShare, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
             SquareZ2Vector[][] xorRes = IntStream.range(0, xiArrays.length).mapToObj(i -> {
@@ -256,12 +250,9 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
                 Arrays.copyOfRange(pr, i * dimLen, i * dimLen + dimLen)).toArray(SquareZ2Vector[][]::new);
             MpcZ2Vector[] leqRes = z2IntegerCircuit.leq(inputSl, inputPr);
             // 得到op结果
-            SquareZ2Vector[] leqFlagExtend = new SquareZ2Vector[attrNum * dimLen];
             for (int i = 0; i < attrNum; i++) {
                 z2cParty.xori(leqRes[i], aggTypes[i].equals(AggTypes.MAX) ? SquareZ2Vector.createZeros(mergeNum) : SquareZ2Vector.createOnes(mergeNum));
-//                Arrays.fill(leqFlagExtend, i * dimLen, i * dimLen + dimLen, leqRes[i]);
             }
-//            SquareZ2Vector[] v = (SquareZ2Vector[]) z2cParty.mux(sl, pr, leqFlagExtend);
 
             SquareZ2Vector[] flatSlXorPr = IntStream.range(0, sl.length).mapToObj(i ->
                 z2cParty.xor(sl[i], pr[i])).toArray(SquareZ2Vector[]::new);

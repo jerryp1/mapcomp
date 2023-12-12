@@ -47,7 +47,7 @@ public class Z2PsorterTest {
     /**
      * default num of elements to be sorted
      */
-    private static final int DEFAULT_SORTED_NUM = 16;
+    private static final int DEFAULT_SORTED_NUM = 7;
     /**
      * large num of elements to be sorted
      */
