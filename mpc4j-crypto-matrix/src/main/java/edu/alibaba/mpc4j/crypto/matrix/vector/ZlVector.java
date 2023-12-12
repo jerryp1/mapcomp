@@ -59,7 +59,7 @@ public class ZlVector implements RingVector {
     }
 
     /**
-     * merges vectors.
+     * merges vectors, and fix the length of each vector into (ByteLength(bitNum))<<3
      *
      * @param vectors vectors.
      * @return the merged vector.
@@ -84,7 +84,7 @@ public class ZlVector implements RingVector {
     }
 
     /**
-     * splits the vector.
+     * splits the vector, where the length of each vector in mergeVector is fixed into (ByteLength(bitNum))<<3
      *
      * @param mergeVector the merged vector.
      * @param nums        nums for each of the split vector.

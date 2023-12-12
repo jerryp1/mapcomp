@@ -22,7 +22,9 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
      * @return the shared vector.
      */
     @Override
-    SquareZ2Vector shareOwn(BitVector xi);
+    default SquareZ2Vector shareOwn(BitVector xi){
+        return SquareZ2Vector.create(xi, false);
+    }
 
     /**
      * Shares its own vectors。
@@ -36,15 +38,6 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             return new SquareZ2Vector[0];
         }
         return Arrays.stream(xiArray).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
-//        // merge
-//        BitVector mergeX = BitVectorFactory.mergeWithPadding(xiArray);
-//        // share
-//        SquareZ2Vector mergeShareXi = shareOwn(mergeX);
-//        // split
-//        int[] bitNums = Arrays.stream(xiArray).mapToInt(BitVector::bitNum).toArray();
-//        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
-//            .map(vector -> (SquareZ2Vector) vector)
-//            .toArray(SquareZ2Vector[]::new);
     }
 
     /**
@@ -52,31 +45,24 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
      *
      * @param bitNum the number of bits to be shared.
      * @return the shared vector.
-     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
-    SquareZ2Vector shareOther(int bitNum) throws MpcAbortException;
+    default SquareZ2Vector shareOther(int bitNum){
+        return SquareZ2Vector.createZeros(bitNum, false);
+    }
 
     /**
      * Shares other's vectors.
      *
      * @param bitNums the number of bits for each vector to be shared.
      * @return the shared vectors.
-     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
-    default SquareZ2Vector[] shareOther(int[] bitNums) throws MpcAbortException {
+    default SquareZ2Vector[] shareOther(int[] bitNums){
         if (bitNums.length == 0) {
             return new SquareZ2Vector[0];
         }
         return Arrays.stream(bitNums).mapToObj(num -> SquareZ2Vector.createZeros(num, false)).toArray(SquareZ2Vector[]::new);
-//        // share
-//        int totalByteNum = Arrays.stream(bitNums).map(CommonUtils::getByteLength).sum();
-//        SquareZ2Vector mergeShareXi = shareOther(totalByteNum << 3);
-//        // split
-//        return Arrays.stream(splitWithPadding(mergeShareXi, bitNums))
-//            .map(vector -> (SquareZ2Vector) vector)
-//            .toArray(SquareZ2Vector[]::new);
     }
 
     /**
@@ -92,7 +78,6 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
             return new BitVector[0];
         }
         // merge
-//        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
         SquareZ2Vector mergeXiArray = (SquareZ2Vector) mergeWithPadding(xiArray);
         // reveal
         BitVector mergeX = revealOwn(mergeXiArray);
@@ -100,7 +85,6 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
         int[] bitNums = Arrays.stream(xiArray)
             .map(vector -> (SquareZ2Vector) vector)
             .mapToInt(SquareZ2Vector::getNum).toArray();
-//        return BitVectorFactory.split(mergeX, bitNums);
         return mergeX.splitWithPadding(bitNums);
     }
 
@@ -111,15 +95,12 @@ public interface Z2cParty extends TwoPartyPto, MpcZ2cParty {
      */
     @Override
     default void revealOther(MpcZ2Vector[] xiArray) {
-        //noinspection StatementWithEmptyBody
-        if (xiArray.length == 0) {
-            // do nothing for 0 length
+        if (xiArray.length > 0) {
+            // merge
+            SquareZ2Vector mergeXiArray = (SquareZ2Vector) mergeWithPadding(xiArray);
+            // reveal
+            revealOther(mergeXiArray);
         }
-        // merge
-//        SquareZ2Vector mergeXiArray = (SquareZ2Vector) merge(xiArray);
-        SquareZ2Vector mergeXiArray = (SquareZ2Vector) mergeWithPadding(xiArray);
-        // reveal
-        revealOther(mergeXiArray);
     }
 
     /**

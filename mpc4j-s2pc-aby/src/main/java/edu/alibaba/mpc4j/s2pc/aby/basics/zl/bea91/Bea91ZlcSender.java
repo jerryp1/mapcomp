@@ -72,58 +72,6 @@ public class Bea91ZlcSender extends AbstractZlcParty {
     }
 
     @Override
-    public SquareZlVector shareOwn(ZlVector x0) {
-        setShareOwnInput(x0);
-        logPhaseInfo(PtoState.PTO_BEGIN, "send share");
-
-        stopWatch.start();
-        ZlVector x0Vector = ZlVector.createRandom(zl, num, secureRandom);
-        ZlVector x1Vector = x0.sub(x0Vector);
-        List<byte[]> x1Payload = Arrays.stream(x1Vector.getElements())
-            .map(element -> BigIntegerUtils.nonNegBigIntegerToByteArray(element, byteL))
-            .collect(Collectors.toList());
-        DataPacketHeader x1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-        rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
-        extraInfo++;
-        stopWatch.stop();
-        long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
-
-        logPhaseInfo(PtoState.PTO_END, "send share");
-        return SquareZlVector.create(x0Vector, false);
-    }
-
-    @Override
-    public SquareZlVector shareOther(int num) throws MpcAbortException {
-        setShareOtherInput(num);
-        logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
-
-        stopWatch.start();
-        DataPacketHeader x0Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
-        extraInfo++;
-        MpcAbortPreconditions.checkArgument(x0Payload.size() == num);
-        BigInteger[] x0Array = x0Payload.stream()
-            .map(BigIntegerUtils::byteArrayToNonNegBigInteger)
-            .toArray(BigInteger[]::new);
-        ZlVector x0Vector = ZlVector.create(zl, x0Array);
-        stopWatch.stop();
-        long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
-
-        logPhaseInfo(PtoState.PTO_END, "receive share");
-        return SquareZlVector.create(x0Vector, false);
-    }
-
-    @Override
     public ZlVector revealOwn(MpcZlVector x0) throws MpcAbortException {
         SquareZlVector x0SquareVector = (SquareZlVector) x0;
         setRevealOwnInput(x0SquareVector);

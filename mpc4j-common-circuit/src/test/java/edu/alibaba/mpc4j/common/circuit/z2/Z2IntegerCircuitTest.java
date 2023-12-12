@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
 /**
  * Z2 integer circuit Test. Inputs are created in [0, 2^(l-1)) to avoid overflow in subtraction, which is suggested in
  * <p>
- * https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html
+ * <a href="https://www.doc.ic.ac.uk/~eedwards/compsys/arithmetic/index.html">...</a>
  * </p>
  *
  * @author Li Peng
@@ -101,12 +101,12 @@ public class Z2IntegerCircuitTest {
     }
 
     private void testPto(boolean constant, int l, long[] longXs, long[] longYs) {
-//        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.MUL, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.SUB, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.INCREASE_ONE, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.ADD, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.MUL, l, longXs, longYs);
         testPto(constant, Z2IntegerOperator.LEQ, l, longXs, longYs);
-//        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
+        testPto(constant, Z2IntegerOperator.EQ, l, longXs, longYs);
     }
 
     private void testPto(boolean constant, Z2IntegerOperator operator, int l, long[] longXs, long[] longYs) {

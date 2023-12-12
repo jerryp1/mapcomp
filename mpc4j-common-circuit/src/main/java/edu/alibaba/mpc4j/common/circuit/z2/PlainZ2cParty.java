@@ -139,18 +139,6 @@ public class PlainZ2cParty implements MpcZ2cParty {
         return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
-
-
-//        // merge xi and yi
-//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
-//        // and operation
-//        PlainZ2Vector mergeZiArray = and(mergeXiArray, mergeYiArray);
-//        // split
-//        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-//        return Arrays.stream(split(mergeZiArray, bitNums))
-//            .map(vector -> (PlainZ2Vector) vector)
-//            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -174,16 +162,6 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         return IntStream.range(0, xiArray.length).mapToObj(i -> xor(xiArray[i], yiArray[i])).toArray(PlainZ2Vector[]::new);
-//        // merge xi and yi
-//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
-//        // xor operation
-//        PlainZ2Vector mergeZiArray = xor(mergeXiArray, mergeYiArray);
-//        // split
-//        int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-//        return Arrays.stream(split(mergeZiArray, bitNums))
-//            .map(vector -> (PlainZ2Vector) vector)
-//            .toArray(PlainZ2Vector[]::new);
     }
 
     @Override
@@ -201,17 +179,12 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         // merge xi and yi
-//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
-//        PlainZ2Vector mergeYiArray = (PlainZ2Vector) merge(yiArray);
         PlainZ2Vector mergeXiArray = (PlainZ2Vector) mergeWithPadding(xiArray);
         PlainZ2Vector mergeYiArray = (PlainZ2Vector) mergeWithPadding(yiArray);
         // or operation
         PlainZ2Vector mergeZiArray = or(mergeXiArray, mergeYiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-//        return Arrays.stream(split(mergeZiArray, bitNums))
-//            .map(vector -> (PlainZ2Vector) vector)
-//            .toArray(PlainZ2Vector[]::new);
         return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);
@@ -233,15 +206,11 @@ public class PlainZ2cParty implements MpcZ2cParty {
             return new PlainZ2Vector[0];
         }
         // merge xi
-//        PlainZ2Vector mergeXiArray = (PlainZ2Vector) merge(xiArray);
         PlainZ2Vector mergeXiArray = (PlainZ2Vector) mergeWithPadding(xiArray);
         // not operation
         PlainZ2Vector mergeZiArray = not(mergeXiArray);
         // split
         int[] bitNums = Arrays.stream(xiArray).mapToInt(MpcZ2Vector::bitNum).toArray();
-//        return Arrays.stream(split(mergeZiArray, bitNums))
-//            .map(vector -> (PlainZ2Vector) vector)
-//            .toArray(PlainZ2Vector[]::new);
         return Arrays.stream(splitWithPadding(mergeZiArray, bitNums))
             .map(vector -> (PlainZ2Vector) vector)
             .toArray(PlainZ2Vector[]::new);

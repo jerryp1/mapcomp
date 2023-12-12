@@ -19,6 +19,7 @@ public interface MpcZ2cParty {
      * @return status
      */
     boolean getParallel();
+
     /**
      * Creates a (plain) vector with assigned value.
      *
@@ -27,6 +28,13 @@ public interface MpcZ2cParty {
      */
     MpcZ2Vector create(BitVector bitVector);
 
+    /**
+     * Creates a vector with assigned value, and specify whether it is shared
+     *
+     * @param bitVector assigned value.
+     * @param isPlain whether this vector is plaintext or not
+     * @return a vector.
+     */
     MpcZ2Vector create(BitVector bitVector, boolean isPlain);
 
     /**
@@ -44,6 +52,14 @@ public interface MpcZ2cParty {
      * @return a vector.
      */
     MpcZ2Vector createZeros(int bitNum);
+
+    /**
+     *  Creates a all-zero vector, and specify whether it is shared
+     *
+     * @param bitNum the bit num.
+     * @param isPlain whether this vector is plaintext or not
+     * @return a vector.
+     */
     MpcZ2Vector createZeros(int bitNum, boolean isPlain);
 
     /**
@@ -322,6 +338,12 @@ public interface MpcZ2cParty {
         return not(xor(xiArray, yiArray));
     }
 
+    /**
+     * splits the vector with padding each vector into a vec with bit length % 8 = 0
+     *
+     * @param data the vectors.
+     * @return the shared vector.
+     */
     MpcZ2Vector[] setPublicValues(BitVector[] data);
 
     /**

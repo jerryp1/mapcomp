@@ -31,7 +31,9 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      * @return the shared vector.
      */
     @Override
-    SquareZlVector shareOwn(ZlVector xi);
+    default SquareZlVector shareOwn(ZlVector xi){
+        return SquareZlVector.create(xi, false);
+    }
 
     /**
      * Shares its own vectors。
@@ -44,15 +46,7 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
         if (xiArray.length == 0) {
             return new SquareZlVector[0];
         }
-        // merge
-        ZlVector mergeX = ZlVector.merge(xiArray);
-        // share
-        SquareZlVector mergeShareXi = shareOwn(mergeX);
-        // split
-        int[] nums = Arrays.stream(xiArray).mapToInt(ZlVector::getNum).toArray();
-        return Arrays.stream(split(mergeShareXi, nums))
-            .map(vector -> (SquareZlVector) vector)
-            .toArray(SquareZlVector[]::new);
+        return Arrays.stream(xiArray).map(x -> SquareZlVector.create(x, false)).toArray(SquareZlVector[]::new);
     }
 
     /**
@@ -60,30 +54,25 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      *
      * @param num the num to be shared.
      * @return the shared vector.
-     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
-    SquareZlVector shareOther(int num) throws MpcAbortException;
+    default SquareZlVector shareOther(int num) {
+        return SquareZlVector.create(ZlVector.createZeros(getZl(), num), false);
+    }
 
     /**
      * Shares other's vectors.
      *
      * @param nums nums for each vector to be shared.
      * @return the shared vectors.
-     * @throws MpcAbortException the protocol failure aborts.
      */
     @Override
-    default SquareZlVector[] shareOther(int[] nums) throws MpcAbortException {
+    default SquareZlVector[] shareOther(int[] nums){
         if (nums.length == 0) {
             return new SquareZlVector[0];
         }
-        // share
-        int totalNum = Arrays.stream(nums).sum();
-        SquareZlVector mergeShareXi = shareOther(totalNum);
-        // split
-        return Arrays.stream(split(mergeShareXi, nums))
-            .map(vector -> (SquareZlVector) vector)
-            .toArray(SquareZlVector[]::new);
+        return Arrays.stream(nums).mapToObj(n ->
+            SquareZlVector.create(ZlVector.createZeros(getZl(), n), false)).toArray(SquareZlVector[]::new);
     }
 
     /**
