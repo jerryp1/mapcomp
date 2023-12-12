@@ -314,15 +314,15 @@ public class BigIntegerBitVector implements BitVector {
     }
 
     @Override
-    public BitVector shiftRight(int bit){
-        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bit", this.bitNum, bit);
-        return create(this.bitNum - bit, bigInteger.shiftRight(bit));
+    public BitVector shiftRight(int bitLen){
+        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bitLen", this.bitNum, bitLen);
+        return create(this.bitNum - bitLen, bigInteger.shiftRight(bitLen));
     }
 
     @Override
-    public void shiftLeftUnChangeNum(int bit){
-        MathPreconditions.checkGreaterOrEqual("bit >= 0", bit, 0);
-        bigInteger = bigInteger.shiftLeft(bit).and(BigInteger.ONE.shiftLeft(this.bitNum).subtract(BigInteger.ONE));
+    public void shiftLeftUnChangeNum(int bitLen){
+        MathPreconditions.checkGreaterOrEqual("bit >= 0", bitLen, 0);
+        bigInteger = bigInteger.shiftLeft(bitLen).and(BigInteger.ONE.shiftLeft(this.bitNum).subtract(BigInteger.ONE));
     }
 
     @Override

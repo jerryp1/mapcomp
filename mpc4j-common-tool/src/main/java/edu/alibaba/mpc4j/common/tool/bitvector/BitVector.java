@@ -162,11 +162,30 @@ public interface BitVector {
      */
     void extendLength(int targetBitLength);
 
-    BitVector shiftRight(int bit);
-    void shiftLeftUnChangeNum(int bit);
+    /**
+     * right shift bits
+     *
+     * @param bitLen the shift bit length
+     */
+    BitVector shiftRight(int bitLen);
 
+    /**
+     * left shift bits, don't change bitNum
+     *
+     * @param bitLen the shift bit length
+     */
+    void shiftLeftUnChangeNum(int bitLen);
+
+    /**
+     * recovering split multiple vector in the group of byteNum, fix the length of each array is 8n padding the zeros between values
+     *
+     * @param bitNums the bit length for each origin vectors
+     */
     BitVector[] splitWithPadding(int[] bitNums);
 
+    /**
+     * reverse the bits
+     */
     void reverseBits();
 
     /**

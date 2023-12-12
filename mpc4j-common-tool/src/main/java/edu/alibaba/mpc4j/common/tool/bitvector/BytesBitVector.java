@@ -356,13 +356,13 @@ public class BytesBitVector implements BitVector {
     }
 
     @Override
-    public BitVector shiftRight(int bit){
-        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bit", this.bitNum, bit);
-        if(bitNum == bit){
+    public BitVector shiftRight(int bitLen){
+        MathPreconditions.checkGreaterOrEqual("this.bitNum >= bit", this.bitNum, bitLen);
+        if(bitNum == bitLen){
             return createEmpty();
         }else{
-            byte[] res = BytesUtils.fixedByteArrayLength(BytesUtils.shiftRight(bytes, bit), CommonUtils.getByteLength(bitNum - bit));
-            return create(this.bitNum - bit, res);
+            byte[] res = BytesUtils.fixedByteArrayLength(BytesUtils.shiftRight(bytes, bitLen), CommonUtils.getByteLength(bitNum - bitLen));
+            return create(this.bitNum - bitLen, res);
         }
     }
 

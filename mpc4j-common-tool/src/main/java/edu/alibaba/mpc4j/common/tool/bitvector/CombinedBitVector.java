@@ -252,8 +252,8 @@ public class CombinedBitVector implements BitVector {
     }
 
     @Override
-    public BitVector shiftRight(int bit){
-        return innerBitVector.shiftRight(bit);
+    public BitVector shiftRight(int bitLen){
+        return innerBitVector.shiftRight(bitLen);
     }
 
     @Override
