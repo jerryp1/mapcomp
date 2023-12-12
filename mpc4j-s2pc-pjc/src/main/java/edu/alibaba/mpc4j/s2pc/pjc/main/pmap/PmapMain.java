@@ -23,6 +23,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * PMAP主函数。
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PmapMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PmapMain.class);
     /**
@@ -54,15 +60,6 @@ public class PmapMain {
         this.properties = properties;
         serverStopWatch = new StopWatch();
         clientStopWatch = new StopWatch();
-    }
-
-    public void runNetty() throws Exception {
-        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
-        if (ownRpc.ownParty().getPartyId() == 0) {
-            runServer(ownRpc, ownRpc.getParty(1));
-        } else {
-            runClient(ownRpc, ownRpc.getParty(0));
-        }
     }
 
     public void runServer(Rpc serverRpc, Party clientParty) throws Exception {

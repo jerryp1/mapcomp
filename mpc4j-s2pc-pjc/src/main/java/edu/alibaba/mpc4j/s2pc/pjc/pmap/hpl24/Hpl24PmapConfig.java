@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.a2b.A2bFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.rrg21.Rrg21Z2cConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenConfig;
@@ -23,6 +22,12 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
+/**
+ * level 2 secure 的private map协议配置
+ *
+ * @author Feng Han
+ * @date 2023/10/24
+ */
 public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements PmapConfig {
     /**
      * 所需的z2

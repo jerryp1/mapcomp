@@ -28,9 +28,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
+/**
+ * 基于PID的map client
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PidBasedPmapClient<T> extends AbstractPmapClient<T> {
-
+    /**
+     * pid client
+     */
     private final PidParty<T> pidClient;
+    /**
+     * peqt sender
+     */
     private final PeqtParty peqtSender;
 
     public PidBasedPmapClient(Rpc clientRpcRpc, Party serverParty, PidBasedPmapConfig config) {

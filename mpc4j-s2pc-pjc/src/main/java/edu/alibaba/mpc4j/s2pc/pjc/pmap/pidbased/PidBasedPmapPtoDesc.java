@@ -3,6 +3,12 @@ package edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+/**
+ * 基于PID的private map协议信息。方案来自于MapComp
+ *
+ * @author Feng Han
+ * @date 2023/11/20
+ */
 public class PidBasedPmapPtoDesc implements PtoDesc {
     /**
      * 协议ID

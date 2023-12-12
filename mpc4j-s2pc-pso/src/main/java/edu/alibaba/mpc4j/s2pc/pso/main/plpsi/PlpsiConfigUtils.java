@@ -15,6 +15,12 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
 import java.util.Properties;
 
+/**
+ * payload psi config utilities.
+ *
+ * @author Feng Han
+ * @date 2023/11/24
+ */
 public class PlpsiConfigUtils {
     /**
      * private constructor.

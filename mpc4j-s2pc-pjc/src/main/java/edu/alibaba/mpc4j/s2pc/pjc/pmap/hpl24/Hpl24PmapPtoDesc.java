@@ -3,6 +3,12 @@ package edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+/**
+ * level 2 secure 的private map协议信息。方案来自于MapComp
+ *
+ * @author Feng Han
+ * @date 2023/10/24
+ */
 public class Hpl24PmapPtoDesc implements PtoDesc {
     /**
      * 协议ID

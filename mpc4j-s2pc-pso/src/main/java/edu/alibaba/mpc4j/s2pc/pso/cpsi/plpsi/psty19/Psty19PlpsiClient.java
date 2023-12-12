@@ -11,7 +11,6 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.AbstractBopprfPlpsiClient;
  * @date 2023/10/20
  */
 public class Psty19PlpsiClient<T> extends AbstractBopprfPlpsiClient<T> {
-
     public Psty19PlpsiClient(Rpc serverRpc, Party clientParty, Psty19PlpsiConfig config) {
         super(Psty19PlpsiPtoDesc.getInstance(), serverRpc, clientParty, config);
     }
