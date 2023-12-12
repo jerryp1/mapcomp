@@ -9,6 +9,12 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.rrk20.Rrk20Z2MuxReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.rrk20.Rrk20Z2MuxSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
+/**
+ * Z2 mux factory.
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public class Z2MuxFactory implements PtoFactory {
     /**
      * private constructor.

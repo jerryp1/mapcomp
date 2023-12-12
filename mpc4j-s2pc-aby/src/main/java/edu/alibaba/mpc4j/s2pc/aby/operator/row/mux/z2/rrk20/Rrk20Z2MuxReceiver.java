@@ -18,10 +18,15 @@ import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * RRK+20 Z2 mux receiver.
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public class Rrk20Z2MuxReceiver extends AbstractZ2MuxParty {
     /**
      * COT receiver
@@ -59,10 +64,7 @@ public class Rrk20Z2MuxReceiver extends AbstractZ2MuxParty {
         byte[] delta = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(delta);
         cotSender.init(delta, maxNum);
-        stopWatch.stop();
-        long initTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.INIT_STEP, 1, 1, initTime);
+        logStepInfo(PtoState.INIT_STEP, 1, 1, resetAndGetTime());
 
         logPhaseInfo(PtoState.INIT_END);
     }
@@ -74,10 +76,7 @@ public class Rrk20Z2MuxReceiver extends AbstractZ2MuxParty {
 
         stopWatch.start();
         prepare(x1, y1);
-        stopWatch.stop();
-        long prepareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 4, prepareTime);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, resetAndGetTime());
 
         stopWatch.start();
         // P1 invokes an instance of COT, where P1 is the receiver with inputs x1.
@@ -86,33 +85,23 @@ public class Rrk20Z2MuxReceiver extends AbstractZ2MuxParty {
         CotReceiverOutput cotReceiverOutput = cotReceiver.receive(x1Binary);
         // P1 invokes an instance of COT, where P1 is the sender with inputs (t0, t1).
         CotSenderOutput cotSenderOutput = cotSender.send(num);
-        stopWatch.stop();
-        long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 4, cotTime);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, resetAndGetTime());
 
         stopWatch.start();
         t0t1(cotSenderOutput);
         t0s = null;
         t1s = null;
-        stopWatch.stop();
-        long s0s1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 4, s0s1Time);
+        logStepInfo(PtoState.PTO_STEP, 3, 4, resetAndGetTime());
 
+        stopWatch.start();
         DataPacketHeader s0s1Header = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0_S1.ordinal(), extraInfo,
             otherParty().getPartyId(), ownParty().getPartyId()
         );
         List<byte[]> s0s1Payload = rpc.receive(s0s1Header).getPayload();
-
-        stopWatch.start();
         SquareZ2Vector[] z1 = s0s1(cotReceiverOutput, s0s1Payload);
         r1z2Vectors = null;
-        stopWatch.stop();
-        long t0t1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 4, 4, t0t1Time);
+        logStepInfo(PtoState.PTO_STEP, 4, 4, resetAndGetTime());
 
         logPhaseInfo(PtoState.PTO_END);
         return z1;

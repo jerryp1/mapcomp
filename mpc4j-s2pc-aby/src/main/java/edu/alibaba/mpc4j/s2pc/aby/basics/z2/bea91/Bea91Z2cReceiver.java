@@ -181,18 +181,7 @@ public class Bea91Z2cReceiver extends AbstractZ2cParty {
             return x1SquareVector.copy();
         } else {
             // x1 and y1 are secret bit vectors, using secret XOR.
-            logPhaseInfo(PtoState.PTO_BEGIN, "xor");
-
-            stopWatch.start();
-            BitVector z1Vector = x1.getBitVector().xor(y1.getBitVector());
-            SquareZ2Vector z1SquareVector = SquareZ2Vector.create(z1Vector, false);
-            stopWatch.stop();
-            long z1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, z1Time, "xor (gen. z)");
-
-            logPhaseInfo(PtoState.PTO_END, "xor");
-            return z1SquareVector;
+            return SquareZ2Vector.create(x1.getBitVector().xor(y1.getBitVector()), false);
         }
     }
 

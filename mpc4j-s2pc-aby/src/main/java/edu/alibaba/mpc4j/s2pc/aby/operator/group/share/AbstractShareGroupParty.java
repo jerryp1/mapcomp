@@ -20,7 +20,7 @@ public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implem
      */
     protected int dataNum;
     /**
-     * how many attributes
+     * 每一个attribute有多少个bit
      */
     protected int dimLen;
 

@@ -7,6 +7,12 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory.Z2MuxType;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
+/**
+ * RRK+20 Z2 mux config.
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public class Rrk20Z2MuxConfig extends AbstractMultiPartyPtoConfig implements Z2MuxConfig {
     /**
      * COT config

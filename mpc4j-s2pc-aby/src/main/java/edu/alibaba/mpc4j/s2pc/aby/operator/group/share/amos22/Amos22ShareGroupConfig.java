@@ -70,7 +70,7 @@ public class Amos22ShareGroupConfig extends AbstractMultiPartyPtoConfig implemen
         public Builder(boolean silent) {
             this.z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             this.z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            maxBitLenOneBatch = 1<<21;
+            maxBitLenOneBatch = 1<<28;
         }
 
         public void setMaxBitLenOneBatch(int maxBitLenOneBatch) {

@@ -29,6 +29,12 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+/**
+ * Permutable bitmap sorter test.
+ *
+ * @author Feng Han
+ * @date 2023/11/03
+ */
 @RunWith(Parameterized.class)
 public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BitmapPermGenTest.class);

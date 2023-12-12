@@ -9,8 +9,20 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 
+/**
+ * Abstract group aggregation Party.
+ *
+ * @author Feng Han
+ * @date 2023/11/06
+ */
 public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
+    /**
+     * 共有多少“行”数据
+     */
     protected int dataNum;
+    /**
+     * 每一个attribute有多少个bit
+     */
     protected int dimLen;
 
     protected AbstractOneSideGroupParty(PtoDesc ptoDesc, Rpc rpc, Party otherParty, OneSideGroupConfig config) {

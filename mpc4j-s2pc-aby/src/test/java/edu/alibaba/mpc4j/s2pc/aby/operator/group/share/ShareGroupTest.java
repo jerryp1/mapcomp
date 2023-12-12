@@ -30,6 +30,9 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShareGroupTest.class);
+    /**
+     * the number of attributes
+     */
     private static final int ATTR_NUM = 3;
     /**
      * bitLen
@@ -53,11 +56,11 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
                 bitLen,
                 new Amos22ShareGroupConfig.Builder(false).build(),
             });
-//            configurations.add(new Object[]{
-//                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
-//                bitLen,
-//                new Amos22ShareGroupConfig.Builder(true).build(),
-//            });
+            configurations.add(new Object[]{
+                ShareGroupType.AMOS22_SHARE.name() + "_silent_bitLen_" + bitLen,
+                bitLen,
+                new Amos22ShareGroupConfig.Builder(true).build(),
+            });
         }
         return configurations;
     }

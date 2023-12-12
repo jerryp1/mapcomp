@@ -28,6 +28,9 @@ import java.util.stream.IntStream;
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
+    /**
+     * the number of attributes
+     */
     private static final int ATTR_NUM = 3;
     /**
      * bitLen

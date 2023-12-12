@@ -6,6 +6,12 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
 
+/**
+ * abstract group aggregation party for shared values, the flag is plaintext to receiver
+ *
+ * @author Feng Han
+ * @date 2023/11/06
+ */
 public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * inits the protocol.

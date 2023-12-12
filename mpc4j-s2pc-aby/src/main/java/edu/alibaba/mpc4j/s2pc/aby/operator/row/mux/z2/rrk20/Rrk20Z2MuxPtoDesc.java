@@ -3,6 +3,16 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.rrk20;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+/**
+ * RRK+20 Z2 mux protocol description. The protocol comes from Appendix A.3 of the following paper:
+ * <p>
+ * Rathee, Deevashwer, Mayank Rathee, Nishant Kumar, Nishanth Chandran, Divya Gupta, Aseem Rastogi, and Rahul Sharma.
+ * CrypTFlow2: Practical 2-party secure inference. CCS 2020, pp. 325-342. 2020.
+ * </p>
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 public class Rrk20Z2MuxPtoDesc implements PtoDesc {
     /**
      * protocol ID
