@@ -94,12 +94,7 @@ public class SbitmapMainUtils {
     }
 
     public static boolean setSenderAgg(Properties properties) {
-        String readString = properties.getProperty("sender_agg");
-        if (readString == null) {
-            return false;
-        } else {
-            return "true".equals(readString);
-        }
+        return PropertiesUtils.readBoolean(properties, "sender_agg", false);
     }
 
     public static Zl setZl(Properties properties) {

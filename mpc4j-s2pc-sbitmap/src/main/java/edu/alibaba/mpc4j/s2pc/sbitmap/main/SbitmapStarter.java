@@ -16,6 +16,7 @@ import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.omix.OptimizedMixGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OneSideGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
@@ -37,8 +38,6 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -223,8 +222,6 @@ public class SbitmapStarter {
             + "\t" + groupTripleNum + "\t" + aggTripleNum;
         printWriter.println(information);
         TRIPLE_NUM = 0;
-        MIX_TIME_AGG = 0;
-        MIX_TRIPLE_AGG = 0;
     }
 
 
@@ -268,6 +265,8 @@ public class SbitmapStarter {
                 return new TrivialSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             case B_SORTING:
                 return new BitmapSortingGroupAggConfig.Builder(zl, silent, prefixAggType).build();
+            case ONE_SIDE:
+                return new OneSideGroupAggConfig.Builder(zl, silent, prefixAggType).build();
             default:
                 throw new IllegalArgumentException("Invalid " + GroupAggTypes.class.getSimpleName() + ": " + groupAggType.name());
         }

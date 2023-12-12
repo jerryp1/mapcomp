@@ -1,5 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.aby.main.trun;
 
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.ZlTruncConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.trunc.zl.gp23.Gp23ZlTruncConfig;
@@ -31,11 +34,13 @@ public class ZlTruncConfigUtils {
         String zlTruncTypeString = PropertiesUtils.readString(properties, "pto_name");
         ZlTruncType zlTruncType = ZlTruncType.valueOf(zlTruncTypeString);
         boolean silent = PropertiesUtils.readBoolean(properties, "silent");
+        int l = PropertiesUtils.readInt(properties, "zl");
+        Zl zl = ZlFactory.createInstance(EnvType.STANDARD, l);
         switch (zlTruncType) {
             case GP23:
                 return new Gp23ZlTruncConfig.Builder(silent).build();
             case RRK20:
-                return new Rrk20ZlTruncConfig.Builder(silent).build();
+                return new Rrk20ZlTruncConfig.Builder(zl, silent).build();
             default:
                 throw new IllegalArgumentException("Invalid " + ZlTruncType.class.getSimpleName() + ": " + zlTruncType.name());
         }

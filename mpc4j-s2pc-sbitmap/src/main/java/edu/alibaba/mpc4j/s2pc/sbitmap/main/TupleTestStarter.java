@@ -4,40 +4,19 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
-import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.EnvType;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
-import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
+import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggParty;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.osorting.OptimizedSortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.sorting.SortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
 import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.core.Z2CoreMtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.cache.CacheZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.offline.OfflineZ2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.sbitmap.pto.GroupAggInputData;
-import edu.alibaba.mpc4j.s2pc.sbitmap.utils.SbitmapMainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.data.DataFrame;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,7 +24,7 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.stream.IntStream;
+
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -54,8 +33,8 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
  * @author Li Peng
  * @date 2023/11/24
  */
-public class TripleTestStarter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TripleTestStarter.class);
+public class TupleTestStarter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TupleTestStarter.class);
     /**
      * Own rpc
      */
@@ -64,10 +43,6 @@ public class TripleTestStarter {
      * The other party
      */
     protected Party otherParty;
-    /**
-     * Group aggregation type.
-     */
-    protected GroupAggTypes groupAggType;
 
     protected boolean receiver;
     /**
@@ -79,19 +54,18 @@ public class TripleTestStarter {
 
     private Properties properties;
     private int logN;
-    private Z2MtgType z2MtgType;
 
 
-    public TripleTestStarter(int logN, String type, Properties properties) {
+    public TupleTestStarter(int logN, Properties properties) {
         this.logN =logN;
         this.num = 1 << logN;
-        z2MtgType = Z2MtgType.valueOf(type);
+//        z2MtgType = Z2MtgType.valueOf(type);
         this.properties = properties;
     }
 
     public void start() throws IOException, MpcAbortException, URISyntaxException {
         // output file format：bitmap_sum_s1_r2_s/r.output
-        String filePath = "./" + z2MtgType.name() +"_" + "triple_" + logN + "_" + ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +".out";
+        String filePath = "./"  + "bit2a_tuple_" + logN + "_" + ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +".out";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
@@ -146,11 +120,11 @@ public class TripleTestStarter {
      */
     protected void runFullSecurePto(PrintWriter printWriter, int num)
         throws MpcAbortException {
-        LOGGER.info("-----Pto aggregation for {}-----", z2MtgType.name());
+        LOGGER.info("-----Pto tuple -----");
 
-        Z2MtgConfig groupAggConfig = genZ2MtgConfig();
+        Bit2aConfig groupAggConfig = genBit2aConfig();
 
-        TripleTestRunner ptoRunner = createRunner(groupAggConfig);
+        TupleTestRunner ptoRunner = createRunner(groupAggConfig);
         ptoRunner.init();
         ptoRunner.run();
         ptoRunner.stop();
@@ -159,26 +133,21 @@ public class TripleTestStarter {
         );
     }
 
-    private Z2MtgConfig genZ2MtgConfig() {
-        switch (z2MtgType){
-            case OFFLINE:
-                Z2CoreMtgConfig z2CoreMtgConfig = Z2CoreMtgFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, false);
-                return new OfflineZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).setCoreMtgConfig(z2CoreMtgConfig).build();
-            case CACHE:
-                return new CacheZ2MtgConfig.Builder(SecurityModel.SEMI_HONEST).build();
-            default:
-                throw new IllegalArgumentException("Invalid " + Z2MtgConfig.class.getSimpleName() + ": " + groupAggType.name());
-        }
+
+
+    private Bit2aConfig genBit2aConfig() {
+        return new Kvh21Bit2aConfig.Builder(ZlFactory.createInstance(EnvType.STANDARD, 64), false).build();
     }
 
-    TripleTestRunner createRunner(Z2MtgConfig groupAggConfig) {
-        Z2MtgParty party;
+
+    TupleTestRunner createRunner(Bit2aConfig bit2aConfig) {
+        Bit2aParty party;
         if (!receiver) {
-            party = Z2MtgFactory.createSender(ownRpc, otherParty, groupAggConfig);
+            party = Bit2aFactory.createSender(ownRpc, otherParty, bit2aConfig);
         } else {
-            party = Z2MtgFactory.createReceiver(ownRpc,otherParty,groupAggConfig);
+            party = Bit2aFactory.createReceiver(ownRpc, otherParty, bit2aConfig);
         }
-        return new TripleTestRunner(party, groupAggConfig, totalRound, num);
+        return new TupleTestRunner(party, bit2aConfig, totalRound, num);
     }
 
 }

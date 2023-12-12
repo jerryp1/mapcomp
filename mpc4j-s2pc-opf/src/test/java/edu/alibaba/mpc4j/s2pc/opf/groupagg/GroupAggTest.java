@@ -11,6 +11,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bitmap.BitmapGroupAggSender;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.bsorting.BitmapSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.oneside.OneSideGroupAggConfig;
+import edu.alibaba.mpc4j.s2pc.opf.groupagg.tsorting.TrivialSortingGroupAggConfig;
 import edu.alibaba.mpc4j.s2pc.opf.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
@@ -27,8 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static edu.alibaba.mpc4j.s2pc.opf.groupagg.CommonConstants.*;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TIME_AGG;
-import static edu.alibaba.mpc4j.s2pc.opf.groupagg.mix.MixGroupAggSender.MIX_TRIPLE_AGG;
 import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender.TRIPLE_NUM;
 
 /**
@@ -47,19 +47,24 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 16;
+    private static final int LARGE_NUM = 1 << 4;
     /**
      * default Zl
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 64);
 
-    private static final int SENDER_GROUP_BIT_LEN = 10;
-    private static final int RECEIVER_GROUP_BIT_LEN = 10;
-//    private static final int DEFAULT_GROUP_BIT_LENGTH = 1;
+    private static final int SENDER_GROUP_BIT_LEN = 0;
+    private static final int RECEIVER_GROUP_BIT_LEN = 3;
 
     private static final int LARGE_GROUP_BIT_LENGTH = 8;
 
-    private static boolean silent = false;
+    private static final boolean silent = false;
+
+    private static final boolean senderAgg = true;
+
+    private static final boolean havingState = false;
+
+    private static final boolean dummyPayload = false;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
@@ -126,17 +131,25 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //        });
 //
 ////        // b_sort && sum
+//        configurations.add(new Object[]{
+//            "B_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
+//////
+////        // b_sort && max
+//        configurations.add(new Object[]{
+//            "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+//        });
+//
+        //
+//        // one-side && sum
         configurations.add(new Object[]{
-            "B_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+            "ONE-SIDE_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new OneSideGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
         });
 ////
-//        // b_sort && max
-        configurations.add(new Object[]{
-            "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
-//
+
 //        // t_sort && sum
 //        configurations.add(new Object[]{
 //            "T_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
@@ -226,9 +239,11 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         // input
         String[] senderGroup = genRandomInputGroup(SENDER_GROUP_BIT_LEN, num);
         String[] receiverGroup = genRandomInputGroup(RECEIVER_GROUP_BIT_LEN, num);
-        long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> i).toArray();
+        long[] agg = IntStream.range(0, num).mapToLong(i -> i).toArray();
+        long[] sAgg = senderAgg ? agg : null;
+        long[] rAgg = senderAgg ? null : agg;
 
-//        long[] receiverAgg = IntStream.range(0, num).mapToLong(i -> SECURE_RANDOM.nextInt(32) + 1).toArray();
+//        long[] agg = IntStream.range(0, num).mapToLong(i -> SECURE_RANDOM.nextInt(32) + 1).toArray();
 
         // random e
 //        SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
@@ -240,7 +255,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         SquareZ2Vector e0 = SquareZ2Vector.create(BitVectorFactory.createRandom(num, SECURE_RANDOM), false);
         SquareZ2Vector e1 = SquareZ2Vector.create(e.xor(e0.getBitVector()), false);
 
-        Properties properties = genProperties(num, SENDER_GROUP_BIT_LEN, RECEIVER_GROUP_BIT_LEN);
+        Properties properties = genProperties(num);
 
         // init the protocol
         GroupAggParty sender = GroupAggFactory.createSender(firstRpc, secondRpc.ownParty(), config);
@@ -250,8 +265,8 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         receiver.setParallel(parallel);
         try {
             LOGGER.info("-----test {} start-----", sender.getPtoDesc().getPtoName());
-            GroupAggPartyThread senderThread = new GroupAggPartyThread(sender, senderGroup, null, e0, properties);
-            GroupAggPartyThread receiverThread = new GroupAggPartyThread(receiver, receiverGroup, receiverAgg, e1, properties);
+            GroupAggPartyThread senderThread = new GroupAggPartyThread(sender, senderGroup, sAgg, e0, properties);
+            GroupAggPartyThread receiverThread = new GroupAggPartyThread(receiver, receiverGroup, rAgg, e1, properties);
             StopWatch stopWatch = new StopWatch();
             // execute the protocol
             stopWatch.start();
@@ -264,7 +279,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
             stopWatch.reset();
             // verify
             GroupAggOut output = receiverThread.getOutput();
-            assertOutput(senderGroup, receiverGroup, receiverAgg, e, output);
+            assertOutput(senderGroup, receiverGroup, agg, e, output);
             printAndResetRpc(time);
             LOGGER.info("-----test {} end-----", sender.getPtoDesc().getPtoName());
         } catch (InterruptedException ex) {
@@ -288,16 +303,10 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
         // verify
         Assert.assertEquals(trueMap, resultMap);
         System.out.println("##mix_矩阵转置总时间：" + TransposeUtils.TRANSPORT_TIME + "ms");
-        System.out.println("##mix_agg总时间：" + MixGroupAggSender.AGG_TIME + "ms");
-        System.out.println("##mix_osn总时间：" + MixGroupAggSender.OSN_TIME + "ms");
-        System.out.println("##mix_MUX总时间：" + MixGroupAggSender.MUX_TIME + "ms");
         System.out.println("##bitmap_agg总时间：" + BitmapGroupAggSender.AGG_TIME + "ms");
         System.out.println("##需要的三元组数量：" + TRIPLE_NUM);
         TRIPLE_NUM = 0;
-        System.out.println("##需要的mix三元组数量：" + MIX_TRIPLE_AGG);
-        MIX_TRIPLE_AGG = 0;
-        System.out.println("##mix time：" + MIX_TIME_AGG);
-        MIX_TIME_AGG = 0;
+
     }
 
     private Map<String, BigInteger> getAggResultMap(List<String> group, List<BigInteger> agg) {
@@ -332,14 +341,21 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     }
 
     private String[] genRandomInputGroup(int groupBitLength, int num) {
+        if (groupBitLength == 0) {
+            return IntStream.range(0,num).mapToObj(i -> "").toArray(String[]::new);
+        }
         String[] groups = GroupAggUtils.genStringSetFromRange(groupBitLength);
-        return IntStream.range(0, num).mapToObj(i -> groups[SECURE_RANDOM.nextInt((1 << groupBitLength))]).toArray(String[]::new);
+        return IntStream.range(0, num).mapToObj(i ->
+            groups[SECURE_RANDOM.nextInt((1 << groupBitLength))]).toArray(String[]::new);
     }
 
-    private Properties genProperties(int n, int senderGroupBitLength, int receiverGroupBitLength) {
+    private Properties genProperties(int n) {
         Properties properties = new Properties();
-        properties.setProperty(SENDER_GROUP_BIT_LENGTH, String.valueOf(senderGroupBitLength));
-        properties.setProperty(RECEIVER_GROUP_BIT_LENGTH, String.valueOf(receiverGroupBitLength));
+        properties.setProperty(SENDER_GROUP_BIT_LENGTH, String.valueOf(SENDER_GROUP_BIT_LEN));
+        properties.setProperty(RECEIVER_GROUP_BIT_LENGTH, String.valueOf(RECEIVER_GROUP_BIT_LEN));
+        properties.setProperty(SENDER_AGG, String.valueOf(senderAgg));
+        properties.setProperty(HAVING_STATE, String.valueOf(havingState));
+        properties.setProperty(DUMMY_PAYLOAD, String.valueOf(dummyPayload));
         properties.setProperty(MAX_L, String.valueOf(zl.getL()));
         properties.setProperty(MAX_NUM, String.valueOf(n));
         return properties;
