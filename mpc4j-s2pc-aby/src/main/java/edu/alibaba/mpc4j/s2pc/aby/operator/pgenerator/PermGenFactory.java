@@ -17,15 +17,26 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22Smal
  */
 public class PermGenFactory {
 
-    public enum PartyTypes{
+    public enum PartyTypes {
+        /**
+         * role is sender.
+         */
         SENDER,
+        /**
+         * role is receiver
+         */
         RECEIVER
     }
 
-    public enum FieldTypes{
+    public enum FieldTypes {
+        /**
+         * small field input
+         */
         SMALL_FIELD,
+        /**
+         * bitmap input
+         */
         BITMAP,
-        COMMON,
     }
 
     /**

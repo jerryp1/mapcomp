@@ -112,7 +112,7 @@ public class Ahi22SmallFieldPermGenConfig extends AbstractMultiPartyPtoConfig im
             return this;
         }
 
-        public Builder setSilent(boolean silent){
+        public Builder setSilent(boolean silent) {
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             return this;

@@ -5,10 +5,10 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
  * Ahi22 Permutable Sorter Protocol Description. The protocol comes from Section 5.2.2 of the following paper:
- *  <p>
- *  Asharov, Gilad, et al. "Efficient secure three-party sorting with applications to data analysis and heavy hitters."
- *  Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security. 2022.
- *  </p>
+ * <p>
+ * Asharov, Gilad, et al. "Efficient secure three-party sorting with applications to data analysis and heavy hitters."
+ * Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security. 2022.
+ * </p>
  *
  * @author Li Peng
  * @date 2023/10/11

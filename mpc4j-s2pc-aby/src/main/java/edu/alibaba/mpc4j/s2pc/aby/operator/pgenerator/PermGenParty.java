@@ -15,7 +15,7 @@ public interface PermGenParty extends TwoPartyPto {
     /**
      * inits the protocol.
      *
-     * @param maxNum max num.
+     * @param maxNum    max num.
      * @param maxBitNum max input bit number
      * @throws MpcAbortException the protocol failure aborts.
      */

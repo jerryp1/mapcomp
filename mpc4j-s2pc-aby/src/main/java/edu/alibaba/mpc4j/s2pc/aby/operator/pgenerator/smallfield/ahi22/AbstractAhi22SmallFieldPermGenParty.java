@@ -70,7 +70,7 @@ public abstract class AbstractAhi22SmallFieldPermGenParty extends AbstractSmallF
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        int maxFullNum = CommonUtils.getByteLength(maxNum)<<3;
+        int maxFullNum = CommonUtils.getByteLength(maxNum) << 3;
         bit2aParty.init(zl.getL(), maxFullNum * ((1 << maxBitNum) - 1));
         z2cParty.init(maxFullNum * (1 << (maxBitNum - 1)));
         zlcParty.init(maxFullNum);
