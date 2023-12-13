@@ -7,11 +7,15 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20ByteEccPidConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21MpPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * PID protocol test.
+ * Pmap protocol test.
  *
  * @author Feng Han
  * @date 2023/11/03
@@ -41,12 +45,12 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
      */
     private static final int DEFAULT_SMALL_SIZE = 99;
     /**
-     * 较大数量
+     * large size
      */
     private static final int LARGE_SIZE = 1 << 14;
 
     /**
-     * default middle size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y
+     * default unbalanced size, in order to make 1. n_x >= m_y, 2. m_y > n_x > n_y
      */
     private static final int[] DEFAULT_SIZE_PAIR_0 = new int[]{100, 2};
     private static final int[] DEFAULT_SIZE_PAIR_1 = new int[]{120, 99};
@@ -62,23 +66,23 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        configurations.add(new Object[]{
-//            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
-//            new PidBasedPmapConfig.Builder(silent).build(),
-//        });
-//
-//        configurations.add(new Object[]{
-//            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
-//            new PidBasedPmapConfig.Builder(silent).setPidConfig(
-//                new Gmr21MpPidConfig.Builder().setPsuConfig(
-//                    new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
-//        });
-//
-//        configurations.add(new Object[]{
-//            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
-//            new PidBasedPmapConfig.Builder(silent).setPidConfig(
-//                new Bkms20ByteEccPidConfig.Builder().build()).build(),
-//        });
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
+            new PidBasedPmapConfig.Builder(silent).build(),
+        });
+
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
+            new PidBasedPmapConfig.Builder(silent).setPidConfig(
+                new Gmr21MpPidConfig.Builder().setPsuConfig(
+                    new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
+        });
+
+        configurations.add(new Object[]{
+            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
+            new PidBasedPmapConfig.Builder(silent).setPidConfig(
+                new Bkms20ByteEccPidConfig.Builder().build()).build(),
+        });
 
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
@@ -115,16 +119,6 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
         super(name);
         this.config = config;
     }
-
-//    @Test
-//    public void testLOG() {
-//        byte a = (byte) (1<<7);
-//        byte b = 1;
-//        LOGGER.info(String.valueOf((a)));
-//        LOGGER.info(String.valueOf((a >>> 7)));
-//        LOGGER.info(String.valueOf((b&1)));
-//        LOGGER.info(String.valueOf(((byte)(a >>>7) & 1) == (b&1)));
-//    }
 
     @Test
     public void test2() {
@@ -236,7 +230,6 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
         Map<Integer, ByteBuffer> clientResMap = clientOutput.getIndexMap();
         for(int i = 0; i < serverResMap.size(); i++){
             ByteBuffer serverEle = serverResMap.get(i);
-//            assert Arrays.equals(serverResMap.get(i).array(), serverEle.array());
             if(clientSet.contains(serverEle)){
                 assert equalFlag.get(i);
                 assert Arrays.equals(serverEle.array(), clientResMap.get(i).array());
