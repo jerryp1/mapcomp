@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
  * Only support dim=1 input currently.
  * Bitonic Sorter. Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
  * since its control flow is independent of the input.
- * <p>
  * The scheme comes from the following paper:
  *
  * <p>
@@ -113,7 +112,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         }
         this.payloadArrays = payloadList.isEmpty() ? null : payloadList.toArray(new MpcZ2Vector[0]);
         if (needStable) {
-            // reverse的原因：将index设置为从后往前的，因为后面的升序排序时，只允许前面的分组不满。此时可以利用每个分组前XX个bit相同，且不需要排序的性质，节省开销
+            // the reason for reverse: set the index of initial permutation to reverse order to reduce the cost of the following comparison
             assert this.payloadArrays != null;
             if(party.getParallel()){
                 Arrays.stream(this.xiArray).parallel().forEach(MpcZ2Vector::reverseBits);
@@ -147,6 +146,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         int log2 = LongUtils.ceilLog2(sortedNum);
         MpcZ2Vector[] noUsed = null;
         if(needStable || needPermutation){
+            // if the sorter is stable, or we need permutation, we can only compare and switch the last (level + 1) bits of permutation
             noUsed = Arrays.copyOfRange(payloadArrays, originPayloadLen - log2, originPayloadLen - level - 1);
             MpcZ2Vector[] currentY = new MpcZ2Vector[originPayloadLen - log2 + (needStable ? 0 : level + 1)];
             System.arraycopy(payloadArrays, 0, currentY, 0, originPayloadLen - log2);
@@ -182,13 +182,13 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
         MathPreconditions.checkGreaterOrEqual("level >= iterNum", level, iterNum);
         int skipLen = 1 << (level - iterNum);
         int partLen = skipLen << 1;
-        // 每一层有多少个需要排序的part，如果剩下的那个小part不满skipLen，则不需要比较了
+        // how many parts should be sorted in this iteration. If the last part's length < skipLen, then we don't sort this part.
         int currentSortNum = sortedNum / partLen + (sortedNum % partLen > skipLen ? 1 : 0);
-        // 第一个需要比较的组，长度与skipLen相差多少，可能是0，也可能是0到skipLen之间的数字，即 0 <= x < skipLen
+        // the difference between the length of the first part and skipLen, 0 <= lessCompareLen < skipLen
         int lessCompareLen = sortedNum % partLen <= skipLen ? 0 : partLen - sortedNum % partLen;
-        // 得到总共需要比较多少组
+        // how many pairs of data should be compared
         int totalCompareNum = currentSortNum * skipLen - lessCompareLen;
-        // 得到比较结果的mask，现有的mask不包含最后一层，实际上最后一层不用翻转比较结果
+        // the mask for comparison result. If the current iteration is the last one, then there is no need for mask
         byte[] currentMask = level == LongUtils.ceilLog2(sortedNum) - 1 ? new byte[CommonUtils.getByteLength(totalCompareNum)] : BytesUtils.keepLastBits(compareMask[level], totalCompareNum);
         compareExchange(totalCompareNum, skipLen, BitVectorFactory.create(totalCompareNum, currentMask));
     }
@@ -207,7 +207,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
             belowX[i] = tmp[1];
         });
 
-        // 先比较得到是否需要交换顺序的flag，如果=0，则不用换顺序，如果=1，则换顺序
+        // get the comparison result, if r = 1, switch two values
         MpcZ2Vector compFlag = party.xor(party.not(circuit.leq(upperX, belowX)), compareMaskVec);
         MpcZ2Vector[] flags = IntStream.range(0, xiArray.length).mapToObj(i -> compFlag).toArray(MpcZ2Vector[]::new);
         MpcZ2Vector[] switchX = party.and(flags, party.xor(upperX, belowX));
@@ -216,7 +216,7 @@ public class PermutableBitonicSorter extends AbstractPermutationSorter {
 
         xiArray = party.xor(extendSwitchX, xiArray);
 
-        // 然后再处理payload
+        // deal with payload
         if (payloadArrays != null) {
             MpcZ2Vector[] upperPayload = new MpcZ2Vector[payloadArrays.length], belowPayload = new MpcZ2Vector[payloadArrays.length];
             intStream = party.getParallel() ? IntStream.range(0, payloadArrays.length).parallel() : IntStream.range(0, payloadArrays.length);

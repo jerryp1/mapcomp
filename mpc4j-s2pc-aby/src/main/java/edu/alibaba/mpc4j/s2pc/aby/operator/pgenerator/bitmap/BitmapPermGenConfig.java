@@ -114,7 +114,7 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
             zlcConfig = ZlcFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, zl);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            maxNumInBatch = 1<<22;
+            maxNumInBatch = 1 << 22;
         }
 
         public Builder setZlcConfig(ZlcConfig zlcConfig) {
@@ -122,13 +122,13 @@ public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements 
             return this;
         }
 
-        public Builder setSilent(boolean silent){
+        public Builder setSilent(boolean silent) {
             zlMuxConfig = ZlMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             z2cConfig = Z2cFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             return this;
         }
 
-        public Builder setBatchSize(int maxNumInBatch){
+        public Builder setBatchSize(int maxNumInBatch) {
             this.maxNumInBatch = maxNumInBatch;
             return this;
         }

@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * PMAP服务端/客户端输出。
+ * PMAP output
  *
  * @author Feng Han
  * @date 2023/10/23
@@ -24,19 +24,19 @@ public class PmapPartyOutput<T> {
      */
     private final List<T> elementList;
     /**
-     * 位置映射map
+     * map between index and element
      */
     private final Map<Integer, T> indexMap;
     /**
-     * 表示对应位置元素是否在交集中的flag
+     * the flag indicating whether the elements are in intersection
      */
     private final SquareZ2Vector equalFlag;
 
     /**
-     * 构造PID服务端输出。
+     * constructing output of pmao
      *
-     * @param elementList 有效的数据列表，即map input的keys
-     * @param indexMap    从位置到
+     * @param elementList the list of valid ids
+     * @param indexMap    map between index and element
      */
     public PmapPartyOutput(MapType mapType, List<T> elementList, Map<Integer, T> indexMap, SquareZ2Vector equalFlag) {
         MathPreconditions.checkPositive("elementList.size()", elementList.size());
@@ -50,7 +50,7 @@ public class PmapPartyOutput<T> {
             case PSI:
                 MathPreconditions.checkGreaterOrEqual("indexMap.size()", elementList.size(), indexMap.size());
         }
-        // 验证index映射中的object都在elementList中
+        // Verify that all elements in indexMap are from elementList
         List<T> mapList = indexMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
         Set<T> mapSet = new HashSet<>(mapList);
         assert elementList.size() == mapList.size();
@@ -65,44 +65,32 @@ public class PmapPartyOutput<T> {
     }
 
     /**
-     * 返回类型
+     * return the type of map
      */
     public MapType getMapType() {
         return mapType;
     }
 
     /**
-     * 返回元素列表
+     * return the indexMap
      *
-     * @return 元素列表
-     */
-    public List<T> getElementList() {
-        return elementList;
-    }
-
-    /**
-     * 返回位置映射map
-     *
-     * @return 位置映射map
      */
     public Map<Integer, T> getIndexMap() {
         return indexMap;
     }
 
     /**
-     * 返回equalFlag
-     *
-     * @return equalFlag
+     * return equalFlag
      */
     public SquareZ2Vector getEqualFlag() {
         return equalFlag;
     }
 
     /**
-     * 返回指定位置对应的元素
+     * return the element of {index}
      *
-     * @param index 需要索引的index
-     * @return 对应的元素
+     * @param index index
+     * @return      the corresponding element
      */
     public T getIndex(int index) {
         return indexMap.get(index);

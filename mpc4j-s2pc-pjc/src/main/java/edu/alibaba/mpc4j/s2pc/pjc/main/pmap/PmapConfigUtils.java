@@ -11,7 +11,7 @@ import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory.PlpsiType;
@@ -43,7 +43,7 @@ public class PmapConfigUtils {
         String pmapTypeString = PropertiesUtils.readString(properties, "pmap_pto_name");
         PmapFactory.PmapType pmapType = PmapFactory.PmapType.valueOf(pmapTypeString);
         switch (pmapType) {
-            case HPL24:
+            case PHP24:
                 return createHpl24PmapConfig(properties);
             case PID_BASED:
                 return createPidBasedPmapConfig(properties);
@@ -69,7 +69,7 @@ public class PmapConfigUtils {
         return new PidBasedPmapConfig.Builder(silent).setPidConfig(pidConfig).setPeqtConfig(peqtConfig).build();
     }
 
-    private static Hpl24PmapConfig createHpl24PmapConfig(Properties properties) {
+    private static Php24PmapConfig createHpl24PmapConfig(Properties properties) {
         // 是否使用压缩编码
         boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
         int bitLen = PropertiesUtils.readIntWithDefault(properties, "bitLen", 32);
@@ -87,6 +87,6 @@ public class PmapConfigUtils {
         }else{
             plpsiConfig = new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(peqtConfig).build();
         }
-        return new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(plpsiConfig).setBitLength(bitLen, silent).build();
+        return new Php24PmapConfig.Builder(silent).setPlpsiconfig(plpsiConfig).setBitLength(bitLen, silent).build();
     }
 }

@@ -29,9 +29,12 @@ public class Payload {
      */
     private final boolean parallel;
     /**
-     * the server received shared payload in binary share
+     * the server received binary shared payload in row form
      */
     private SquareZ2Vector[] z2RowPayload;
+    /**
+     * the server received binary shared payload in column form
+     */
     private SquareZ2Vector[] z2ColumnPayload;
     /**
      * the server received shared payload in arithmetic share

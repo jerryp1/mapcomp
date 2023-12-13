@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 /**
- * 基于PID的map server
+ * PID-based map server
  *
  * @author Feng Han
  * @date 2023/11/20
@@ -70,7 +70,7 @@ public class PidBasedPmapServer<T> extends AbstractPmapServer<T> {
         setPtoInput(serverElementList, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // 1. 先传输一个hash key
+        // 1. send hash key
         stopWatch.start();
         byte[] hashKeys = new byte[CommonConstants.BLOCK_BYTE_LENGTH];
         secureRandom.nextBytes(hashKeys);
@@ -85,12 +85,12 @@ public class PidBasedPmapServer<T> extends AbstractPmapServer<T> {
         prf.setKey(hashKeys);
         logStepInfo(PtoState.PTO_STEP, 1, 3, resetAndGetTime());
 
-        // 2. 先进行第一次 plpsi
+        // 2. pid
         stopWatch.start();
         PidPartyOutput<T> pidOut = pidServer.pid(new HashSet<>(serverElementList), clientElementSize);
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime());
 
-        // 3. 设置输出位置，并且进行peqt
+        // 3. sort ids based on pid, and run peqt
         stopWatch.start();
         ByteBuffer[] sortedId = pidOut.getPidSet().stream().sorted().toArray(ByteBuffer[]::new);
         HashMap<Integer, T> resMap = new HashMap<>();

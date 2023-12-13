@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 /**
- * 基于PID的map client
+ * PID-based map client
  *
  * @author Feng Han
  * @date 2023/11/20
@@ -71,7 +71,7 @@ public class PidBasedPmapClient<T> extends AbstractPmapClient<T> {
         setPtoInput(serverElementList, clientElementSize);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // 1. 先传输一个hash key
+        // 1. receive a hash key
         stopWatch.start();
         DataPacketHeader hashKeyHeader = new DataPacketHeader(
             encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SERVER_SEND_HASH_KEYS.ordinal(), extraInfo,
@@ -84,12 +84,12 @@ public class PidBasedPmapClient<T> extends AbstractPmapClient<T> {
         prf.setKey(hashKeyPayload.get(0));
         logStepInfo(PtoState.PTO_STEP, 1, 3, resetAndGetTime());
 
-        // 2. 先进行第一次 plpsi
+        // 2.pid
         stopWatch.start();
         PidPartyOutput<T> pidOut = pidClient.pid(new HashSet<>(serverElementList), clientElementSize);
         logStepInfo(PtoState.PTO_STEP, 2, 3, resetAndGetTime());
 
-        // 3. 设置输出位置，并且进行peqt
+        // 3. sort ids based on pid, and run peqt
         stopWatch.start();
         ByteBuffer[] sortedId = pidOut.getPidSet().stream().sorted().toArray(ByteBuffer[]::new);
         HashMap<Integer, T> resMap = new HashMap<>();

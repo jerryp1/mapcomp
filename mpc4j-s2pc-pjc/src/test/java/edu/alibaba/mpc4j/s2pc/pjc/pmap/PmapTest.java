@@ -9,7 +9,7 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 import org.apache.commons.lang3.time.StopWatch;
@@ -82,13 +82,13 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
 
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
-                PmapType.HPL24.name()+ "_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
+                PmapType.PHP24.name()+ "_bitLen_" + bitLen,
+                new Php24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
             });
 
             configurations.add(new Object[]{
-                PmapType.HPL24.name()+ "_naive_peqt_bitLen_" + bitLen,
-                new Hpl24PmapConfig.Builder(silent).setPlpsiconfig(
+                PmapType.PHP24.name()+ "_naive_peqt_bitLen_" + bitLen,
+                new Php24PmapConfig.Builder(silent).setPlpsiconfig(
                     new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(
                         new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()).build())
                     .setBitLength(bitLen, silent).build(),

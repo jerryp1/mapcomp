@@ -4,23 +4,23 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * 基于PID的private map协议信息。方案来自于MapComp
+ * PID-based map protocol description, the protocol comes from "MapComp"
  *
  * @author Feng Han
  * @date 2023/11/20
  */
 public class PidBasedPmapPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) -2607344576398744169L);
     /**
-     * 协议名称
+     * protocol name
      */
     private static final String PTO_NAME = "PID_PMAP";
 
     /**
-     * 单例模式
+     * singleton mode
      */
     private static final PidBasedPmapPtoDesc INSTANCE = new PidBasedPmapPtoDesc();
 
@@ -32,7 +32,7 @@ public class PidBasedPmapPtoDesc implements PtoDesc {
     }
 
     /**
-     * 私有构造函数
+     * private constructor
      */
     private PidBasedPmapPtoDesc() {
         // empty

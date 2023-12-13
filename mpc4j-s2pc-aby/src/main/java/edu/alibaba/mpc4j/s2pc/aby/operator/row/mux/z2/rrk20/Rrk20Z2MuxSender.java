@@ -114,7 +114,7 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         r0Z2Vectors = IntStream.range(0, xi.length).mapToObj(i ->
             BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
         byte[][] valueByte = ZlDatabase.create(envType, parallel, r0Z2Vectors).getBytesData();
-        // if x0 = 0, P0 sets (s0, s1) = (-r0, -r0 + y0), else, P0 sets (s0, s1) = (-r0 + y0, -r0).
+        // if x0 = 0, P0 sets (s0, s1) = (r0, r0 ⊕ y0), else, P0 sets (s0, s1) = (r0 ⊕ y0, r0).
 
         BitVector x0BitVector = f.getBitVector();
         byte[][] originData = ZlDatabase.create(envType, parallel, Arrays.stream(xi)

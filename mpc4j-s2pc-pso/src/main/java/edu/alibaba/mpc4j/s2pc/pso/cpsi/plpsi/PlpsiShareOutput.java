@@ -55,10 +55,6 @@ public class PlpsiShareOutput {
         payloadList.add(payload);
     }
 
-    public List<Payload> getPayloadList() {
-        return payloadList;
-    }
-
     public Payload getPayload(int index){
         return payloadList.get(index);
     }
@@ -80,14 +76,4 @@ public class PlpsiShareOutput {
             return null;
         }
     }
-
-    public SquareZ2Vector[] getZ2ColumnPayload(int index) {
-        if (payloadList != null) {
-            MathPreconditions.checkGreaterOrEqual("index should be in range of payloads' length", payloadList.size(), index);
-            return payloadList.get(index).getZ2ColumnPayload();
-        } else {
-            return null;
-        }
-    }
-
 }
