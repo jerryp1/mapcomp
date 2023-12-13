@@ -7,12 +7,25 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group;
  * @date 2023/11/08
  */
 public class GroupTypes {
-    public enum AggTypes{
+    public enum AggTypes {
+        /**
+         * Maximum
+         */
         MAX,
+        /**
+         * Minimum
+         */
         MIN,
     }
+
     public enum GroupPartyTypes {
+        /**
+         * Role is sender.
+         */
         SENDER,
+        /**
+         * Role is receiver.
+         */
         RECEIVER
     }
 }

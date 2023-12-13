@@ -2,8 +2,8 @@ package edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
+import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupReceiver;
 import edu.alibaba.mpc4j.s2pc.aby.operator.group.oneside.amos22.Amos22OneSideGroupSender;
@@ -25,9 +25,10 @@ public class OneSideGroupFactory extends GroupTypes {
         AMOS22_ONE_SIDE,
     }
 
-    public static OneSideGroupParty createSender(Rpc senderRpc, Party receiverParty, OneSideGroupConfig config){
+    public static OneSideGroupParty createSender(Rpc senderRpc, Party receiverParty, OneSideGroupConfig config) {
         OneSideGroupType type = config.getPtoType();
-        switch (type){
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
             case AMOS22_ONE_SIDE:
                 return new Amos22OneSideGroupSender(senderRpc, receiverParty, (Amos22OneSideGroupConfig) config);
             default:
@@ -35,9 +36,10 @@ public class OneSideGroupFactory extends GroupTypes {
         }
     }
 
-    public static OneSideGroupParty createReceiver(Rpc receiverRpc, Party senderParty, OneSideGroupConfig config){
+    public static OneSideGroupParty createReceiver(Rpc receiverRpc, Party senderParty, OneSideGroupConfig config) {
         OneSideGroupType type = config.getPtoType();
-        switch (type){
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
             case AMOS22_ONE_SIDE:
                 return new Amos22OneSideGroupReceiver(receiverRpc, senderParty, (Amos22OneSideGroupConfig) config);
             default:
@@ -53,7 +55,7 @@ public class OneSideGroupFactory extends GroupTypes {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static OneSideGroupConfig createDefaultConfig(SecurityModel securityModel,boolean silent) {
+    public static OneSideGroupConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:

@@ -6,7 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * AMOS22 shared group aggregation protocol description. The protocol comes from the following paper:
  * <p>
- * 	Nuttapong Attrapadung, Hiraku Morita, Kazuma Ohara, Jacob C. N. Schuldt, Tadanori Teruya, Kazunari Tozawa.
+ * Nuttapong Attrapadung, Hiraku Morita, Kazuma Ohara, Jacob C. N. Schuldt, Tadanori Teruya, Kazunari Tozawa.
  * Secure Parallel Computation on Privately Partitioned Data and Applications. CCS 2022, pp. 151-164. 2022.
  * </p>
  *

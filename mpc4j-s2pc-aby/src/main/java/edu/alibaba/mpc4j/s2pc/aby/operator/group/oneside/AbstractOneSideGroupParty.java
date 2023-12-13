@@ -17,11 +17,11 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.group.GroupTypes.AggTypes;
  */
 public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
     /**
-     * 共有多少“行”数据
+     * number of data
      */
     protected int dataNum;
     /**
-     * 每一个attribute有多少个bit
+     * bit length of attribute
      */
     protected int dimLen;
 
@@ -36,21 +36,21 @@ public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto impl
         initState();
     }
 
-    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, BitVector groupFlag){
+    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, BitVector groupFlag) {
         dataNum = xiArrays[0][0].bitNum();
         assert dataNum >= 2;
         dimLen = xiArrays[0].length;
         assert xiArrays.length == aggType.length;
-        for(SquareZ2Vector[] eachAttr : xiArrays){
+        for (SquareZ2Vector[] eachAttr : xiArrays) {
             MathPreconditions.checkEqual("dimLen", "eachAttr.length", dimLen, eachAttr.length);
-            for(SquareZ2Vector each : eachAttr){
+            for (SquareZ2Vector each : eachAttr) {
                 MathPreconditions.checkEqual("dataNum", "each.bitNum()", dataNum, each.bitNum());
             }
         }
-        for(SquareZ2Vector each : validFlags){
+        for (SquareZ2Vector each : validFlags) {
             MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
         }
-        if(groupFlag != null){
+        if (groupFlag != null) {
             MathPreconditions.checkEqual("dataNum", "groupFlag.length", dataNum, groupFlag.bitNum());
         }
     }

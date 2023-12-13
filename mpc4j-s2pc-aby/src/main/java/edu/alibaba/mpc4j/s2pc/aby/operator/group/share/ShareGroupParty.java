@@ -25,7 +25,7 @@ public interface ShareGroupParty extends TwoPartyPto {
     /**
      * get the valid flag for result, 1 for valid tuples and 0 for dummy tuples
      *
-     * @param groupFlag   if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @param groupFlag if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @throws MpcAbortException the protocol failure aborts.
      */
     SquareZ2Vector getFlag(SquareZ2Vector groupFlag) throws MpcAbortException;
@@ -40,7 +40,7 @@ public interface ShareGroupParty extends TwoPartyPto {
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    default SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, SquareZ2Vector groupFlag) throws MpcAbortException{
+    default SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlags, AggTypes aggTypes, SquareZ2Vector groupFlag) throws MpcAbortException {
         return groupAgg(new SquareZ2Vector[][]{xiArrays}, validFlags == null ? null : new SquareZ2Vector[]{validFlags}, new AggTypes[]{aggTypes}, groupFlag)[0];
     }
 

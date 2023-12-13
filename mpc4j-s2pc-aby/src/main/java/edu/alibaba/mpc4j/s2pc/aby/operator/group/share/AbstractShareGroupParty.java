@@ -20,7 +20,7 @@ public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implem
      */
     protected int dataNum;
     /**
-     * 每一个attribute有多少个bit
+     * bit length of attribute
      */
     protected int dimLen;
 
@@ -35,19 +35,19 @@ public abstract class AbstractShareGroupParty extends AbstractTwoPartyPto implem
         initState();
     }
 
-    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, SquareZ2Vector groupFlag){
+    protected void setInputs(SquareZ2Vector[][] xiArrays, SquareZ2Vector[] validFlags, AggTypes[] aggType, SquareZ2Vector groupFlag) {
         dataNum = xiArrays[0][0].bitNum();
         assert dataNum >= 2;
         dimLen = xiArrays[0].length;
         assert xiArrays.length == aggType.length;
-        for(SquareZ2Vector[] eachAttr : xiArrays){
+        for (SquareZ2Vector[] eachAttr : xiArrays) {
             MathPreconditions.checkEqual("dimLen", "eachAttr.length", dimLen, eachAttr.length);
-            for(SquareZ2Vector each : eachAttr){
+            for (SquareZ2Vector each : eachAttr) {
                 MathPreconditions.checkEqual("dataNum", "each.bitNum()", dataNum, each.bitNum());
             }
         }
-        if(validFlags != null){
-            for(SquareZ2Vector each : validFlags){
+        if (validFlags != null) {
+            for (SquareZ2Vector each : validFlags) {
                 MathPreconditions.checkEqual("dataNum", "validFlag.bitNum()", dataNum, each.bitNum());
             }
         }

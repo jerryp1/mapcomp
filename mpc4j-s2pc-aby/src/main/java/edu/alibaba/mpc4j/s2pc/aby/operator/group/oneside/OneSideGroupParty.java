@@ -34,14 +34,14 @@ public interface OneSideGroupParty extends TwoPartyPto {
     /**
      * Executes the protocol.
      *
-     * @param xiArrays   the arrays of share xi.
+     * @param xiArrays  the arrays of share xi.
      * @param validFlag whether the corresponding row is valid
      * @param aggType   max or min
-     * @param groupFlag  if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
+     * @param groupFlag if the i-th row is the first one in its group, groupFlag[i] = true, otherwise, groupFlag[i] = false
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    default SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlag, AggTypes aggType, BitVector groupFlag) throws MpcAbortException{
+    default SquareZ2Vector[] groupAgg(SquareZ2Vector[] xiArrays, SquareZ2Vector validFlag, AggTypes aggType, BitVector groupFlag) throws MpcAbortException {
         return groupAgg(new SquareZ2Vector[][]{xiArrays}, new SquareZ2Vector[]{validFlag}, new AggTypes[]{aggType}, groupFlag)[0];
     }
 

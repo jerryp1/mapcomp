@@ -18,11 +18,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Bitonic Sorter for permutation generation
- * Only support dim=1 input currently.
- * Bitonic Sorter. Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
+ * Bitonic Sorter for permutation generation. Only support dim=1 input currently.
+ * Bitonic sort has a complexity of O(m log^2 m) comparisons with small constant, and is data-oblivious
  * since its control flow is independent of the input.
- * <p>
  * The scheme comes from the following paper:
  *
  * <p>

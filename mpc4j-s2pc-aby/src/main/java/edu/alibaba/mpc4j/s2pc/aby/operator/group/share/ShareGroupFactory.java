@@ -32,9 +32,10 @@ public class ShareGroupFactory extends GroupTypes {
      * @param config        the config.
      * @return a sender.
      */
-    public static ShareGroupParty createSender(Rpc senderRpc, Party receiverParty, ShareGroupConfig config){
+    public static ShareGroupParty createSender(Rpc senderRpc, Party receiverParty, ShareGroupConfig config) {
         ShareGroupType type = config.getPtoType();
-        switch (type){
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
             case AMOS22_SHARE:
                 return new Amos22ShareGroupSender(senderRpc, receiverParty, (Amos22ShareGroupConfig) config);
             default:
@@ -50,9 +51,10 @@ public class ShareGroupFactory extends GroupTypes {
      * @param config      the config.
      * @return a receiver.
      */
-    public static ShareGroupParty createReceiver(Rpc receiverRpc, Party senderParty, ShareGroupConfig config){
+    public static ShareGroupParty createReceiver(Rpc receiverRpc, Party senderParty, ShareGroupConfig config) {
         ShareGroupType type = config.getPtoType();
-        switch (type){
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
             case AMOS22_SHARE:
                 return new Amos22ShareGroupReceiver(receiverRpc, senderParty, (Amos22ShareGroupConfig) config);
             default:
