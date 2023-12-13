@@ -4,9 +4,9 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumConfig;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.xxx23.Xxx23PrefixSumSender;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.php24.Php24PrefixSumConfig;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.php24.Php24PrefixSumReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.prefixagg.prefixsum.php24.Php24PrefixSumSender;
 
 /**
  * Prefix sum factory.
@@ -27,9 +27,9 @@ public class PrefixSumFactory {
      */
     public enum PrefixSumTypes {
         /**
-         * Xxx+23
+         * Php+24
          */
-        Xxx23,
+        PHP24,
     }
 
     /**
@@ -41,8 +41,8 @@ public class PrefixSumFactory {
         PrefixSumTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PrefixSumSender(senderRpc, receiverParty, (Xxx23PrefixSumConfig) config);
+            case PHP24:
+                return new Php24PrefixSumSender(senderRpc, receiverParty, (Php24PrefixSumConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixSumTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -57,8 +57,8 @@ public class PrefixSumFactory {
         PrefixSumTypes type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PrefixSumReceiver(receiverRpc, senderParty, (Xxx23PrefixSumConfig) config);
+            case PHP24:
+                return new Php24PrefixSumReceiver(receiverRpc, senderParty, (Php24PrefixSumConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixSumTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -75,7 +75,7 @@ public class PrefixSumFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PrefixSumConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
+                return new Php24PrefixSumConfig.Builder(zl, silent).setPlainOutput(plainOutput).build();
             case COVERT:
             case MALICIOUS:
             default:

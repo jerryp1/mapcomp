@@ -15,7 +15,6 @@ public class CommonConstants {
 
     public static String MAX_L = "max_l";
     public static String MAX_NUM = "max_num";
-    public static String SILENT = "silent";
     public static int MAX_GROUP_BIT_LENGTH = 32;
 
 }

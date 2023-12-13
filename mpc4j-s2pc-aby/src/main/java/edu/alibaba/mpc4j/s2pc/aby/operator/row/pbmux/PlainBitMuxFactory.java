@@ -5,9 +5,9 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.PtoFactory;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxSender;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.php24.Php24PlainBitMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.php24.Php24PlainBitMuxReceiver;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.php24.Php24PlainBitMuxSender;
 import edu.alibaba.mpc4j.s2pc.pcg.ot.cot.CotFactory;
 
 /**
@@ -29,9 +29,9 @@ public class PlainBitMuxFactory implements PtoFactory {
      */
     public enum PlainBitMuxType {
         /**
-         * Xxx23
+         * PHP+24
          */
-        Xxx23,
+        PHP24,
     }
 
     /**
@@ -46,8 +46,8 @@ public class PlainBitMuxFactory implements PtoFactory {
         PlainBitMuxType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PlainBitMuxSender(senderRpc, receiverParty, (Xxx23PlainBitMuxConfig) config);
+            case PHP24:
+                return new Php24PlainBitMuxSender(senderRpc, receiverParty, (Php24PlainBitMuxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainBitMuxType.class.getSimpleName() + ": " + type.name());
         }
@@ -65,8 +65,8 @@ public class PlainBitMuxFactory implements PtoFactory {
         PlainBitMuxType type = config.getPtoType();
         //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
-            case Xxx23:
-                return new Xxx23PlainBitMuxReceiver(receiverRpc, senderParty, (Xxx23PlainBitMuxConfig) config);
+            case PHP24:
+                return new Php24PlainBitMuxReceiver(receiverRpc, senderParty, (Php24PlainBitMuxConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PlainBitMuxType.class.getSimpleName() + ": " + type.name());
         }
@@ -83,7 +83,7 @@ public class PlainBitMuxFactory implements PtoFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23PlainBitMuxConfig.Builder(zl, silent)
+                return new Php24PlainBitMuxConfig.Builder(zl, silent)
                     .setCotConfig(CotFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent))
                     .build();
             case COVERT:

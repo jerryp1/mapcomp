@@ -27,10 +27,7 @@ public class Dsz15A2bPtoDesc implements PtoDesc {
      * protocol step
      */
     enum PtoStep {
-        // obtain ote keys
-        OBTAIN_OTE_KEYS,
-        // sender send payloads
-        SENDER_SEND_PAYLOADS,
+        // empty
     }
 
     /**

@@ -9,10 +9,8 @@ import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Arrays;
+import java.util.Vector;
 
 /**
  * Abstract shared permutation sender.
@@ -51,7 +49,7 @@ public abstract class AbstractSharedPermutationParty extends AbstractTwoPartyPto
     }
 
     @Override
-    public SquareZ2Vector[][] permute(SquareZ2Vector[] perms, SquareZ2Vector[][] x) throws MpcAbortException{
+    public SquareZ2Vector[][] permute(SquareZ2Vector[] perms, SquareZ2Vector[][] x) throws MpcAbortException {
         Vector<byte[]> permRows = ShuffleUtils.mergeSecret(new SquareZ2Vector[][]{perms}, envType, parallel);
         Vector<byte[]> dataRows = ShuffleUtils.mergeSecret(x, envType, parallel);
         Vector<byte[]> res = permute(permRows, dataRows);

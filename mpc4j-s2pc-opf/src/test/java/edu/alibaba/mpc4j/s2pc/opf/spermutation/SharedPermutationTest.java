@@ -9,8 +9,8 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
 import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleUtils;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,24 +50,24 @@ public class SharedPermutationTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 no silent
+        // Php+24 no silent
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name(), new Xxx23SharedPermutationConfig.Builder(false).build()
+            PermutationTypes.PHP24.name(), new Php24SharedPermutationConfig.Builder(false).build()
         });
 
-        // Xxx23 silent
+        // Php+24 silent
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name() + "_silent", new Xxx23SharedPermutationConfig.Builder(true).build()
+            PermutationTypes.PHP24.name() + "_silent", new Php24SharedPermutationConfig.Builder(true).build()
         });
 
-        // Xxx23b no silent
+        // Php+24b no silent
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23bSharedPermutationConfig.Builder(false).build()
+            PermutationTypes.PHP24B.name(), new Php24bSharedPermutationConfig.Builder(false).build()
         });
 
-        // Xxx23b silent
+        // Php+24b silent
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name() + "_silent", new Xxx23bSharedPermutationConfig.Builder(true).build()
+            PermutationTypes.PHP24B.name() + "_silent", new Php24bSharedPermutationConfig.Builder(true).build()
         });
 
         return configurations;

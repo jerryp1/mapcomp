@@ -10,11 +10,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
-import edu.alibaba.mpc4j.s2pc.opf.groupagg.GroupAggFactory.GroupAggTypes;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgConfig;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgFactory.Z2MtgType;
-import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.Z2MtgParty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,29 +38,36 @@ public class TupleTestStarter {
      * The other party
      */
     protected Party otherParty;
-
+    /**
+     * Whether current role is receiver.
+     */
     protected boolean receiver;
     /**
      * Total round fo test.
      */
     protected int totalRound = 1;
-
-    private int num;
-
-    private Properties properties;
-    private int logN;
-
+    /**
+     * Test number.
+     */
+    private final int num;
+    /**
+     * Input parameters.
+     */
+    private final Properties properties;
+    /**
+     * Log n.
+     */
+    private final int logN;
 
     public TupleTestStarter(int logN, Properties properties) {
-        this.logN =logN;
+        this.logN = logN;
         this.num = 1 << logN;
-//        z2MtgType = Z2MtgType.valueOf(type);
         this.properties = properties;
     }
 
     public void start() throws IOException, MpcAbortException, URISyntaxException {
         // output file format：bitmap_sum_s1_r2_s/r.output
-        String filePath = "./"  + "bit2a_tuple_" + logN + "_" + ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") +".out";
+        String filePath = "./" + "bit2a_tuple_" + logN + "_" + ((ownRpc.ownParty().getPartyId() == 1) ? "r" : "s") + ".out";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // output table title
@@ -99,7 +101,7 @@ public class TupleTestStarter {
                              long packetNum, long payloadByteLength, long sendByteLength) {
         String information = num + "\t" +
             // time
-             (Objects.isNull(time) ? "N/A" : time)
+            (Objects.isNull(time) ? "N/A" : time)
             // packet num
             + "\t" + packetNum
             // payload byte length
@@ -111,9 +113,8 @@ public class TupleTestStarter {
         TRIPLE_NUM = 0;
     }
 
-
     /**
-     * Run full secure protocol
+     * Run  protocol
      *
      * @param printWriter print writer.
      * @throws MpcAbortException the protocol failure aborts.
@@ -133,12 +134,9 @@ public class TupleTestStarter {
         );
     }
 
-
-
     private Bit2aConfig genBit2aConfig() {
         return new Kvh21Bit2aConfig.Builder(ZlFactory.createInstance(EnvType.STANDARD, 64), false).build();
     }
-
 
     TupleTestRunner createRunner(Bit2aConfig bit2aConfig) {
         Bit2aParty party;
@@ -147,7 +145,7 @@ public class TupleTestStarter {
         } else {
             party = Bit2aFactory.createReceiver(ownRpc, otherParty, bit2aConfig);
         }
-        return new TupleTestRunner(party, bit2aConfig, totalRound, num);
+        return new TupleTestRunner(party, totalRound, num);
     }
 
 }

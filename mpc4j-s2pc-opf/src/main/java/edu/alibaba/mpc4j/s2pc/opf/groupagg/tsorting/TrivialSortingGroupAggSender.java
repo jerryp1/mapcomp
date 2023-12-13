@@ -168,8 +168,6 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
         groupStep2Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        // b2a
-        // SquareZlVector receiverAggAs = b2a();
         SquareZ2Vector[] receiverAggAs = getAggAttr();
         // ### test
         // zlcSender.revealOther(otherAggB2a);

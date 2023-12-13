@@ -30,7 +30,6 @@ public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
         zl = config.getZl();
         needShuffle = config.needShuffle();
         plainOutput = config.isPlainOutput();
-//        addMultipleSubPtos(z2cParty, shuffleParty, z2MuxParty, shareGroupParty);
     }
 
     @Override
@@ -52,7 +51,7 @@ public class Amos22PrefixMaxSender extends AbstractPrefixMaxAggregator {
     @Override
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         SquareZ2Vector[] res = shareGroupParty.groupAgg(aggField, null, AggTypes.MAX, groupIndicator1);
-        // 将 groupIndicator1 也进行更新。
+        // update groupIndicator1
         groupIndicator1.getBitVector().replaceCopy(shareGroupParty.getFlag(groupIndicator1).getBitVector());
         return res;
     }

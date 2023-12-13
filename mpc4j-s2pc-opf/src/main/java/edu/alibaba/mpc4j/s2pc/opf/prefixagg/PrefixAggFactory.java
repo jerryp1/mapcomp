@@ -20,7 +20,13 @@ public class PrefixAggFactory {
      * prefix agg type.
      */
     public enum PrefixAggTypes {
+        /**
+         * Summation.
+         */
         SUM,
+        /**
+         * Maximum.
+         */
         MAX,
     }
 

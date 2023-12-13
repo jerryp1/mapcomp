@@ -7,8 +7,8 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationTypes;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23.Xxx23PermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.permutation.xxx23b.Xxx23bPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24.Php24PermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.permutation.php24b.Php24bPermutationConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,24 +59,24 @@ public class PermutationTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 default zl
+        // Php+24 default zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(DEFAULT_ZL, silent).build()
+            PermutationTypes.PHP24.name(), new Php24PermutationConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
-        // Xxx23 large zl
+        // Php+24 large zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23.name(), new Xxx23PermutationConfig.Builder(LARGE_ZL, silent).build()
+            PermutationTypes.PHP24.name(), new Php24PermutationConfig.Builder(LARGE_ZL, silent).build()
         });
 
-        // Xxx23b default zl
+        // Php+24b default zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(DEFAULT_ZL, silent).build()
+            PermutationTypes.PHP24B.name(), new Php24bPermutationConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
-        // Xxx23b large zl
+        // Php+24b large zl
         configurations.add(new Object[]{
-            PermutationTypes.XXX23B.name(), new Xxx23bPermutationConfig.Builder(LARGE_ZL, silent).build()
+            PermutationTypes.PHP24B.name(), new Php24bPermutationConfig.Builder(LARGE_ZL, silent).build()
         });
 
         return configurations;

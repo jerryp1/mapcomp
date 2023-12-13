@@ -113,6 +113,13 @@ public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implemen
         initState();
     }
 
+    /**
+     * Set input into protocol.
+     *
+     * @param groupAttr group attribute.
+     * @param aggAttr   aggregation attribute.
+     * @param e         intersection flag.
+     */
     protected void setPtoInput(String[] groupAttr, long[] aggAttr, SquareZ2Vector e) {
         num = groupAttr.length;
         LOGGER.info("data num: " + num);

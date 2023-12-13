@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.PlainAndFactory.PlainAndType;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.xxx23.Xxx23PlainAndConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.plainand.php24.Php24PlainAndConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,9 +51,9 @@ public class PlainAndTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 default zl
+        // Php+24 default zl
         configurations.add(new Object[]{
-            PlainAndType.Xxx23.name(), new Xxx23PlainAndConfig.Builder(DEFAULT_ZL, silent).build()
+            PlainAndType.PHP24.name(), new Php24PlainAndConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;

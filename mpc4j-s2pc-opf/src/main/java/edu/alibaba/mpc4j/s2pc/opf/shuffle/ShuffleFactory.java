@@ -3,13 +3,12 @@ package edu.alibaba.mpc4j.s2pc.opf.shuffle;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23.Xxx23ShuffleSender;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b.Xxx23bShuffleConfig;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b.Xxx23bShuffleReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.xxx23b.Xxx23bShuffleSender;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24.Php24ShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24.Php24ShuffleReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24.Php24ShuffleSender;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24b.Php24bShuffleConfig;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24b.Php24bShuffleReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.php24b.Php24bShuffleSender;
 
 /**
  * Shuffle factory.
@@ -30,13 +29,13 @@ public class ShuffleFactory {
      */
     public enum ShuffleTypes {
         /**
-         * xxx+23 shuffle.
+         * Php+24 shuffle.
          */
-        XXX23,
+        PHP24,
         /**
-         * xxx+23b un-shuffle.
+         * Php+24b un-shuffle.
          */
-        XXX23b,
+        PHP24b,
     }
 
     /**
@@ -50,10 +49,10 @@ public class ShuffleFactory {
     public static ShuffleParty createSender(Rpc senderRpc, Party receiverParty, ShuffleConfig config) {
         ShuffleTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23ShuffleSender(senderRpc, receiverParty, (Xxx23ShuffleConfig) config);
-            case XXX23b:
-                return new Xxx23bShuffleSender(senderRpc, receiverParty, (Xxx23bShuffleConfig) config);
+            case PHP24:
+                return new Php24ShuffleSender(senderRpc, receiverParty, (Php24ShuffleConfig) config);
+            case PHP24b:
+                return new Php24bShuffleSender(senderRpc, receiverParty, (Php24bShuffleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ShuffleTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -70,10 +69,10 @@ public class ShuffleFactory {
     public static ShuffleParty createReceiver(Rpc receiverRpc, Party senderParty, ShuffleConfig config) {
         ShuffleTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23ShuffleReceiver(receiverRpc, senderParty, (Xxx23ShuffleConfig) config);
-            case XXX23b:
-                return new Xxx23bShuffleReceiver(receiverRpc, senderParty, (Xxx23bShuffleConfig) config);
+            case PHP24:
+                return new Php24ShuffleReceiver(receiverRpc, senderParty, (Php24ShuffleConfig) config);
+            case PHP24b:
+                return new Php24bShuffleReceiver(receiverRpc, senderParty, (Php24bShuffleConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + ShuffleTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -91,7 +90,7 @@ public class ShuffleFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23ShuffleConfig.Builder(silent).build();
+                return new Php24ShuffleConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -110,7 +109,7 @@ public class ShuffleFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bShuffleConfig.Builder(silent).build();
+                return new Php24bShuffleConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

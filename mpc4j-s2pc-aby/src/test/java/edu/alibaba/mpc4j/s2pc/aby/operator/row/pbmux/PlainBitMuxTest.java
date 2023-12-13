@@ -8,7 +8,7 @@ import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxFactory.PlainBitMuxType;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.Xxx23.Xxx23PlainBitMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.php24.Php24PlainBitMuxConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,9 +53,9 @@ public class PlainBitMuxTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // Xxx23 default zl
+        // Php+24 default zl
         configurations.add(new Object[]{
-            PlainBitMuxType.Xxx23.name(), new Xxx23PlainBitMuxConfig.Builder(DEFAULT_ZL, silent).build()
+            PlainBitMuxType.PHP24.name(), new Php24PlainBitMuxConfig.Builder(DEFAULT_ZL, silent).build()
         });
 
         return configurations;
@@ -124,9 +124,6 @@ public class PlainBitMuxTest extends AbstractTwoPartyPtoTest {
     private void testPto(int num, boolean parallel) {
         // create inputs
         BitVector x = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        BitVector x1 = BitVectorFactory.createRandom(num, SECURE_RANDOM);
-//        SquareZ2Vector shareX0 = SquareZ2Vector.create(x, false);
-//        SquareZ2Vector shareX1 = SquareZ2Vector.create(x1, false);
 
         long[] y = IntStream.range(0, num).map(i -> SECURE_RANDOM.nextInt(Integer.MAX_VALUE)).mapToLong(i -> i).toArray();
         SquareZlVector y0 = SquareZlVector.createRandom(config.getZl(), num, SECURE_RANDOM);

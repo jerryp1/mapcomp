@@ -3,12 +3,12 @@ package edu.alibaba.mpc4j.s2pc.opf.spermutation;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23.Xxx23SharedPermutationSender;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationConfig;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationReceiver;
-import edu.alibaba.mpc4j.s2pc.opf.spermutation.xxx23b.Xxx23bSharedPermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationSender;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationConfig;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationSender;
 
 /**
  * Shared permutation factory.
@@ -29,13 +29,13 @@ public class SharedPermutationFactory {
      */
     public enum SharedPermutationTypes {
         /**
-         * xxx+23.
+         * Php+24.
          */
-        XXX23,
+        PHP24,
         /**
-         * xxx+23b.
+         * Php+24b.
          */
-        XXX23B,
+        PHP24B,
     }
 
     /**
@@ -49,10 +49,10 @@ public class SharedPermutationFactory {
     public static SharedPermutationParty createSender(Rpc senderRpc, Party receiverParty, SharedPermutationConfig config) {
         SharedPermutationTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23SharedPermutationSender(senderRpc, receiverParty, (Xxx23SharedPermutationConfig) config);
-            case XXX23B:
-                return new Xxx23bSharedPermutationSender(senderRpc, receiverParty, (Xxx23bSharedPermutationConfig) config);
+            case PHP24:
+                return new Php24SharedPermutationSender(senderRpc, receiverParty, (Php24SharedPermutationConfig) config);
+            case PHP24B:
+                return new Php24bSharedPermutationSender(senderRpc, receiverParty, (Php24bSharedPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SharedPermutationTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -69,10 +69,10 @@ public class SharedPermutationFactory {
     public static SharedPermutationParty createReceiver(Rpc receiverRpc, Party senderParty, SharedPermutationConfig config) {
         SharedPermutationTypes type = config.getPtoType();
         switch (type) {
-            case XXX23:
-                return new Xxx23SharedPermutationReceiver(receiverRpc, senderParty, (Xxx23SharedPermutationConfig) config);
-            case XXX23B:
-                return new Xxx23bSharedPermutationReceiver(receiverRpc, senderParty, (Xxx23bSharedPermutationConfig) config);
+            case PHP24:
+                return new Php24SharedPermutationReceiver(receiverRpc, senderParty, (Php24SharedPermutationConfig) config);
+            case PHP24B:
+                return new Php24bSharedPermutationReceiver(receiverRpc, senderParty, (Php24bSharedPermutationConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + SharedPermutationTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -89,7 +89,7 @@ public class SharedPermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23SharedPermutationConfig.Builder(silent).build();
+                return new Php24SharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:
@@ -108,7 +108,7 @@ public class SharedPermutationFactory {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
-                return new Xxx23bSharedPermutationConfig.Builder(silent).build();
+                return new Php24bSharedPermutationConfig.Builder(silent).build();
             case COVERT:
             case MALICIOUS:
             default:

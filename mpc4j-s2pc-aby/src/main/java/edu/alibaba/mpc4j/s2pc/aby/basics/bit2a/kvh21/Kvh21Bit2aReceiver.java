@@ -110,8 +110,6 @@ public class Kvh21Bit2aReceiver extends AbstractBit2aParty {
 
         return Arrays.stream(ZlVector.splitWithPadding(mergedZiArray.getZlVector(), nums))
             .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
-//        return Arrays.stream(ZlVector.split(mergedZiArray.getZlVector(), nums))
-//            .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
     }
 
     private SquareZlVector t0t1(CotReceiverOutput cotReceiverOutput, List<byte[]> t0t1Payload) throws MpcAbortException {
