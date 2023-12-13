@@ -54,7 +54,7 @@ public class Amos22PrefixMaxReceiver extends AbstractPrefixMaxAggregator {
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         SquareZ2Vector[] res = shareGroupParty.groupAgg(aggField, null, AggTypes.MAX, groupIndicator1);
         // 将 groupIndicator1 也进行更新。
-        groupIndicator1.setBitVector(shareGroupParty.getFlag(groupIndicator1).getBitVector());
+        groupIndicator1.getBitVector().replaceCopy(shareGroupParty.getFlag(groupIndicator1).getBitVector());
         return res;
     }
 }

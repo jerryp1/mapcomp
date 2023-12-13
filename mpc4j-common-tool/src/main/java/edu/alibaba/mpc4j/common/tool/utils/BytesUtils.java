@@ -600,11 +600,11 @@ public class BytesUtils {
 
     private static void binaryShiftRight(byte[] byteArray, final int x) {
         assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
-        for (int i = byteArray.length - 1; i > 0; i--) {
+        for (int i = byteArray.length - 1, supplyShiftBit = Byte.SIZE - x; i > 0; i--) {
             // shift current byte
             int currentByte = (byteArray[i] & 0xFF) >>> x;
             // supply from next byte
-            int supplyByte = (byteArray[i - 1] & 0xFF) << (Byte.SIZE - x);
+            int supplyByte = (byteArray[i - 1] & 0xFF) << supplyShiftBit;
             byteArray[i] = (byte) (currentByte | supplyByte);
         }
         // handle the last byte
@@ -671,11 +671,11 @@ public class BytesUtils {
 
     private static void binaryShiftLeft(byte[] byteArray, final int x) {
         assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
-        for (int i = 0; i < byteArray.length - 1; i++) {
+        for (int i = 0, supplyShiftBit = Byte.SIZE - x; i < byteArray.length - 1; i++) {
             // shift current byte
             int currentByte = (byteArray[i] & 0xFF) << x;
             // supply from next byte
-            int supplyByte = (byteArray[i + 1] & 0xFF) >> (Byte.SIZE - x);
+            int supplyByte = (byteArray[i + 1] & 0xFF) >> supplyShiftBit;
             // combine
             byteArray[i] = (byte) (currentByte | supplyByte);
         }

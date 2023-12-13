@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.common.tool.bitvector;
 
 import com.google.common.base.Preconditions;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory.BitVectorType;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.IntUtils;
@@ -495,11 +496,90 @@ public class BitVectorTest {
         // empty extend
         SecureRandom secureRandom = new SecureRandom();
         bitVector1 = BitVectorFactory.createEmpty(type);
-        for(int i = 0, currentBitLen = 0; i < 10; i++){
+        for (int i = 0, currentBitLen = 0; i < 10; i++) {
             currentBitLen += IntUtils.randomNonNegative(64, secureRandom);
             bitVector1.extendLength(currentBitLen);
             assertZerosCorrectness(bitVector1, currentBitLen);
         }
+    }
+
+    @Test
+    public void testShiftRight() {
+        int byteNum = 73;
+        byte[] v = new byte[byteNum];
+        SECURE_RANDOM.nextBytes(v);
+        BigInteger baseline = BigIntegerUtils.byteArrayToNonNegBigInteger(v);
+        BitVector bitVector = BitVectorFactory.create(type, byteNum << 3, v);
+        for (int i = 0; i < 10; i++) {
+            int shiftNum = SECURE_RANDOM.nextInt(bitVector.bitNum());
+            bitVector = bitVector.shiftRight(shiftNum);
+            baseline = baseline.shiftRight(shiftNum);
+            assert bitVector.getBigInteger().equals(baseline);
+        }
+    }
+
+    @Test
+    public void testShiftLeftUnChangeNum() {
+        int byteNum = 73;
+        byte[] v = new byte[byteNum];
+        SECURE_RANDOM.nextBytes(v);
+        BigInteger baseline = BigIntegerUtils.byteArrayToNonNegBigInteger(v);
+        BigInteger andNum = BigInteger.ONE.shiftLeft(byteNum << 3).subtract(BigInteger.ONE);
+        BitVector bitVector = BitVectorFactory.create(type, byteNum << 3, v);
+        for (int i = 0; i < 10; i++) {
+            int shiftNum = SECURE_RANDOM.nextInt((byteNum << 3) / 10);
+            bitVector.shiftLeftUnChangeNum(shiftNum);
+            baseline = baseline.shiftLeft(shiftNum).and(andNum);
+            assert bitVector.getBigInteger().equals(baseline);
+        }
+    }
+
+    @Test
+    public void testMergeSplitWithPaddingConsistency() {
+        for (int maxBitNum = MIN_BIT_NUM; maxBitNum < MAX_BIT_NUM; maxBitNum++) {
+            testMergeSplitWithPaddingConsistency(maxBitNum);
+        }
+    }
+
+    private void testMergeSplitWithPaddingConsistency(int maxBitNum) {
+        int totalNum = 10;
+        BitVector[] bitVectors = IntStream.range(0, totalNum)
+            .mapToObj(index -> {
+                int bitNum = SECURE_RANDOM.nextInt(maxBitNum) + 1;
+                return BitVectorFactory.createRandom(type, bitNum, SECURE_RANDOM);
+            })
+            .toArray(BitVector[]::new);
+        // merge
+        BitVector mergeBitVector = BitVectorFactory.mergeWithPadding(bitVectors);
+        // split
+        BitVector[] splitBitVectors = mergeBitVector.splitWithPadding(Arrays.stream(bitVectors).mapToInt(BitVector::bitNum).toArray());
+        for (int i = 0; i < bitVectors.length; i++) {
+            Assert.assertArrayEquals(bitVectors[i].getBytes(), splitBitVectors[i].getBytes());
+        }
+    }
+
+    @Test
+    public void testReverseBits() {
+        for (int maxBitNum = MIN_BIT_NUM; maxBitNum < MAX_BIT_NUM; maxBitNum++) {
+            testReverseBits(maxBitNum);
+        }
+    }
+
+    private void testReverseBits(int bitNum){
+        int byteNum = CommonUtils.getByteLength(bitNum);
+        byte andNum = (byte) (bitNum & 7);
+        byte[] v = new byte[byteNum];
+        SECURE_RANDOM.nextBytes(v);
+        if(andNum > 0){
+            v[0] &= andNum;
+        }
+        BitVector bitVector = BitVectorFactory.create(type, bitNum, v);
+        BitVector bitVector1 = BitVectorFactory.create(type, bitNum, BigInteger.ZERO);
+        for(int i = 0; i < bitNum; i++){
+            bitVector1.set(i, bitVector.get(bitNum - 1 - i));
+        }
+        bitVector.reverseBits();
+        Assert.assertEquals(bitVector, bitVector1);
     }
 
     private void assertEmptyCorrectness(BitVector bitVector) {

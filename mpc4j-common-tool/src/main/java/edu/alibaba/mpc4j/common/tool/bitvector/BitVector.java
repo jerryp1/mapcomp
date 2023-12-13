@@ -170,14 +170,14 @@ public interface BitVector {
     BitVector shiftRight(int bitLen);
 
     /**
-     * left shift bits, don't change bitNum
+     * left shift bits, don't change bitNum.
      *
      * @param bitLen the shift bit length
      */
     void shiftLeftUnChangeNum(int bitLen);
 
     /**
-     * recovering split multiple vector in the group of byteNum, fix the length of each array is 8n padding the zeros between values
+     * recovering split multiple vector in the group of byteNum, fix the length of each array to 8n, pad the zeros between values
      *
      * @param bitNums the bit length for each origin vectors
      */

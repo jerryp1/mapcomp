@@ -165,7 +165,7 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
             LOGGER.info("processing one side group op in batch: {} / {}, each batch has {} parallel group", i, batchNum, copyEndIndex - copyStartIndex);
             SquareZ2Vector[][] tmp = groupAggBatch(
                 Arrays.copyOfRange(xiArrays, copyStartIndex, copyEndIndex),
-                Arrays.copyOfRange(validFlags, copyStartIndex, copyEndIndex),
+                validFlags != null ? Arrays.copyOfRange(validFlags, copyStartIndex, copyEndIndex) : null,
                 Arrays.copyOfRange(aggTypes, copyStartIndex, copyEndIndex), groupFlag);
             System.arraycopy(tmp, 0, res, copyStartIndex, tmp.length);
         }
@@ -230,7 +230,6 @@ public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupPa
     }
 
     private SquareZ2Vector[][] commonIter(AggTypes[] aggTypes, SquareZ2Vector groupFlag, int attrNum) throws MpcAbortException {
-        stopWatch.start();
         int levelNum = LongUtils.ceilLog2(dataNum);
         for (int level = 0; level < levelNum; level++) {
             stopWatch.start();
