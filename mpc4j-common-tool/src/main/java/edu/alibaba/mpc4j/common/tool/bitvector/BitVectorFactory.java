@@ -251,6 +251,12 @@ public class BitVectorFactory {
         return bitVectors;
     }
 
+    /**
+     * merge vectors, fixing the length of each vector to 8n, padding zeros in front of each vector.
+     *
+     * @param vectors bit vectors.
+     * @return the merged bit vector.
+     */
     public static BitVector mergeWithPadding(BitVector[] vectors){
         ByteBuffer buffer = ByteBuffer.allocate(Arrays.stream(vectors).mapToInt(BitVector::byteNum).sum());
         Arrays.stream(vectors).forEach(x -> buffer.put(x.getBytes()));

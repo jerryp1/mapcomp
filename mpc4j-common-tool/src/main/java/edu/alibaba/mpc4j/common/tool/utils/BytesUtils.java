@@ -7,7 +7,7 @@ import java.util.stream.IntStream;
 /**
  * 字节{@code byte}和字节数组{@code byte[]}工具类。
  * <p>基础操作源代码来自Bouncy Castle的ByteUtils.java。移位操作源代码参考文章《循环移位：字节数组（byte[]）实现二进制串的循环移位》
- * （https://blog.csdn.net/weixin_40411846/article/details/79580431）。
+ * （<a href="https://blog.csdn.net/weixin_40411846/article/details/79580431">...</a>）。
  *
  * @author Weiran Liu
  * @date 2021/06/19
@@ -172,7 +172,12 @@ public class BytesUtils {
         }
     }
 
-
+    /**
+     * 保留给定的{@code byte[]}的最后{@code bitLength}个bit，大端表示。
+     *
+     * @param byteArray 给定的{@code byte[]}。
+     * @param bitLength 有效比特位数。
+     */
     public static byte[] keepLastBits(byte[] byteArray, final int bitLength){
         assert bitLength >= 0 && bitLength <= byteArray.length * Byte.SIZE
             : "bitLength must be in range [0, " + byteArray.length * Byte.SIZE + "]: " + bitLength;
@@ -315,17 +320,17 @@ public class BytesUtils {
      * 将给定{@code byte[]}填充或截断，如果填充，则在数组前填充0x00到指定的长度；如果截断，则截取后length个byte。
      *
      * @param byteArray 给定的{@code byte[]}。
-     * @param length    目标长度。
+     * @param byteLen    目标长度。
      * @return 指定长度的{@code byte[]}。
      */
-    public static byte[] fixedByteArrayLength(byte[] byteArray, int length) {
-        assert length > 0;
-        if (byteArray.length == length) {
+    public static byte[] fixedByteArrayLength(byte[] byteArray, int byteLen) {
+        assert byteLen > 0;
+        if (byteArray.length == byteLen) {
             return byteArray;
-        }else if(byteArray.length < length){
-            return paddingByteArray(byteArray, length);
+        }else if(byteArray.length < byteLen){
+            return paddingByteArray(byteArray, byteLen);
         }else{
-            return Arrays.copyOfRange(byteArray, byteArray.length - length, byteArray.length);
+            return Arrays.copyOfRange(byteArray, byteArray.length - byteLen, byteArray.length);
         }
     }
 
@@ -595,11 +600,11 @@ public class BytesUtils {
 
     private static void binaryShiftRight(byte[] byteArray, final int x) {
         assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
-        for (int i = byteArray.length - 1; i > 0; i--) {
+        for (int i = byteArray.length - 1, supplyShiftBit = Byte.SIZE - x; i > 0; i--) {
             // shift current byte
             int currentByte = (byteArray[i] & 0xFF) >>> x;
             // supply from next byte
-            int supplyByte = (byteArray[i - 1] & 0xFF) << (Byte.SIZE - x);
+            int supplyByte = (byteArray[i - 1] & 0xFF) << supplyShiftBit;
             byteArray[i] = (byte) (currentByte | supplyByte);
         }
         // handle the last byte
@@ -666,11 +671,11 @@ public class BytesUtils {
 
     private static void binaryShiftLeft(byte[] byteArray, final int x) {
         assert x >= 0 && x < Byte.SIZE : "x must be in range [0, " + Byte.SIZE + ")";
-        for (int i = 0; i < byteArray.length - 1; i++) {
+        for (int i = 0, supplyShiftBit = Byte.SIZE - x; i < byteArray.length - 1; i++) {
             // shift current byte
             int currentByte = (byteArray[i] & 0xFF) << x;
             // supply from next byte
-            int supplyByte = (byteArray[i + 1] & 0xFF) >> (Byte.SIZE - x);
+            int supplyByte = (byteArray[i + 1] & 0xFF) >> supplyShiftBit;
             // combine
             byteArray[i] = (byte) (currentByte | supplyByte);
         }

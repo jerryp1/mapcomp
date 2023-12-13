@@ -40,20 +40,6 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
         initState();
     }
 
-    protected void setShareOwnInput(BitVector xi) {
-        checkInitialized();
-        MathPreconditions.checkPositive("bitNum", xi.bitNum());
-        bitNum = xi.bitNum();
-        extraInfo++;
-    }
-
-    protected void setShareOtherInput(int bitNum) {
-        checkInitialized();
-        MathPreconditions.checkPositive("bitNum", bitNum);
-        this.bitNum = bitNum;
-        extraInfo++;
-    }
-
     protected void setDyadicOperatorInput(SquareZ2Vector xi, SquareZ2Vector yi) {
         checkInitialized();
         MathPreconditions.checkEqual("xi.bitNum", "yi.bitNum", xi.getNum(), yi.getNum());
@@ -177,31 +163,20 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
                 int bitNum = xiArray[selectIndex].getNum();
                 assert yiArray[selectIndex].getNum() == bitNum;
                 return bitNum;
-            })
-            .toArray();
-//        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) merge(selectXs);
-//        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) merge(selectYs);
-        SquareZ2Vector mergeSelectXs = (SquareZ2Vector) mergeWithPadding(selectXs);
-        SquareZ2Vector mergeSelectYs = (SquareZ2Vector) mergeWithPadding(selectYs);
-        SquareZ2Vector mergeSelectZs;
-        switch (operator) {
-            case AND:
-                mergeSelectZs = and(mergeSelectXs, mergeSelectYs);
-                break;
-            case XOR:
-                mergeSelectZs = xor(mergeSelectXs, mergeSelectYs);
-                break;
-            default:
-                throw new IllegalStateException();
+            }).toArray();
+        if (operator.equals(DyadicBcOperator.XOR)) {
+            IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = xor(selectXs[index], selectYs[index]));
+        }else{
+            assert operator.equals(DyadicBcOperator.AND);
+            SquareZ2Vector mergeSelectXs = (SquareZ2Vector) mergeWithPadding(selectXs);
+            SquareZ2Vector mergeSelectYs = (SquareZ2Vector) mergeWithPadding(selectYs);
+            SquareZ2Vector mergeSelectZs = and(mergeSelectXs, mergeSelectYs);
+            SquareZ2Vector[] selectZs = Arrays.stream(splitWithPadding(mergeSelectZs, bitNums))
+                .map(vector -> (SquareZ2Vector) vector)
+                .toArray(SquareZ2Vector[]::new);
+            assert selectZs.length == selectIndexes.length;
+            IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
         }
-//        SquareZ2Vector[] selectZs = Arrays.stream(split(mergeSelectZs, bitNums))
-//            .map(vector -> (SquareZ2Vector) vector)
-//            .toArray(SquareZ2Vector[]::new);
-        SquareZ2Vector[] selectZs = Arrays.stream(splitWithPadding(mergeSelectZs, bitNums))
-            .map(vector -> (SquareZ2Vector) vector)
-            .toArray(SquareZ2Vector[]::new);
-        assert selectZs.length == selectIndexes.length;
-        IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -213,7 +188,7 @@ public abstract class AbstractZ2cParty extends AbstractTwoPartyPto implements Z2
         //noinspection SwitchStatementWithTooFewBranches
         switch (operator) {
             case NOT:
-                for(int i = 0; i < xiArray.length; i++){
+                for (int i = 0; i < xiArray.length; i++) {
                     res[i] = not(xiArray[i]);
                 }
                 break;

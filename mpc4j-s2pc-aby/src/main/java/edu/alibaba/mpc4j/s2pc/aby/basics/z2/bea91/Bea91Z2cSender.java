@@ -61,55 +61,6 @@ public class Bea91Z2cSender extends AbstractZ2cParty {
     }
 
     @Override
-    public SquareZ2Vector shareOwn(BitVector x0) {
-        setShareOwnInput(x0);
-        return SquareZ2Vector.create(x0, false);
-//        logPhaseInfo(PtoState.PTO_BEGIN, "send share");
-//
-//        stopWatch.start();
-//        BitVector x0Vector = BitVectorFactory.createRandom(bitNum, secureRandom);
-//        BitVector x1Vector = x0.xor(x0Vector);
-//        List<byte[]> x1Payload = Collections.singletonList(x1Vector.getBytes());
-//        DataPacketHeader x1Header = new DataPacketHeader(
-//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_SHARE.ordinal(), extraInfo,
-//            ownParty().getPartyId(), otherParty().getPartyId()
-//        );
-//        rpc.send(DataPacket.fromByteArrayList(x1Header, x1Payload));
-//        extraInfo++;
-//        stopWatch.stop();
-//        long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "send share");
-//
-//        logPhaseInfo(PtoState.PTO_END, "send share");
-//        return SquareZ2Vector.create(x0Vector, false);
-    }
-
-    @Override
-    public SquareZ2Vector shareOther(int bitNum) throws MpcAbortException {
-        setShareOtherInput(bitNum);
-        return SquareZ2Vector.createZeros(bitNum, false);
-//        logPhaseInfo(PtoState.PTO_BEGIN, "receive share");
-//
-//        stopWatch.start();
-//        DataPacketHeader x0Header = new DataPacketHeader(
-//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_INPUT_SHARE.ordinal(), extraInfo,
-//            otherParty().getPartyId(), ownParty().getPartyId()
-//        );
-//        List<byte[]> x0Payload = rpc.receive(x0Header).getPayload();
-//        extraInfo++;
-//        MpcAbortPreconditions.checkArgument(x0Payload.size() == 1);
-//        BitVector x0Vector = BitVectorFactory.create(bitNum, x0Payload.get(0));
-//        stopWatch.stop();
-//        long shareTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-//        stopWatch.reset();
-//        logStepInfo(PtoState.PTO_STEP, 1, 1, shareTime, "receive share");
-//
-//        logPhaseInfo(PtoState.PTO_END, "receive share");
-//        return SquareZ2Vector.create(x0Vector, false);
-    }
-
-    @Override
     public BitVector revealOwn(MpcZ2Vector x0) throws MpcAbortException {
         SquareZ2Vector x0SquareVector = (SquareZ2Vector) x0;
         setRevealOwnInput(x0SquareVector);

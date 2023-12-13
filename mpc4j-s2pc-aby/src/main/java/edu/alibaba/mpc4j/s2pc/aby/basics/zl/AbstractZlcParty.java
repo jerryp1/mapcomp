@@ -11,10 +11,8 @@ import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
@@ -56,18 +54,6 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
         MathPreconditions.checkPositive("updateNum", updateNum);
         this.updateNum = updateNum;
         initState();
-    }
-
-    protected void setShareOwnInput(ZlVector xi) {
-        checkInitialized();
-        MathPreconditions.checkPositive("num", xi.getNum());
-        num = xi.getNum();
-    }
-
-    protected void setShareOtherInput(int num) {
-        checkInitialized();
-        MathPreconditions.checkPositive("num", num);
-        this.num = num;
     }
 
     protected void setDyadicOperatorInput(SquareZlVector xi, SquareZlVector yi) {
@@ -126,7 +112,7 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
 
     @Override
     public SquareZlVector neg(MpcZlVector xi) throws MpcAbortException {
-        return sub(createZeros(num), xi);
+        return sub(createZeros(xi.getNum()), xi);
     }
 
     @Override

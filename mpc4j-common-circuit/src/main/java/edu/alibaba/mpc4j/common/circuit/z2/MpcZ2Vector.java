@@ -47,6 +47,9 @@ public interface MpcZ2Vector extends MpcVector {
         return result;
     }
 
+    /**
+     * reverse the bits
+     */
     void reverseBits();
 
     /**
