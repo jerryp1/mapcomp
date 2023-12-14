@@ -27,7 +27,7 @@
         <module>mpc4j-s2pc-pjc</module>
         <module>mpc4j-sml-opboost</module>
         <module>mpc4j-common-circuit</module>
-        <module>mpc4j-s2pc-sbitmap</module>
+        <module>mpc4j-s2pc-groupagg</module>
         <module>mpc4j-crypto-fhe</module>
     </modules>
 

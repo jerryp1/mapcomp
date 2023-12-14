@@ -131,7 +131,7 @@ public class Z2cFactory implements PtoFactory {
             case IDEAL:
             case TRUSTED_DEALER:
             case SEMI_HONEST:
-                return new Rrg21Z2cConfig.Builder().build();
+                return new Bea91Z2cConfig.Builder(securityModel).build();
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel);
         }

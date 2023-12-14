@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class TransposeUtils {
 
     public static long TRANSPORT_TIME = 0;
-    public static StopWatch STOPWATCH = new StopWatch();
     /**
      * Transpose bitvectors to vector of byte arrays.
      *

@@ -144,9 +144,9 @@ public class Z2MtgFactory implements PtoFactory {
      * @return a default config.
      */
     public static Z2MtgConfig createDefaultConfig(SecurityModel securityModel, boolean silent) {
-        return new CacheZ2MtgConfig.Builder(securityModel).build();
-//        return new HardcodeZ2MtgConfig.Builder(securityModel)
-//            .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
-//            .build();
+//        return new CacheZ2MtgConfig.Builder(securityModel).build();
+        return new HardcodeZ2MtgConfig.Builder(securityModel)
+            .setCoreMtgConfig(Z2CoreMtgFactory.createDefaultConfig(securityModel, silent))
+            .build();
     }
 }
