@@ -144,18 +144,7 @@ public class Bea91ZlcSender extends AbstractZlcParty {
             return SquareZlVector.create(z0Vector, false);
         } else {
             // x0 and y0 are secret vector, using secret add.
-            logPhaseInfo(PtoState.PTO_BEGIN, "add");
-
-            stopWatch.start();
-            ZlVector z0Vector = x0.getZlVector().add(y0.getZlVector());
-            SquareZlVector z0SquareVector = SquareZlVector.create(z0Vector, false);
-            stopWatch.stop();
-            long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, z0Time, "add (gen. z)");
-
-            logPhaseInfo(PtoState.PTO_END, "add");
-            return z0SquareVector;
+            return SquareZlVector.create(x0.getZlVector().add(y0.getZlVector()), false);
         }
     }
 
@@ -174,18 +163,7 @@ public class Bea91ZlcSender extends AbstractZlcParty {
             return SquareZlVector.create(z0Vector, false);
         } else {
             // x0 and y0 are secret vector, using secret sub.
-            logPhaseInfo(PtoState.PTO_BEGIN, "sub");
-
-            stopWatch.start();
-            ZlVector z0Vector = x0.getZlVector().sub(y0.getZlVector());
-            SquareZlVector z0SquareVector = SquareZlVector.create(z0Vector, false);
-            stopWatch.stop();
-            long z0Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            stopWatch.reset();
-            logStepInfo(PtoState.PTO_STEP, 1, 1, z0Time, "sub (gen. z)");
-
-            logPhaseInfo(PtoState.PTO_END, "sub");
-            return z0SquareVector;
+            return SquareZlVector.create(x0.getZlVector().sub(y0.getZlVector()), false);
         }
     }
 

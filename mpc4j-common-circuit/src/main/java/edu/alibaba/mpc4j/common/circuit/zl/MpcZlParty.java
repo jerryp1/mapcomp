@@ -4,6 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
 import edu.alibaba.mpc4j.crypto.matrix.vector.ZlVector;
 
+import java.util.Arrays;
+
 /**
  * MPC Zl Circuit Party.
  *
@@ -25,6 +27,7 @@ public interface MpcZlParty {
      * @return a vector.
      */
     MpcZlVector create(ZlVector zlVector);
+    MpcZlVector create(ZlVector zlVector, boolean isPlain);
 
     /**
      * Creates a (plain) all-one vector.
@@ -59,13 +62,10 @@ public interface MpcZlParty {
     default MpcZlVector merge(MpcZlVector[] vectors) {
         assert vectors.length > 0 : "merged vector length must be greater than 0";
         boolean plain = vectors[0].isPlain();
-        MpcZlVector mergeVector = createEmpty(plain);
-        // we must merge the bit vector in the reverse order
-        for (MpcZlVector vector : vectors) {
-            assert vector.getNum() > 0 : "the number of bits must be greater than 0";
-            mergeVector.merge(vector);
-        }
-        return mergeVector;
+        return create(ZlVector.merge(Arrays.stream(vectors).map(x -> {
+            assert x.isPlain() == plain;
+            return x.getZlVector();
+        }).toArray(ZlVector[]::new)), plain);
     }
 
     /**
@@ -76,12 +76,9 @@ public interface MpcZlParty {
      * @return the split vector.
      */
     default MpcZlVector[] split(MpcZlVector mergeVector, int[] nums) {
-        MpcZlVector[] splitVectors = new MpcZlVector[nums.length];
-        for (int index = 0; index < nums.length; index++) {
-            splitVectors[index] = (MpcZlVector) mergeVector.split(nums[index]);
-        }
-        assert mergeVector.getNum() == 0 : "merged vector must remain 0 num: " + mergeVector.getNum();
-        return splitVectors;
+        boolean isPlain = mergeVector.isPlain();
+        ZlVector[] vs = ZlVector.split(mergeVector.getZlVector(), nums);
+        return Arrays.stream(vs).map(x -> create(x, isPlain)).toArray(MpcZlVector[]::new);
     }
 
     /**

@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
  * @date 2021/06/19
  */
 public class BytesUtils {
-    public static final byte[] BYTE_WITH_FIX_NUM_OF_ONE = new byte[]{
+    static final byte[] BYTE_WITH_FIX_NUM_OF_ONE = new byte[]{
         0, 1, 3, 7, 15, 31, 63, 127
     };
 

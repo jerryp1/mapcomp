@@ -54,7 +54,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
      */
     private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 64);
 
-    private static final int SENDER_GROUP_BIT_LEN = 0;
+    private static final int SENDER_GROUP_BIT_LEN = 2;
     private static final int RECEIVER_GROUP_BIT_LEN = 3;
 
     private static final boolean silent = false;
@@ -117,29 +117,29 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //            new SortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
 
-//        //  o_sort && sum
-        configurations.add(new Object[]{
-            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
-
-//        // o_sort && max
-        configurations.add(new Object[]{
-            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-        });
+////        //  o_sort && sum
+//        configurations.add(new Object[]{
+//            "O_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
 //
-////        // b_sort && sum
+////        // o_sort && max
 //        configurations.add(new Object[]{
-//            "B_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//            "O-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
-//////
-////        // b_sort && max
-//        configurations.add(new Object[]{
-//            "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-//        });
+//
+//        // b_sort && sum
+        configurations.add(new Object[]{
+            "B_SORT_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
+////
+//        // b_sort && max
+        configurations.add(new Object[]{
+            "B-SORT_"+PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+        });
 //
         //
 //        // one-side && sum

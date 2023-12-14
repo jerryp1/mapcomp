@@ -52,25 +52,4 @@ public class CommonConstants {
      * 统计安全性字节长度
      */
     public static final int STATS_BYTE_LENGTH = 5;
-
-    public static final int[] ONLY_ONE_BIT_ONE = new int[]{
-        0b00000001,
-        0b00000010,
-        0b00000100,
-        0b00001000,
-        0b00010000,
-        0b00100000,
-        0b01000000,
-        0b10000000
-    };
-    public static final int[] ONLY_ONE_BIT_ZERO = new int[]{
-        0b11111110,
-        0b11111101,
-        0b11111011,
-        0b11110111,
-        0b11101111,
-        0b11011111,
-        0b10111111,
-        0b01111111
-    };
 }
