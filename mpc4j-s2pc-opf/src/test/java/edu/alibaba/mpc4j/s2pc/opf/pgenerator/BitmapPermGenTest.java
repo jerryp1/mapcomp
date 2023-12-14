@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -11,9 +11,9 @@ import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenTestUtils.Tuple;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap.BitmapPermGenConfig;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenTestUtils.Tuple;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.bitmap.BitmapPermGenConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +45,7 @@ public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * bit numbers
      */

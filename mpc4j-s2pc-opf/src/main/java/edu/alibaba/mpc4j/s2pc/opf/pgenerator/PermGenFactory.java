@@ -1,13 +1,13 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap.BitmapPermGenConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap.BitmapPermGenReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap.BitmapPermGenSender;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenReceiver;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenSender;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.bitmap.BitmapPermGenConfig;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.bitmap.BitmapPermGenReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.bitmap.BitmapPermGenSender;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenSender;
 
 /**
  * permutation generator Factory

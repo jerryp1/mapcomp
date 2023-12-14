@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.bitmap;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator.bitmap;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -16,10 +16,10 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.AbstractPermGenParty;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PartyTypes;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.AbstractPermGenParty;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PartyTypes;
 
 import java.math.BigInteger;
 import java.util.stream.IntStream;

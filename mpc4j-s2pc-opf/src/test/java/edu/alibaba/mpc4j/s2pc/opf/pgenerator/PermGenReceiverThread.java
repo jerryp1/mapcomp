@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;

@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import java.math.BigInteger;
 

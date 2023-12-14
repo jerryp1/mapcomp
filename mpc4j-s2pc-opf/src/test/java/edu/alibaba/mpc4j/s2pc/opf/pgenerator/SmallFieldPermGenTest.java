@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.test.AbstractTwoPartyPtoTest;
 import edu.alibaba.mpc4j.common.tool.EnvType;
@@ -11,8 +11,8 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.bit2a.kvh21.Kvh21Bit2aConfig;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22.Ahi22SmallFieldPermGenConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;

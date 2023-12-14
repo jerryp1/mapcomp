@@ -1,8 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.smallfield.ahi22;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PartyTypes;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PartyTypes;
 
 /**
  * Ahi22 Permutable Sorter Receiver.

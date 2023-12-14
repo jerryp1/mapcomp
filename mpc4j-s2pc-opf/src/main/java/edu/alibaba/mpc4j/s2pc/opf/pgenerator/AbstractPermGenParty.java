@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
@@ -55,7 +55,7 @@ public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implement
         this.maxBitNum = maxBitNum;
         initState();
     }
-
+    
     protected void setPtoInput(SquareZ2Vector[] xiArray) {
         num = xiArray[0].getNum();
         l = xiArray.length;

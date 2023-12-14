@@ -1,9 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator;
+package edu.alibaba.mpc4j.s2pc.opf.pgenerator;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.FieldTypes;
-import edu.alibaba.mpc4j.s2pc.aby.operator.pgenerator.PermGenFactory.PermGenTypes;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.FieldTypes;
+import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
 
 /**
  * permutation generator config.
