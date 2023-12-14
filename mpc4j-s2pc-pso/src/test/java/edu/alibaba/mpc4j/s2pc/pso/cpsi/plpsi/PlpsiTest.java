@@ -42,7 +42,7 @@ public class PlpsiTest extends AbstractTwoPartyPtoTest {
      */
     private static final int DEFAULT_SIZE = 99;
     /**
-     * 较大数量
+     * large size
      */
     private static final int LARGE_SIZE = 1 << 12;
     /**

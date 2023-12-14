@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24;
+package edu.alibaba.mpc4j.s2pc.pjc.pmap.php24;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
@@ -28,22 +28,20 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.AbstractPmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.*;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 满足level 2 安全的map client
+ * level 2 secure map client
  *
  * @author Feng Han
  * @date 2023/10/24
  */
-public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
+public class Php24PmapClient<T> extends AbstractPmapClient<T> {
     /**
-     * 用来表示置换所需的bit长度
+     * the bit length of an index in result permutation
      */
     private final int bitLen;
     /**
@@ -79,8 +77,8 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
      */
     private final A2bParty a2bReceiver;
 
-    public Hpl24PmapClient(Rpc clientRpc, Party serverParty, Hpl24PmapConfig config) {
-        super(Hpl24PmapPtoDesc.getInstance(), clientRpc, serverParty, config);
+    public Php24PmapClient(Rpc clientRpc, Party serverParty, Php24PmapConfig config) {
+        super(Php24PmapPtoDesc.getInstance(), clientRpc, serverParty, config);
         bitLen = config.getBitLen();
         plpsiClient = PlpsiFactory.createClient(clientRpc, serverParty, config.getPlpsiconfig());
         plpsiServer = PlpsiFactory.createServer(clientRpc, serverParty, config.getPlpsiconfig());
@@ -122,19 +120,19 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         int stepSteps = 8;
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        // 1. 先进行第一次 plpsi
+        // 1. first plpsi
         stopWatch.start();
         List<Integer> plainInt = IntStream.range(0, clientElementSize).boxed().collect(Collectors.toList());
         PlpsiShareOutput plpsiServerOutput = plpsiServer.psiWithPayload(clientElementArrayList, serverElementSize,
             Collections.singletonList(plainInt), new int[]{bitLen}, new boolean[]{true});
         logStepInfo(PtoState.PTO_STEP, 1, stepSteps, resetAndGetTime());
 
-        // 2. 再进行第二次plpsi
+        // 2. second plpsi
         stopWatch.start();
         PlpsiClientOutput<T> plpsiClientOutput = plpsiClient.psi(clientElementArrayList, serverElementSize);
         logStepInfo(PtoState.PTO_STEP, 2, stepSteps, resetAndGetTime());
 
-        // 3. 基于server的信息进行osn
+        // 3. osn based on server's permutation
         stopWatch.start();
         int osnBitLen = 1 + bitLen;
         int osnByteL = CommonUtils.getByteLength(osnBitLen);
@@ -144,7 +142,7 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         BitVector[] shareRes = ZlDatabase.create(bitLen + 1, Arrays.copyOf(osnRes.getShareArray(bitLen + 1), serverElementSize)).bitPartition(envType, parallel);
         logStepInfo(PtoState.PTO_STEP, 3, stepSteps, resetAndGetTime());
 
-        // 4. 发送用于osn的rho1来自client的数据，进行对client PSI数据的补齐和osn
+        // 4. generate and share rho1
         stopWatch.start();
         int indexByteNum = CommonUtils.getByteLength(bitLen);
         BitVector[] rho1 = Arrays.stream(rho1AndOsnMap[0]).mapToObj(x ->
@@ -153,7 +151,7 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         SquareZ2Vector[] clientIndexes = z2cReceiver.shareOwn(rho1);
         logStepInfo(PtoState.PTO_STEP, 4, stepSteps, resetAndGetTime());
 
-        // 5. 两次OSN
+        // 5. invoke ons twice
         stopWatch.start();
         Vector<byte[]> tmpF = osnReceiver.osn(rho1AndOsnMap[1], 1).getVector();
         BitVector bitVector = plpsiClientOutput.getZ1().getBitVector();
@@ -163,10 +161,10 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
             }
         }
         if(tmpF.size() > serverElementSize){
-            // 如果F的长度超过了serverElementSize，则只有前面的是有效的
+            // If the length of F is bigger than serverElementSize, keep the first serverElementSize elements
             tmpF = new Vector<>(tmpF.subList(0, serverElementSize));
         }
-        // 生成第二次OSN的输入
+        // the input of the second osn
         int secondOsnByteLen = CommonUtils.getByteLength(1 + bitLen);
         byte[][] secondOsnInput = new byte[serverElementSize][];
         for(int i = 0; i < serverElementSize; i++){
@@ -180,13 +178,11 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
                 secondOsnInput[i][0] ^= f;
             }
         }
-
-        // 无论bitLen是不是8的倍数，那么f都放在第一个数组的第1个bit
         Vector<byte[]> tmpFPrimeAndIndex = osnSender.osn(
             Arrays.stream(secondOsnInput).collect(Collectors.toCollection(Vector::new)), secondOsnByteLen).getVector();
         MathPreconditions.checkEqual("tmpF.size()", "tmpFPrime.size()", tmpF.size(), tmpFPrimeAndIndex.size());
 
-        // 5.1 恢复l 和 fPrime
+        // 5.1 get l and fPrime
         byte[] fByte = new byte[CommonUtils.getByteLength(serverElementSize)];
         byte[][] lBytes = new byte[serverElementSize][];
         int modNum = (fByte.length << 3) - serverElementSize;
@@ -209,14 +205,14 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
         Vector<byte[]> l = Arrays.stream(lBytes).collect(Collectors.toCollection(Vector::new));
         logStepInfo(PtoState.PTO_STEP, 5, stepSteps, resetAndGetTime());
 
-        // 6. 计算得到置换 sigma_0, sigma_1
+        // 6. compute sigma_0, sigma_1
         stopWatch.start();
         SquareZ2Vector serverEqualFlag = SquareZ2Vector.create(shareRes[0], false);
         SquareZlVector sigma0 = smallFieldPermGenReceiver.sort(new SquareZ2Vector[]{serverEqualFlag});
         SquareZlVector sigma1 = smallFieldPermGenReceiver.sort(new SquareZ2Vector[]{fPrime});
         logStepInfo(PtoState.PTO_STEP, 6, stepSteps, resetAndGetTime());
 
-        // 7. 置换两次
+        // 7. permute twice
         stopWatch.start();
         SquareZ2Vector[][] sigmaTwo = a2bReceiver.a2b(new SquareZlVector[]{sigma0, sigma1});
         Vector<byte[]> binarySigma0 = Arrays.stream(
@@ -237,13 +233,12 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
             .map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
         logStepInfo(PtoState.PTO_STEP, 7, stepSteps, resetAndGetTime());
 
-        // 8. 计算mux，并将结果回复给client
+        // 8. mux and reveal the final permutation
         stopWatch.start();
         SquareZ2Vector[] originRows = IntStream.range(0, bitLen).mapToObj(i -> SquareZ2Vector.create(shareRes[i + 1], false)).toArray(SquareZ2Vector[]::new);
         SquareZ2Vector[] equalFlag = IntStream.range(0, bitLen).mapToObj(i -> serverEqualFlag).toArray(SquareZ2Vector[]::new);
         SquareZ2Vector[] resIndex = (SquareZ2Vector[]) z2cReceiver.mux(p0Vec, originRows, equalFlag);
         BitVector[] indexRes = z2cReceiver.revealOwn(resIndex);
-        // 拼装得到最终的结果
         byte[][] indexBytes = ZlDatabase.create(envType, parallel, indexRes).getBytesData();
         Map<Integer, T> indexMap = new HashMap<>();
         for (int i = 0; i < indexBytes.length; i++) {
@@ -261,9 +256,6 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
     }
 
     private int[][] genRho1AndOsnMap(PlpsiClientOutput<T> plpsiClientOutput){
-        StopWatch s = new StopWatch();
-        s.start();
-
         HashMap<T, Integer> element2Pos = new HashMap<>();
         for(int i = 0; i < clientElementArrayList.size(); i++){
             element2Pos.put(clientElementArrayList.get(i), i);
@@ -285,21 +277,17 @@ public class Hpl24PmapClient<T> extends AbstractPmapClient<T> {
             }
         }
         assert nullPos.size() == allElements.size() - clientElementSize;
-        long tim1 = s.getTime(TimeUnit.MILLISECONDS);
 
         if (secondBeta < serverElementSize) {
-            // 还需要将第二次circuit PSI的结果长度拉长
+            // extend the result of the second plpsi
             plpsiClientOutput.getZ1().getBitVector().extendLength(serverElementSize);
             IntStream.range(0, paddingLen).forEach(nullPos::add);
         }
-        long tim2 = s.getTime(TimeUnit.MILLISECONDS);
         Collections.shuffle(nullPos, secureRandom);
-        long tim3 = s.getTime(TimeUnit.MILLISECONDS);
         System.arraycopy(validPos, 0, osnMap, 0, clientElementSize);
         for (int i = 0, j = clientElementSize; i < nullPos.size(); i++, j++) {
             osnMap[j] = nullPos.get(i);
         }
-
         int[] rho1 = ShuffleUtils.generateRandomPerm(serverElementSize);
         System.arraycopy(ShuffleUtils.composePerms(Arrays.copyOf(osnMap, serverElementSize), rho1), 0, osnMap, 0, serverElementSize);
         return new int[][]{rho1, osnMap};

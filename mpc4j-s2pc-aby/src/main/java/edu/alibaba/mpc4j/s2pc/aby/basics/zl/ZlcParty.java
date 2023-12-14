@@ -121,10 +121,9 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      * @param xi xi.
      * @param yi yi.
      * @return zi, such that z = x + y.
-     * @throws MpcAbortException if the protocol is abort.
      */
     @Override
-    SquareZlVector add(MpcZlVector xi, MpcZlVector yi) throws MpcAbortException;
+    SquareZlVector add(MpcZlVector xi, MpcZlVector yi);
 
     /**
      * Vector addition.
@@ -143,10 +142,9 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      * @param xi xi.
      * @param yi yi.
      * @return zi, such that z = x - y.
-     * @throws MpcAbortException if the protocol is abort.
      */
     @Override
-    SquareZlVector sub(MpcZlVector xi, MpcZlVector yi) throws MpcAbortException;
+    SquareZlVector sub(MpcZlVector xi, MpcZlVector yi);
 
     /**
      * Vector subtraction.
@@ -164,10 +162,9 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
      *
      * @param xi xi.
      * @return zi, such that z = -x.
-     * @throws MpcAbortException if the protocol is abort.
      */
     @Override
-    SquareZlVector neg(MpcZlVector xi) throws MpcAbortException;
+    SquareZlVector neg(MpcZlVector xi);
 
     /**
      * Vector negation.

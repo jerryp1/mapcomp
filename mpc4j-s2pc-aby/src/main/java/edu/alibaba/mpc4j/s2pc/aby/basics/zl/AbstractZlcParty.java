@@ -81,6 +81,11 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
     }
 
     @Override
+    public SquareZlVector create(ZlVector zlVector, boolean isPlain) {
+        return SquareZlVector.create(zlVector, isPlain);
+    }
+
+    @Override
     public SquareZlVector createOnes(int num) {
         return SquareZlVector.createOnes(zl, num);
     }
@@ -111,12 +116,12 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
     }
 
     @Override
-    public SquareZlVector neg(MpcZlVector xi) throws MpcAbortException {
+    public SquareZlVector neg(MpcZlVector xi) {
         return sub(createZeros(xi.getNum()), xi);
     }
 
     @Override
-    public SquareZlVector[] neg(MpcZlVector[] xiArray) throws MpcAbortException {
+    public SquareZlVector[] neg(MpcZlVector[] xiArray) {
         return operate(UnaryAcOperator.NEG, xiArray);
     }
 
@@ -176,55 +181,44 @@ public abstract class AbstractZlcParty extends AbstractTwoPartyPto implements Zl
         SquareZlVector[] selectYs = Arrays.stream(selectIndexes)
             .mapToObj(selectIndex -> yiArray[selectIndex])
             .toArray(SquareZlVector[]::new);
-        int[] nums = Arrays.stream(selectIndexes)
-            .map(selectIndex -> {
-                int num = xiArray[selectIndex].getNum();
-                assert yiArray[selectIndex].getNum() == num;
-                return num;
-            })
-            .toArray();
-        SquareZlVector mergeSelectXs = (SquareZlVector) merge(selectXs);
-        SquareZlVector mergeSelectYs = (SquareZlVector) merge(selectYs);
-        SquareZlVector mergeSelectZs;
+
         switch (operator) {
             case ADD:
-                mergeSelectZs = add(mergeSelectXs, mergeSelectYs);
+                IntStream.range(0, selectXs.length).forEach(i -> ziArray[selectIndexes[i]] = add(selectXs[i], selectYs[i]));
                 break;
             case SUB:
-                mergeSelectZs = sub(mergeSelectXs, mergeSelectYs);
+                IntStream.range(0, selectXs.length).forEach(i -> ziArray[selectIndexes[i]] = sub(selectXs[i], selectYs[i]));
                 break;
-            case MUL:
-                mergeSelectZs = mul(mergeSelectXs, mergeSelectYs);
+            case MUL:{
+                int[] nums = Arrays.stream(selectIndexes)
+                    .map(selectIndex -> {
+                        int num = xiArray[selectIndex].getNum();
+                        assert yiArray[selectIndex].getNum() == num;
+                        return num;
+                    })
+                    .toArray();
+                SquareZlVector mergeSelectXs = (SquareZlVector) merge(selectXs);
+                SquareZlVector mergeSelectYs = (SquareZlVector) merge(selectYs);
+                SquareZlVector mergeSelectZs = mul(mergeSelectXs, mergeSelectYs);
+                SquareZlVector[] selectZs = Arrays.stream(split(mergeSelectZs, nums))
+                    .map(vector -> (SquareZlVector) vector)
+                    .toArray(SquareZlVector[]::new);
+                assert selectZs.length == selectIndexes.length;
+                IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
                 break;
+            }
             default:
                 throw new IllegalStateException();
         }
-        SquareZlVector[] selectZs = Arrays.stream(split(mergeSelectZs, nums))
-            .map(vector -> (SquareZlVector) vector)
-            .toArray(SquareZlVector[]::new);
-        assert selectZs.length == selectIndexes.length;
-        IntStream.range(0, selectIndexes.length).forEach(index -> ziArray[selectIndexes[index]] = selectZs[index]);
+
     }
 
     @SuppressWarnings("SameParameterValue")
-    private SquareZlVector[] operate(UnaryAcOperator operator, MpcZlVector[] xiArray) throws MpcAbortException {
+    private SquareZlVector[] operate(UnaryAcOperator operator, MpcZlVector[] xiArray) {
         if (xiArray.length == 0) {
             return new SquareZlVector[0];
         }
-        SquareZlVector mergeXiArray = (SquareZlVector) merge(xiArray);
-        SquareZlVector mergeZiArray;
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (operator) {
-            case NEG:
-                mergeZiArray = neg(mergeXiArray);
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-        // split
-        int[] nums = Arrays.stream(xiArray).mapToInt(MpcZlVector::getNum).toArray();
-        return Arrays.stream(split(mergeZiArray, nums))
-            .map(vector -> (SquareZlVector) vector)
-            .toArray(SquareZlVector[]::new);
+        assert operator.equals(UnaryAcOperator.NEG);
+        return Arrays.stream(xiArray).map(this::neg).toArray(SquareZlVector[]::new);
     }
 }

@@ -28,13 +28,13 @@ public class MainPmapTest {
 
     @Test
     public void testHpl24Silent() throws Exception {
-        Properties properties = readConfig("pmap/conf_pmap_hpl24_silent.txt");
+        Properties properties = readConfig("pmap/conf_pmap_php24_silent.txt");
         runTest(new PmapMain(properties));
     }
 
     @Test
     public void testHpl24NoSilent() throws Exception {
-        Properties properties = readConfig("pmap/conf_pmap_hpl24_no_silent.txt");
+        Properties properties = readConfig("pmap/conf_pmap_php24_no_silent.txt");
         runTest(new PmapMain(properties));
     }
 

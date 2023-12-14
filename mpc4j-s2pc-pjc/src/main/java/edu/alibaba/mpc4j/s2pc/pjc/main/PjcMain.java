@@ -2,6 +2,7 @@ package edu.alibaba.mpc4j.s2pc.pjc.main;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidMain;
+import edu.alibaba.mpc4j.s2pc.pjc.main.pmap.PmapMain;
 import edu.alibaba.mpc4j.s2pc.pjc.main.pmid.PmidMain;
 import edu.alibaba.mpc4j.s2pc.pso.main.PsoMain;
 import org.slf4j.Logger;
@@ -39,6 +40,10 @@ public class PjcMain {
             case PmidMain.PTO_TYPE_NAME:
                 PmidMain pmidMain = new PmidMain(properties);
                 pmidMain.runNetty();
+                break;
+            case PmapMain.PTO_TYPE_NAME:
+                PmapMain pmapMain = new PmapMain(properties);
+                pmapMain.runNetty();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid pto_type: " + ptoType);

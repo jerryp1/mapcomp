@@ -27,6 +27,12 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+/**
+ * group aggregation with shared group flag test
+ *
+ * @author Feng Han
+ * @date 2023/11/28
+ */
 @RunWith(Parameterized.class)
 public class ShareGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShareGroupTest.class);
@@ -43,7 +49,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
      */
     private static final int DEFAULT_SMALL_SIZE = 99;
     /**
-     * 较大数量
+     * large size
      */
     private static final int LARGE_SIZE = 1 << 14;
 
@@ -162,7 +168,7 @@ public class ShareGroupTest extends AbstractTwoPartyPtoTest {
                 s1[i] = Arrays.stream(tmp1).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
             });
             BitVector groupFlag = BitVectorFactory.createZeros(listSize);
-            // 设置group flag，保证最后一个bit是1
+            // set group flag, make sure the first bit is 1
             int possibleGroupNum = Math.max(listSize >> 2, 1);
             IntStream.range(0, possibleGroupNum).forEach(i -> groupFlag.set(secureRandom.nextInt(listSize), true));
             groupFlag.set(0, true);

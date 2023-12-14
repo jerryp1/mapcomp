@@ -31,6 +31,9 @@ public class PsoMain {
         // read config
         LOGGER.info("read PTO config");
         Properties properties = PropertiesUtils.loadProperties(args[0]);
+        if(args.length > 1){
+            properties.setProperty("own_name", args[1]);
+        }
         // 读取协议类型
         String ptoType = PropertiesUtils.readString(properties, "pto_type");
         LOGGER.info("pto_type = " + ptoType);

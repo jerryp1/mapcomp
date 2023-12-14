@@ -2,35 +2,35 @@ package edu.alibaba.mpc4j.s2pc.pjc.pmap;
 
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapClient;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24.Hpl24PmapServer;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapClient;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapServer;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapServer;
 
 /**
- * PMAP协议工厂。
+ * PMAP factory
  *
  * @author Weiran Liu
  * @date 2022/01/19
  */
 public class PmapFactory {
     /**
-     * 私有构造函数
+     * private constructor
      */
     private PmapFactory() {
         // empty
     }
 
     /**
-     * PID协议类型。
+     * pmap type
      */
     public enum PmapType {
         /**
-         * HPL24方案
+         * PHP24
          */
-        HPL24,
+        PHP24,
         /**
          * based on PID
          */
@@ -48,8 +48,8 @@ public class PmapFactory {
     public static <T> PmapServer<T> createServer(Rpc serverRpc, Party clientParty, PmapConfig config) {
         PmapType type = config.getPtoType();
         switch (type){
-            case HPL24:
-                return new Hpl24PmapServer<>(serverRpc, clientParty, (Hpl24PmapConfig) config);
+            case PHP24:
+                return new Php24PmapServer<>(serverRpc, clientParty, (Php24PmapConfig) config);
             case PID_BASED:
                 return new PidBasedPmapServer<>(serverRpc, clientParty, (PidBasedPmapConfig) config);
             default:
@@ -68,8 +68,8 @@ public class PmapFactory {
     public static <T> PmapClient<T> createClient(Rpc clientRpc, Party serverParty, PmapConfig config) {
         PmapType type = config.getPtoType();
         switch (type){
-            case HPL24:
-                return new Hpl24PmapClient<>(clientRpc, serverParty, (Hpl24PmapConfig) config);
+            case PHP24:
+                return new Php24PmapClient<>(clientRpc, serverParty, (Php24PmapConfig) config);
             case PID_BASED:
                 return new PidBasedPmapClient<>(clientRpc, serverParty, (PidBasedPmapConfig) config);
             default:

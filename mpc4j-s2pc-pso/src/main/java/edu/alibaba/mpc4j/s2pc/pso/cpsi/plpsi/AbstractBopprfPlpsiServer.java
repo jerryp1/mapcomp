@@ -300,7 +300,7 @@ public class AbstractBopprfPlpsiServer<T, X> extends AbstractPlpsiServer<T, X> {
             });
             return new Payload(envType, parallel, maskBytes[i], payloadBitLs[i], isBinaryShare[i]);
         }).toArray(Payload[]::new);
-        // 生成opprf对应的value
+        // generate opprf value
         intStream = parallel ? IntStream.range(0, beta).parallel() : IntStream.range(0, beta);
         targetArrays = intStream.mapToObj(batchIndex -> {
                 ArrayList<HashBinEntry<T>> bin = new ArrayList<>(simpleHashBin.getBin(batchIndex));

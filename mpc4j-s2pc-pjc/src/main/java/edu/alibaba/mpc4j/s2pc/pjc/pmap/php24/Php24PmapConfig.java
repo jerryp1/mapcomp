@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24;
+package edu.alibaba.mpc4j.s2pc.pjc.pmap.php24;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
@@ -23,39 +23,42 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
 /**
- * level 2 secure 的private map协议配置
+ * level 2 secure private map configure
  *
  * @author Feng Han
  * @date 2023/10/24
  */
-public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements PmapConfig {
+public class Php24PmapConfig extends AbstractMultiPartyPtoConfig implements PmapConfig {
     /**
-     * 所需的z2
+     * z2 configure
      */
     private final Z2cConfig z2cConfig;
     /**
-     * 使用的plpsi配置
+     * plpsi configure
      */
     private final PlpsiConfig plpsiconfig;
     /**
-     * 使用的osn配置
+     * osn configure
      */
     private final OsnConfig osnConfig;
     /**
-     * 在得到map的过程中需要用到B2A的类型转换，在此需要定义域的大小
+     * the bit length of an index in result permutation
      */
     private final int bitLen;
     /**
-     * 生成稳定排序对应置换的配置
+     * permutation generator
      */
     private final PermGenConfig smallFieldPermGenConfig;
     /**
      * A2b config.
      */
     private final A2bConfig a2bConfig;
+    /**
+     * permutation configure
+     */
     private final SharedPermutationConfig permutationConfig, invPermutationConfig;
 
-    private Hpl24PmapConfig(Builder builder) {
+    private Php24PmapConfig(Builder builder) {
         super(SecurityModel.SEMI_HONEST);
         plpsiconfig = builder.plpsiconfig;
         osnConfig = builder.osnConfig;
@@ -69,7 +72,7 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
 
     @Override
     public PmapType getPtoType() {
-        return PmapType.HPL24;
+        return PmapType.PHP24;
     }
 
     public PlpsiConfig getPlpsiconfig() {
@@ -104,43 +107,41 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
         return a2bConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<Hpl24PmapConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Php24PmapConfig> {
         /**
-         * 所需的z2
+         * z2 configure
          */
         private Z2cConfig z2cConfig;
         /**
-         * 使用的plpsi配置
+         * plpsi configure
          */
         private PlpsiConfig plpsiconfig;
         /**
-         * 使用的osn配置
+         * osn configure
          */
         private OsnConfig osnConfig;
         /**
-         * 在得到map的过程中需要用到B2A的类型转换，在此需要定义域的大小
+         * the bit length of an index in result permutation
          */
         private int bitLen;
         /**
-         * b2A配置
-         */
-        private Bit2aConfig bit2aConfig;
-        /**
-         * 生成稳定排序对应置换的配置
+         * permutation generator
          */
         private PermGenConfig smallFieldPermGenConfig;
         /**
          * A2b config.
          */
         private A2bConfig a2bConfig;
-
+        /**
+         * permutation configure
+         */
         private final SharedPermutationConfig permutationConfig, invPermutationConfig;
 
         public Builder(boolean silent) {
             plpsiconfig = new Rs21PlpsiConfig.Builder(silent).build();
             osnConfig = new Gmr21OsnConfig.Builder(silent).build();
             bitLen = Long.SIZE;
-            bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
+            Bit2aConfig bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             z2cConfig = new Rrg21Z2cConfig.Builder().build();
             permutationConfig = new Php24SharedPermutationConfig.Builder(silent).build();
@@ -160,7 +161,7 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
 
         public Builder setBitLength(int bitLen, boolean silent) {
             this.bitLen = bitLen;
-            bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
+            Bit2aConfig bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             a2bConfig = A2bFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             return this;
@@ -168,7 +169,6 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
 
         public Builder setBit2aConfig(Bit2aConfig bit2aConfig, boolean silent) {
             bitLen = bit2aConfig.getZl().getL();
-            this.bit2aConfig = bit2aConfig;
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             return this;
         }
@@ -179,8 +179,8 @@ public class Hpl24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
         }
 
         @Override
-        public Hpl24PmapConfig build() {
-            return new Hpl24PmapConfig(this);
+        public Php24PmapConfig build() {
+            return new Php24PmapConfig(this);
         }
     }
 }

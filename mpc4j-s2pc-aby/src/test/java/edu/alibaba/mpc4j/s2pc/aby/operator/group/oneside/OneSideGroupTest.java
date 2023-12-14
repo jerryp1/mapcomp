@@ -25,6 +25,12 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+/**
+ * group aggregation test, where the group flag is plaintext to receiver
+ *
+ * @author Feng Han
+ * @date 2023/11/19
+ */
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneSideGroupTest.class);
@@ -160,7 +166,7 @@ public class OneSideGroupTest extends AbstractTwoPartyPtoTest {
                 s1[i] = Arrays.stream(tmp1).map(x -> SquareZ2Vector.create(x, false)).toArray(SquareZ2Vector[]::new);
             });
             BitVector groupFlag = BitVectorFactory.createZeros(listSize);
-            // 设置group flag，保证最后一个bit是1
+            // set group flag, make sure the first bit is 1
             int possibleGroupNum = Math.max(listSize >> 2, 1);
             IntStream.range(0, possibleGroupNum).forEach(i -> groupFlag.set(secureRandom.nextInt(listSize), true));
             groupFlag.set(0, true);

@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 
 /**
  * BytesUtils test.
@@ -192,6 +193,18 @@ public class BytesUtilsTest {
             BytesUtils.shiftRighti(actual, x);
             byte[] expect = BigIntegerUtils.nonNegBigIntegerToByteArray(dataBigInteger.shiftRight(x).and(and), data.length);
             Assert.assertArrayEquals(expect, actual);
+        }
+    }
+
+    @Test
+    public void testKeepLastBits(){
+        byte[] data = new byte[10];
+        new SecureRandom().nextBytes(data);
+        BigInteger v = BigIntegerUtils.byteArrayToNonNegBigInteger(data);
+        for(int i = (data.length<<3) - 1; i > 0; i--){
+            byte[] r = BytesUtils.keepLastBits(data, i);
+            assert r.length == CommonUtils.getByteLength(i);
+            assert v.and(BigInteger.ONE.shiftLeft(i).subtract(BigInteger.ONE)).compareTo(BigIntegerUtils.byteArrayToNonNegBigInteger(r)) == 0;
         }
     }
 }

@@ -26,11 +26,13 @@ public class PSorterUtils {
     }
 
     /**
-     * 得到1<<(log2-1)长度的mask的值
+     * get the mask for bitonic sorter
+     * @param log2 ceilLog of data number
+     * @return the mask value for 1<<(log2-1) comparison
      */
     public static byte[][] returnCompareResultMask(int log2) {
         byte[][] compareResultMask = new byte[log2 - 1][];
-        // 前三个分别是01010101..., 00110011..., 00001111...
+        // the first three masks are 01010101..., 00110011..., 00001111...
         int byteNum = log2 < 4 ? 1 : 1 << (log2 - 4);
         IntStream.range(0, log2 - 1).parallel().forEach(i -> {
             byte[] tmpByte = new byte[byteNum];
@@ -52,7 +54,9 @@ public class PSorterUtils {
     }
 
     /**
-     * 得到指定范围的binary sharing，plain的值是[0, length - 1)
+     * get the index for data [0, length - 1].
+     * @param length the length of index.
+     * @return the binary value of indexes in column form.
      */
     public static BitVector[] getBinaryIndex(int length) {
         byte[][] compareResultMask = returnCompareResultMask(LongUtils.ceilLog2(length) + 1);
@@ -76,7 +80,12 @@ public class PSorterUtils {
     }
 
     /**
-     * 扩展bit vector: 扩展当前的vector使其变为一个destBitLen长的vector
+     * extend the bits of specific positions with fixed skip length from the end to the front.
+     * if destBitLen % skipLen > 0, then there are 0s in the first group.
+     * For example, given data = abc, skipLen = 2 and destBitLen = 5
+     * the return vectors are [abcbc]
+     * given data = abcde, skipLen = 4 and totalBitNum = 13
+     * the return vectors are [a000a,bcdebcde]
      *
      * @param data       source data
      * @param destBitLen target bit length
@@ -88,9 +97,9 @@ public class PSorterUtils {
         byte[] destByte = new byte[destByteNum];
         int notFullNum = destBitLen % (skipLen << 1) - skipLen > 0 ? 1 : 0;
         int groupNum = destBitLen / (skipLen << 1) + notFullNum;
-        // 如果第一个的length和其他的不一致，则先处理第一个
+        // if the first part is not full, deal with the first part
         if (notFullNum > 0) {
-            // 如果第一个组是未满的，则之前的比较一定是从第一个开始取数比较的
+            // if the first part is not full, the data should be picked out from the index of 0
             int destOffset = (destByteNum << 3) - destBitLen;
             int firstLen = destBitLen % skipLen;
             for (int i = 0; i < firstLen; i++, destOffset++) {
@@ -100,7 +109,7 @@ public class PSorterUtils {
                 }
             }
         }
-        // 处理后续满skipLen的数据
+        // deal with the other parts
         byte[] srcByte = data.getBitVector().getBytes();
         if (skipLen >= 8) {
             int eachByteNum = skipLen >> 3, eachPartNum = eachByteNum << 1;
@@ -137,7 +146,7 @@ public class PSorterUtils {
                     destByte[currentDestByteIndex--] = record;
                 }
             }
-            // 处理不满byte的数据
+            // deal with the parts that can not fill one byte
             if (fullByteNum != groupNum - notFullNum) {
                 int lastGroupNum = groupNum - notFullNum - fullByteNum;
                 int j = 0, currentSrc = srcByte[currentSrcByteIndex];
@@ -157,7 +166,11 @@ public class PSorterUtils {
     }
 
     /**
-     * 将当前bitvector按照指定的间隔取数
+     * get the bits of specific positions with fixed skip length from the end to the front.
+     * For example, given data = abcdefg, skipLen = 2 and totalBitNum = 3
+     * the return vectors are [ade, cfg]
+     * given data = a,bcdefghi, skipLen = 1 and totalBitNum = 4
+     * the return vectors are [bdfh, cegi]
      *
      * @param data        source data
      * @param totalBitNum how many bits should be picked out
@@ -170,7 +183,7 @@ public class PSorterUtils {
         byte[][] destByte = new byte[2][destByteNum];
         int groupNum = totalBitNum / skipLen + (totalBitNum % skipLen > 0 ? 1 : 0);
 
-        // 如果第一个的length和其他的不一致，则先处理第一个
+        // if the first part is not full, deal with the first part
         if (totalBitNum % skipLen > 0) {
             int destOffset = (destByteNum << 3) - totalBitNum;
             int firstLen = totalBitNum % skipLen;
@@ -183,7 +196,7 @@ public class PSorterUtils {
                 }
             }
         }
-        // 处理后续满skipLen的数据
+        // deal with the other parts
         int notFullNum = totalBitNum % skipLen > 0 ? 1 : 0;
         if (skipLen >= 8) {
             int eachByteNum = skipLen >> 3, eachPartNum = eachByteNum << 1;
@@ -221,7 +234,7 @@ public class PSorterUtils {
                 destByte[0][currentDestByteIndex] = (byte) record0;
                 destByte[1][currentDestByteIndex--] = (byte) record1;
             }
-            // 处理不满byte的数据
+            // deal with the parts that can not fill one byte
             if (fullByteNum != groupNum - notFullNum) {
                 int lastGroupNum = groupNum - notFullNum - fullByteNum;
                 int j = 0, record0 = 0x00, record1 = 0x00;

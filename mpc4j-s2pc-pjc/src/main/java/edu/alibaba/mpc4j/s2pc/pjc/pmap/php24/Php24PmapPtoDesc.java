@@ -1,33 +1,33 @@
-package edu.alibaba.mpc4j.s2pc.pjc.pmap.hpl24;
+package edu.alibaba.mpc4j.s2pc.pjc.pmap.php24;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * level 2 secure 的private map协议信息。方案来自于MapComp
+ * level 2 secure map protocol description, the protocols comes from "MapComp"
  *
  * @author Feng Han
  * @date 2023/10/24
  */
-public class Hpl24PmapPtoDesc implements PtoDesc {
+public class Php24PmapPtoDesc implements PtoDesc {
     /**
-     * 协议ID
+     * protocol ID
      */
     private static final int PTO_ID = Math.abs((int) -3452608700023484963L);
     /**
-     * 协议名称
+     * protocol name
      */
-    private static final String PTO_NAME = "HPL24_PMAP";
+    private static final String PTO_NAME = "PHP24_PMAP";
 
     /**
-     * 单例模式
+     * singleton mode
      */
-    private static final Hpl24PmapPtoDesc INSTANCE = new Hpl24PmapPtoDesc();
+    private static final Php24PmapPtoDesc INSTANCE = new Php24PmapPtoDesc();
 
     /**
-     * 私有构造函数
+     * private constructor
      */
-    private Hpl24PmapPtoDesc() {
+    private Php24PmapPtoDesc() {
         // empty
     }
 

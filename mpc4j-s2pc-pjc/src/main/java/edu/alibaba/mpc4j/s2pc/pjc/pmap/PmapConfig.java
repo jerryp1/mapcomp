@@ -4,16 +4,16 @@ import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
 
 /**
- * PMAP协议配置项。
+ * PMAP protocol configure interface
  *
  * @author Feng Han
  * @date 2023/10/23
  */
 public interface PmapConfig extends MultiPartyPtoConfig {
     /**
-     * 返回协议类型。
+     * return the type of protocol
      *
-     * @return 协议类型。
+     * @return protocol type
      */
     PmapType getPtoType();
 }

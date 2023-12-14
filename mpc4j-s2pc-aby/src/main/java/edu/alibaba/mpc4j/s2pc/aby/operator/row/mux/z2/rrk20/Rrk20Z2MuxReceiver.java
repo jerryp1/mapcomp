@@ -112,7 +112,7 @@ public class Rrk20Z2MuxReceiver extends AbstractZ2MuxParty {
         r1z2Vectors = IntStream.range(0, xi.length).mapToObj(i ->
             BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
         byte[][] valueByte = ZlDatabase.create(envType, parallel, r1z2Vectors).getBytesData();
-        // if x1 = 0, P1 sets (t0, t1) = (-r1, -r1 + y1), else, P1 sets (t0, t1) = (-r1 + y1, -r1).
+        // if x1 = 0, P1 sets (t0, t1) = (r1, -r1 ⊕ y1), else, P1 sets (t0, t1) = (r1 ⊕ y1, r1).
         byte[][] originData = ZlDatabase.create(envType, parallel, Arrays.stream(xi)
             .map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new)).getBytesData();
         BitVector x1BitVector = f.getBitVector();

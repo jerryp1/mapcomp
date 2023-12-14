@@ -8,7 +8,7 @@ element_byte_length = 16
 log_set_size = 12,10
 
 # protocol name
-pmap_pto_name = HPL24
+pmap_pto_name = PHP24
 
 # specific config
 silent = true
