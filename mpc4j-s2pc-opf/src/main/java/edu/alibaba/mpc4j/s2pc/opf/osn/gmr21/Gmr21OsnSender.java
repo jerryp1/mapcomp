@@ -208,11 +208,10 @@ public class Gmr21OsnSender extends AbstractOsnSender {
             Vector<byte[]> subTopShareInputs = new Vector<>(subTopN);
             Vector<byte[]> subBottomShareInputs = new Vector<>(subBottomN);
             // 构造Benes网络左侧的纠正值
-            for (int i = 0; i < subN - 1; i += 2) {
+            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
                 // 输入导线遮蔽值
                 byte[] inputMask0 = subShareInputs.elementAt(i);
                 byte[] inputMask1 = subShareInputs.elementAt(i ^ 1);
-                int widthIndex = permIndex + i / 2;
                 // M_(j, 0) = R_0
                 byte[] outputMask0 = switchWireMask0s[levelIndex][widthIndex];
                 // M_(j, 1) = R_0 ⊕ R_1
@@ -250,13 +249,12 @@ public class Gmr21OsnSender extends AbstractOsnSender {
                 genSwitchCorrections(subLogN - 1, levelIndex + 1, permIndex + subN / 4,
                     subBottomShareInputs, corrections);
             }
+            int rightLevelIndex = levelIndex + subLevel - 1;
             // 构造Benes网络右侧的纠正值
-            for (int i = 0; i < subN - 1; i += 2) {
+            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
                 // 输入导线遮蔽值
                 byte[] inputMask0 = subTopShareInputs.elementAt(i / 2);
                 byte[] inputMask1 = subBottomShareInputs.elementAt(i / 2);
-                int rightLevelIndex = levelIndex + subLevel - 1;
-                int widthIndex = permIndex + i / 2;
                 // M_(j, 0) = R_0
                 byte[] outputMask0 = switchWireMask0s[rightLevelIndex][widthIndex];
                 // M_(j, 1) = R_0 ⊕ R_1

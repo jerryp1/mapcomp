@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -128,7 +130,7 @@ public class PmapMain4Batch {
         // 读取输入文件
         LOGGER.info("Server read element set, size = " + setSize);
         InputStreamReader inputStreamReader = new InputStreamReader(
-            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, ELEMENT_BYTE_LENGTH)),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -266,7 +268,7 @@ public class PmapMain4Batch {
     private Set<ByteBuffer> readClientElementSet(int setSize) throws IOException {
         LOGGER.info("Client read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-            new FileInputStream(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, ELEMENT_BYTE_LENGTH)),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);

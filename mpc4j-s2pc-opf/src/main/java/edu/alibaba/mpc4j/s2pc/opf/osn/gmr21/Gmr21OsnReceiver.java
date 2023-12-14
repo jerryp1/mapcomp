@@ -190,9 +190,8 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
             Vector<byte[]> subTopShareInputs = new Vector<>(subTopN);
             Vector<byte[]> subBottomShareInputs = new Vector<>(subBottomN);
             // 求解Benes网络左侧
-            for (int i = 0; i < subN - 1; i += 2) {
+            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
                 // 输入导线遮蔽值
-                int widthIndex = permIndex + i / 2;
                 int leftS = benesNetwork.getNetworkLevel(levelIndex)[widthIndex] ? 1 : 0;
                 byte[] inputMask0 = subShareInputs.elementAt(i);
                 byte[] inputMask1 = subShareInputs.elementAt(i + 1);
@@ -239,9 +238,8 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
                     subBottomShareInputs, corrections);
             }
             // 求解Benes网络右侧
-            for (int i = 0; i < subN - 1; i += 2) {
-                int rightLevelIndex = levelIndex + subLevel - 1;
-                int widthIndex = permIndex + i / 2;
+            int rightLevelIndex = levelIndex + subLevel - 1;
+            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
                 int rightS = benesNetwork.getNetworkLevel(rightLevelIndex)[widthIndex] ? 1 : 0;
                 for (int j = 0; j < 2; j++) {
                     int x = rightCycleShift((i | j) ^ rightS, subLogN);
