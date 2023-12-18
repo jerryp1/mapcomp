@@ -16,19 +16,13 @@
         <module>mpc4j-common-sampler</module>
         <module>mpc4j-common-tool</module>
         <module>mpc4j-crypto-phe</module>
-        <module>mpc4j-dp-cdp</module>
-        <module>mpc4j-dp-ldp</module>
-        <module>mpc4j-dp-service</module>
         <module>mpc4j-s2pc-aby</module>
         <module>mpc4j-s2pc-opf</module>
         <module>mpc4j-s2pc-pcg</module>
-        <module>mpc4j-s2pc-pir</module>
         <module>mpc4j-s2pc-pso</module>
         <module>mpc4j-s2pc-pjc</module>
-        <module>mpc4j-sml-opboost</module>
         <module>mpc4j-common-circuit</module>
         <module>mpc4j-s2pc-groupagg</module>
-        <module>mpc4j-crypto-fhe</module>
     </modules>
 
     <properties>
