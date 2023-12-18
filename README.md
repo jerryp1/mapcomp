@@ -31,9 +31,9 @@ For benchmark, please follow the instructions below.
 - ``cd mpc4j-s2pc-pjc``
 - Execute the following command in two terminals respectively:``java -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release -jar mpc4j-s2pc-pjc-1.1.0-SNAPSHOT-jar-with-dependencies.jar fileDir role``
 
-    - `fileDir` is the directory of configure files. An example configure files can be seen in `./mpc4j-s2pc-pjc/src/test/resources/pmap`.
+  - `fileDir` is the directory of configure files. An example configure files can be seen in `./mpc4j-s2pc-pjc/src/test/resources/pmap`.
 
-    - `role` needs to be replaced with `server` or `client`
+  - `role` needs to be replaced with `server` or `client`
 
 ### Group-aggregation protocols:
 
@@ -45,8 +45,8 @@ For benchmark, please follow the instructions below.
 
 - Execute the following command in two terminals respectively:``java -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release -jar mpc4j-s2pc-pjc-1.1.0-SNAPSHOT-jar-with-dependencies.jar -s/-m PATH``
 
-    - ``-s``  means run single test with a spcified configure file, which located in PATH
+  - ``-s``  means run single test with a spcified configure file, which located in PATH
 
-    - ``-m``  means run multiple tests with spcified configure files located in a directory PATH.
+  - ``-m``  means run multiple tests with spcified configure files located in a directory PATH.
 
-    - An example of configure is located in ```./mpc4j-s2pc-groupagg/src/test/resources/pmap``
+  - An example of configure is located in ```./mpc4j-s2pc-groupagg/src/test/resources/pmap``
