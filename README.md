@@ -13,9 +13,9 @@ Note: it is required to build native-tools first to run any tests or benchmarks.
 
 MapComp contains mainly two sub-process: mapping and group-aggregation.
 
-## Unit test
+## Unit tests
 
-For unit test, you can use an IDE (e.g., IntelliJ IDEA) to import the source code and run unit tests. The unit tests of MapComp's main protocols can be found in: 
+For unit tests, you can use an IDE (e.g., IntelliJ IDEA) to import the source code and run unit tests. The unit tests of MapComp's main protocols can be found in: 
 
 - mpc4j-s2pc-groupagg/src/test/java/edu/alibaba/mpc4j/s2pc/groupagg/pto
 - mpc4j-s2pc-pjc/src/test/java/edu/alibaba/mpc4j/s2pc/pjc
