@@ -55,7 +55,7 @@ public abstract class AbstractPermGenParty extends AbstractTwoPartyPto implement
         this.maxBitNum = maxBitNum;
         initState();
     }
-    
+
     protected void setPtoInput(SquareZ2Vector[] xiArray) {
         num = xiArray[0].getNum();
         l = xiArray.length;

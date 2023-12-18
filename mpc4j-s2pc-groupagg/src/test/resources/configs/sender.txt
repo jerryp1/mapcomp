@@ -1,0 +1,28 @@
+# network parameters
+own_name=sender
+sender_name = sender
+sender_ip = 127.0.0.1
+sender_port = 8092
+receiver_name = receiver
+receiver_ip = 127.0.0.1
+receiver_port = 8093
+dataset_name = test
+
+# protocol parameters
+max_l = 64
+prefix_agg_type=sum
+# bitmap/o_mix/b_sorting/o_sorting/t_sorting
+group_agg_type=b_sorting
+sender_group_bit_length=2
+receiver_group_bit_length=2
+#test_data_nums=8,10,12,14,16,18,20
+test_data_nums=20
+silent=false
+
+# data parameters
+input_dir=dataset
+output_dir=result
+total_round = 5
+#sender_agg=true
+#having_state=true
+#dummy_payload=true
