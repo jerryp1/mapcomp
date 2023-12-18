@@ -7,21 +7,25 @@ MapComp is a  secure collaborative analytics framework towards join group aggreg
 
 The requirements for building and running project are the same with mpc4j, please refer https://github.com/alibaba-edu/mpc4j for further details.
 
+Note: it is required to build native-tools first to run any tests or benchmarks. The process can be found in https://github.com/alibaba-edu/mpc4j/tree/main/mpc4j-native-tool.
+
 # Running the protocols
 
 MapComp contains mainly two sub-process: mapping and group-aggregation.
 
 ## Unit test
 
-For unit test, you can use an IDE (e.g., IntelliJ IDEA) to import the source code and run unit tests. The unit tests of MapComp's main protocols can be found in:
+For unit test, you can use an IDE (e.g., IntelliJ IDEA) to import the source code and run unit tests. The unit tests of MapComp's main protocols can be found in: 
 
 - mpc4j-s2pc-groupagg/src/test/java/edu/alibaba/mpc4j/s2pc/groupagg/pto
 - mpc4j-s2pc-pjc/src/test/java/edu/alibaba/mpc4j/s2pc/pjc
 
 Unit tests of building blocks that designed in our protocol can also be performed at will.
 
-## Benchmarks
+Note: The path of native-tool should be set as running parameters. An example is:
+``-ea -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release``
 
+## Benchmarks
 
 For benchmark, please follow the instructions below.
 
