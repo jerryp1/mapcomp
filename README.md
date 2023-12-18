@@ -27,7 +27,7 @@ Note: The path of native-tool should be set as running parameters. An example is
 
 ## Benchmarks
 
-For benchmark, please follow the instructions below.
+For benchmarks, please follow the instructions below.
 
 ### Mapping protocols:
 
