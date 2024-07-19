@@ -262,7 +262,8 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
      * @return vertical bitmaps.
      */
     private Vector<byte[]> genBitmap(String[] group, SquareZ2Vector e) {
-        return IntStream.range(0, group.length).parallel().mapToObj(i -> {
+        IntStream intStream = parallel ? IntStream.range(0, group.length).parallel() : IntStream.range(0, group.length);
+        return intStream.mapToObj(i -> {
             byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
             BinaryUtils.setBoolean(bytes, senderGroupMap.get(group[i]), true);
             BinaryUtils.setBoolean(bytes, senderGroupNum, e.getBitVector().get(i));
@@ -278,7 +279,8 @@ public class OptimizedMixGroupAggSender extends AbstractGroupAggParty {
      */
     private Vector<byte[]> genBitmapWithAgg(String[] group, SquareZ2Vector e, long[] aggAtt) {
         int payloadByteLen = CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
-        return IntStream.range(0, group.length).mapToObj(i -> {
+        IntStream intStream = parallel ? IntStream.range(0, group.length).parallel() : IntStream.range(0, group.length);
+        return intStream.mapToObj(i -> {
             ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
             byte[] bytes = new byte[CommonUtils.getByteLength(senderGroupNum + 1)];
             BinaryUtils.setBoolean(bytes, senderGroupMap.get(group[i]), true);

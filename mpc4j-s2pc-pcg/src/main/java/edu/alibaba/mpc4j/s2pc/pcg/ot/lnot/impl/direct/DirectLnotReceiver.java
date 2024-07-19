@@ -65,7 +65,8 @@ public class DirectLnotReceiver extends AbstractLnotReceiver {
 
         stopWatch.start();
         int offset = Integer.BYTES - byteL;
-        byte[][] choices = IntStream.range(0, num)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][] choices = intStream
             .mapToObj(index -> {
                 byte[] choiceBytes = IntUtils.intToByteArray(choiceArray[index]);
                 byte[] fixedChoiceBytes = new byte[byteL];
@@ -97,7 +98,8 @@ public class DirectLnotReceiver extends AbstractLnotReceiver {
 
         stopWatch.start();
         // convert LCOT receiver output to be LNOT receiver output
-        byte[][] rbArray = IntStream.range(0, num)
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][] rbArray = intStream
             .mapToObj(index -> {
                 byte[] rb = lcotReceiverOutput.getRb(index);
                 return kdf.deriveKey(rb);

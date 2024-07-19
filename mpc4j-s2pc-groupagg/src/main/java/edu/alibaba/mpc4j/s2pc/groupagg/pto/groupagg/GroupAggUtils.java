@@ -132,7 +132,7 @@ public class GroupAggUtils {
         List<Vector<byte[]>> result = new ArrayList<>(byteLengths.length);
         int[] startIndex = new int[byteLengths.length];
         for (int i = 0; i < byteLengths.length; i++) {
-            result.add(new Vector<>());
+            result.add(new Vector<>(num));
             if (i > 0) {
                 startIndex[i] = startIndex[i - 1] + byteLengths[i - 1];
             }

@@ -40,7 +40,7 @@ public class ZlMuxTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 18;
+    private static final int LARGE_NUM = 1 << 22;
     /**
      * small Zl
      */
@@ -52,7 +52,7 @@ public class ZlMuxTest extends AbstractTwoPartyPtoTest {
     /**
      * silent
      */
-    private static final boolean silent = true;
+    private static final boolean silent = false;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {

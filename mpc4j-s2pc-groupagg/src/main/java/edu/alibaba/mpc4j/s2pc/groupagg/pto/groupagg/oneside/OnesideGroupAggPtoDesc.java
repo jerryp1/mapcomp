@@ -13,7 +13,7 @@ public class OnesideGroupAggPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -985239413597525368L);
+    private static final int PTO_ID = Math.abs((int) -985239213597525368L);
     /**
      * protocol name
      */

@@ -83,7 +83,8 @@ public class DirectLnotSender extends AbstractLnotSender {
         stopWatch.start();
         // convert LCOT sender output to be LNOT sender output
         int offset = Integer.BYTES - byteL;
-        byte[][][] rsArray = IntStream.range(0, num)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][][] rsArray = intStream
             .mapToObj(index -> {
                 byte[][] rs = new byte[n][];
                 byte[] choiceBytes;
