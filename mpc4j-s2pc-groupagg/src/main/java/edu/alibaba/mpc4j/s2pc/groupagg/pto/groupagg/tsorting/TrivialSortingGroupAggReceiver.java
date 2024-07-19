@@ -201,7 +201,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 
     private void sort() throws MpcAbortException {
         // merge input
-        Vector<byte[]> eByte = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> eByte = intStream.mapToObj(i -> ByteBuffer.allocate(1)
             .put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
         Vector<byte[]> mergedInput = merge(Arrays.asList(eByte, mergedGroups));
         // transpose
@@ -233,7 +234,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
 
     private void apply() throws MpcAbortException {
         // apply permutation to plain agg
-        aggShare = IntStream.range(0, num).mapToObj(i ->
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        aggShare = intStream.mapToObj(i ->
             ByteBuffer.allocate(Long.BYTES)
                 .put(LongUtils.longToByteArray(aggAttr[i])).array())
             .collect(Collectors.toCollection(Vector::new));
@@ -254,7 +256,8 @@ public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private Vector<byte[]> mergeGroup(Vector<byte[]> senderGroupShare, Vector<byte[]> receiverGroupShare) {
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 

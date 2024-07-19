@@ -202,10 +202,12 @@ public class Php24PlainPayloadMuxReceiver extends AbstractPlainPayloadMuxParty {
         byte andNum = (byte) (data.length == 8 ? 255 : (1 << (data.length & 7)) - 1);
         BitVector[] resBits = IntStream.range(0, data.length).mapToObj(i -> BitVectorFactory.createRandom(num, secureRandom)).toArray(BitVector[]::new);
         byte[][] rs = ZlDatabase.create(envType, parallel, resBits).getBytesData();
-        byte[][] r0s = IntStream.range(0, num)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][] r0s = intStream
             .mapToObj(i -> inputBits.get(i) ? BytesUtils.xor(rs[i], inputPayloads[i]) : rs[i])
             .toArray(byte[][]::new);
-        byte[][] r1s = IntStream.range(0, num)
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        byte[][] r1s = intStream
             .mapToObj(i -> inputBits.get(i) ? rs[i] : BytesUtils.xor(rs[i], inputPayloads[i]))
             .toArray(byte[][]::new);
         // P1 creates t0

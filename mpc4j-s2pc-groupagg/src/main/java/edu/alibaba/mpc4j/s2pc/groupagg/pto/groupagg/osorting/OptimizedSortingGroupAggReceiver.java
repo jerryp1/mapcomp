@@ -212,7 +212,8 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
         // merge group
         Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
         // osn1
-        Vector<byte[]> osnInput1 = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + 1)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> osnInput1 = intStream.mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + 1)
             .put(groupBytes.get(i)).put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array())
             .collect(Collectors.toCollection(Vector::new));
 
@@ -273,7 +274,8 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private void permute2(long[] agg) throws MpcAbortException {
-        aggShare = IntStream.range(0, num).mapToObj(i ->
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        aggShare = intStream.mapToObj(i ->
             ByteBuffer.allocate(Long.BYTES)
                 .put(LongUtils.longToByteArray(agg[i])).array())
             .collect(Collectors.toCollection(Vector::new));
@@ -281,7 +283,8 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private Vector<byte[]> mergeGroup() {
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 

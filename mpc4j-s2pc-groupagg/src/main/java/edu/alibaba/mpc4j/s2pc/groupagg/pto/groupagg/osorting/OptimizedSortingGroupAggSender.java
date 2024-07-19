@@ -203,12 +203,14 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         Vector<byte[]> receiverE = splits.get(1);
 
         // e share in byte form
-        Vector<byte[]> tempE = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> tempE = intStream.mapToObj(i -> ByteBuffer.allocate(1)
             .put((e.getBitVector().get(i) ? (byte) 1 : (byte) 0)).array()).collect(Collectors.toCollection(Vector::new));
         // permute own e share
         Vector<byte[]> tempE2 = BenesNetworkUtils.permutation(sigmaB, tempE);
         // xor two e shares to get aligned e shares
-        eByte = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        eByte = intStream.mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
         // sender group
         senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
 
@@ -258,7 +260,8 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
     private void permute1() throws MpcAbortException {
         senderGroupShare = BenesNetworkUtils.permutation(sigmaB, senderGroupShare);
         // sender's group and sigmaB
-        Vector<byte[]> permInput = IntStream.range(0, num).mapToObj(i ->
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> permInput = intStream.mapToObj(i ->
             ByteBuffer.allocate(senderGroupByteLength + Integer.BYTES)
                 .put(senderGroupShare.get(i)).putInt(sigmaB[i]).array())
             .collect(Collectors.toCollection(Vector::new));
@@ -274,7 +277,8 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
 
     private Vector<byte[]> mergeGroup() {
         // merge group
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 

@@ -210,7 +210,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
 
     private void sort() throws MpcAbortException {
         // merge input
-        Vector<byte[]> eByte = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> eByte = intStream.mapToObj(i -> ByteBuffer.allocate(1)
             .put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
         Vector<byte[]> mergedInput = merge(Arrays.asList(eByte, mergedGroups));
         // transpose
@@ -250,7 +251,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     private void applyWithSenderAgg() throws MpcAbortException {
         // apply permutation to plain agg
         int byteLen = dummyPayload ? 2 * Long.BYTES : Long.BYTES;
-        aggShare = IntStream.range(0, num).mapToObj(i ->
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        aggShare = intStream.mapToObj(i ->
             ByteBuffer.allocate(byteLen)
                 .put(LongUtils.longToByteArray(aggAttr[i])).array())
             .collect(Collectors.toCollection(Vector::new));
@@ -265,7 +267,8 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     private Vector<byte[]> mergeGroup(Vector<byte[]> senderGroupShare, Vector<byte[]> receiverGroupShare) {
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 
@@ -291,13 +294,15 @@ public class TrivialSortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     protected Vector<byte[]> shareOwn(Vector<byte[]> input) {
-        Vector<byte[]> ownShares = IntStream.range(0, input.size()).mapToObj(i -> {
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> ownShares = intStream.mapToObj(i -> {
             byte[] bytes = new byte[input.get(0).length];
             secureRandom.nextBytes(bytes);
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));
 
-        List<byte[]> otherShares = IntStream.range(0, input.size()).mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        List<byte[]> otherShares = intStream.mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
 
         DataPacketHeader sendSharesHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SENDER_SEND_SHARES.ordinal(), extraInfo,

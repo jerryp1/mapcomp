@@ -87,10 +87,6 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         plainPayloadMuxReceiver = PlainPlayloadMuxFactory.createReceiver(senderRpc, receiverParty, config.getPlainPayloadMuxConfig());
         z2MuxParty = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
         addMultipleSubPtos(zlMuxSender, z2cSender, zlcSender, plainAndSender, zlMaxSender, plainPayloadMuxReceiver, z2MuxParty);
-//        addMultipleSubPtos(zlMuxSender);
-//        addMultipleSubPtos(zlcSender);
-//        addSubPtos(plainAndSender);
-//        addSubPtos(zlMaxSender);
         prefixAggType = config.getPrefixAggConfig().getPrefixType();
         zl = config.getZl();
     }
