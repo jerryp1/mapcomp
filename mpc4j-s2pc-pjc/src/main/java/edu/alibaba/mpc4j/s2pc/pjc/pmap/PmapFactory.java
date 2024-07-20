@@ -76,4 +76,8 @@ public class PmapFactory {
                 throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
         }
     }
+
+    public static PmapConfig createDefaultConfig(boolean silent){
+        return new Php24PmapConfig.Builder(silent).build();
+    }
 }

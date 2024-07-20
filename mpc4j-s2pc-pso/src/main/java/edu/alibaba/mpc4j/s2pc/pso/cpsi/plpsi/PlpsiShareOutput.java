@@ -76,4 +76,13 @@ public class PlpsiShareOutput {
             return null;
         }
     }
+
+    public SquareZ2Vector[] getZ2ColumnPayload(int index) {
+        if (payloadList != null) {
+            MathPreconditions.checkGreaterOrEqual("index should be in range of payloads' length", payloadList.size(), index);
+            return payloadList.get(index).getZ2ColumnPayload();
+        } else {
+            return null;
+        }
+    }
 }

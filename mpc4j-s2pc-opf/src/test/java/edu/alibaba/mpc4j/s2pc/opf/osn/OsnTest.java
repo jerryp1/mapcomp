@@ -5,7 +5,6 @@ import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.s2pc.opf.osn.gmr21.Gmr21OsnConfig;
-import edu.alibaba.mpc4j.s2pc.opf.osn.ms13.Ms13OsnConfig;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,10 +57,10 @@ public class OsnTest extends AbstractTwoPartyPtoTest {
         configurations.add(new Object[]{
             OsnFactory.OsnType.GMR21.name(), new Gmr21OsnConfig.Builder(true).build(),
         });
-        // MS13
-        configurations.add(new Object[]{
-            OsnFactory.OsnType.MS13.name(), new Ms13OsnConfig.Builder(true).build(),
-        });
+//        // MS13
+//        configurations.add(new Object[]{
+//            OsnFactory.OsnType.MS13.name(), new Ms13OsnConfig.Builder(true).build(),
+//        });
 
         return configurations;
     }

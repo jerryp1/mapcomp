@@ -1,5 +1,6 @@
 package edu.alibaba.mpc4j.common.tool.benes;
 
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.utils.LongUtils;
 
 import java.util.Arrays;
@@ -87,5 +88,23 @@ public class BenesNetworkUtils {
         IntStream.range(0, n).forEach(position -> outputVector.set(map.get(position), inputVector.elementAt(position)));
 
         return outputVector;
+    }
+
+    /**
+     * 根据给定的置换表置换输入向量。
+     *
+     * @param permutationMap 置换表。
+     * @param inputVector    输入向量。
+     * @return 输出向量。
+     */
+    public static byte[][] permutation(int[] permutationMap, byte[][] inputVector) {
+        assert validPermutation(permutationMap);
+        assert permutationMap.length == inputVector.length;
+        return Arrays.stream(permutationMap).mapToObj(i -> inputVector[permutationMap[i]]).toArray(byte[][]::new);
+    }
+    public static BitVector[] permutation(int[] permutationMap, BitVector[] inputVector) {
+        assert validPermutation(permutationMap);
+        assert permutationMap.length == inputVector.length;
+        return Arrays.stream(permutationMap).mapToObj(i -> inputVector[permutationMap[i]]).toArray(BitVector[]::new);
     }
 }
