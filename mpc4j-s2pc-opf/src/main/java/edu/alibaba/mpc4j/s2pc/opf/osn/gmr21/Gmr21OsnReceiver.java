@@ -1,8 +1,8 @@
 package edu.alibaba.mpc4j.s2pc.opf.osn.gmr21;
 
 import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.Crhf;
 import edu.alibaba.mpc4j.common.tool.crypto.crhf.CrhfFactory;
 import edu.alibaba.mpc4j.common.tool.crypto.prg.Prg;
@@ -38,15 +38,19 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
     /**
      * 接收方向量分享值
      */
-    private Vector<byte[]> receiverShareVector;
+    private byte[][] receiverShareVector;
     /**
-     * 交换网络交换导线
+     * switch wire masks 0
      */
-    private byte[][][] switchWireMasks;
+    private byte[][][] switchWireMask0s;
+    /**
+     * switch wire masks 1
+     */
+    private byte[][][] switchWireMask1s;
     /**
      * 执行OSN所用的线程池
      */
-    private ForkJoinPool osnForkJoinPool;
+    private ForkJoinPool forkJoinPool;
 
     public Gmr21OsnReceiver(Rpc receiverRpc, Party senderParty, Gmr21OsnConfig config) {
         super(Gmr21OsnPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -74,19 +78,6 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         setPtoInput(permutationMap, byteLength);
         logPhaseInfo(PtoState.PTO_BEGIN);
 
-        DataPacketHeader inputCorrectionHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> inputCorrectionPayload = rpc.receive(inputCorrectionHeader).getPayload();
-
-        stopWatch.start();
-        handleInputCorrectionPayload(inputCorrectionPayload);
-        stopWatch.stop();
-        long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 3, inputCorrectionTime, "Receiver computes input correlation");
-
         stopWatch.start();
         CotReceiverOutput[] cotReceiverOutputs = new CotReceiverOutput[level];
         for (int levelIndex = 0; levelIndex < level; levelIndex++) {
@@ -96,18 +87,27 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 3, cotTime, "Receiver runs COTs");
-
-        DataPacketHeader switchCorrectionHeader = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), Gmr21OsnPtoDesc.PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> switchCorrectionPayload = rpc.receive(switchCorrectionHeader).getPayload();
+        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime, "Receiver runs COTs");
 
         stopWatch.start();
+        List<byte[]> switchCorrectionPayload = receiveOtherPartyEqualSizePayload(PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), switchNum, byteLength * 2);
+        receiverShareVector = new byte[n][byteLength];
         handleSwitchCorrectionPayload(switchCorrectionPayload);
-        OsnPartyOutput receiverOutput = new OsnPartyOutput(byteLength, receiverShareVector);
-        switchWireMasks = null;
+        switchWireMask0s = null;
+        switchWireMask1s = null;
+        benesNetwork = null;
+        stopWatch.stop();
+        long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 2, inputCorrectionTime, "Receiver switches correlations");
+
+        stopWatch.start();
+        List<byte[]> inputCorrectionPayload = receiveOtherPartyPayload(PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal());
+        Vector<byte[]> res = BenesNetworkUtils.permutation(permutationMap, new Vector<>(inputCorrectionPayload));
+        for(int i = 0; i < n; i++){
+            BytesUtils.xori(res.get(i), receiverShareVector[i]);
+        }
+        OsnPartyOutput receiverOutput = new OsnPartyOutput(byteLength, res);
         receiverShareVector = null;
         benesNetwork = null;
         stopWatch.stop();
@@ -119,43 +119,32 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         return receiverOutput;
     }
 
-    private void handleInputCorrectionPayload(List<byte[]> inputCorrectionPayload) throws MpcAbortException {
-        MpcAbortPreconditions.checkArgument(inputCorrectionPayload.size() == n);
-        receiverShareVector = new Vector<>(inputCorrectionPayload);
-    }
-
     private void handleCotReceiverOutputs(CotReceiverOutput[] cotReceiverOutputs) {
-        switchWireMasks = new byte[level][width][];
-        if (byteLength <= CommonConstants.BLOCK_BYTE_LENGTH) {
+        int totalByteLen = byteLength * 2;
+        switchWireMask0s = new byte[level][width][];
+        switchWireMask1s = new byte[level][width][];
+        // 要用width做并发，因为level数量太少了，并发效果不好
+        IntStream widthIndexIntStream = parallel ? IntStream.range(0, width).parallel() : IntStream.range(0, width);
+        if (totalByteLen <= CommonConstants.BLOCK_BYTE_LENGTH) {
             // 字节长度小于等于128比特时，只需要抗关联哈希函数
             Crhf crhf = CrhfFactory.createInstance(getEnvType(), CrhfFactory.CrhfType.MMO);
-            // 要用width做并发，因为level数量太少了，并发效果不好
-            IntStream widthIndexIntStream = IntStream.range(0, width);
-            widthIndexIntStream = parallel ? widthIndexIntStream.parallel() : widthIndexIntStream;
             widthIndexIntStream.forEach(widthIndex -> {
                 for (int levelIndex = 0; levelIndex < level; levelIndex++) {
-                    if (benesNetwork.getNetworkLevel(levelIndex)[widthIndex]) {
-                        // 只需要扩展一半的密钥
-                        byte[] switchWireMask = cotReceiverOutputs[levelIndex].getRb(widthIndex);
-                        switchWireMask = Arrays.copyOf(crhf.hash(switchWireMask), byteLength);
-                        switchWireMasks[levelIndex][widthIndex] = switchWireMask;
-                    }
+                    byte[] switchWireMask = cotReceiverOutputs[levelIndex].getRb(widthIndex);
+                    switchWireMask = crhf.hash(switchWireMask);
+                    switchWireMask0s[levelIndex][widthIndex] = Arrays.copyOf(switchWireMask, byteLength);
+                    switchWireMask1s[levelIndex][widthIndex] = Arrays.copyOfRange(switchWireMask, byteLength, totalByteLen);
                 }
             });
         } else {
             // 字节长度大于128比特时，要使用PRG
-            Prg prg = PrgFactory.createInstance(envType, byteLength);
-            // 要用width做并发，因为level数量太少了，并发效果不好
-            IntStream widthIndexIntStream = IntStream.range(0, width);
-            widthIndexIntStream = parallel ? widthIndexIntStream.parallel() : widthIndexIntStream;
+            Prg prg = PrgFactory.createInstance(envType, totalByteLen);
             widthIndexIntStream.forEach(widthIndex -> {
                 for (int levelIndex = 0; levelIndex < level; levelIndex++) {
-                    if (benesNetwork.getNetworkLevel(levelIndex)[widthIndex]) {
-                        // 只需要扩展一半的密钥
-                        byte[] switchWireMask = cotReceiverOutputs[levelIndex].getRb(widthIndex);
-                        switchWireMask = prg.extendToBytes(switchWireMask);
-                        switchWireMasks[levelIndex][widthIndex] = switchWireMask;
-                    }
+                    byte[] switchWireMask = cotReceiverOutputs[levelIndex].getRb(widthIndex);
+                    switchWireMask = prg.extendToBytes(switchWireMask);
+                    switchWireMask0s[levelIndex][widthIndex] = Arrays.copyOf(switchWireMask, byteLength);
+                    switchWireMask1s[levelIndex][widthIndex] = Arrays.copyOfRange(switchWireMask, byteLength, totalByteLen);
                 }
             });
         }
@@ -169,13 +158,13 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
             System.arraycopy(flattenCorrections, levelIndex * width, corrections[levelIndex], 0, width);
         }
         int logN = (int) Math.ceil(DoubleUtils.log2(n));
-        osnForkJoinPool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
+        forkJoinPool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism());
         handleSwitchCorrection(logN, 0, 0, receiverShareVector, corrections);
     }
 
     private void handleSwitchCorrection(int subLogN, int levelIndex, int permIndex,
-                                        Vector<byte[]> subShareInputs, byte[][][] corrections) {
-        int subN = subShareInputs.size();
+                                        byte[][] subShareInputs, byte[][][] corrections) {
+        int subN = subShareInputs.length;
         if (subN == 2) {
             assert subLogN == 1 || subLogN == 2;
             handleSingleSwitchCorrection(subLogN, levelIndex, permIndex, subShareInputs, corrections);
@@ -187,14 +176,17 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
             int subTopN = subN / 2;
             // 下方子Benes网络的输入导线遮蔽值，大小为Math.ceil(n / 2)
             int subBottomN = subN - subTopN;
-            Vector<byte[]> subTopShareInputs = new Vector<>(subTopN);
-            Vector<byte[]> subBottomShareInputs = new Vector<>(subBottomN);
+            byte[][] subTopShareInputs = new byte[subTopN][];
+            int subTopShareIndex = 0;
+            byte[][] subBottomShareInputs = new byte[subBottomN][];
+            int subBottomShareIndex = 0;
             // 求解Benes网络左侧
-            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
+            for (int i = 0; i < subN - 1; i += 2) {
                 // 输入导线遮蔽值
+                int widthIndex = permIndex + i / 2;
                 int leftS = benesNetwork.getNetworkLevel(levelIndex)[widthIndex] ? 1 : 0;
-                byte[] inputMask0 = subShareInputs.elementAt(i);
-                byte[] inputMask1 = subShareInputs.elementAt(i + 1);
+                byte[] inputMask0 = subShareInputs[i];
+                byte[] inputMask1 = subShareInputs[i + 1];
                 // 计算输出导线遮蔽值，左侧Benes网络要交换输出导线的位置
                 byte[][] outputMasks = getOutputMasks(levelIndex, widthIndex, corrections);
                 BytesUtils.xori(inputMask0, outputMasks[leftS]);
@@ -202,23 +194,25 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
                 for (int j = 0; j < 2; ++j) {
                     int x = rightCycleShift((i | j) ^ leftS, subLogN);
                     if (x < subN / 2) {
-                        subTopShareInputs.add(subShareInputs.elementAt(i | j));
+                        subTopShareInputs[subTopShareIndex] = subShareInputs[i | j];
+                        subTopShareIndex++;
                     } else {
-                        subBottomShareInputs.add(subShareInputs.elementAt(i | j));
+                        subBottomShareInputs[subBottomShareIndex] = subShareInputs[i | j];
+                        subBottomShareIndex++;
                     }
                 }
             }
             // 如果是奇数个输入，则下方子Benes网络需要再增加一个输入
             if (subN % 2 == 1) {
-                subBottomShareInputs.add(subShareInputs.elementAt(subN - 1));
+                subBottomShareInputs[subBottomShareIndex] = subShareInputs[subN - 1];
             }
             if (parallel) {
                 // 参考https://github.com/dujiajun/PSU/blob/master/osn/OSNReceiver.cpp实现并发
-                if (osnForkJoinPool.getParallelism() - osnForkJoinPool.getActiveThreadCount() > 0) {
-                    ForkJoinTask<?> topTask = osnForkJoinPool.submit(() -> handleSwitchCorrection(
+                if (forkJoinPool.getParallelism() - forkJoinPool.getActiveThreadCount() > 0) {
+                    ForkJoinTask<?> topTask = forkJoinPool.submit(() -> handleSwitchCorrection(
                         subLogN - 1, levelIndex + 1, permIndex,
                         subTopShareInputs, corrections));
-                    ForkJoinTask<?> subTask = osnForkJoinPool.submit(() -> handleSwitchCorrection(
+                    ForkJoinTask<?> subTask = forkJoinPool.submit(() -> handleSwitchCorrection(
                         subLogN - 1, levelIndex + 1, permIndex + subN / 4,
                         subBottomShareInputs, corrections)
                     );
@@ -238,20 +232,21 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
                     subBottomShareInputs, corrections);
             }
             // 求解Benes网络右侧
-            int rightLevelIndex = levelIndex + subLevel - 1;
-            for (int i = 0, widthIndex = permIndex; i < subN - 1; i += 2, widthIndex++) {
+            for (int i = 0; i < subN - 1; i += 2) {
+                int rightLevelIndex = levelIndex + subLevel - 1;
+                int widthIndex = permIndex + i / 2;
                 int rightS = benesNetwork.getNetworkLevel(rightLevelIndex)[widthIndex] ? 1 : 0;
                 for (int j = 0; j < 2; j++) {
                     int x = rightCycleShift((i | j) ^ rightS, subLogN);
                     if (x < subN / 2) {
-                        subShareInputs.set(i | j, subTopShareInputs.elementAt(x));
+                        subShareInputs[i | j] = subTopShareInputs[x];
                     } else {
-                        subShareInputs.set(i | j, subBottomShareInputs.elementAt(i / 2));
+                        subShareInputs[i | j] = subBottomShareInputs[i / 2];
                     }
                 }
                 // 输入导线遮蔽值
-                byte[] inputMask0 = subShareInputs.elementAt(i);
-                byte[] inputMask1 = subShareInputs.elementAt(i + 1);
+                byte[] inputMask0 = subShareInputs[i];
+                byte[] inputMask1 = subShareInputs[i + 1];
                 // 输出导线遮蔽值，右侧Benes网络要交换输入导线遮蔽值的位置
                 byte[][] outputMasks = getOutputMasks(rightLevelIndex, widthIndex, corrections);
                 BytesUtils.xori(inputMask0, outputMasks[0]);
@@ -260,75 +255,75 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
             // 如果是奇数个输入，则下方子Benes网络需要多替换一个输出导线遮蔽值
             int idx = (int) (Math.ceil(subN * 0.5));
             if (subN % 2 == 1) {
-                subShareInputs.set(subN - 1, subBottomShareInputs.elementAt(idx - 1));
+                subShareInputs[subN - 1] = subBottomShareInputs[idx - 1];
             }
         }
     }
 
-    private void handleSingleSwitchCorrection(int subLogN, int levelIndex, int permIndex, Vector<byte[]> subShareInputs,
+    private void handleSingleSwitchCorrection(int subLogN, int levelIndex, int permIndex, byte[][] subShareInputs,
                                               byte[][][] corrections) {
         // 输出导线遮蔽值
         int singleLevelIndex = (subLogN == 1) ? levelIndex : levelIndex + 1;
         int s = benesNetwork.getNetworkLevel(singleLevelIndex)[permIndex] ? 1 : 0;
         // 输入导线遮蔽值
-        byte[] inputMask0 = subShareInputs.elementAt(s);
-        byte[] inputMask1 = subShareInputs.elementAt(1 - s);
+        byte[] inputMask0 = subShareInputs[s];
+        byte[] inputMask1 = subShareInputs[1 - s];
         byte[][] outputMasks = getOutputMasks(singleLevelIndex, permIndex, corrections);
         BytesUtils.xori(outputMasks[0], inputMask0);
         BytesUtils.xori(outputMasks[1], inputMask1);
-        subShareInputs.set(0, outputMasks[0]);
-        subShareInputs.set(1, outputMasks[1]);
+        subShareInputs[0] = outputMasks[0];
+        subShareInputs[1] = outputMasks[1];
     }
 
-    private void handleTripleSwitchCorrection(int levelIndex, int permIndex, Vector<byte[]> subShareInputs,
+    private void handleTripleSwitchCorrection(int levelIndex, int permIndex, byte[][] subShareInputs,
                                               byte[][][] corrections) {
         // 第一组输出导线遮蔽值
         int s0 = benesNetwork.getNetworkLevel(levelIndex)[permIndex] ? 1 : 0;
         // 第一组输入导线遮蔽值
-        byte[] inputMask00 = subShareInputs.elementAt(s0);
-        byte[] inputMask01 = subShareInputs.elementAt(1 - s0);
+        byte[] inputMask00 = subShareInputs[s0];
+        byte[] inputMask01 = subShareInputs[1 - s0];
         byte[][] outputMasks0 = getOutputMasks(levelIndex, permIndex, corrections);
         BytesUtils.xori(outputMasks0[0], inputMask00);
         BytesUtils.xori(outputMasks0[1], inputMask01);
-        subShareInputs.set(0, outputMasks0[0]);
-        subShareInputs.set(1, outputMasks0[1]);
+        subShareInputs[0] = outputMasks0[0];
+        subShareInputs[1] = outputMasks0[1];
 
         // 第二组输出导线遮蔽值
         int levelIndex1 = levelIndex + 1;
         int s1 = benesNetwork.getNetworkLevel(levelIndex1)[permIndex] ? 1 : 0;
         // 第二组输入导线遮蔽值
-        byte[] inputMask10 = subShareInputs.elementAt(1 + s1);
-        byte[] inputMask11 = subShareInputs.elementAt(2 - s1);
+        byte[] inputMask10 = subShareInputs[1 + s1];
+        byte[] inputMask11 = subShareInputs[2 - s1];
         byte[][] outputMasks1 = getOutputMasks(levelIndex1, permIndex, corrections);
         BytesUtils.xori(outputMasks1[0], inputMask10);
         BytesUtils.xori(outputMasks1[1], inputMask11);
-        subShareInputs.set(1, outputMasks1[0]);
-        subShareInputs.set(2, outputMasks1[1]);
+        subShareInputs[1] = outputMasks1[0];
+        subShareInputs[2] = outputMasks1[1];
 
         // 第三组输出导线遮蔽值
         int levelIndex2 = levelIndex + 2;
         int s2 = benesNetwork.getNetworkLevel(levelIndex2)[permIndex] ? 1 : 0;
         byte[][] outputMasks2 = getOutputMasks(levelIndex2, permIndex, corrections);
         // 第三组输入导线遮蔽值
-        byte[] inputMask20 = subShareInputs.elementAt(s2);
-        byte[] inputMask21 = subShareInputs.elementAt(1 - s2);
+        byte[] inputMask20 = subShareInputs[s2];
+        byte[] inputMask21 = subShareInputs[1 - s2];
         BytesUtils.xori(outputMasks2[0], inputMask20);
         BytesUtils.xori(outputMasks2[1], inputMask21);
-        subShareInputs.set(0, outputMasks2[0]);
-        subShareInputs.set(1, outputMasks2[1]);
+        subShareInputs[0] = outputMasks2[0];
+        subShareInputs[1] = outputMasks2[1];
     }
 
     private byte[][] getOutputMasks(int levelIndex, int widthIndex, byte[][][] corrections) {
         byte[] choiceMessage = corrections[levelIndex][widthIndex];
         byte[][] outputMasks = new byte[2][byteLength];
         if (benesNetwork.getNetworkLevel(levelIndex)[widthIndex]) {
-            System.arraycopy(choiceMessage, 0, outputMasks[1], 0, byteLength);
-            System.arraycopy(choiceMessage, byteLength, outputMasks[0], 0, byteLength);
-            BytesUtils.xori(outputMasks[0], switchWireMasks[levelIndex][widthIndex]);
-            BytesUtils.xori(outputMasks[1], switchWireMasks[levelIndex][widthIndex]);
-        } else {
             System.arraycopy(choiceMessage, 0, outputMasks[0], 0, byteLength);
             System.arraycopy(choiceMessage, byteLength, outputMasks[1], 0, byteLength);
+            BytesUtils.xori(outputMasks[0], switchWireMask0s[levelIndex][widthIndex]);
+            BytesUtils.xori(outputMasks[1], switchWireMask1s[levelIndex][widthIndex]);
+        } else {
+            outputMasks[0] = switchWireMask0s[levelIndex][widthIndex];
+            outputMasks[1] = switchWireMask1s[levelIndex][widthIndex];
         }
 
         return outputMasks;

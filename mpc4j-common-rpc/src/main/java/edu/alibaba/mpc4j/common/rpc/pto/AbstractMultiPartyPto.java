@@ -5,6 +5,8 @@ import edu.alibaba.mpc4j.common.rpc.PartyState;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
+import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
@@ -32,6 +34,10 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
      * display log level.
      */
     private static final int DISPLAY_LOG_LEVEL = 2;
+    /**
+     * max msg size
+     */
+    public static final int MAX_SIZE_MSG = 1 << 30;
     /**
      * maximal number of sub-protocols. Note that some protocols would have many levels (e.g., PSU based on SKE).
      */
@@ -101,6 +107,14 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
      */
     private int displayLogLevel;
     /**
+     * timestamps for sending payloads, each party maintain each sending timestamps for each parties
+     */
+    protected long[] sendingTimestamps;
+    /**
+     * timestamps for receiving payloads, each party maintain each receiving timestamps for each parties
+     */
+    protected long[] receivingTimestamps;
+    /**
      * the extra information
      */
     protected long extraInfo;
@@ -149,6 +163,9 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         secureRandom = new SecureRandom();
         parallel = false;
         displayLogLevel = DISPLAY_LOG_LEVEL;
+        int partyNum = rpc.getPartySet().size();
+        sendingTimestamps = new long[partyNum];
+        receivingTimestamps = new long[partyNum];
     }
 
     protected void addSubPtos(MultiPartyPto subPto) {
@@ -282,6 +299,87 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
         for (MultiPartyPto subPto : subPtos) {
             subPto.setDisplayLogLevel(displayLogLevel);
         }
+    }
+
+    /**
+     * Sends payload to the given party.
+     *
+     * @param stepId       step ID.
+     * @param receiveParty party to receive payload.
+     * @param payload      payload.
+     */
+    protected void sendPayload(int stepId, Party receiveParty, List<byte[]> payload) {
+        int sendPartyId = ownParty().getPartyId();
+        int receivePartyId = receiveParty.getPartyId();
+        DataPacketHeader header = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), stepId, sendingTimestamps[receivePartyId], sendPartyId, receivePartyId
+        );
+        rpc.send(DataPacket.fromByteArrayList(header, payload));
+        sendingTimestamps[receivePartyId]++;
+    }
+
+    /**
+     * Sends payload to the given party.
+     *
+     * @param stepId       step ID.
+     * @param receiveParty party to receive payload.
+     * @param payload      payload.
+     */
+    protected void sendEqualSizePayload(int stepId, Party receiveParty, List<byte[]> payload) {
+        int byteLength = payload.get(0).length;
+        int maxSendNum = MAX_SIZE_MSG / byteLength;
+        if (maxSendNum >= payload.size()) {
+            sendPayload(stepId, receiveParty, payload);
+        } else {
+            int recBatchNum = (int) Math.ceil(payload.size() * 1.0 / maxSendNum);
+            for (int i = 0; i < recBatchNum; i++) {
+                int start = i * maxSendNum;
+                List<byte[]> part = payload.subList(start, Math.min(payload.size(), start + maxSendNum));
+                sendPayload(stepId, receiveParty, part);
+            }
+        }
+    }
+
+    /**
+     * Receives payload from the given party.
+     *
+     * @param stepId    step ID.
+     * @param sendParty party to send payload.
+     * @return payload.
+     */
+    protected List<byte[]> receivePayload(int stepId, Party sendParty) {
+        int sendPartyId = sendParty.getPartyId();
+        int receivePartyId = ownParty().getPartyId();
+        DataPacketHeader header = new DataPacketHeader(
+            encodeTaskId, getPtoDesc().getPtoId(), stepId, receivingTimestamps[sendPartyId], sendPartyId, receivePartyId
+        );
+        List<byte[]> payload = rpc.receive(header).getPayload();
+        receivingTimestamps[sendPartyId]++;
+        return payload;
+    }
+
+    /**
+     * Receives payload from the given party.
+     *
+     * @param stepId     step ID.
+     * @param sendParty  party to send payload.
+     * @param num        the number of arrays in the list
+     * @param byteLength the byte length of each array
+     * @return payload.
+     */
+    protected List<byte[]> receiveEqualSizePayload(int stepId, Party sendParty, int num, int byteLength) {
+        int maxSendNum = MAX_SIZE_MSG / byteLength;
+        List<byte[]> receiveMsgPayload;
+        if (maxSendNum >= num) {
+            return receivePayload(stepId, sendParty);
+        } else {
+            receiveMsgPayload = new ArrayList<>(num);
+            int recBatchNum = (int) Math.ceil(num * 1.0 / maxSendNum);
+            for (int i = 0; i < recBatchNum; i++) {
+                receiveMsgPayload.addAll(receivePayload(stepId, sendParty));
+            }
+        }
+        return receiveMsgPayload;
     }
 
     /**
