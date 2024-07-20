@@ -183,12 +183,14 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         Vector<byte[]> receiverE = splits.get(2);
 
         // e share in byte form
-        Vector<byte[]> tempE = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(1)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> tempE = intStream.mapToObj(i -> ByteBuffer.allocate(1)
             .put((e.getBitVector().get(i) ? (byte) 1 : (byte) 0)).array()).collect(Collectors.toCollection(Vector::new));
         // permute own e share
         Vector<byte[]> tempE2 = BenesNetworkUtils.permutation(sigmaS, tempE);
         // xor two e shares to get aligned e shares
-        eByte = IntStream.range(0, num).mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        eByte = intStream.mapToObj(i -> BytesUtils.xor(receiverE.get(i), tempE2.get(i))).collect(Collectors.toCollection(Vector::new));
         // sender group
         senderGroupShare = GroupAggUtils.binaryStringToBytes(groupAttr);
         senderGroupShare = BenesNetworkUtils.permutation(sigmaS, senderGroupShare);
@@ -208,7 +210,6 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // prepare psorter input, with shared e and group of receiver
         SquareZ2Vector[] psorterInput = Arrays.stream(TransposeUtils.transposeSplit(mergedSortInput, (receiverGroupByteLength + 1) * 8))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-
 
         SquareZ2Vector[] sortInput = new SquareZ2Vector[receiverGroupBitLength + 1];
         sortInput[0] = psorterInput[7];
@@ -262,7 +263,8 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
 
     private Vector<byte[]> mergeGroup() {
         // merge group
-        return IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> ByteBuffer.allocate(totalGroupByteLength)
             .put(senderGroupShare.get(i)).put(receiverGroupShare.get(i)).array()).collect(Collectors.toCollection(Vector::new));
     }
 
@@ -278,13 +280,15 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
     }
 
     protected Vector<byte[]> shareOwn(Vector<byte[]> input) {
-        Vector<byte[]> ownShares = IntStream.range(0, input.size()).mapToObj(i -> {
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> ownShares = intStream.mapToObj(i -> {
             byte[] bytes = new byte[input.get(0).length];
             secureRandom.nextBytes(bytes);
             return bytes;
         }).collect(Collectors.toCollection(Vector::new));
 
-        List<byte[]> otherShares = IntStream.range(0, input.size()).mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
+        intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        List<byte[]> otherShares = intStream.mapToObj(i -> BytesUtils.xor(input.get(i), ownShares.get(i))).collect(Collectors.toList());
 
         DataPacketHeader sendSharesHeader = new DataPacketHeader(
             encodeTaskId, ptoDesc.getPtoId(), PtoStep.SEND_SHARES.ordinal(), extraInfo,

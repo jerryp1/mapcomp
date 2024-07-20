@@ -1,41 +1,40 @@
-package edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.oneside;
+package edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.php24;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * One-side group aggregation protocol description, which is specially used for one-side TPC-H test.
+ * Php+24 prefix xor protocol description.
  *
  * @author Li Peng
- * @date 2023/11/3
+ * @date 2024/7/19
  */
-public class OnesideGroupAggPtoDesc implements PtoDesc {
+public class Php24PrefixXorPtoDesc implements PtoDesc {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) -985239213597525368L);
+    private static final int PTO_ID = Math.abs((int) -4981362137146781151L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "MIX_GROUP_AGG";
+    private static final String PTO_NAME = "PHP24_PREFIX_XOR";
 
     /**
      * protocol step
      */
     enum PtoStep {
         // empty
-        REVEAL_OUTPUT
     }
 
     /**
      * singleton mode
      */
-    private static final OnesideGroupAggPtoDesc INSTANCE = new OnesideGroupAggPtoDesc();
+    private static final Php24PrefixXorPtoDesc INSTANCE = new Php24PrefixXorPtoDesc();
 
     /**
      * private constructor.
      */
-    private OnesideGroupAggPtoDesc() {
+    private Php24PrefixXorPtoDesc() {
         // empty
     }
 

@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.AbstractPrefixGroupAggregator;
@@ -41,7 +42,7 @@ public abstract class AbstractPrefixSumAggregator extends AbstractPrefixGroupAgg
         IntStream.range(0, input1.length).forEach(i -> groupIndicator1bc.getBitVector().set(i, input1[i].isGroupIndicator()));
         SquareZ2Vector groupIndicator2bc = SquareZ2Vector.createZeros(input2.length, false);
         IntStream.range(0, input2.length).forEach(i -> groupIndicator2bc.getBitVector().set(i, input2[i].isGroupIndicator()));
-        // sum_out = ((group_in1 ?= group_in2) ? sum_in2 : 0) + sum_in1
+        // sum_out = ((group_in1 == group_in2) ? sum_in2 : 0) + sum_in1
         SquareZlVector sumOut = zlcParty.add(zlMuxParty.mux(groupIndicator1bc, sumIn2Ac), sumIn1Ac);
         // group_indicator_out
         SquareZ2Vector groupIndicatorOut = z2cParty.and(groupIndicator1bc, groupIndicator2bc);

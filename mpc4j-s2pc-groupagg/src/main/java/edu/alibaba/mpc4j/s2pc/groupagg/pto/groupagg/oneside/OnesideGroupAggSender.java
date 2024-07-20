@@ -257,7 +257,8 @@ public class OnesideGroupAggSender extends AbstractGroupAggParty {
     private Vector<byte[]> genOsnInput(SquareZ2Vector e, long[] aggAtt) {
         int payloadByteLen = dummyPayload ? CommonUtils.getByteLength(senderGroupNum + 1) + 2 * Long.BYTES :
             CommonUtils.getByteLength(senderGroupNum + 1) + Long.BYTES;
-        return IntStream.range(0, num).mapToObj(i -> {
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        return intStream.mapToObj(i -> {
             ByteBuffer buffer = ByteBuffer.allocate(payloadByteLen);
             byte[] bytes = new byte[1];
             BinaryUtils.setBoolean(bytes, 0, e.getBitVector().get(i));

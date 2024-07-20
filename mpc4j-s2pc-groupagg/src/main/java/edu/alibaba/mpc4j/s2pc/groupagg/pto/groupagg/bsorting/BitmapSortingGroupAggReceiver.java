@@ -146,9 +146,9 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
 
         stopWatch.start();
 
+        z2cReceiver.init(maxL * maxNum);
         prefixAggReceiver.init(maxL, maxNum);
         osnReceiver.init(maxNum);
-        z2cReceiver.init(maxL * maxNum);
         zlcReceiver.init(1);
         reversePermutationSender.init(maxL, maxNum);
         sharedPermutationReceiver.init(maxNum);
@@ -269,7 +269,8 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
     private void permute1() throws MpcAbortException {
         // permute receiver's group,agg and sigmaB
         Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
-        Vector<byte[]> input = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Long.BYTES + Integer.BYTES)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> input = intStream.mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Long.BYTES + Integer.BYTES)
             .put(groupBytes.get(i)).put(LongUtils.longToByteArray(aggAttr[i])).putInt(sigmaB[i]).array()).collect(Collectors.toCollection(Vector::new));
         Vector<byte[]> output = reversePermutationSender.permute(piG0, input);
         // split
@@ -282,7 +283,8 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
     private void permute1WithSenderAgg() throws MpcAbortException {
         // permute receiver's group,agg and sigmaB
         Vector<byte[]> groupBytes = GroupAggUtils.binaryStringToBytes(groupAttr);
-        Vector<byte[]> input = IntStream.range(0, num).mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Integer.BYTES)
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> input = intStream.mapToObj(i -> ByteBuffer.allocate(receiverGroupByteLength + Integer.BYTES)
             .put(groupBytes.get(i)).putInt(sigmaB[i]).array()).collect(Collectors.toCollection(Vector::new));
         Vector<byte[]> output = reversePermutationSender.permute(piG0, input);
         // split
@@ -303,7 +305,8 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private void permute3() throws MpcAbortException {
-        Vector<byte[]> eByte = IntStream.range(0, num).mapToObj(i ->
+        IntStream intStream = parallel ? IntStream.range(0, num).parallel() : IntStream.range(0, num);
+        Vector<byte[]> eByte = intStream.mapToObj(i ->
             ByteBuffer.allocate(1).put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array()).collect(Collectors.toCollection(Vector::new));
         Vector<byte[]> permutedE = sharedPermutationReceiver.permute(rho, eByte);
         e = SquareZ2Vector.createZeros(num, false);
