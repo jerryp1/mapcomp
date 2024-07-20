@@ -29,9 +29,10 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.zl.ZlcParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.zl.ZlMuxParty;
-import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.pbmux.PlainBitMuxParty;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggTypes;
+import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleParty;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -80,6 +81,10 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
      * Z2 mux party.
      */
     protected Z2MuxParty z2MuxParty;
+    /**
+     * Plain bit mux party.
+     */
+    protected PlainBitMuxParty pbMuxParty;
 
     /**
      * Prefix sum tree used for addition.
@@ -133,7 +138,6 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         if (intersFlag != null) {
             aggField = zlMuxParty.mux(intersFlag, aggField);
         }
-
         SquareZlVector sums;
         // optimize for sum
         if (plainOutput && getAggType().equals(PrefixAggTypes.SUM)) {
@@ -166,6 +170,30 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
             sums = optimizeForSum(aggField, groupIndicator);
         } else {
             sums = aggWithIndicatorsArithmetic(groupIndicator, aggField);
+        }
+        // share
+        Vector<byte[]> sharedGroup = receiver ? shareOwnGroup(groupField) : shareOtherGroup();
+
+        return new PrefixAggOutput(sharedGroup, sums, groupIndicator);
+    }
+
+    @Override
+    public PrefixAggOutput agg(String[] groupField, SquareZ2Vector[] aggField, SquareZ2Vector intersFlag) throws MpcAbortException {
+        checkInputs(groupField, aggField);
+        // obtain group indicator
+        SquareZ2Vector groupIndicator = obtainPlainGroupIndicator1(groupField, intersFlag);
+        // agg
+        if (intersFlag != null) {
+            aggField = z2MuxParty.mux(intersFlag, aggField);
+        }
+        SquareZ2Vector[] sums;
+        // optimize for sum
+        if (plainOutput && getAggType().equals(PrefixAggTypes.SUM)) {
+            SquareZlVector transRes = b2aParty.b2a(aggField);
+            SquareZlVector tmp = optimizeForSum(transRes, groupIndicator);
+            sums = a2bParty.a2b(tmp);
+        } else {
+            sums = aggWithIndicators(groupIndicator, aggField);
         }
         // share
         Vector<byte[]> sharedGroup = receiver ? shareOwnGroup(groupField) : shareOtherGroup();
@@ -212,30 +240,6 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         return new PrefixAggOutput(groupField, sums, groupIndicator);
     }
 
-    @Override
-    public PrefixAggOutput agg(String[] groupField, SquareZ2Vector[] aggField, SquareZ2Vector intersFlag) throws MpcAbortException {
-        checkInputs(groupField, aggField);
-        // obtain group indicator
-        SquareZ2Vector groupIndicator = obtainPlainGroupIndicator1(groupField, intersFlag);
-        // agg
-        if (intersFlag != null) {
-            aggField = z2MuxParty.mux(intersFlag, aggField);
-        }
-
-        SquareZ2Vector[] sums;
-        // optimize for sum
-        if (plainOutput && getAggType().equals(PrefixAggTypes.SUM)) {
-            SquareZlVector transRes = b2aParty.b2a(aggField);
-            SquareZlVector tmp = optimizeForSum(transRes, groupIndicator);
-            sums = a2bParty.a2b(tmp);
-        } else {
-            sums = aggWithIndicators(groupIndicator, aggField);
-        }
-        // share
-        Vector<byte[]> sharedGroup = receiver ? shareOwnGroup(groupField) : shareOtherGroup();
-
-        return new PrefixAggOutput(sharedGroup, sums, groupIndicator);
-    }
 
     private SquareZlVector optimizeForSum(SquareZlVector aggField, SquareZ2Vector indicator) throws MpcAbortException {
         Zl zl = aggField.getZl();
@@ -328,6 +332,17 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     protected void genNodes(SquareZlVector sumField, SquareZ2Vector indicator) {
         nodes = IntStream.range(0, num).mapToObj(i -> new PrefixAggNode(sumField.getZlVector().getElement(i),
             indicator.getBitVector().get(i))).toArray(PrefixAggNode[]::new);
+    }
+
+    /**
+     * Generate prefix-sum nodes.
+     *
+     * @param sumField  sum field.
+     * @param indicator group indicator in secret shared form.
+     */
+    protected void genNodesBool(SquareZlVector sumField, SquareZ2Vector indicator, int l) {
+        nodes = IntStream.range(0, num).mapToObj(i -> new PrefixAggNode(sumField.getZlVector().getElement(i),
+            indicator.getBitVector().get(i), l)).toArray(PrefixAggNode[]::new);
     }
 
     /**

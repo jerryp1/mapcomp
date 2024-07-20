@@ -19,10 +19,21 @@ public class PrefixAggNode implements PrefixNode {
      * Secret shares of group indicator (group_i == group_{i+1}), such as 11101110.
      */
     private final boolean groupIndicator;
+    /**
+     * length used specifically in bool share.
+     */
+    private final int l;
 
     public PrefixAggNode(BigInteger aggShare, boolean groupIndicator) {
         this.aggShare = aggShare;
         this.groupIndicator = groupIndicator;
+        l = 0;
+    }
+
+    public PrefixAggNode(BigInteger aggShare, boolean groupIndicator, int l) {
+        this.aggShare = aggShare;
+        this.groupIndicator = groupIndicator;
+        this.l = l;
     }
 
     public BigInteger getAggShare() {
@@ -31,5 +42,9 @@ public class PrefixAggNode implements PrefixNode {
 
     public boolean isGroupIndicator() {
         return groupIndicator;
+    }
+
+    public int getL() {
+        return l;
     }
 }

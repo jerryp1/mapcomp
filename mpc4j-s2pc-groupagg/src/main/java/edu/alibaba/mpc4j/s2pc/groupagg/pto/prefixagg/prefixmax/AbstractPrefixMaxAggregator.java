@@ -46,9 +46,8 @@ public abstract class AbstractPrefixMaxAggregator extends AbstractPrefixGroupAgg
         IntStream.range(0, input1.length).forEach(i -> groupIndicator1bc.getBitVector().set(i, input1[i].isGroupIndicator()));
         SquareZ2Vector groupIndicator2bc = SquareZ2Vector.createZeros(input2.length, false);
         IntStream.range(0, input2.length).forEach(i -> groupIndicator2bc.getBitVector().set(i, input2[i].isGroupIndicator()));
-        // agg_out = mux((group_in1 ?= group_in2), greater(agg_1, agg_2)) + mux(not(group_in1 ?= group_in2), agg_1)
-        SquareZlVector aggOut = zlcParty.add(zlMuxParty.mux(groupIndicator1bc, zlGreaterParty.gt(aggIn1ac, sumIn2ac)),
-            zlMuxParty.mux(z2cParty.not(groupIndicator1bc), aggIn1ac));
+        // agg_out = mux((group_in1 == group_in2), greater(agg_1, agg_2)) + mux(not(group_in1 ?= group_in2), agg_1)
+        SquareZlVector aggOut = zlcParty.add(aggIn1ac, zlMuxParty.mux(groupIndicator1bc, zlcParty.sub(zlGreaterParty.gt(aggIn1ac, sumIn2ac), aggIn1ac)));
         // group_indicator_out
         SquareZ2Vector groupIndicatorOut = z2cParty.and(groupIndicator1bc, groupIndicator2bc);
         return IntStream.range(0, num).mapToObj(i -> new PrefixAggNode(aggOut.getZlVector().getElement(i),
