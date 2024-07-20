@@ -151,10 +151,10 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //        });
 //
 //        // t_sort && sum
-//        configurations.add(new Object[]{
-//            "T_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-//        });
+        configurations.add(new Object[]{
+            "T_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
 //
 //        // t_sort && max
 //        configurations.add(new Object[]{
@@ -162,11 +162,11 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
 
-        // one-side && sum
-         configurations.add(new Object[]{
-            "ONE-SIDE_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-             new OneSideGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-         });
+//        // one-side && sum
+//         configurations.add(new Object[]{
+//            "ONE-SIDE_"+PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//             new OneSideGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//         });
 
         return configurations;
     }

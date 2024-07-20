@@ -46,6 +46,12 @@ public class GroupAggregationMainUtils {
         .build();
 
     /**
+     * default csv.
+     */
+    public static final CSVFormat DEFAULT_CSV_FORMAT_NO_HEADER = CSVFormat.Builder.create()
+        .build();
+
+    /**
      * set dataset name.
      *
      * @param properties configurations.
@@ -144,6 +150,6 @@ public class GroupAggregationMainUtils {
         if (!new File(path).exists()) {
             LOGGER.info("Dataset file not exist, please generate data first.");
         }
-        return Read.csv(path, DEFAULT_CSV_FORMAT, schema);
+        return Read.csv(path, DEFAULT_CSV_FORMAT_NO_HEADER, schema);
     }
 }
