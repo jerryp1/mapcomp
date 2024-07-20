@@ -111,7 +111,6 @@ public interface PrefixAggParty extends TwoPartyPto {
      */
     PrefixAggOutput agg(String[] groupField, SquareZ2Vector[] aggField, SquareZ2Vector flag) throws MpcAbortException;
 
-
     PrefixAggTypes getAggType();
 
 }

@@ -28,6 +28,10 @@ public class PrefixAggFactory {
          * Maximum.
          */
         MAX,
+        /**
+         * XOR
+         */
+        XOR,
     }
 
 
