@@ -53,6 +53,10 @@ public class GroupAggregationStarter {
      */
     protected Properties properties;
     /**
+     * Configuration common properties.
+     */
+    protected Properties commonProperties;
+    /**
      * Own rpc
      */
     protected Rpc ownRpc;
@@ -133,6 +137,10 @@ public class GroupAggregationStarter {
         this.properties = properties;
     }
 
+    public void setCommonProperties(Properties properties) {
+        this.commonProperties = properties;
+    }
+
     public void start() throws IOException, MpcAbortException, URISyntaxException {
         // output file format：bitmap_sum_s1_r2_s/r.output
         String filePath = "./" + outputDir + "/" + groupAggType.name() + "_" + prefixAggType.name() + "_" +
@@ -147,12 +155,12 @@ public class GroupAggregationStarter {
             "GroupTripleNum\tAggTripleNum";
         printWriter.println(tab);
 
-        // Full secure
+        // test multiple nums
         for (int numBitLen : testDataNums) {
             int num = 1 << numBitLen;
             setDataSet(numBitLen);
             properties.setProperty("max_num", String.valueOf(num));
-            runFullSecurePto(printWriter, numBitLen);
+            runPto(printWriter, numBitLen);
         }
         // clean
         printWriter.close();
@@ -161,8 +169,6 @@ public class GroupAggregationStarter {
     }
 
     public void init() {
-        // set dataset name
-        datasetName = GroupAggregationMainUtils.setDatasetName(properties);
         // set aggregation type
         prefixAggType = GroupAggregationMainUtils.setPrefixAggTypes(properties);
         // set protocol type
@@ -172,23 +178,25 @@ public class GroupAggregationStarter {
         receiverGroupBitLength = GroupAggregationMainUtils.setReceiverGroupBitLength(properties);
         // num
         testDataNums = GroupAggregationMainUtils.setTestDataNums(properties);
-        // 设置总测试轮数
-        totalRound = GroupAggregationMainUtils.setTotalRound(properties);
-        // silent
-        silent = GroupAggregationMainUtils.setSilent(properties);
-        // silent
+        // sender agg
         senderAgg = GroupAggregationMainUtils.setSenderAgg(properties);
+        // set dataset name
+        datasetName = GroupAggregationMainUtils.setDatasetName(commonProperties);
+        // 设置总测试轮数
+        totalRound = GroupAggregationMainUtils.setTotalRound(commonProperties);
+        // silent
+        silent = GroupAggregationMainUtils.setSilent(commonProperties);
         // zl
-        zl = GroupAggregationMainUtils.setZl(properties);
+        zl = GroupAggregationMainUtils.setZl(commonProperties);
         // output_dir
-        outputDir = GroupAggregationMainUtils.setOutputDir(properties);
+        outputDir = GroupAggregationMainUtils.setOutputDir(commonProperties);
         // input_dir
-        inputDir = GroupAggregationMainUtils.setInputDir(properties);
+        inputDir = GroupAggregationMainUtils.setInputDir(commonProperties);
     }
 
     public void initRpc() {
         // set rpc
-        ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "sender", "receiver");
+        ownRpc = RpcPropertiesUtils.readNettyRpc(commonProperties, "sender", "receiver");
         if (ownRpc.ownParty().getPartyId() == 0) {
             receiver = false;
             otherParty = ownRpc.getParty(1);
@@ -256,7 +264,7 @@ public class GroupAggregationStarter {
      * @param printWriter print writer.
      * @throws MpcAbortException the protocol failure aborts.
      */
-    protected void runFullSecurePto(PrintWriter printWriter, int num)
+    protected void runPto(PrintWriter printWriter, int num)
         throws MpcAbortException {
         LOGGER.info("-----Pto aggregation for {}-----", groupAggType.name() + "_" + prefixAggType.name());
 
@@ -301,8 +309,10 @@ public class GroupAggregationStarter {
         GroupAggParty party;
         if (!receiver) {
             party = GroupAggFactory.createSender(ownRpc, otherParty, groupAggConfig);
+            party.setParallel(true);
         } else {
             party = GroupAggFactory.createReceiver(ownRpc, otherParty, groupAggConfig);
+            party.setParallel(true);
         }
         return new GroupAggregationPtoRunner(party, totalRound, groupAggInputData, properties);
     }

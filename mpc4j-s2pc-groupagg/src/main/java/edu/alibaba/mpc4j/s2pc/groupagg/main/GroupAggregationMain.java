@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 public class GroupAggregationMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationMain.class);
 
+    private static final String COMMON_PARAMS = "common_params.txt";
+
     public static void main(String[] args) throws Exception {
         PropertiesUtils.loadLog4jProperties();
         // read configuration.
@@ -48,12 +50,14 @@ public class GroupAggregationMain {
      */
     private static void processSingle(String[] args) throws IOException, URISyntaxException, MpcAbortException {
         Properties properties = PropertiesUtils.loadProperties(args[1]);
-        GroupAggregationStarter fullSecureProtocol = new GroupAggregationStarter();
-        fullSecureProtocol.setProperties(properties);
-        fullSecureProtocol.initRpc();
-        fullSecureProtocol.init();
-        fullSecureProtocol.start();
-        fullSecureProtocol.stopRpc();
+        Properties commonProperties = PropertiesUtils.loadProperties(args[1]);
+        GroupAggregationStarter ptoStarter = new GroupAggregationStarter();
+        ptoStarter.setProperties(properties);
+        ptoStarter.setProperties(commonProperties);
+        ptoStarter.initRpc();
+        ptoStarter.init();
+        ptoStarter.start();
+        ptoStarter.stopRpc();
         System.exit(0);
     }
 
@@ -64,17 +68,32 @@ public class GroupAggregationMain {
      */
     private static void processMul(String[] args) throws IOException, URISyntaxException, MpcAbortException {
         List<String> files = listFilesForFolder(new File(args[1]));
+
+        // read common params
+        Properties commonProperties = null;
+        for (String file : files) {
+            if (file.contains(COMMON_PARAMS)) {
+                commonProperties = PropertiesUtils.loadProperties(file);
+                files.remove(file);
+                break;
+            }
+        }
+        if (commonProperties == null) {
+            throw new IOException("common_params.txt is not found.");
+        }
+        // read experiment params
         files = files.stream().sorted().collect(Collectors.toList());
         List<Properties> ps = files.stream().map(PropertiesUtils::loadProperties).collect(Collectors.toList());
-        GroupAggregationStarter fullSecureProtocol = new GroupAggregationStarter();
-        fullSecureProtocol.setProperties(ps.get(0));
-        fullSecureProtocol.initRpc();
+        GroupAggregationStarter ptoStarter = new GroupAggregationStarter();
+        ptoStarter.setProperties(ps.get(0));
+        ptoStarter.setCommonProperties(commonProperties);
+        ptoStarter.initRpc();
         for (Properties p : ps) {
-            fullSecureProtocol.setProperties(p);
-            fullSecureProtocol.init();
-            fullSecureProtocol.start();
+            ptoStarter.setProperties(p);
+            ptoStarter.init();
+            ptoStarter.start();
         }
-        fullSecureProtocol.stopRpc();
+        ptoStarter.stopRpc();
         System.exit(0);
     }
 
