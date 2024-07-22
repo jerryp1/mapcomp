@@ -1,9 +1,9 @@
-package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline;
+package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxConfig;
-import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggTypes;
@@ -11,24 +11,22 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.PtoType;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
-import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
 
 /**
- * configure of baseline PkFk view
- *
  * @author Feng Han
  * @date 2024/7/19
  */
-public class BaselinePkFkViewConfig extends AbstractMultiPartyPtoConfig implements PkFkViewConfig {
+public class Php24PkFkViewConfig extends AbstractMultiPartyPtoConfig implements PkFkViewConfig {
     /**
-     * z2 mux config
+     * plain text mux config
      */
-    private final Z2MuxConfig z2MuxConfig;
+    private final PlainPayloadMuxConfig plainPayloadMuxConfig;
     /**
-     * payload psi config
+     * pmap config
      */
-    private final PlpsiConfig plpsiConfig;
+    private final PmapConfig pmapConfig;
     /**
      * osn config
      */
@@ -38,25 +36,25 @@ public class BaselinePkFkViewConfig extends AbstractMultiPartyPtoConfig implemen
      */
     private final PrefixAggConfig prefixAggConfig;
 
-    private BaselinePkFkViewConfig(Builder builder) {
-        super(SecurityModel.SEMI_HONEST, builder.z2MuxConfig, builder.plpsiConfig, builder.osnConfig, builder.prefixAggConfig);
-        z2MuxConfig = builder.z2MuxConfig;
-        plpsiConfig = builder.plpsiConfig;
+    private Php24PkFkViewConfig(Builder builder) {
+        super(SecurityModel.SEMI_HONEST, builder.plainPayloadMuxConfig, builder.pmapConfig, builder.osnConfig, builder.prefixAggConfig);
+        plainPayloadMuxConfig = builder.plainPayloadMuxConfig;
+        pmapConfig = builder.pmapConfig;
         osnConfig = builder.osnConfig;
         prefixAggConfig = builder.prefixAggConfig;
     }
 
     @Override
     public PtoType getPtoType() {
-        return PtoType.BASELINE;
+        return PtoType.PHP24;
     }
 
-    public Z2MuxConfig getZ2MuxConfig() {
-        return z2MuxConfig;
+    public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
+        return plainPayloadMuxConfig;
     }
 
-    public PlpsiConfig getPlpsiConfig() {
-        return plpsiConfig;
+    public PmapConfig getPmapConfig() {
+        return pmapConfig;
     }
 
     public OsnConfig getOsnConfig() {
@@ -67,15 +65,15 @@ public class BaselinePkFkViewConfig extends AbstractMultiPartyPtoConfig implemen
         return prefixAggConfig;
     }
 
-    public static class Builder implements org.apache.commons.lang3.builder.Builder<BaselinePkFkViewConfig> {
+    public static class Builder implements org.apache.commons.lang3.builder.Builder<Php24PkFkViewConfig> {
         /**
-         * z2 mux config
+         * plain text mux config
          */
-        private final Z2MuxConfig z2MuxConfig;
+        private final PlainPayloadMuxConfig plainPayloadMuxConfig;
         /**
-         * payload psi config
+         * pmap config
          */
-        private PlpsiConfig plpsiConfig;
+        private PmapConfig pmapConfig;
         /**
          * osn config
          */
@@ -86,21 +84,21 @@ public class BaselinePkFkViewConfig extends AbstractMultiPartyPtoConfig implemen
         private final PrefixAggConfig prefixAggConfig;
 
         public Builder(boolean silent) {
-            z2MuxConfig = Z2MuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
-            plpsiConfig = PlpsiFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            plainPayloadMuxConfig = PlainPlayloadMuxFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
+            pmapConfig = PmapFactory.createDefaultConfig(silent);
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST,
                 null, silent, PrefixAggTypes.XOR, false);
         }
 
-        public Builder setPlpsiConfig(PlpsiConfig plpsiConfig) {
-            this.plpsiConfig = plpsiConfig;
+        public Builder setPmapConfig(PmapConfig pmapConfig) {
+            this.pmapConfig = pmapConfig;
             return this;
         }
 
         @Override
-        public BaselinePkFkViewConfig build() {
-            return new BaselinePkFkViewConfig(this);
+        public Php24PkFkViewConfig build() {
+            return new Php24PkFkViewConfig(this);
         }
     }
 }

@@ -5,21 +5,28 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
-import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
-import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
-import edu.alibaba.mpc4j.common.tool.utils.BinaryUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiver;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiClientOutput;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
 
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,12 +38,16 @@ import java.util.stream.IntStream;
 public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkFkViewReceiver {
     private final Z2MuxParty z2MuxParty;
     private final PlpsiClient<byte[]> plpsiClient;
+    private final OsnReceiver osnReceiver;
+    private final PrefixAggParty prefixAggParty;
 
     protected BaselinePkFkViewReceiver(Rpc rpc, Party senderParty, BaselinePkFkViewConfig config) {
         super(BaselinePkFkViewPtoDesc.getInstance(), rpc, senderParty, config);
         z2MuxParty = Z2MuxFactory.createReceiver(rpc, senderParty, config.getZ2MuxConfig());
         plpsiClient = PlpsiFactory.createClient(rpc, senderParty, config.getPlpsiConfig());
-        addMultipleSubPtos(z2MuxParty, plpsiClient);
+        osnReceiver = OsnFactory.createReceiver(rpc, senderParty, config.getOsnConfig());
+        prefixAggParty = PrefixAggFactory.createPrefixAggReceiver(rpc, senderParty, config.getPrefixAggConfig());
+        addMultipleSubPtos(z2MuxParty, plpsiClient, osnReceiver, prefixAggParty);
     }
 
     @Override
@@ -44,6 +55,8 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         assert senderPayloadBitLen * senderSize > 0;
         z2MuxParty.init(receiverSize);
         plpsiClient.init(senderSize, receiverSize);
+        osnReceiver.init(receiverSize * 10);
+        prefixAggParty.init(256, receiverSize * 10);
         initState();
     }
 
@@ -62,55 +75,78 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         int receiverSize = key.length;
         assert key.length == payload.length;
 
-        // 1. key加后缀
+        // 1. key加后缀 Payload psi
         stopWatch.start();
         byte[][] appendKey = PkFkUtils.addIndex(key);
-        int[] sigma = PkFkUtils.permutation4Sort(appendKey);
-        appendKey = BenesNetworkUtils.permutation(sigma, appendKey);
-        BitVector[] selfPayload = BenesNetworkUtils.permutation(sigma, payload);
-        stopWatch.stop();
-        long perProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 4, perProcess);
-
-        // 2. Payload psi
-        stopWatch.start();
         PlpsiClientOutput<byte[]> psiRes = plpsiClient.psiWithPayload(Arrays.stream(appendKey).collect(Collectors.toList()),
             senderSize, new int[]{senderPayloadBitLen}, new boolean[]{true});
         stopWatch.stop();
         long psiProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 4, psiProcess);
+        logStepInfo(PtoState.PTO_STEP, 1, 4, psiProcess);
 
-        // 3. 用e置0非交集
+        // 2. 用e置0非交集
         stopWatch.start();
         SquareZ2Vector[] sharePayload = psiRes.getZ2ColumnPayload(0);
         sharePayload = z2MuxParty.mux(psiRes.getZ1(), sharePayload);
         stopWatch.stop();
         long muxProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 3, 4, muxProcess);
+        logStepInfo(PtoState.PTO_STEP, 2, 4, muxProcess);
+
+        // 3. osn
+        stopWatch.start();
+        // 2.1 sort based on psiRes result
+        BigInteger maxNum = BigInteger.ONE.shiftLeft(key[0].length * 8 + 32);
+        BigInteger[] sortData = new BigInteger[psiRes.getBeta()];
+        byte[][] allPsiKey = psiRes.getTable().toArray(new byte[0][]);
+        for (int i = 0; i < sortData.length; i++) {
+            if (allPsiKey[i] == null) {
+                sortData[i] = maxNum.add(BigInteger.valueOf(i));
+            } else {
+                sortData[i] = BigIntegerUtils.byteArrayToNonNegBigInteger(allPsiKey[i]).shiftLeft(32).add(BigInteger.valueOf(i));
+            }
+        }
+        Arrays.sort(sortData, (x, y) -> -x.compareTo(y));
+        int[] sigma = Arrays.stream(sortData).mapToInt(BigInteger::intValue).toArray();
+        // 3.2 sort payload
+        BitVector[] selfPayload = Arrays.stream(sigma).mapToObj(i -> i >= key.length ? null : payload[sigma[i]]).toArray(BitVector[]::new);
+        // 3.3 osn the other payload
+        byte[][] sharePayloadInRow = ZlDatabase.create(envType, parallel,
+                Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
+            .getBytesData();
+        byte[][] osnInput = new byte[sharePayloadInRow.length][];
+        for (int i = 0; i < osnInput.length; i++) {
+            osnInput[i] = new byte[sharePayloadInRow[i].length + 1];
+            osnInput[i][0] = (byte) (psiRes.getZ1().getBitVector().get(i) ? 1 : 0);
+            System.arraycopy(sharePayloadInRow[i], 0, osnInput[i], 1, sharePayloadInRow[i].length);
+        }
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigma, new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnInput[0].length);
+
+        stopWatch.stop();
+        long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 4, osnTime);
 
         // 4. 复制值
         stopWatch.start();
         SquareZ2Vector[] duplicateInput = new SquareZ2Vector[sharePayload.length + 1];
-        System.arraycopy(sharePayload, 0, duplicateInput, 0, sharePayload.length);
-        duplicateInput[sharePayload.length] = psiRes.getZ1();
-        boolean[] flag = new boolean[receiverSize];
-        for (int i = 1; i < receiverSize; i++) {
-            flag[i] = Arrays.equals(
-                Arrays.copyOf(appendKey[i - 1], appendKey[i - 1].length - 4),
-                Arrays.copyOf(appendKey[i], appendKey[i].length - 4));
-        }
-        SquareZ2Vector vecFlag = SquareZ2Vector.create(BitVectorFactory.create(receiverSize, BinaryUtils.binaryToRoundByteArray(flag)), true);
-        // todo
-        SquareZ2Vector[] duplicateRes = null;
+        SquareZ2Vector[] payloadAndFlag = Arrays.stream(
+                ZlDatabase.create(osnInput[0].length * 8 - 7, osnPartyOutput.getShareArray(7))
+                    .bitPartition(envType, parallel))
+            .map(ea -> SquareZ2Vector.create(ea, false))
+            .toArray(SquareZ2Vector[]::new);
+        System.arraycopy(payloadAndFlag, payloadAndFlag.length - sharePayload.length, duplicateInput, 0, sharePayload.length);
+        duplicateInput[sharePayload.length] = payloadAndFlag[0];
+        String[] keyStr = Arrays.stream(sortData).map(ea -> ea.shiftRight(64).toString()).toArray(String[]::new);
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(keyStr, duplicateInput);
+        SquareZ2Vector[] duplicateRes = prefixAggOutput.getAggsBinary();
         SquareZ2Vector[] forTrans = Arrays.copyOf(duplicateRes, sharePayload.length);
         SquareZ2Vector finalEqualFlag = duplicateRes[sharePayload.length];
 
         PkFkViewReceiverOutput output = new PkFkViewReceiverOutput(key, payload,
             IntStream.range(0, receiverSize).toArray(), sigma,
-            forTrans, selfPayload, finalEqualFlag
+            forTrans, selfPayload, finalEqualFlag, psiRes.getZ1()
         );
         stopWatch.stop();
         long transProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
