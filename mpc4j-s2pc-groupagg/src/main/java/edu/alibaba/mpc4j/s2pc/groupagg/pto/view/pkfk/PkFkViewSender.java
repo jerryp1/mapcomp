@@ -27,5 +27,5 @@ public interface PkFkViewSender extends ViewParty {
      * @param preView the pre-generated view
      * @param receiverSize the table size of the receiver
      */
-    PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, int receiverSize) throws MpcAbortException;
+    PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload, int receiverSize) throws MpcAbortException;
 }

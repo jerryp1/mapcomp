@@ -62,8 +62,9 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
     }
 
     @Override
-    public PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, int receiverSize) throws MpcAbortException {
-        return innerCommon(preView.inputKey, preView.inputPayload, receiverSize);
+    public PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload, int receiverSize) throws MpcAbortException {
+        assert preView.inputKey.length == payload.length;
+        return innerCommon(preView.inputKey, payload, receiverSize);
     }
 
     private PkFkViewSenderOutput innerCommon(byte[][] key, BitVector[] payload, int receiverSize) throws MpcAbortException {
