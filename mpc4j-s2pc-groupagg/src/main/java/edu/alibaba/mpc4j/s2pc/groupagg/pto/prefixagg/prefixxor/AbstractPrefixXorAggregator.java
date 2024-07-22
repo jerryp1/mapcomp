@@ -6,8 +6,11 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.EnvType;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.TransposeUtils;
@@ -76,6 +79,7 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
 
     /**
      * backup
+     *
      * @param input1
      * @param input2
      * @return
@@ -118,9 +122,12 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
     @Override
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         int l = aggField.length;
+        int byteLen = CommonUtils.getByteLength(l);
         SquareZ2Vector groupIndicator2 = z2cParty.not(groupIndicator1);
         groupIndicator2.getBitVector().shiftLeftUnChangeNum(1);
+        Zl zl = ZlFactory.createInstance(EnvType.INLAND_JDK, l);
 
+        // test
 //        if (receiver) {
 //            BitVector test = z2cParty.revealOwn(groupIndicator1);
 //            System.out.printf("123");
@@ -136,10 +143,22 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         genNodesBool(data, groupIndicator2, l);
         // prefix-computation
         prefixTree.addPrefix(num);
-        // obtain agg fields
-        SquareZlVector res1 = zlMuxParty.mux(groupIndicator1, SquareZlVector.create(zl, Arrays.stream(nodes)
-            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new), false));
-        return a2bParty.a2b(res1);
+
+        // for test
+//        SquareZlVector vv = SquareZlVector.create(zl, Arrays.stream(nodes)
+//            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new),false);
+//        if (receiver) {
+//            ZlVector testt = zlcParty.revealOwn(vv);
+//            System.out.printf("123");
+//        } else {
+//            zlcParty.revealOther(vv);
+//        }
+
+        // obtain agg fields, transfer to z2Vector
+        byte[][] resultBytes = Arrays.stream(nodes)
+            .map(PrefixAggNode::getAggShare).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteLen)).toArray(byte[][]::new);
+        SquareZ2Vector[] resultZ2Vector = Arrays.stream(TransposeUtils.transposeSplit(resultBytes, l)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+        return resultZ2Vector;
     }
 
     @Override

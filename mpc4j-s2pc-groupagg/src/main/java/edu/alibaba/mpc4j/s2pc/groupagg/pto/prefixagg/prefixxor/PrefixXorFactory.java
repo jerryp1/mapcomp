@@ -71,7 +71,7 @@ public class PrefixXorFactory {
      * @param silent        if using a silent config.
      * @return a default config.
      */
-    public static PrefixXorConfig createDefaultPrefixSumConfig(SecurityModel securityModel, Zl zl, boolean silent, boolean plainOutput) {
+    public static PrefixXorConfig createDefaultPrefixXorConfig(SecurityModel securityModel, Zl zl, boolean silent, boolean plainOutput) {
         switch (securityModel) {
             case IDEAL:
             case SEMI_HONEST:
