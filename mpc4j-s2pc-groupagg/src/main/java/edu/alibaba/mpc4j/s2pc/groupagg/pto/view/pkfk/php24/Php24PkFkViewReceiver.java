@@ -1,0 +1,286 @@
+package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24;
+
+import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
+import edu.alibaba.mpc4j.common.rpc.Party;
+import edu.alibaba.mpc4j.common.rpc.PtoState;
+import edu.alibaba.mpc4j.common.rpc.Rpc;
+import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
+import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
+import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
+import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
+import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkUtils;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiver;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiverOutput;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewPtoDesc;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
+import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapClient;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
+import scala.collection.mutable.HashMap;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+/**
+ * @author Feng Han
+ * @date 2024/7/19
+ */
+public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkViewReceiver {
+    private final PlainPayloadMuxParty plainPayloadMuxParty;
+    private final PmapClient<byte[]> pmapClient;
+    private final OsnReceiver osnReceiver;
+    private final PrefixAggParty prefixAggParty;
+
+    private byte[][] appendKey;
+    private int[] pi;
+    private int[] sigma;
+    private SquareZ2Vector mapEqualFlag;
+
+    protected Php24PkFkViewReceiver(Rpc rpc, Party senderParty, Php24PkFkViewConfig config) {
+        super(BaselinePkFkViewPtoDesc.getInstance(), rpc, senderParty, config);
+        plainPayloadMuxParty = PlainPlayloadMuxFactory.createReceiver(rpc, senderParty, config.getPlainPayloadMuxConfig());
+        pmapClient = PmapFactory.createClient(rpc, senderParty, config.getPmapConfig());
+        osnReceiver = OsnFactory.createReceiver(rpc, senderParty, config.getOsnConfig());
+        prefixAggParty = PrefixAggFactory.createPrefixAggReceiver(rpc, senderParty, config.getPrefixAggConfig());
+        addMultipleSubPtos(plainPayloadMuxParty, pmapClient, osnReceiver, prefixAggParty);
+    }
+
+    @Override
+    public void init(int senderPayloadBitLen, int senderSize, int receiverSize) throws MpcAbortException {
+        assert senderPayloadBitLen * senderSize > 0;
+        plainPayloadMuxParty.init(receiverSize);
+        pmapClient.init(senderSize, receiverSize);
+        osnReceiver.init(senderSize + receiverSize);
+        prefixAggParty.init(256, senderSize + receiverSize);
+        initState();
+    }
+
+    @Override
+    public PkFkViewReceiverOutput generate(byte[][] key, BitVector[] payload, int senderSize, int senderPayloadBitLen) throws MpcAbortException {
+        logPhaseInfo(PtoState.PTO_BEGIN);
+        int receiverSize = key.length;
+        assert key.length == payload.length;
+
+        // 1. 预计算map
+        stopWatch.start();
+        preComp(key, senderSize);
+        stopWatch.stop();
+        long psiProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 4, psiProcess);
+
+        // 2. 用e置0非交集
+        stopWatch.start();
+        SquareZ2Vector[] sharePayload = plainPayloadMuxParty.muxB(mapEqualFlag, null, senderPayloadBitLen);
+        stopWatch.stop();
+        long muxProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 4, muxProcess);
+
+        // 3. osn: the last bit is eqFlag
+        stopWatch.start();
+        int osnByteLen = CommonUtils.getByteLength(senderPayloadBitLen) + 1;
+        byte[][] transPayloadBytes = ZlDatabase.create(envType, parallel,
+                Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
+            .getBytesData();
+        byte[][] osnInput = new byte[sigma.length][];
+        for (int i = 0; i < sigma.length; i++) {
+            osnInput[i] = new byte[osnByteLen];
+            osnInput[i][0] = (byte) (mapEqualFlag.getBitVector().get(i) ? 1 : 0);
+            System.arraycopy(transPayloadBytes[i], 0, osnInput[i], 1, transPayloadBytes[i].length);
+        }
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigma,
+            new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnByteLen);
+        BitVector[] osnSenderPayload = new BitVector[sigma.length];
+        BitVector osnEqual = BitVectorFactory.createZeros(sigma.length);
+        for (int i = 0; i < sigma.length; i++) {
+            byte[] tmp = osnPartyOutput.getShare(i);
+            osnSenderPayload[i] = BitVectorFactory.create(senderPayloadBitLen, Arrays.copyOfRange(tmp, 1, tmp.length));
+            osnEqual.set(i, (tmp[0] & 1) == 1);
+        }
+        stopWatch.stop();
+        long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 4, osnTime);
+
+        // 4. traversal
+        stopWatch.start();
+        String[] groupString = getGroupString(key);
+        SquareZ2Vector[] groupInput = new SquareZ2Vector[senderPayloadBitLen + 1];
+        byte[][] payloadTrans = ZlDatabase.create(envType, parallel, osnSenderPayload).getBytesData();
+        IntStream.range(0, payloadTrans.length).forEach(i -> groupInput[i] = SquareZ2Vector.create(sigma.length, payloadTrans[i], false));
+        groupInput[senderPayloadBitLen] = SquareZ2Vector.create(osnEqual, false);
+        // todo
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(groupString, groupInput);
+        SquareZ2Vector[] groupOut = prefixAggOutput.getAggsBinary();
+        stopWatch.stop();
+        long traversalTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 4, 4, traversalTime);
+
+        BitVector[] selfData = new BitVector[sigma.length];
+        for(int i = 0; i < sigma.length; i++){
+            int target = pi[sigma[i]];
+            if(target < key.length){
+                selfData[i] = payload[target];
+            }else{
+                selfData[i] = null;
+            }
+        }
+
+        logPhaseInfo(PtoState.PTO_END);
+        return new PkFkViewReceiverOutput(key, payload, pi, sigma,
+            Arrays.copyOf(groupOut, senderPayloadBitLen), selfData, groupOut[senderPayloadBitLen], mapEqualFlag);
+    }
+
+    @Override
+    public PkFkViewReceiverOutput refresh(PkFkViewReceiverOutput preView, int senderSize) throws MpcAbortException {
+        appendKey = PkFkUtils.addIndex(preView.inputKey);
+        pi = preView.pi;
+        sigma = preView.sigma;
+        mapEqualFlag = preView.mapEqualFlag;
+
+        int senderPayloadBitLen = preView.shareData.length;
+
+        // 1. 用e置0非交集
+        SquareZ2Vector[] sharePayload = plainPayloadMuxParty.muxB(mapEqualFlag, null, senderPayloadBitLen);
+        stopWatch.stop();
+        long muxProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 1, 3, muxProcess);
+
+        // 2. osn: the last bit is eqFlag
+        stopWatch.start();
+        int osnByteLen = CommonUtils.getByteLength(senderPayloadBitLen) + 1;
+        byte[][] osnInput = ZlDatabase.create(envType, parallel,
+                Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
+            .getBytesData();
+        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigma,
+            new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnByteLen);
+        BitVector[] osnSenderPayload = Arrays.stream(osnPartyOutput.getShare().toArray(new byte[0][]))
+            .map(ea -> BitVectorFactory.create(senderPayloadBitLen, ea))
+            .toArray(BitVector[]::new);
+        stopWatch.stop();
+        long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 2, 3, osnTime);
+
+        // 3. traversal
+        stopWatch.start();
+        String[] groupString = getGroupString(preView.inputKey);
+        SquareZ2Vector[] groupInput = Arrays.stream(ZlDatabase.create(envType, parallel, osnSenderPayload).getBytesData())
+            .map(ea -> SquareZ2Vector.create(osnSenderPayload.length, ea, false))
+            .toArray(SquareZ2Vector[]::new);
+        // todo
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(groupString, groupInput);
+        SquareZ2Vector[] groupOut = prefixAggOutput.getAggsBinary();
+        stopWatch.stop();
+        long traversalTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 3, traversalTime);
+
+        logPhaseInfo(PtoState.PTO_END);
+        return new PkFkViewReceiverOutput(preView.inputKey, preView.inputPayload, preView.pi, preView.sigma,
+            groupOut, preView.selfData, preView.equalFlag, preView.mapEqualFlag);
+    }
+
+    private void preComp(byte[][] key, int senderSize) throws MpcAbortException {
+        int receiverSize = key.length;
+        // 1. key加后缀
+        appendKey = PkFkUtils.addIndex(key);
+        // 2. pmap
+        PmapPartyOutput<byte[]> pmapRes = pmapClient.map(Arrays.stream(appendKey).collect(Collectors.toList()), senderSize);
+
+        Map<Integer, byte[]> resultMap = pmapRes.getIndexMap();
+        // extend the permutation
+        if (pmapRes.getIndexMap().size() < receiverSize) {
+            assert pmapRes.getMapType().equals(MapType.PSI);
+            HashSet<BigInteger> psiKeySet = new HashSet<>(receiverSize);
+            for (byte[] psiKey : pmapRes.getIndexMap().values()) {
+                psiKeySet.add(new BigInteger(psiKey));
+            }
+            int startIndex = pmapRes.getIndexMap().size();
+            for (byte[] oneKey : appendKey) {
+                if (!psiKeySet.contains(new BigInteger(oneKey))) {
+                    resultMap.put(startIndex++, oneKey);
+                }
+            }
+        }
+        // extend flag
+        mapEqualFlag = pmapRes.getEqualFlag();
+        if (resultMap.size() > mapEqualFlag.bitNum()) {
+            BigInteger eqBig = mapEqualFlag.getBitVector().getBigInteger().shiftLeft(resultMap.size() - mapEqualFlag.bitNum());
+            mapEqualFlag = SquareZ2Vector.create(BitVectorFactory.create(resultMap.size(), eqBig), false);
+        }
+        // get pi
+        HashMap<BigInteger, Integer> data2pos = new HashMap<>();
+        for (int i = 0; i < receiverSize; i++) {
+            data2pos.put(new BigInteger(appendKey[i]), i);
+        }
+        int dummyIndex = receiverSize;
+        pi = new int[resultMap.size()];
+        for (int i = 0; i < resultMap.size(); i++) {
+            BigInteger tmp = new BigInteger(resultMap.get(i));
+            if (data2pos.contains(tmp)) {
+                pi[i] = data2pos.get(tmp).get();
+            } else {
+                pi[i] = dummyIndex++;
+            }
+        }
+        assert dummyIndex == resultMap.size();
+        genPerm4Sort();
+    }
+
+    private void genPerm4Sort() {
+        int bigNum = appendKey[0].length * 8;
+        BigInteger maxNum = BigInteger.ONE.shiftLeft(bigNum);
+        HashMap<BigInteger, Integer> data2pos = new HashMap<>();
+        // 排序已经置换过的key
+        BigInteger[] tmp = Arrays.stream(pi).mapToObj(i -> {
+            if (pi[i] < appendKey.length) {
+                BigInteger v = BigIntegerUtils.byteArrayToNonNegBigInteger(appendKey[pi[i]]);
+                data2pos.put(v, i);
+                return v;
+            } else {
+                return maxNum;
+            }
+        }).toArray(BigInteger[]::new);
+        Arrays.sort(tmp, BigInteger::compareTo);
+        int otherStartIndex = appendKey.length;
+        sigma = new int[pi.length];
+        for (int i = 0; i < pi.length; i++) {
+            BigInteger v = tmp[i];
+            if (data2pos.contains(v)) {
+                sigma[i] = data2pos.get(v).get();
+            } else {
+                sigma[i] = otherStartIndex++;
+            }
+        }
+        assert otherStartIndex == pi.length;
+    }
+
+    private String[] getGroupString(byte[][] key) {
+        String defaultStr = BigInteger.ONE.shiftLeft(key[0].length * 8).toString();
+        byte[][] perRes = Arrays.stream(pi).mapToObj(i -> i < key.length ? key[i] : new byte[0]).toArray(byte[][]::new);
+        perRes = BenesNetworkUtils.permutation(sigma, perRes);
+        return Arrays.stream(perRes).map(ea -> ea.length > 0 ? new BigInteger(ea).toString() : defaultStr).toArray(String[]::new);
+    }
+}
