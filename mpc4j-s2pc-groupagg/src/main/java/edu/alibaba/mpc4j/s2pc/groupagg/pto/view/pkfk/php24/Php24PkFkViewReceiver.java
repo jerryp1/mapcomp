@@ -169,7 +169,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
 
         // 2. osn: the last bit is eqFlag
         stopWatch.start();
-        int osnByteLen = CommonUtils.getByteLength(senderPayloadBitLen) + 1;
+        int osnByteLen = CommonUtils.getByteLength(senderPayloadBitLen);
         byte[][] osnInput = ZlDatabase.create(envType, parallel,
                 Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
             .getBytesData();
@@ -189,7 +189,6 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         SquareZ2Vector[] groupInput = Arrays.stream(ZlDatabase.create(envType, parallel, osnSenderPayload).getBytesData())
             .map(ea -> SquareZ2Vector.create(osnSenderPayload.length, ea, false))
             .toArray(SquareZ2Vector[]::new);
-        // todo
         PrefixAggOutput prefixAggOutput = prefixAggParty.agg(groupString, groupInput);
         SquareZ2Vector[] groupOut = prefixAggOutput.getAggsBinary();
         stopWatch.stop();
