@@ -135,26 +135,18 @@ public class PrefixXorTest extends AbstractTwoPartyPtoTest {
         for (int i = 0; i < num; i++) {
             groupings[i] = BigIntegerUtils.nonNegBigIntegerToByteArray
                 (BigInteger.valueOf(i / groupSize), zl.getByteL());
-            aggs[i] = BigInteger.valueOf(i);
+            if (i % groupSize == 0) {
+                aggs[i] = BigInteger.ONE;
+            } else {
+                aggs[i] = BigInteger.ZERO;
+            }
+//            aggs[i] = BigInteger.valueOf(i);
         }
         String[] groupingStrings = IntStream.range(0, num).mapToObj(i -> new String(groupings[i])).toArray(String[]::new);
         // generate indicator
-        boolean[] indicator = getIndicator(groupings);
-        // make the aggs
-        IntStream.range(0, num).forEach(i -> aggs[i] = indicator[i] ? BigInteger.ZERO : aggs[i]);
-        // generate shares
-//        Vector<byte[]> groupShares0 = IntStream.range(0, num).mapToObj(i -> {
-//            byte[] shares = new byte[zl.getByteL()];
-//            SECURE_RANDOM.nextBytes(shares);
-//            return shares;
-//        }).collect(Collectors.toCollection(Vector::new));
-//        Vector<byte[]> groupShares1 = IntStream.range(0, num).mapToObj(i ->
-//            BytesUtils.xor(groupings[i], groupShares0.elementAt(i))).collect(Collectors.toCollection(Vector::new));
-
-//        SquareZlVector aggShares0 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-//            new BigInteger(zl.getL(), SECURE_RANDOM)).toArray(BigInteger[]::new), false);
-//        SquareZlVector aggShares1 = SquareZlVector.create(zl, IntStream.range(0, num).mapToObj(i ->
-//            zl.sub(aggs[i], aggShares0.getZlVector().getElement(i))).toArray(BigInteger[]::new), false);
+//        boolean[] indicator = getIndicator(groupings);
+//        // make the aggs
+//        IntStream.range(0, num).forEach(i -> aggs[i] = indicator[i] ? BigInteger.ZERO : aggs[i]);
 
         SecureRandom secureRandom = new SecureRandom();
         BitVector[] originDataVec = ZlDatabase.create(zl.getL(), aggs).bitPartition(EnvType.STANDARD, true);
