@@ -30,8 +30,8 @@ public class PkFkViewFactory {
         PHP24,
     }
 
-    public static PkFkViewSender createPkFkViewSender(Rpc senderRpc, Party receiverParty, PkFkViewConfig config){
-        switch (config.getPtoType()){
+    public static PkFkViewSender createPkFkViewSender(Rpc senderRpc, Party receiverParty, PkFkViewConfig config) {
+        switch (config.getPtoType()) {
             case BASELINE:
                 return new BaselinePkFkViewSender(senderRpc, receiverParty, (BaselinePkFkViewConfig) config);
             case PHP24:
@@ -41,8 +41,8 @@ public class PkFkViewFactory {
         }
     }
 
-    public static PkFkViewReceiver createPkFkViewReceiver(Rpc receiverRpc, Party senderParty, PkFkViewConfig config){
-        switch (config.getPtoType()){
+    public static PkFkViewReceiver createPkFkViewReceiver(Rpc receiverRpc, Party senderParty, PkFkViewConfig config) {
+        switch (config.getPtoType()) {
             case BASELINE:
                 return new BaselinePkFkViewReceiver(receiverRpc, senderParty, (BaselinePkFkViewConfig) config);
             case PHP24:
@@ -52,7 +52,7 @@ public class PkFkViewFactory {
         }
     }
 
-    public static PkFkViewConfig createDefaultConfig(boolean silent){
+    public static PkFkViewConfig createDefaultConfig(boolean silent) {
         return new Php24PkFkViewConfig.Builder(silent).build();
     }
 }
