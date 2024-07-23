@@ -53,7 +53,7 @@ public class GroupAggregationMain {
         Properties commonProperties = PropertiesUtils.loadProperties(args[1]);
         GroupAggregationStarter ptoStarter = new GroupAggregationStarter();
         ptoStarter.setProperties(properties);
-        ptoStarter.setProperties(commonProperties);
+        ptoStarter.setCommonProperties(commonProperties);
         ptoStarter.initRpc();
         ptoStarter.init();
         ptoStarter.start();
