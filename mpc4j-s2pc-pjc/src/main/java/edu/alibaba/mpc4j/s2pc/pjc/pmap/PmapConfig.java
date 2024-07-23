@@ -1,7 +1,7 @@
 package edu.alibaba.mpc4j.s2pc.pjc.pmap;
 
 import edu.alibaba.mpc4j.common.rpc.pto.MultiPartyPtoConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 
 /**
  * PMAP protocol configure interface
@@ -15,5 +15,5 @@ public interface PmapConfig extends MultiPartyPtoConfig {
      *
      * @return protocol type
      */
-    PmapType getPtoType();
+    PmapPtoType getPtoType();
 }

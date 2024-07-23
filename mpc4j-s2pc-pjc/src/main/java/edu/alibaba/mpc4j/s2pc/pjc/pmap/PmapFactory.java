@@ -8,11 +8,14 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapServer;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapServer;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapClient;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapServer;
 
 /**
  * PMAP factory
  *
- * @author Weiran Liu
+ * @author Feng Han
  * @date 2022/01/19
  */
 public class PmapFactory {
@@ -26,7 +29,7 @@ public class PmapFactory {
     /**
      * pmap type
      */
-    public enum PmapType {
+    public enum PmapPtoType {
         /**
          * PHP24
          */
@@ -35,6 +38,10 @@ public class PmapFactory {
          * based on PID
          */
         PID_BASED,
+        /**
+         * based on PSI
+         */
+        PSI_BASED,
     }
 
     /**
@@ -46,14 +53,16 @@ public class PmapFactory {
      * @return a PSI server.
      */
     public static <T> PmapServer<T> createServer(Rpc serverRpc, Party clientParty, PmapConfig config) {
-        PmapType type = config.getPtoType();
+        PmapPtoType type = config.getPtoType();
         switch (type){
             case PHP24:
                 return new Php24PmapServer<>(serverRpc, clientParty, (Php24PmapConfig) config);
             case PID_BASED:
                 return new PidBasedPmapServer<>(serverRpc, clientParty, (PidBasedPmapConfig) config);
+            case PSI_BASED:
+                return new PsiBasedPmapServer<>(serverRpc, clientParty, (PsiBasedPmapConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + PmapPtoType.class.getSimpleName() + ": " + type.name());
         }
     }
 
@@ -66,14 +75,16 @@ public class PmapFactory {
      * @return a client.
      */
     public static <T> PmapClient<T> createClient(Rpc clientRpc, Party serverParty, PmapConfig config) {
-        PmapType type = config.getPtoType();
+        PmapPtoType type = config.getPtoType();
         switch (type){
             case PHP24:
                 return new Php24PmapClient<>(clientRpc, serverParty, (Php24PmapConfig) config);
             case PID_BASED:
                 return new PidBasedPmapClient<>(clientRpc, serverParty, (PidBasedPmapConfig) config);
+            case PSI_BASED:
+                return new PsiBasedPmapClient<>(clientRpc, serverParty, (PsiBasedPmapConfig) config);
             default:
-                throw new IllegalArgumentException("Invalid " + PmapType.class.getSimpleName() + ": " + type.name());
+                throw new IllegalArgumentException("Invalid " + PmapPtoType.class.getSimpleName() + ": " + type.name());
         }
     }
 

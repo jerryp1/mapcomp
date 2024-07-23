@@ -22,8 +22,7 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiShareOutput;
 
-import java.util.Arrays;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -37,7 +36,7 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
     private final PrefixAggParty prefixAggParty;
     private final OsnSender osnSender;
 
-    protected BaselinePkFkViewSender(Rpc rpc, Party receiverParty, BaselinePkFkViewConfig config) {
+    public BaselinePkFkViewSender(Rpc rpc, Party receiverParty, BaselinePkFkViewConfig config) {
         super(BaselinePkFkViewPtoDesc.getInstance(), rpc, receiverParty, config);
         z2MuxParty = Z2MuxFactory.createSender(rpc, receiverParty, config.getZ2MuxConfig());
         plpsiServer = PlpsiFactory.createServer(rpc, receiverParty, config.getPlpsiConfig());
@@ -47,13 +46,17 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
     }
 
     @Override
-    public void init(int senderPayloadBitLen, int senderSize, int receiverSize) throws MpcAbortException {
-        assert senderPayloadBitLen * senderSize > 0;
-        z2MuxParty.init(receiverSize);
+    public void init(int payloadBitLen, int senderSize, int receiverSize) throws MpcAbortException {
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
+        assert payloadBitLen * senderSize > 0;
+        z2MuxParty.init(receiverSize * 20);
         plpsiServer.init(senderSize, receiverSize);
-        osnSender.init(receiverSize * 10);
+        osnSender.init(receiverSize * 20);
         prefixAggParty.init(256, receiverSize * 10);
         initState();
+
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -62,9 +65,9 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
     }
 
     @Override
-    public PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload, int receiverSize) throws MpcAbortException {
+    public PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload) throws MpcAbortException {
         assert preView.inputKey.length == payload.length;
-        return innerCommon(preView.inputKey, payload, receiverSize);
+        return innerCommon(preView.inputKey, payload, preView.receiverInputSize);
     }
 
     private PkFkViewSenderOutput innerCommon(byte[][] key, BitVector[] payload, int receiverSize) throws MpcAbortException {
@@ -79,7 +82,10 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
             System.arraycopy(ea, 0, tmp, 0, ea.length);
             return tmp;
         }).toArray(byte[][]::new);
-        PlpsiShareOutput psiRes = plpsiServer.psi(Arrays.stream(appendKey).collect(Collectors.toList()), receiverSize);
+        List<byte[]> payloadByteList = Arrays.stream(payload).map(BitVector::getBytes).collect(Collectors.toList());
+        PlpsiShareOutput psiRes = plpsiServer.psiWithPayload(Arrays.stream(appendKey).collect(Collectors.toList()), receiverSize,
+            Collections.singletonList(payloadByteList), new int[]{payload[0].bitNum()}, new boolean[]{true}
+        );
         stopWatch.stop();
         long psiProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -106,23 +112,27 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
             System.arraycopy(sharePayloadInRow[i], 0, osnInput[i], 1, sharePayloadInRow[i].length);
         }
         OsnPartyOutput osnPartyOutput = osnSender.osn(new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnInput[0].length);
+        stopWatch.stop();
+        long osnProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        stopWatch.reset();
+        logStepInfo(PtoState.PTO_STEP, 3, 4, osnProcess);
 
         // 4. 复制值
         stopWatch.start();
         SquareZ2Vector[] duplicateInput = new SquareZ2Vector[sharePayload.length + 1];
         SquareZ2Vector[] payloadAndFlag = Arrays.stream(
-                ZlDatabase.create(osnInput[0].length * 8 - 7, osnPartyOutput.getShareArray(7))
+                ZlDatabase.create(osnInput[0].length * 8 - 7, osnPartyOutput.getShareArray(osnInput[0].length * 8 - 7))
                     .bitPartition(envType, parallel))
             .map(ea -> SquareZ2Vector.create(ea, false))
             .toArray(SquareZ2Vector[]::new);
         System.arraycopy(payloadAndFlag, payloadAndFlag.length - sharePayload.length, duplicateInput, 0, sharePayload.length);
         duplicateInput[sharePayload.length] = payloadAndFlag[0];
-        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(new String[psiRes.getBeta()], duplicateInput);
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg((String[]) null, duplicateInput);
         SquareZ2Vector[] duplicateRes = prefixAggOutput.getAggsBinary();
         SquareZ2Vector[] forTrans = Arrays.copyOf(duplicateRes, sharePayload.length);
         SquareZ2Vector finalEqualFlag = duplicateRes[sharePayload.length];
 
-        PkFkViewSenderOutput output = new PkFkViewSenderOutput(key, payload, null, forTrans, finalEqualFlag, psiRes.getZ1());
+        PkFkViewSenderOutput output = new PkFkViewSenderOutput(key, payload, null, forTrans, finalEqualFlag, psiRes.getZ1(), receiverSize);
         stopWatch.stop();
         long transProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();

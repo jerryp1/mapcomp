@@ -42,11 +42,16 @@ public class PkFkViewReceiverOutput {
      * shared map equal flag generated after mapping
      */
     public SquareZ2Vector mapEqualFlag;
+    /**
+     * sender input size
+     */
+    public int senderInputSize;
 
     public PkFkViewReceiverOutput(byte[][] inputKey, BitVector[] inputPayload,
                                   int[] pi, int[] sigma,
                                   SquareZ2Vector[] shareData, BitVector[] selfData,
-                                  SquareZ2Vector equalFlag, SquareZ2Vector mapEqualFlag){
+                                  SquareZ2Vector equalFlag, SquareZ2Vector mapEqualFlag,
+                                  int senderInputSize){
         this.inputKey = inputKey;
         this.inputPayload = inputPayload;
         this.pi = pi;
@@ -55,5 +60,6 @@ public class PkFkViewReceiverOutput {
         this.shareData = shareData;
         this.equalFlag = equalFlag;
         this.mapEqualFlag = mapEqualFlag;
+        this.senderInputSize = senderInputSize;
     }
 }

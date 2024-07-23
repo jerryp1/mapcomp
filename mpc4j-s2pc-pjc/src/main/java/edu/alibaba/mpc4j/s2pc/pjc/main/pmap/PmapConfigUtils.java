@@ -10,7 +10,7 @@ import edu.alibaba.mpc4j.s2pc.pjc.main.pid.PidConfigUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
@@ -41,8 +41,8 @@ public class PmapConfigUtils {
     static PmapConfig createConfig(Properties properties) {
         // 读取协议类型
         String pmapTypeString = PropertiesUtils.readString(properties, "pmap_pto_name");
-        PmapFactory.PmapType pmapType = PmapFactory.PmapType.valueOf(pmapTypeString);
-        switch (pmapType) {
+        PmapPtoType pmapPtoType = PmapPtoType.valueOf(pmapTypeString);
+        switch (pmapPtoType) {
             case PHP24:
                 return createHpl24PmapConfig(properties);
             case PID_BASED:

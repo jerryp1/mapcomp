@@ -7,7 +7,7 @@ import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.PidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21SloppyPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 import edu.alibaba.mpc4j.s2pc.pso.psu.PsuConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
 
@@ -34,8 +34,8 @@ public class PidBasedPmapConfig extends AbstractMultiPartyPtoConfig implements P
     }
 
     @Override
-    public PmapType getPtoType() {
-        return PmapType.PID_BASED;
+    public PmapPtoType getPtoType() {
+        return PmapPtoType.PID_BASED;
     }
 
     public PeqtConfig getPeqtConfig() {

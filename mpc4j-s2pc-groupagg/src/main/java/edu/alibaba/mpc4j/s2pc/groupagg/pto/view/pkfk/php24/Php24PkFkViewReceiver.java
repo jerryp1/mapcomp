@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
+import edu.alibaba.mpc4j.common.tool.MathPreconditions;
 import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
@@ -14,6 +15,7 @@ import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxParty;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
@@ -28,6 +30,7 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
+import gnu.trove.list.array.TIntArrayList;
 import scala.collection.mutable.HashMap;
 
 import java.math.BigInteger;
@@ -54,7 +57,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
     private int[] sigma;
     private SquareZ2Vector mapEqualFlag;
 
-    protected Php24PkFkViewReceiver(Rpc rpc, Party senderParty, Php24PkFkViewConfig config) {
+    public Php24PkFkViewReceiver(Rpc rpc, Party senderParty, Php24PkFkViewConfig config) {
         super(BaselinePkFkViewPtoDesc.getInstance(), rpc, senderParty, config);
         plainPayloadMuxParty = PlainPlayloadMuxFactory.createReceiver(rpc, senderParty, config.getPlainPayloadMuxConfig());
         pmapClient = PmapFactory.createClient(rpc, senderParty, config.getPmapConfig());
@@ -65,19 +68,24 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
 
     @Override
     public void init(int senderPayloadBitLen, int senderSize, int receiverSize) throws MpcAbortException {
+        logPhaseInfo(PtoState.INIT_BEGIN);
+        MathPreconditions.checkGreaterOrEqual("senderSize >= receiverSize", senderSize, receiverSize);
         assert senderPayloadBitLen * senderSize > 0;
-        plainPayloadMuxParty.init(receiverSize);
-        pmapClient.init(senderSize, receiverSize);
-        osnReceiver.init(senderSize + receiverSize);
+
+        pmapClient.init(receiverSize, senderSize);
+        osnReceiver.init(senderSize + receiverSize * 20);
         prefixAggParty.init(256, senderSize + receiverSize);
+        plainPayloadMuxParty.init(senderSize + receiverSize);
         initState();
+
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
     public PkFkViewReceiverOutput generate(byte[][] key, BitVector[] payload, int senderSize, int senderPayloadBitLen) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
-        int receiverSize = key.length;
         assert key.length == payload.length;
+        int keyByteLen = key[0].length;
 
         // 1. 预计算map
         stopWatch.start();
@@ -123,13 +131,13 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
 
         // 4. traversal
         stopWatch.start();
-        String[] groupString = getGroupString(key);
+        Vector<byte[]> groupBytes = getGroupBytes(key);
+        String[] keyStr = GroupAggUtils.bytesToBinaryString(groupBytes, keyByteLen * 8);
         SquareZ2Vector[] groupInput = new SquareZ2Vector[senderPayloadBitLen + 1];
         byte[][] payloadTrans = ZlDatabase.create(envType, parallel, osnSenderPayload).getBytesData();
         IntStream.range(0, payloadTrans.length).forEach(i -> groupInput[i] = SquareZ2Vector.create(sigma.length, payloadTrans[i], false));
         groupInput[senderPayloadBitLen] = SquareZ2Vector.create(osnEqual, false);
-        // todo
-        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(groupString, groupInput);
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(keyStr, groupInput);
         SquareZ2Vector[] groupOut = prefixAggOutput.getAggsBinary();
         stopWatch.stop();
         long traversalTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -137,23 +145,24 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         logStepInfo(PtoState.PTO_STEP, 4, 4, traversalTime);
 
         BitVector[] selfData = new BitVector[sigma.length];
-        for(int i = 0; i < sigma.length; i++){
+        for (int i = 0; i < sigma.length; i++) {
             int target = pi[sigma[i]];
-            if(target < key.length){
+            if (target < key.length) {
                 selfData[i] = payload[target];
-            }else{
+            } else {
                 selfData[i] = null;
             }
         }
 
         logPhaseInfo(PtoState.PTO_END);
         return new PkFkViewReceiverOutput(key, payload, pi, sigma,
-            Arrays.copyOf(groupOut, senderPayloadBitLen), selfData, groupOut[senderPayloadBitLen], mapEqualFlag);
+            Arrays.copyOf(groupOut, senderPayloadBitLen), selfData, groupOut[senderPayloadBitLen], mapEqualFlag, senderSize);
     }
 
     @Override
-    public PkFkViewReceiverOutput refresh(PkFkViewReceiverOutput preView, int senderSize) throws MpcAbortException {
+    public PkFkViewReceiverOutput refresh(PkFkViewReceiverOutput preView, BitVector[] payload) throws MpcAbortException {
         appendKey = PkFkUtils.addIndex(preView.inputKey);
+        int keyByteLen = preView.inputKey[0].length;
         pi = preView.pi;
         sigma = preView.sigma;
         mapEqualFlag = preView.mapEqualFlag;
@@ -161,6 +170,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         int senderPayloadBitLen = preView.shareData.length;
 
         // 1. 用e置0非交集
+        stopWatch.start();
         SquareZ2Vector[] sharePayload = plainPayloadMuxParty.muxB(mapEqualFlag, null, senderPayloadBitLen);
         stopWatch.stop();
         long muxProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -185,20 +195,30 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
 
         // 3. traversal
         stopWatch.start();
-        String[] groupString = getGroupString(preView.inputKey);
+        Vector<byte[]> groupBytes = getGroupBytes(preView.inputKey);
+        String[] keyStr = GroupAggUtils.bytesToBinaryString(groupBytes, keyByteLen * 8);
         SquareZ2Vector[] groupInput = Arrays.stream(ZlDatabase.create(envType, parallel, osnSenderPayload).getBytesData())
             .map(ea -> SquareZ2Vector.create(osnSenderPayload.length, ea, false))
             .toArray(SquareZ2Vector[]::new);
-        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(groupString, groupInput);
+        PrefixAggOutput prefixAggOutput = prefixAggParty.agg(keyStr, groupInput);
         SquareZ2Vector[] groupOut = prefixAggOutput.getAggsBinary();
         stopWatch.stop();
         long traversalTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 3, traversalTime);
 
+        BitVector[] selfData = new BitVector[sigma.length];
+        for (int i = 0; i < sigma.length; i++) {
+            int target = pi[sigma[i]];
+            if (target < payload.length) {
+                selfData[i] = payload[target];
+            } else {
+                selfData[i] = null;
+            }
+        }
         logPhaseInfo(PtoState.PTO_END);
         return new PkFkViewReceiverOutput(preView.inputKey, preView.inputPayload, preView.pi, preView.sigma,
-            groupOut, preView.selfData, preView.equalFlag, preView.mapEqualFlag);
+            groupOut, selfData, preView.equalFlag, preView.mapEqualFlag, preView.senderInputSize);
     }
 
     private void preComp(byte[][] key, int senderSize) throws MpcAbortException {
@@ -212,15 +232,17 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         // extend the permutation
         if (pmapRes.getIndexMap().size() < receiverSize) {
             assert pmapRes.getMapType().equals(MapType.PSI);
-            HashSet<BigInteger> psiKeySet = new HashSet<>(receiverSize);
-            for (byte[] psiKey : pmapRes.getIndexMap().values()) {
-                psiKeySet.add(new BigInteger(psiKey));
-            }
+            HashSet<byte[]> psiKeySet = new HashSet<>(pmapRes.getIndexMap().values());
             int startIndex = pmapRes.getIndexMap().size();
             for (byte[] oneKey : appendKey) {
-                if (!psiKeySet.contains(new BigInteger(oneKey))) {
+                if (!psiKeySet.contains(oneKey)) {
                     resultMap.put(startIndex++, oneKey);
                 }
+            }
+        }
+        if (pmapRes.getIndexMap().size() < senderSize) {
+            for (int i = pmapRes.getIndexMap().size(); i < senderSize; i++) {
+                resultMap.put(i, new byte[0]);
             }
         }
         // extend flag
@@ -230,14 +252,14 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
             mapEqualFlag = SquareZ2Vector.create(BitVectorFactory.create(resultMap.size(), eqBig), false);
         }
         // get pi
-        HashMap<BigInteger, Integer> data2pos = new HashMap<>();
+        HashMap<byte[], Integer> data2pos = new HashMap<>();
         for (int i = 0; i < receiverSize; i++) {
-            data2pos.put(new BigInteger(appendKey[i]), i);
+            data2pos.put(appendKey[i], i);
         }
         int dummyIndex = receiverSize;
         pi = new int[resultMap.size()];
         for (int i = 0; i < resultMap.size(); i++) {
-            BigInteger tmp = new BigInteger(resultMap.get(i));
+            byte[] tmp = resultMap.get(i);
             if (data2pos.contains(tmp)) {
                 pi[i] = data2pos.get(tmp).get();
             } else {
@@ -252,6 +274,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         int bigNum = appendKey[0].length * 8;
         BigInteger maxNum = BigInteger.ONE.shiftLeft(bigNum);
         HashMap<BigInteger, Integer> data2pos = new HashMap<>();
+        TIntArrayList intList = new TIntArrayList(pi.length - appendKey.length);
         // 排序已经置换过的key
         BigInteger[] tmp = Arrays.stream(pi).mapToObj(i -> {
             if (pi[i] < appendKey.length) {
@@ -259,27 +282,27 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
                 data2pos.put(v, i);
                 return v;
             } else {
+                intList.add(i);
                 return maxNum;
             }
         }).toArray(BigInteger[]::new);
-        Arrays.sort(tmp, BigInteger::compareTo);
-        int otherStartIndex = appendKey.length;
+        Arrays.sort(tmp, (x, y) -> -x.compareTo(y));
         sigma = new int[pi.length];
-        for (int i = 0; i < pi.length; i++) {
+        for (int i = 0, other = 0; i < pi.length; i++) {
             BigInteger v = tmp[i];
             if (data2pos.contains(v)) {
                 sigma[i] = data2pos.get(v).get();
             } else {
-                sigma[i] = otherStartIndex++;
+                sigma[i] = intList.get(other++);
             }
         }
-        assert otherStartIndex == pi.length;
     }
 
-    private String[] getGroupString(byte[][] key) {
-        String defaultStr = BigInteger.ONE.shiftLeft(key[0].length * 8).toString();
+    private Vector<byte[]> getGroupBytes(byte[][] key) {
+        byte[] defaultBytes = new byte[key[0].length];
+        Arrays.fill(defaultBytes, (byte) 255);
         byte[][] perRes = Arrays.stream(pi).mapToObj(i -> i < key.length ? key[i] : new byte[0]).toArray(byte[][]::new);
         perRes = BenesNetworkUtils.permutation(sigma, perRes);
-        return Arrays.stream(perRes).map(ea -> ea.length > 0 ? new BigInteger(ea).toString() : defaultStr).toArray(String[]::new);
+        return Arrays.stream(perRes).map(ea -> ea.length > 0 ? ea : defaultBytes).collect(Collectors.toCollection(Vector::new));
     }
 }

@@ -9,6 +9,8 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixmax.PrefixMaxFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumFactory.PrefixSumTypes;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorConfig;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorFactory;
 
 /**
  * @author Li Peng
@@ -47,6 +49,8 @@ public class PrefixAggFactory {
                 return PrefixSumFactory.createPrefixSumSender(senderRpc, receiverParty, (PrefixSumConfig) config);
             case MAX:
                 return PrefixMaxFactory.createPrefixMaxSender(senderRpc, receiverParty, (PrefixMaxConfig) config);
+            case XOR:
+                return PrefixXorFactory.createPrefixXorSender(senderRpc, receiverParty, (PrefixXorConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixAggTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -64,6 +68,8 @@ public class PrefixAggFactory {
                 return PrefixSumFactory.createPrefixSumReceiver(receiverRpc, senderParty, (PrefixSumConfig) config);
             case MAX:
                 return PrefixMaxFactory.createPrefixMaxReceiver(receiverRpc, senderParty, (PrefixMaxConfig) config);
+            case XOR:
+                return PrefixXorFactory.createPrefixXorReceiver(receiverRpc, senderParty, (PrefixXorConfig) config);
             default:
                 throw new IllegalArgumentException("Invalid " + PrefixSumTypes.class.getSimpleName() + ": " + type.name());
         }
@@ -82,6 +88,8 @@ public class PrefixAggFactory {
                 return PrefixMaxFactory.createDefaultPrefixMaxConfig(securityModel, zl, silent, plainOutput);
             case SUM:
                 return PrefixSumFactory.createDefaultPrefixSumConfig(securityModel, zl, silent, plainOutput);
+            case XOR:
+                return PrefixXorFactory.createDefaultPrefixXorConfig(securityModel, zl, silent, plainOutput);
             default:
                 throw new IllegalArgumentException("Invalid " + SecurityModel.class.getSimpleName() + ": " + securityModel.name());
         }
