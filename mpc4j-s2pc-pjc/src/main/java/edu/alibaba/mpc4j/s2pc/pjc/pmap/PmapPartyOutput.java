@@ -53,9 +53,11 @@ public class PmapPartyOutput<T> {
         // Verify that all elements in indexMap are from elementList
         List<T> mapList = indexMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
         Set<T> mapSet = new HashSet<>(mapList);
-        assert elementList.size() == mapList.size();
-        for (T value : elementList) {
-            assert mapSet.contains(value);
+        if(!mapType.equals(MapType.PSI)){
+            assert elementList.size() == mapList.size();
+            for (T value : elementList) {
+                assert mapSet.contains(value);
+            }
         }
         this.indexMap = indexMap;
         if(equalFlag != null){

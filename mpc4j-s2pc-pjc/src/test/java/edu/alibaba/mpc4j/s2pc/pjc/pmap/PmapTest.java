@@ -9,10 +9,11 @@ import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.peqt.naive.NaivePeqtConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.bkms20.Bkms20ByteEccPidConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pid.gmr21.Gmr21MpPidConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapPartyOutput.MapType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.psu.jsz22.Jsz22SfcPsuConfig;
@@ -67,31 +68,36 @@ public class PmapTest extends AbstractTwoPartyPtoTest {
         Collection<Object[]> configurations = new ArrayList<>();
 
         configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
+            PmapPtoType.PSI_BASED.name(),
+            new PsiBasedPmapConfig.Builder(silent).build(),
+        });
+
+        configurations.add(new Object[]{
+            PmapPtoType.PID_BASED.name() + "_Gmr21Sloppy_JSZ22_SFC",
             new PidBasedPmapConfig.Builder(silent).build(),
         });
 
         configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
+            PmapPtoType.PID_BASED.name() + "_Gmr21Mp_JSZ22_SFC",
             new PidBasedPmapConfig.Builder(silent).setPidConfig(
                 new Gmr21MpPidConfig.Builder().setPsuConfig(
                     new Jsz22SfcPsuConfig.Builder(false).build()).build()).build(),
         });
 
         configurations.add(new Object[]{
-            PmapType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
+            PmapPtoType.PID_BASED.name() + "_Bkms20_Byte_Ecc",
             new PidBasedPmapConfig.Builder(silent).setPidConfig(
                 new Bkms20ByteEccPidConfig.Builder().build()).build(),
         });
 
         for(int bitLen : bitLens){
             configurations.add(new Object[]{
-                PmapType.PHP24.name()+ "_bitLen_" + bitLen,
+                PmapPtoType.PHP24.name()+ "_bitLen_" + bitLen,
                 new Php24PmapConfig.Builder(silent).setBitLength(bitLen, silent).build(),
             });
 
             configurations.add(new Object[]{
-                PmapType.PHP24.name()+ "_naive_peqt_bitLen_" + bitLen,
+                PmapPtoType.PHP24.name()+ "_naive_peqt_bitLen_" + bitLen,
                 new Php24PmapConfig.Builder(silent).setPlpsiconfig(
                     new Rs21PlpsiConfig.Builder(silent).setPeqtConfig(
                         new NaivePeqtConfig.Builder(SecurityModel.SEMI_HONEST, false).build()).build())

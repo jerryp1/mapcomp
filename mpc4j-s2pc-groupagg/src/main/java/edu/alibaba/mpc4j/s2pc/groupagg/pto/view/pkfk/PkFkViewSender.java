@@ -14,18 +14,22 @@ public interface PkFkViewSender extends ViewParty {
     /**
      * init the protocol
      */
-    void init(int bitNum, int senderSize, int receiverSize) throws MpcAbortException;
+    void init(int payloadBitLen, int senderSize, int receiverSize) throws MpcAbortException;
+
     /**
      * generate the view
-     * @param key the join key of database
-     * @param payload the payload of database
+     *
+     * @param key          the join key of database
+     * @param payload      the payload of database
      * @param receiverSize the table size of the receiver
      */
     PkFkViewSenderOutput generate(byte[][] key, BitVector[] payload, int receiverSize) throws MpcAbortException;
+
     /**
      * generate the view
+     *
      * @param preView the pre-generated view
-     * @param receiverSize the table size of the receiver
+     * @param payload new payload
      */
-    PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload, int receiverSize) throws MpcAbortException;
+    PkFkViewSenderOutput refresh(PkFkViewSenderOutput preView, BitVector[] payload) throws MpcAbortException;
 }

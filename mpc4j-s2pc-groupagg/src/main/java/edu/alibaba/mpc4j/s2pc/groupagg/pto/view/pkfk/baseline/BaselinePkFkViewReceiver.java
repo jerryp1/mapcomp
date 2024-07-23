@@ -11,6 +11,7 @@ import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxParty;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
@@ -41,23 +42,27 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
     private final OsnReceiver osnReceiver;
     private final PrefixAggParty prefixAggParty;
 
-    protected BaselinePkFkViewReceiver(Rpc rpc, Party senderParty, BaselinePkFkViewConfig config) {
+    public BaselinePkFkViewReceiver(Rpc rpc, Party senderParty, BaselinePkFkViewConfig config) {
         super(BaselinePkFkViewPtoDesc.getInstance(), rpc, senderParty, config);
         z2MuxParty = Z2MuxFactory.createReceiver(rpc, senderParty, config.getZ2MuxConfig());
         plpsiClient = PlpsiFactory.createClient(rpc, senderParty, config.getPlpsiConfig());
         osnReceiver = OsnFactory.createReceiver(rpc, senderParty, config.getOsnConfig());
         prefixAggParty = PrefixAggFactory.createPrefixAggReceiver(rpc, senderParty, config.getPrefixAggConfig());
-        addMultipleSubPtos(z2MuxParty, plpsiClient, osnReceiver, prefixAggParty);
+        addMultipleSubPtos(z2MuxParty, plpsiClient, prefixAggParty, osnReceiver);
     }
 
     @Override
     public void init(int senderPayloadBitLen, int senderSize, int receiverSize) throws MpcAbortException {
+        logPhaseInfo(PtoState.INIT_BEGIN);
+
         assert senderPayloadBitLen * senderSize > 0;
-        z2MuxParty.init(receiverSize);
-        plpsiClient.init(senderSize, receiverSize);
-        osnReceiver.init(receiverSize * 10);
+        z2MuxParty.init(receiverSize * 20);
+        plpsiClient.init(receiverSize, senderSize);
+        osnReceiver.init(receiverSize * 20);
         prefixAggParty.init(256, receiverSize * 10);
         initState();
+
+        logPhaseInfo(PtoState.INIT_END);
     }
 
     @Override
@@ -66,13 +71,14 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
     }
 
     @Override
-    public PkFkViewReceiverOutput refresh(PkFkViewReceiverOutput preView, int senderSize) throws MpcAbortException {
-        return innerCommon(preView.inputKey, preView.inputPayload, senderSize, preView.shareData.length);
+    public PkFkViewReceiverOutput refresh(PkFkViewReceiverOutput preView, BitVector[] payload) throws MpcAbortException {
+        return innerCommon(preView.inputKey, payload, preView.senderInputSize, preView.shareData.length);
     }
 
     private PkFkViewReceiverOutput innerCommon(byte[][] key, BitVector[] payload, int senderSize, int senderPayloadBitLen) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
         int receiverSize = key.length;
+        int keyByteLen = key[0].length;
         assert key.length == payload.length;
 
         // 1. key加后缀 Payload psi
@@ -110,7 +116,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         Arrays.sort(sortData, (x, y) -> -x.compareTo(y));
         int[] sigma = Arrays.stream(sortData).mapToInt(BigInteger::intValue).toArray();
         // 3.2 sort payload
-        BitVector[] selfPayload = Arrays.stream(sigma).mapToObj(i -> i >= key.length ? null : payload[sigma[i]]).toArray(BitVector[]::new);
+        BitVector[] selfPayload = Arrays.stream(sigma).mapToObj(i -> i >= key.length ? null : payload[i]).toArray(BitVector[]::new);
         // 3.3 osn the other payload
         byte[][] sharePayloadInRow = ZlDatabase.create(envType, parallel,
                 Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
@@ -132,13 +138,17 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         stopWatch.start();
         SquareZ2Vector[] duplicateInput = new SquareZ2Vector[sharePayload.length + 1];
         SquareZ2Vector[] payloadAndFlag = Arrays.stream(
-                ZlDatabase.create(osnInput[0].length * 8 - 7, osnPartyOutput.getShareArray(7))
+                ZlDatabase.create(osnInput[0].length * 8 - 7, osnPartyOutput.getShareArray(osnInput[0].length * 8 - 7))
                     .bitPartition(envType, parallel))
             .map(ea -> SquareZ2Vector.create(ea, false))
             .toArray(SquareZ2Vector[]::new);
         System.arraycopy(payloadAndFlag, payloadAndFlag.length - sharePayload.length, duplicateInput, 0, sharePayload.length);
         duplicateInput[sharePayload.length] = payloadAndFlag[0];
-        String[] keyStr = Arrays.stream(sortData).map(ea -> ea.shiftRight(64).toString()).toArray(String[]::new);
+
+        Vector<byte[]> keyBytes = Arrays.stream(sortData)
+            .map(ea -> BigIntegerUtils.nonNegBigIntegerToByteArray(ea.shiftRight(64), keyByteLen))
+            .collect(Collectors.toCollection(Vector::new));
+        String[] keyStr = GroupAggUtils.bytesToBinaryString(keyBytes, keyByteLen * 8);
         PrefixAggOutput prefixAggOutput = prefixAggParty.agg(keyStr, duplicateInput);
         SquareZ2Vector[] duplicateRes = prefixAggOutput.getAggsBinary();
         SquareZ2Vector[] forTrans = Arrays.copyOf(duplicateRes, sharePayload.length);
@@ -146,7 +156,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
 
         PkFkViewReceiverOutput output = new PkFkViewReceiverOutput(key, payload,
             IntStream.range(0, receiverSize).toArray(), sigma,
-            forTrans, selfPayload, finalEqualFlag, psiRes.getZ1()
+            forTrans, selfPayload, finalEqualFlag, psiRes.getZ1(), senderSize
         );
         stopWatch.stop();
         long transProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
