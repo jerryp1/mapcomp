@@ -15,18 +15,18 @@ public class PkFkUtils {
     /**
      * add index for data
      */
-    public static byte[][] addIndex(byte[][] input){
+    public static byte[][] addIndex(byte[][] input) {
         int n = input.length;
         HashMap<BigInteger, int[]> map = new HashMap<>();
         byte[][] res = new byte[n][];
-        for(int i = 0 ; i < input.length; i++){
+        for (int i = 0; i < input.length; i++) {
             BigInteger data = new BigInteger(input[i]);
             res[i] = new byte[input[i].length + 4];
             int[] cnt;
-            if(map.containsKey(data)){
+            if (map.containsKey(data)) {
                 cnt = map.get(data);
                 cnt[0] = cnt[0] + 1;
-            }else{
+            } else {
                 cnt = new int[]{0};
                 map.put(data, cnt);
             }
@@ -39,10 +39,10 @@ public class PkFkUtils {
     /**
      * sort data to get the permutation
      */
-    public static int[] permutation4Sort(byte[][] input){
+    public static int[] permutation4Sort(byte[][] input) {
         BigInteger[] bigIntegers = Arrays.stream(input).map(BigIntegerUtils::byteArrayToNonNegBigInteger).toArray(BigInteger[]::new);
         HashMap<BigInteger, Integer> map = new HashMap<>();
-        for(int i = 0; i < input.length; i++){
+        for (int i = 0; i < input.length; i++) {
             map.put(bigIntegers[i], i);
         }
         Arrays.parallelSort(bigIntegers, BigInteger::compareTo);

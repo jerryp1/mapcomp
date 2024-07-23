@@ -27,10 +27,10 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * @author Feng Han
@@ -103,16 +103,26 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         // 3. osn
         stopWatch.start();
         // 2.1 sort based on psiRes result
+        HashMap<byte[], Integer> map2PsiRes = new HashMap<>();
+        for(int i = 0; i < appendKey.length; i++){
+            map2PsiRes.put(appendKey[i], i);
+        }
         BigInteger maxNum = BigInteger.ONE.shiftLeft(key[0].length * 8 + 32);
         BigInteger[] sortData = new BigInteger[psiRes.getBeta()];
         byte[][] allPsiKey = psiRes.getTable().toArray(new byte[0][]);
+        int[] pi = new int[psiRes.getBeta()];
+        int startPos = appendKey.length;
         for (int i = 0; i < sortData.length; i++) {
             if (allPsiKey[i] == null) {
                 sortData[i] = maxNum.add(BigInteger.valueOf(i));
+                pi[i] = startPos++;
             } else {
                 sortData[i] = BigIntegerUtils.byteArrayToNonNegBigInteger(allPsiKey[i]).shiftLeft(32).add(BigInteger.valueOf(i));
+                pi[i] = map2PsiRes.get(allPsiKey[i]);
             }
         }
+        assert startPos == sortData.length;
+
         Arrays.sort(sortData, (x, y) -> -x.compareTo(y));
         int[] sigma = Arrays.stream(sortData).mapToInt(BigInteger::intValue).toArray();
         // 3.2 sort payload
@@ -155,7 +165,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         SquareZ2Vector finalEqualFlag = duplicateRes[sharePayload.length];
 
         PkFkViewReceiverOutput output = new PkFkViewReceiverOutput(key, payload,
-            IntStream.range(0, receiverSize).toArray(), sigma,
+            pi, sigma,
             forTrans, selfPayload, finalEqualFlag, psiRes.getZ1(), senderSize
         );
         stopWatch.stop();

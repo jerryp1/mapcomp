@@ -51,7 +51,7 @@ public class PkFkViewReceiverOutput {
                                   int[] pi, int[] sigma,
                                   SquareZ2Vector[] shareData, BitVector[] selfData,
                                   SquareZ2Vector equalFlag, SquareZ2Vector mapEqualFlag,
-                                  int senderInputSize){
+                                  int senderInputSize) {
         this.inputKey = inputKey;
         this.inputPayload = inputPayload;
         this.pi = pi;
