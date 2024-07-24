@@ -127,14 +127,6 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         groupIndicator2.getBitVector().shiftLeftUnChangeNum(1);
         Zl zl = ZlFactory.createInstance(EnvType.INLAND_JDK, l);
 
-        // test
-//        if (receiver) {
-//            BitVector test = z2cParty.revealOwn(groupIndicator1);
-//            System.out.printf("123");
-//        } else {
-//            z2cParty.revealOther(groupIndicator1);
-//        }
-
         BitVector[] aggBitArray = Arrays.stream(aggField).map(v -> v.getBitVector()).toArray(BitVector[]::new);
         byte[][] aggByteArray = TransposeUtils.transposeMerge(aggBitArray);
         BigInteger[] aggBigInt = Arrays.stream(aggByteArray).map(v -> BigIntegerUtils.byteArrayToNonNegBigInteger(v)).toArray(BigInteger[]::new);
@@ -144,20 +136,12 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         // prefix-computation
         prefixTree.addPrefix(num);
 
-        // for test
-//        SquareZlVector vv = SquareZlVector.create(zl, Arrays.stream(nodes)
-//            .map(PrefixAggNode::getAggShare).toArray(BigInteger[]::new),false);
-//        if (receiver) {
-//            ZlVector testt = zlcParty.revealOwn(vv);
-//            System.out.printf("123");
-//        } else {
-//            zlcParty.revealOther(vv);
-//        }
-
         // obtain agg fields, transfer to z2Vector
         byte[][] resultBytes = Arrays.stream(nodes)
             .map(PrefixAggNode::getAggShare).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteLen)).toArray(byte[][]::new);
         SquareZ2Vector[] resultZ2Vector = Arrays.stream(TransposeUtils.transposeSplit(resultBytes, l)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
+        resultZ2Vector = z2MuxParty.mux(groupIndicator1, resultZ2Vector);
+
         return resultZ2Vector;
     }
 

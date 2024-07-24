@@ -10,6 +10,7 @@ import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
 import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.GroupAggUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorConfig;
@@ -30,8 +31,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
 
 
 /**
@@ -54,7 +53,7 @@ public class PrefixXorTest extends AbstractTwoPartyPtoTest {
     /**
      * default Zl
      */
-    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, 8);
+    private static final Zl DEFAULT_ZL = ZlFactory.createInstance(EnvType.STANDARD, Integer.SIZE);
     /**
      * current Zl
      */
@@ -135,18 +134,15 @@ public class PrefixXorTest extends AbstractTwoPartyPtoTest {
         for (int i = 0; i < num; i++) {
             groupings[i] = BigIntegerUtils.nonNegBigIntegerToByteArray
                 (BigInteger.valueOf(i / groupSize), zl.getByteL());
+            // set agg=0 to the first location within a group
             if (i % groupSize == 0) {
-                aggs[i] = BigInteger.ONE;
+                aggs[i] = new BigInteger(zl.getL() / 2, SECURE_RANDOM);
             } else {
                 aggs[i] = BigInteger.ZERO;
             }
-//            aggs[i] = BigInteger.valueOf(i);
         }
-        String[] groupingStrings = IntStream.range(0, num).mapToObj(i -> new String(groupings[i])).toArray(String[]::new);
-        // generate indicator
-//        boolean[] indicator = getIndicator(groupings);
-//        // make the aggs
-//        IntStream.range(0, num).forEach(i -> aggs[i] = indicator[i] ? BigInteger.ZERO : aggs[i]);
+        Vector<byte[]> group = Arrays.stream(groupings).collect(Collectors.toCollection(Vector::new));
+        String[] groupingStrings = GroupAggUtils.bytesToBinaryString(group, zl.getL());
 
         SecureRandom secureRandom = new SecureRandom();
         BitVector[] originDataVec = ZlDatabase.create(zl.getL(), aggs).bitPartition(EnvType.STANDARD, true);
@@ -217,15 +213,5 @@ public class PrefixXorTest extends AbstractTwoPartyPtoTest {
             }
         }
         return map;
-    }
-
-    private boolean[] getIndicator(byte[][] groups) {
-        int num = groups.length;
-        boolean[] indicator = new boolean[num];
-        for (int i = 1; i < num; i++) {
-            indicator[i] = Arrays.equals(groups[i], groups[i-1]) ;
-        }
-        indicator[0] = false;
-        return indicator;
     }
 }
