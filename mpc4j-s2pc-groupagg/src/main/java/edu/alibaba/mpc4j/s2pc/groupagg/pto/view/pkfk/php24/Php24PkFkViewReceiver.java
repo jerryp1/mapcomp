@@ -6,7 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.MathPreconditions;
-import edu.alibaba.mpc4j.common.tool.benes.BenesNetworkUtils;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
@@ -23,7 +22,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiver;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewPtoDesc;
-import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
@@ -103,41 +101,41 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         logStepInfo(PtoState.PTO_STEP, 2, 4, muxProcess);
 
 
-        // debug
-        List<byte[]> senderKey = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderEqShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderPayload = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderPayloadShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        java.util.HashMap<BigInteger, byte[]> senderMap = new java.util.HashMap<>();
-        for (int i = 0; i < senderKey.size(); i++) {
-            byte[] originalKey = senderKey.get(i);
-            byte[] tmpKey = new byte[originalKey.length + 4];
-            System.arraycopy(originalKey, 0, tmpKey, 0, originalKey.length);
-            senderMap.put(new BigInteger(tmpKey), senderPayload.get(i));
-        }
-        // 恢复得到真正的equal flag
-        BitVector actualEqFlag = mapEqualFlag.getBitVector().xor(BitVectorFactory.create(mapEqualFlag.bitNum(), senderEqShare.get(0)));
-        BitVector[] joinPayload = new BitVector[sharePayload.length];
-        for (int i = 0; i < joinPayload.length; i++) {
-            joinPayload[i] = sharePayload[i].getBitVector().xor(BitVectorFactory.create(sharePayload[i].bitNum(), senderPayloadShare.get(i)));
-        }
-        byte[][] actualPayload = ZlDatabase.create(envType, parallel, joinPayload).getBytesData();
-        // verify
-        for(int i = 0; i < pi.length; i++){
-            if(pi[i] >= key.length){
-                assert !actualEqFlag.get(i);
-                assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
-            }else{
-                BigInteger tmpKeyBig = new BigInteger(appendKey[pi[i]]);
-                if(senderMap.containsKey(tmpKeyBig)){
-                    assert actualEqFlag.get(i);
-                    assert Arrays.equals(actualPayload[i], senderMap.get(tmpKeyBig));
-                }else{
-                    assert !actualEqFlag.get(i);
-                    assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
-                }
-            }
-        }
+//        // debug
+//        List<byte[]> senderKey = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderEqShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderPayload = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderPayloadShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        java.util.HashMap<BigInteger, byte[]> senderMap = new java.util.HashMap<>();
+//        for (int i = 0; i < senderKey.size(); i++) {
+//            byte[] originalKey = senderKey.get(i);
+//            byte[] tmpKey = new byte[originalKey.length + 4];
+//            System.arraycopy(originalKey, 0, tmpKey, 0, originalKey.length);
+//            senderMap.put(new BigInteger(tmpKey), senderPayload.get(i));
+//        }
+//        // 恢复得到真正的equal flag
+//        BitVector actualEqFlag = mapEqualFlag.getBitVector().xor(BitVectorFactory.create(mapEqualFlag.bitNum(), senderEqShare.get(0)));
+//        BitVector[] joinPayload = new BitVector[sharePayload.length];
+//        for (int i = 0; i < joinPayload.length; i++) {
+//            joinPayload[i] = sharePayload[i].getBitVector().xor(BitVectorFactory.create(sharePayload[i].bitNum(), senderPayloadShare.get(i)));
+//        }
+//        byte[][] actualPayload = ZlDatabase.create(envType, parallel, joinPayload).getBytesData();
+//        // verify
+//        for(int i = 0; i < pi.length; i++){
+//            if(pi[i] >= key.length){
+//                assert !actualEqFlag.get(i);
+//                assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
+//            }else{
+//                BigInteger tmpKeyBig = new BigInteger(appendKey[pi[i]]);
+//                if(senderMap.containsKey(tmpKeyBig)){
+//                    assert actualEqFlag.get(i);
+//                    assert Arrays.equals(actualPayload[i], senderMap.get(tmpKeyBig));
+//                }else{
+//                    assert !actualEqFlag.get(i);
+//                    assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
+//                }
+//            }
+//        }
 
         // 3. osn: the last bit is eqFlag
         stopWatch.start();
@@ -168,28 +166,28 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         logStepInfo(PtoState.PTO_STEP, 3, 4, osnTime);
 
 
-        // debug osn
-        List<byte[]> osnSenderPayloadRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> osnSenderEqRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        BitVector actualEqRes = osnEqual.xor(BitVectorFactory.create(osnEqual.bitNum(), osnSenderEqRes.get(0)));
-        BitVector[] osnRes = IntStream.range(0, osnSenderPayloadRes.size())
-            .mapToObj(i -> osnSenderPayload[i].xor(BitVectorFactory.create(osnSenderPayload[i].bitNum(), osnSenderPayloadRes.get(i))))
-            .toArray(BitVector[]::new);
-        for (int i = 0; i < sigma.length; i++) {
-            if(pi[sigma[i]] < key.length){
-                BigInteger appSortReceiverKey = new BigInteger(appendKey[pi[sigma[i]]]);
-                if (senderMap.containsKey(appSortReceiverKey)) {
-                    assert actualEqRes.get(i);
-                    assert Arrays.equals(osnRes[i].getBytes(), senderMap.get(appSortReceiverKey));
-                } else {
-                    assert !actualEqRes.get(i);
-                    assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
-                }
-            }else{
-                assert !actualEqRes.get(i);
-                assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
-            }
-        }
+//        // debug osn
+//        List<byte[]> osnSenderPayloadRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> osnSenderEqRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        BitVector actualEqRes = osnEqual.xor(BitVectorFactory.create(osnEqual.bitNum(), osnSenderEqRes.get(0)));
+//        BitVector[] osnRes = IntStream.range(0, osnSenderPayloadRes.size())
+//            .mapToObj(i -> osnSenderPayload[i].xor(BitVectorFactory.create(osnSenderPayload[i].bitNum(), osnSenderPayloadRes.get(i))))
+//            .toArray(BitVector[]::new);
+//        for (int i = 0; i < sigma.length; i++) {
+//            if(pi[sigma[i]] < key.length){
+//                BigInteger appSortReceiverKey = new BigInteger(appendKey[pi[sigma[i]]]);
+//                if (senderMap.containsKey(appSortReceiverKey)) {
+//                    assert actualEqRes.get(i);
+//                    assert Arrays.equals(osnRes[i].getBytes(), senderMap.get(appSortReceiverKey));
+//                } else {
+//                    assert !actualEqRes.get(i);
+//                    assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
+//                }
+//            }else{
+//                assert !actualEqRes.get(i);
+//                assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
+//            }
+//        }
 
 
         // 4. traversal
@@ -240,41 +238,41 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 1, 3, muxProcess);
 
-        // debug
-        List<byte[]> senderKey = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderEqShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderPayload = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        List<byte[]> senderPayloadShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        java.util.HashMap<BigInteger, byte[]> senderMap = new java.util.HashMap<>();
-        for (int i = 0; i < senderKey.size(); i++) {
-            byte[] originalKey = senderKey.get(i);
-            byte[] tmpKey = new byte[originalKey.length + 4];
-            System.arraycopy(originalKey, 0, tmpKey, 0, originalKey.length);
-            senderMap.put(new BigInteger(tmpKey), senderPayload.get(i));
-        }
-        // 恢复得到真正的equal flag
-        BitVector actualEqFlag = mapEqualFlag.getBitVector().xor(BitVectorFactory.create(mapEqualFlag.bitNum(), senderEqShare.get(0)));
-        BitVector[] joinPayload = new BitVector[sharePayload.length];
-        for (int i = 0; i < joinPayload.length; i++) {
-            joinPayload[i] = sharePayload[i].getBitVector().xor(BitVectorFactory.create(sharePayload[i].bitNum(), senderPayloadShare.get(i)));
-        }
-        byte[][] actualPayload = ZlDatabase.create(envType, parallel, joinPayload).getBytesData();
-        // verify
-        for(int i = 0; i < pi.length; i++){
-            if(pi[i] >= preView.inputKey.length){
-                assert !actualEqFlag.get(i);
-                assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
-            }else{
-                BigInteger tmpKeyBig = new BigInteger(appendKey[pi[i]]);
-                if(senderMap.containsKey(tmpKeyBig)){
-                    assert actualEqFlag.get(i);
-                    assert Arrays.equals(actualPayload[i], senderMap.get(tmpKeyBig));
-                }else{
-                    assert !actualEqFlag.get(i);
-                    assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
-                }
-            }
-        }
+//        // debug
+//        List<byte[]> senderKey = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderEqShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderPayload = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        List<byte[]> senderPayloadShare = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        java.util.HashMap<BigInteger, byte[]> senderMap = new java.util.HashMap<>();
+//        for (int i = 0; i < senderKey.size(); i++) {
+//            byte[] originalKey = senderKey.get(i);
+//            byte[] tmpKey = new byte[originalKey.length + 4];
+//            System.arraycopy(originalKey, 0, tmpKey, 0, originalKey.length);
+//            senderMap.put(new BigInteger(tmpKey), senderPayload.get(i));
+//        }
+//        // 恢复得到真正的equal flag
+//        BitVector actualEqFlag = mapEqualFlag.getBitVector().xor(BitVectorFactory.create(mapEqualFlag.bitNum(), senderEqShare.get(0)));
+//        BitVector[] joinPayload = new BitVector[sharePayload.length];
+//        for (int i = 0; i < joinPayload.length; i++) {
+//            joinPayload[i] = sharePayload[i].getBitVector().xor(BitVectorFactory.create(sharePayload[i].bitNum(), senderPayloadShare.get(i)));
+//        }
+//        byte[][] actualPayload = ZlDatabase.create(envType, parallel, joinPayload).getBytesData();
+//        // verify
+//        for(int i = 0; i < pi.length; i++){
+//            if(pi[i] >= preView.inputKey.length){
+//                assert !actualEqFlag.get(i);
+//                assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
+//            }else{
+//                BigInteger tmpKeyBig = new BigInteger(appendKey[pi[i]]);
+//                if(senderMap.containsKey(tmpKeyBig)){
+//                    assert actualEqFlag.get(i);
+//                    assert Arrays.equals(actualPayload[i], senderMap.get(tmpKeyBig));
+//                }else{
+//                    assert !actualEqFlag.get(i);
+//                    assert Arrays.equals(actualPayload[i], new byte[actualPayload[i].length]);
+//                }
+//            }
+//        }
 
         // 2. osn: the last bit is eqFlag
         stopWatch.start();
@@ -284,8 +282,12 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
             .getBytesData();
         OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigma,
             new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnByteLen);
+        byte andNum = (byte) (senderPayloadBitLen % 8 == 0 ? 255 : (1 << (senderPayloadBitLen % 8)) - 1);
         BitVector[] osnSenderPayload = Arrays.stream(osnPartyOutput.getVector().toArray(new byte[0][]))
-            .map(ea -> BitVectorFactory.create(senderPayloadBitLen, ea))
+            .map(ea -> {
+                ea[0] &= andNum;
+                return BitVectorFactory.create(senderPayloadBitLen, ea);
+            })
             .toArray(BitVector[]::new);
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -293,23 +295,23 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         logStepInfo(PtoState.PTO_STEP, 2, 3, osnTime);
 
 
-        // debug osn
-        List<byte[]> osnSenderPayloadRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
-        BitVector[] osnRes = IntStream.range(0, osnSenderPayloadRes.size())
-            .mapToObj(i -> osnSenderPayload[i].xor(BitVectorFactory.create(osnSenderPayload[i].bitNum(), osnSenderPayloadRes.get(i))))
-            .toArray(BitVector[]::new);
-        for (int i = 0; i < sigma.length; i++) {
-            if(pi[sigma[i]] < preView.inputKey.length){
-                BigInteger appSortReceiverKey = new BigInteger(appendKey[pi[sigma[i]]]);
-                if (senderMap.containsKey(appSortReceiverKey)) {
-                    assert Arrays.equals(osnRes[i].getBytes(), senderMap.get(appSortReceiverKey));
-                } else {
-                    assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
-                }
-            }else{
-                assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
-            }
-        }
+//        // debug osn
+//        List<byte[]> osnSenderPayloadRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+//        BitVector[] osnRes = IntStream.range(0, osnSenderPayloadRes.size())
+//            .mapToObj(i -> osnSenderPayload[i].xor(BitVectorFactory.create(osnSenderPayload[i].bitNum(), osnSenderPayloadRes.get(i))))
+//            .toArray(BitVector[]::new);
+//        for (int i = 0; i < sigma.length; i++) {
+//            if(pi[sigma[i]] < preView.inputKey.length){
+//                BigInteger appSortReceiverKey = new BigInteger(appendKey[pi[sigma[i]]]);
+//                if (senderMap.containsKey(appSortReceiverKey)) {
+//                    assert Arrays.equals(osnRes[i].getBytes(), senderMap.get(appSortReceiverKey));
+//                } else {
+//                    assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
+//                }
+//            }else{
+//                assert Arrays.equals(osnRes[i].getBytes(), new byte[osnRes[i].byteNum()]);
+//            }
+//        }
 
 
         // 3. traversal
@@ -336,7 +338,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
             }
         }
         logPhaseInfo(PtoState.PTO_END);
-        return new PkFkViewReceiverOutput(preView.inputKey, preView.inputPayload, preView.pi, preView.sigma,
+        return new PkFkViewReceiverOutput(preView.inputKey, payload, preView.pi, preView.sigma,
             groupOut, selfData, preView.equalFlag, preView.mapEqualFlag, preView.senderInputSize);
     }
 
@@ -427,8 +429,9 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
     private Vector<byte[]> getGroupBytes(byte[][] key) {
         byte[] defaultBytes = new byte[key[0].length];
         Arrays.fill(defaultBytes, (byte) 255);
-        byte[][] perRes = Arrays.stream(pi).mapToObj(i -> i < key.length ? key[i] : new byte[0]).toArray(byte[][]::new);
-        perRes = BenesNetworkUtils.permutation(sigma, perRes);
-        return Arrays.stream(perRes).map(ea -> ea.length > 0 ? ea : defaultBytes).collect(Collectors.toCollection(Vector::new));
+        return IntStream.range(0, pi.length).mapToObj(i -> {
+            int source = pi[sigma[i]];
+            return source < key.length ? key[source] : defaultBytes;
+        }).collect(Collectors.toCollection(Vector::new));
     }
 }

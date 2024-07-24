@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.*;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24.Php24PkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
@@ -21,6 +22,7 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -36,11 +38,11 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     /**
      * bitLen
      */
-    private static final int[] bitLens = new int[]{16, 64, 256};
+    private static final int[] bitLens = new int[]{16, 61, 93};
     /**
      * default small size
      */
-    private static final int DEFAULT_SMALL_SIZE = 99;
+    private static final int DEFAULT_SMALL_SIZE = 9;
     /**
      * large size
      */
@@ -54,11 +56,11 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // baseline
-//        configurations.add(new Object[]{
-//            ViewPtoType.BASELINE.name(),
-//            new BaselinePkFkViewConfig.Builder(false).build(),
-//        });
+        // baseline
+        configurations.add(new Object[]{
+            ViewPtoType.BASELINE.name(),
+            new BaselinePkFkViewConfig.Builder(false).build(),
+        });
 
         configurations.add(new Object[]{
             ViewPtoType.PHP24.name() + " Php24Pmap",
@@ -163,9 +165,9 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
             stopWatch.stop();
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
-            // verify todo
-//            assertOutput(senderThread.senderOut1, receiverThread.receiverOut1);
-//            assertOutput(senderThread.senderOut2, receiverThread.receiverOut2);
+            // verify
+            assertOutput(senderThread.senderOut1, receiverThread.receiverOut1);
+            assertOutput(senderThread.senderOut2, receiverThread.receiverOut2);
             printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
@@ -185,31 +187,38 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
             .toArray(BitVector[]::new);
 
         // correctness of pi, sigma and receiver's selfData
-        byte[][] receiverExpectKeyInRes = IntStream.range(0, receiverOutput.pi.length).mapToObj(i -> {
+        byte[][] receiverExpectKeyInRes = new byte[receiverOutput.pi.length][];
+        for(int i = 0; i < receiverOutput.pi.length; i++){
             int source = receiverOutput.pi[receiverOutput.sigma[i]];
             if (source < receiverOutput.inputKey.length) {
                 // self payload
                 Assert.assertEquals(receiverOutput.inputPayload[source], receiverOutput.selfData[i]);
-                return receiverOutput.inputKey[source];
+                receiverExpectKeyInRes[i] = receiverOutput.inputKey[source];
             } else {
                 Assert.assertNull(receiverOutput.selfData[i]);
-                return null;
+                receiverExpectKeyInRes[i] =  null;
             }
-        }).toArray(byte[][]::new);
-        HashMap<byte[], Integer> senderKey2Index = new HashMap<>();
+        }
+        HashMap<BigInteger, Integer> senderKey2Index = new HashMap<>();
         for (int i = 0; i < senderOutput.inputKey.length; i++) {
-            senderKey2Index.put(senderOutput.inputKey[i], i);
+            senderKey2Index.put(new BigInteger(senderOutput.inputKey[i]), i);
         }
 
         for (int i = 0; i < receiverExpectKeyInRes.length; i++) {
-            if (receiverExpectKeyInRes[i] != null && senderKey2Index.containsKey(receiverExpectKeyInRes[i])) {
+            if (receiverExpectKeyInRes[i] != null && senderKey2Index.containsKey(new BigInteger(receiverExpectKeyInRes[i]))) {
                 // match
-                int index = senderKey2Index.get(receiverExpectKeyInRes[i]);
+                int index = senderKey2Index.get(new BigInteger(receiverExpectKeyInRes[i]));
                 // equal flag
+                if(!equalFlag.get(i)){
+                    int xxxx = 0;
+                }
                 Assert.assertTrue(equalFlag.get(i));
                 // sender's payload
                 Assert.assertEquals(rowPayload[i], senderOutput.inputPayload[index]);
             } else {
+                if(equalFlag.get(i)){
+                    int xxx = 0;
+                }
                 Assert.assertFalse(equalFlag.get(i));
                 Assert.assertEquals(rowPayload[i], BitVectorFactory.createZeros(columnSenderPayload.length));
             }

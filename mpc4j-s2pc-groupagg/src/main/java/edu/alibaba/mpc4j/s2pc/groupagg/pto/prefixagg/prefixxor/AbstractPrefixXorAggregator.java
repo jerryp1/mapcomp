@@ -63,9 +63,6 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         BitVector indicator1 = receiver ? groupIndicator1bc.getBitVector() : null;
         BitVector indicator2 = receiver ? groupIndicator2bc.getBitVector() : null;
 
-        if (receiver) {
-            System.out.printf("123");
-        }
         // xor_out = xor_in1 ⊕ (group_indicator1 ? (xor_in1 ⊕ xor_in2) : 0), which is a prefix-copy operation.
         SquareZ2Vector[] xorOut = z2cParty.xor(input1Z2Array, pbMuxParty.mux(indicator1, z2cParty.xor(input2Z2Array, input1Z2Array)));
 

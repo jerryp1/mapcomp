@@ -1,9 +1,8 @@
-package edu.alibaba.mpc4j.s2pc.groupagg.main;
+package edu.alibaba.mpc4j.s2pc.groupagg.main.view;
 
 import edu.alibaba.mpc4j.common.rpc.MpcAbortException;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
-import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
@@ -20,17 +19,18 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
  * @author Feng Han
- * @date 2024/7/23
+ * @date 2024/7/24
  */
-public class PkFkViewMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PkFkViewMain.class);
+public class PkFkViewMainBatch {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PkFkViewMainBatch.class);
     /**
      * 协议类型名称
      */
@@ -64,15 +64,14 @@ public class PkFkViewMain {
      */
     private final SecureRandom secureRandom;
 
-    public PkFkViewMain(Properties properties) {
+    public PkFkViewMainBatch(Properties properties) {
         this.properties = properties;
         senderStopWatch = new StopWatch();
         receiverStopWatch = new StopWatch();
         secureRandom = new SecureRandom();
     }
 
-    public void runNetty() throws Exception {
-        Rpc ownRpc = RpcPropertiesUtils.readNettyRpc(properties, "server", "client");
+    public void runNetty(Rpc ownRpc) throws Exception {
         if (ownRpc.ownParty().getPartyId() == 0) {
             runReceiver(ownRpc, ownRpc.getParty(1));
         } else {
@@ -80,9 +79,9 @@ public class PkFkViewMain {
         }
     }
 
-    public void runReceiver(Rpc serverRpc, Party clientParty) throws Exception {
+    public void runReceiver(Rpc receiverRpc, Party senderParty) throws Exception {
         // 读取协议参数
-        LOGGER.info("{} read settings", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} read settings", receiverRpc.ownParty().getPartyName());
         // 读取集合大小
         int[] logSetSizes = PropertiesUtils.readLogIntArray(properties, "log_set_size");
         int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
@@ -90,39 +89,37 @@ public class PkFkViewMain {
         int[] logPayloadBitLens = PropertiesUtils.readLogIntArray(properties, "log_payload_bit_len");
         int[] bitLens = Arrays.stream(logPayloadBitLens).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取特殊参数
-        LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} read PTO config", receiverRpc.ownParty().getPartyName());
         PkFkViewConfig config = PkFkViewConfigUtils.createConfig(properties);
         // 生成输入文件
-        LOGGER.info("{} generate warm-up element files", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} generate warm-up element files", receiverRpc.ownParty().getPartyName());
         PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, ELEMENT_BYTE_LENGTH);
-        LOGGER.info("{} generate element files", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} generate element files", receiverRpc.ownParty().getPartyName());
         for (int setSize : setSizes) {
             PsoUtils.generateBytesInputFiles(setSize, ELEMENT_BYTE_LENGTH);
         }
-        LOGGER.info("{} create result file", serverRpc.ownParty().getPartyName());
+        LOGGER.info("{} create result file", receiverRpc.ownParty().getPartyName());
         // 创建统计结果文件
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + PropertiesUtils.readString(properties, "append_string", "")
             + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
-            + "_" + serverRpc.ownParty().getPartyId()
+            + "_" + receiverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tReceiver Element Size\tSender Element Size\tIs Parallel\tThread Num"
+        String tab = "Party ID\tReceiver Element Size\tSender Element Size\tPayload Bit Length\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
             + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
         printWriter.println(tab);
-        LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
-        // 建立连接
-        serverRpc.connect();
+        LOGGER.info("{} ready for run", receiverRpc.ownParty().getPartyName());
         // 启动测试
         int taskId = 0;
         // 预热
-        warmupReceiver(serverRpc, clientParty, config, taskId);
+        warmupReceiver(receiverRpc, senderParty, config, taskId);
         taskId++;
         // 正式测试
         for (int setSize : setSizes) {
@@ -130,15 +127,13 @@ public class PkFkViewMain {
             byte[][] serverKeys = readReceiverKeys(setSize);
             for (int bitlen : bitLens) {
                 // 多线程
-                runReceiver(serverRpc, clientParty, config, taskId, true, serverKeys, setSize, bitlen, printWriter);
+                runReceiver(receiverRpc, senderParty, config, taskId, true, serverKeys, setSize, bitlen, printWriter);
                 taskId++;
                 // 单线程
-                runReceiver(serverRpc, clientParty, config, taskId, false, serverKeys, setSize, bitlen, printWriter);
+                runReceiver(receiverRpc, senderParty, config, taskId, false, serverKeys, setSize, bitlen, printWriter);
                 taskId++;
             }
         }
-        // 断开连接
-        serverRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }
@@ -248,8 +243,7 @@ public class PkFkViewMain {
         receiver.getRpc().reset();
         // 写入统计结果
         String info = receiver.ownParty().getPartyId()
-            + "\t" + receiverSize
-            + "\t" + senderSize
+            + "\t" + receiverSize + "\t" + senderSize + "\t" + payloadBitLen
             + "\t" + receiver.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
@@ -292,14 +286,12 @@ public class PkFkViewMain {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
+        String tab = "Party ID\tServer Set Size\tClient Set Size\tPayload Bit Length\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
             + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", senderRpc.ownParty().getPartyName());
-        // 建立连接
-        senderRpc.connect();
         // 启动测试
         int taskId = 0;
         // 预热
@@ -317,8 +309,6 @@ public class PkFkViewMain {
             }
 
         }
-        // 断开连接
-        senderRpc.disconnect();
         printWriter.close();
         fileWriter.close();
     }
@@ -413,6 +403,8 @@ public class PkFkViewMain {
         long ptoDataPacketNum = sender.getRpc().getSendDataPacketNum();
         long ptoPayloadByteLength = sender.getRpc().getPayloadByteLength();
         long ptoSendByteLength = sender.getRpc().getSendByteLength();
+        sender.getRpc().synchronize();
+        sender.getRpc().reset();
         // 执行refresh
         LOGGER.info("{} execute refresh", sender.ownParty().getPartyName());
         receiverStopWatch.start();
@@ -423,10 +415,11 @@ public class PkFkViewMain {
         long refreshDataPacketNum = sender.getRpc().getSendDataPacketNum();
         long refreshPayloadByteLength = sender.getRpc().getPayloadByteLength();
         long refreshSendByteLength = sender.getRpc().getSendByteLength();
+        sender.getRpc().synchronize();
+        sender.getRpc().reset();
         // 写入统计结果
         String info = sender.ownParty().getPartyId()
-            + "\t" + receiverSize
-            + "\t" + senderSetSize
+            + "\t" + receiverSize + "\t" + senderSetSize + "\t" + payloadBitLen
             + "\t" + sender.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
@@ -434,8 +427,6 @@ public class PkFkViewMain {
             + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength;
         printWriter.println(info);
         // 同步
-        sender.getRpc().synchronize();
-        sender.getRpc().reset();
         sender.destroy();
         LOGGER.info("{} finish", sender.ownParty().getPartyName());
     }
