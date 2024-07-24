@@ -18,7 +18,7 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24.Php24SharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapType;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.rs21.Rs21PlpsiConfig;
 
@@ -71,8 +71,8 @@ public class Php24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
     }
 
     @Override
-    public PmapType getPtoType() {
-        return PmapType.PHP24;
+    public PmapPtoType getPtoType() {
+        return PmapPtoType.PHP24;
     }
 
     public PlpsiConfig getPlpsiconfig() {

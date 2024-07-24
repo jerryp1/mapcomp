@@ -1,39 +1,40 @@
-package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline;
+package edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased;
 
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
+import java.io.Serializable;
+
 /**
  * @author Feng Han
- * @date 2024/7/19
+ * @date 2024/7/22
  */
-public class BaselinePkFkViewPtoDesc implements PtoDesc {
+public class PsiBasedPmapPtoDesc implements PtoDesc, Serializable {
     /**
      * protocol ID
      */
-    private static final int PTO_ID = Math.abs((int) 1831211969270444701L);
+    private static final int PTO_ID = Math.abs((int) 6850253681126374703L);
     /**
      * protocol name
      */
-    private static final String PTO_NAME = "PK_FK_VIEW_BASELINE";
+    private static final String PTO_NAME = "PSI_PMAP";
 
     /**
      * singleton mode
      */
-    private static final BaselinePkFkViewPtoDesc INSTANCE = new BaselinePkFkViewPtoDesc();
+    private static final PsiBasedPmapPtoDesc INSTANCE = new PsiBasedPmapPtoDesc();
 
     public enum PtoStep {
         /**
          * the client sends hash keys
          */
-        SERVER_SEND_HASH_KEYS,
-        DEBUG,
+        CLIENT_SEND_SPI_RES,
     }
 
     /**
      * private constructor
      */
-    private BaselinePkFkViewPtoDesc() {
+    private PsiBasedPmapPtoDesc() {
         // empty
     }
 

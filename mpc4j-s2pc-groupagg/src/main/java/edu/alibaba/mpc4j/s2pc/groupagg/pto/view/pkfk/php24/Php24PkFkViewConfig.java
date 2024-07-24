@@ -2,13 +2,15 @@ package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24;
 
 import edu.alibaba.mpc4j.common.rpc.desc.SecurityModel;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractMultiPartyPtoConfig;
+import edu.alibaba.mpc4j.common.tool.EnvType;
+import edu.alibaba.mpc4j.common.tool.galoisfield.zl.ZlFactory;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPayloadMuxConfig;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.ppmux.PlainPlayloadMuxFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggTypes;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewConfig;
-import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.PtoType;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnConfig;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
@@ -45,8 +47,8 @@ public class Php24PkFkViewConfig extends AbstractMultiPartyPtoConfig implements 
     }
 
     @Override
-    public PtoType getPtoType() {
-        return PtoType.PHP24;
+    public ViewPtoType getPtoType() {
+        return ViewPtoType.PHP24;
     }
 
     public PlainPayloadMuxConfig getPlainPayloadMuxConfig() {
@@ -88,7 +90,7 @@ public class Php24PkFkViewConfig extends AbstractMultiPartyPtoConfig implements 
             pmapConfig = PmapFactory.createDefaultConfig(silent);
             osnConfig = OsnFactory.createDefaultConfig(SecurityModel.SEMI_HONEST, silent);
             prefixAggConfig = PrefixAggFactory.createDefaultPrefixAggConfig(SecurityModel.SEMI_HONEST,
-                null, silent, PrefixAggTypes.XOR, false);
+                ZlFactory.createInstance(EnvType.STANDARD, 64), silent, PrefixAggTypes.XOR, false);
         }
 
         public Builder setPmapConfig(PmapConfig pmapConfig) {
