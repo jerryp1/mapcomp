@@ -44,6 +44,11 @@ public class Php24PrefixMaxSender extends AbstractPrefixMaxAggregator {
     }
 
     @Override
+    public boolean isSender() {
+        return true;
+    }
+
+    @Override
     public void init(int maxL, int maxNum) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
 

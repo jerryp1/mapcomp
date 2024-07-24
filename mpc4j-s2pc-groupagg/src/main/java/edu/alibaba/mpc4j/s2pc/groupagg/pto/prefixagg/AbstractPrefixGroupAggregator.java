@@ -478,14 +478,14 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     private void checkInputs(Vector<byte[]> groupField, SquareZlVector sumField) {
-        receiver = ownParty().getPartyId() == 1;
+        receiver = !isSender();
         num = sumField.getNum();
         // check equal.
         MathPreconditions.checkEqual("size of groupField", "size of sumField", groupField.size(), sumField.getNum());
     }
 
     private void checkInputs(String[] groupField, SquareZlVector sumField) {
-        receiver = ownParty().getPartyId() == 1;
+        receiver = !isSender();
         if (groupField == null && receiver || groupField != null && !receiver) {
             throw new IllegalArgumentException("Wrong input field, receiver should input groupField, or sender should not input groupField");
         }
@@ -497,14 +497,14 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
     }
 
     private void checkInputs(Vector<byte[]> groupField, SquareZ2Vector[] sumField) {
-        receiver = ownParty().getPartyId() == 1;
+        receiver = !isSender();
         num = sumField[0].getNum();
         // check equal.
         MathPreconditions.checkEqual("size of groupField", "size of sumField", groupField.size(), sumField[0].getNum());
     }
 
     private void checkInputs(String[] groupField, SquareZ2Vector[] sumField) {
-        receiver = ownParty().getPartyId() == 1;
+        receiver = !isSender();
         if (groupField == null && receiver || groupField != null && !receiver) {
             throw new IllegalArgumentException("Wrong input field, receiver should input groupField, or sender should not input groupField");
         }

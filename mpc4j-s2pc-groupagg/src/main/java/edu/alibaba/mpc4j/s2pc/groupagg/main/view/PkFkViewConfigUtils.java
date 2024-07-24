@@ -1,4 +1,4 @@
-package edu.alibaba.mpc4j.s2pc.groupagg.main;
+package edu.alibaba.mpc4j.s2pc.groupagg.main.view;
 
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewConfig;

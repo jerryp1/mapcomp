@@ -43,6 +43,11 @@ public class Php24PrefixSumReceiver extends AbstractPrefixSumAggregator {
     }
 
     @Override
+    public boolean isSender() {
+        return false;
+    }
+
+    @Override
     public void init(int maxL, int maxNum) throws MpcAbortException {
         logPhaseInfo(PtoState.INIT_BEGIN);
 

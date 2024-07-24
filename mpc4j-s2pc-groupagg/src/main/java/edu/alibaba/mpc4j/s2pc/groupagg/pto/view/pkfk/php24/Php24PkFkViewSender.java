@@ -196,8 +196,12 @@ public class Php24PkFkViewSender extends AbstractTwoPartyPto implements PkFkView
                 Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).toArray(BitVector[]::new))
             .getBytesData();
         OsnPartyOutput osnPartyOutput = osnSender.osn(new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnByteLen);
+        byte andNum = (byte) (senderPayloadBitLen % 8 == 0 ? 255 : (1 << (senderPayloadBitLen % 8)) - 1);
         BitVector[] osnSenderPayload = Arrays.stream(osnPartyOutput.getVector().toArray(new byte[0][]))
-            .map(ea -> BitVectorFactory.create(senderPayloadBitLen, ea))
+            .map(ea -> {
+                ea[0] &= andNum;
+                return BitVectorFactory.create(senderPayloadBitLen, ea);
+            })
             .toArray(BitVector[]::new);
         stopWatch.stop();
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
@@ -220,7 +224,7 @@ public class Php24PkFkViewSender extends AbstractTwoPartyPto implements PkFkView
         logStepInfo(PtoState.PTO_STEP, 3, 3, traversalTime);
 
         logPhaseInfo(PtoState.PTO_END);
-        return new PkFkViewSenderOutput(preView.inputKey, preView.inputPayload, preView.pi,
+        return new PkFkViewSenderOutput(preView.inputKey, payload, preView.pi,
             groupOut, preView.equalFlag, preView.mapEqualFlag, preView.receiverInputSize);
     }
 

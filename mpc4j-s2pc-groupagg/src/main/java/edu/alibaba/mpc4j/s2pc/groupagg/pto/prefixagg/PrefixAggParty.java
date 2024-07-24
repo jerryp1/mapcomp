@@ -16,6 +16,11 @@ import java.util.Vector;
  */
 public interface PrefixAggParty extends TwoPartyPto {
     /**
+     * whether self is the sender
+     */
+    boolean isSender();
+
+    /**
      * inits the protocol.
      *
      * @param maxL   max l.
