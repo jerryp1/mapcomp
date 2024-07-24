@@ -63,8 +63,12 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         BitVector indicator1 = receiver ? groupIndicator1bc.getBitVector() : null;
         BitVector indicator2 = receiver ? groupIndicator2bc.getBitVector() : null;
 
-        // xor_out = xor_in1 ⊕ (group_indicator1 ? xor_in2 : 0)
-        SquareZ2Vector[] xorOut = z2cParty.xor(input1Z2Array, pbMuxParty.mux(indicator1, input2Z2Array));
+        if (receiver) {
+            System.out.printf("123");
+        }
+        // xor_out = xor_in1 ⊕ (group_indicator1 ? (xor_in1 ⊕ xor_in2) : 0), which is a prefix-copy operation.
+        SquareZ2Vector[] xorOut = z2cParty.xor(input1Z2Array, pbMuxParty.mux(indicator1, z2cParty.xor(input2Z2Array, input1Z2Array)));
+
         // group_indicator_out
         BitVector groupIndicatorOut = receiver ? indicator1.and(indicator2) : BitVectorFactory.createZeros(num);
 
@@ -123,9 +127,16 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
     protected SquareZ2Vector[] aggWithIndicators(SquareZ2Vector groupIndicator1, SquareZ2Vector[] aggField) throws MpcAbortException {
         int l = aggField.length;
         int byteLen = CommonUtils.getByteLength(l);
-        SquareZ2Vector groupIndicator2 = z2cParty.not(groupIndicator1);
-        groupIndicator2.getBitVector().shiftLeftUnChangeNum(1);
         Zl zl = ZlFactory.createInstance(EnvType.INLAND_JDK, l);
+        // compute (plain) indicator2 from (plain) indicator 1
+        SquareZ2Vector groupIndicator2;
+        if (receiver) {
+            BitVector temp = groupIndicator1.getBitVector().not();
+            temp.shiftLeftUnChangeNum(1);
+            groupIndicator2 = SquareZ2Vector.create(temp, false);
+        } else {
+            groupIndicator2 = SquareZ2Vector.createZeros(groupIndicator1.getNum(), false);
+        }
 
         BitVector[] aggBitArray = Arrays.stream(aggField).map(v -> v.getBitVector()).toArray(BitVector[]::new);
         byte[][] aggByteArray = TransposeUtils.transposeMerge(aggBitArray);
@@ -140,7 +151,6 @@ public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAgg
         byte[][] resultBytes = Arrays.stream(nodes)
             .map(PrefixAggNode::getAggShare).map(v -> BigIntegerUtils.nonNegBigIntegerToByteArray(v, byteLen)).toArray(byte[][]::new);
         SquareZ2Vector[] resultZ2Vector = Arrays.stream(TransposeUtils.transposeSplit(resultBytes, l)).map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
-        resultZ2Vector = z2MuxParty.mux(groupIndicator1, resultZ2Vector);
 
         return resultZ2Vector;
     }
