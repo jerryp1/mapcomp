@@ -183,7 +183,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         logStepInfo(PtoState.PTO_STEP, 2, 4, osnTime);
 
 
-        // debug osns
+        // debug osn
         List<byte[]> osnSenderRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
         byte[][] osnRes = IntStream.range(0, osnSenderRes.size())
             .mapToObj(i -> BytesUtils.xor(osnSenderRes.get(i), osnPartyOutput.getShare(i)))

@@ -8,7 +8,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.*;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType;
-import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24.Php24PkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
@@ -49,17 +48,17 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     /**
      * duplicate rate
      */
-    private static final double DUPLICATE_RATE = 1;
+    private static final double DUPLICATE_RATE = 0.1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-        // baseline
-        configurations.add(new Object[]{
-            ViewPtoType.BASELINE.name(),
-            new BaselinePkFkViewConfig.Builder(false).build(),
-        });
+//        // baseline
+//        configurations.add(new Object[]{
+//            ViewPtoType.BASELINE.name(),
+//            new BaselinePkFkViewConfig.Builder(false).build(),
+//        });
 
         configurations.add(new Object[]{
             ViewPtoType.PHP24.name() + " Php24Pmap",

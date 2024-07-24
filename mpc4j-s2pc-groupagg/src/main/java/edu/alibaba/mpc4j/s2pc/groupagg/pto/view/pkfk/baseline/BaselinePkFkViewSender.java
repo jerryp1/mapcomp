@@ -107,7 +107,10 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
         // debug
         sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(key).collect(Collectors.toList()));
         sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(payload).map(BitVector::getBytes).collect(Collectors.toList()));
-        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).map(BitVector::getBytes).collect(Collectors.toList()));
+        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(sharePayload)
+            .map(SquareZ2Vector::getBitVector)
+            .map(BitVector::getBytes)
+            .collect(Collectors.toList()));
 
         // 3. osn
         stopWatch.start();
