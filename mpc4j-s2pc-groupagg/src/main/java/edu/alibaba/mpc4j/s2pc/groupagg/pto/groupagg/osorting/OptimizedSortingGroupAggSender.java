@@ -196,7 +196,7 @@ public class OptimizedSortingGroupAggSender extends AbstractGroupAggParty {
         // sigma_s permutation
         sigmaB = obtainPerms(groupAttr);
         // osn1, sender permute receiver's group, agg and e
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaB, receiverGroupByteLength + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaB, receiverGroupByteLength + 1).getVector();
         // split
         List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, 1});
         receiverGroupShare = splits.get(0);

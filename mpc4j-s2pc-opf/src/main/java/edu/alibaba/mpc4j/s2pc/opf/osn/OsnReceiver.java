@@ -46,7 +46,7 @@ public interface OsnReceiver extends TwoPartyPto {
      */
     default OsnPartyOutput osn(int[] permutationMap, Vector<byte[]> inputShare, int byteLength) throws MpcAbortException {
         MathPreconditions.checkEqual("permutationMap.length", "inputShare.length", permutationMap.length, inputShare.size());
-        Vector<byte[]> osnPartyOutput = osn(permutationMap, byteLength).getShare();
+        Vector<byte[]> osnPartyOutput = osn(permutationMap, byteLength).getVector();
         Vector<byte[]> permutedInput = BenesNetworkUtils.permutation(permutationMap, inputShare);
         return new OsnPartyOutput(byteLength, IntStream.range(0, inputShare.size())
             .mapToObj(i -> BytesUtils.xor(osnPartyOutput.get(i), permutedInput.get(i))).collect(Collectors.toCollection(Vector::new)));

@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.*;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24.Php24PkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
@@ -48,17 +49,17 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     /**
      * duplicate rate
      */
-    private static final double DUPLICATE_RATE = 0.1;
+    private static final double DUPLICATE_RATE = 1;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> configurations() {
         Collection<Object[]> configurations = new ArrayList<>();
 
-//        // baseline
-//        configurations.add(new Object[]{
-//            ViewPtoType.BASELINE.name(),
-//            new BaselinePkFkViewConfig.Builder(false).build(),
-//        });
+        // baseline
+        configurations.add(new Object[]{
+            ViewPtoType.BASELINE.name(),
+            new BaselinePkFkViewConfig.Builder(false).build(),
+        });
 
         configurations.add(new Object[]{
             ViewPtoType.PHP24.name() + " Php24Pmap",
@@ -164,6 +165,8 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
             long time = stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
             // verify todo
+//            assertOutput(senderThread.senderOut1, receiverThread.receiverOut1);
+//            assertOutput(senderThread.senderOut2, receiverThread.receiverOut2);
             printAndResetRpc(time);
             // destroy
             new Thread(sender::destroy).start();
@@ -174,6 +177,14 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     }
 
     private void assertOutput(PkFkViewSenderOutput senderOutput, PkFkViewReceiverOutput receiverOutput) {
+        BitVector equalFlag = senderOutput.equalFlag.getBitVector().xor(receiverOutput.equalFlag.getBitVector());
+        BitVector[] columnSenderPayload = IntStream.range(0, senderOutput.shareData.length)
+            .mapToObj(i -> senderOutput.shareData[i].getBitVector().xor(receiverOutput.shareData[i].getBitVector()))
+            .toArray(BitVector[]::new);
+        BitVector[] rowPayload = Arrays.stream(ZlDatabase.create(EnvType.STANDARD, true, columnSenderPayload).getBytesData())
+            .map(ea -> BitVectorFactory.create(columnSenderPayload.length, ea))
+            .toArray(BitVector[]::new);
+
         // correctness of pi, sigma and receiver's selfData
         byte[][] receiverExpectKeyInRes = IntStream.range(0, receiverOutput.pi.length).mapToObj(i -> {
             int source = receiverOutput.pi[receiverOutput.sigma[i]];
@@ -191,13 +202,6 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
             senderKey2Index.put(senderOutput.inputKey[i], i);
         }
 
-        BitVector equalFlag = senderOutput.equalFlag.getBitVector().xor(receiverOutput.equalFlag.getBitVector());
-        BitVector[] columnSenderPayload = IntStream.range(0, senderOutput.shareData.length)
-            .mapToObj(i -> senderOutput.shareData[i].getBitVector().xor(receiverOutput.shareData[i].getBitVector()))
-            .toArray(BitVector[]::new);
-        BitVector[] rowPayload = Arrays.stream(ZlDatabase.create(EnvType.STANDARD, true, columnSenderPayload).getBytesData())
-            .map(ea -> BitVectorFactory.create(columnSenderPayload.length, ea))
-            .toArray(BitVector[]::new);
         for (int i = 0; i < receiverExpectKeyInRes.length; i++) {
             if (receiverExpectKeyInRes[i] != null && senderKey2Index.containsKey(receiverExpectKeyInRes[i])) {
                 // match
@@ -211,7 +215,6 @@ public class PkFkViewTest extends AbstractTwoPartyPtoTest {
                 Assert.assertEquals(rowPayload[i], BitVectorFactory.createZeros(columnSenderPayload.length));
             }
         }
-
     }
 
     private byte[][] duplicateKeys(Set<ByteBuffer> keys, double rate) {

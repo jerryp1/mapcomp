@@ -175,7 +175,7 @@ public class SortingGroupAggSender extends AbstractGroupAggParty {
         // sigma_s permutation
         int[] sigmaS = obtainPerms(groupAttr);
         // osn1, sender permute receiver's group, agg and e
-        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupByteLength + Long.BYTES + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnReceiver.osn(sigmaS, receiverGroupByteLength + Long.BYTES + 1).getVector();
         // split
         List<Vector<byte[]>> splits = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, Long.BYTES, 1});
         receiverGroupShare = splits.get(0);

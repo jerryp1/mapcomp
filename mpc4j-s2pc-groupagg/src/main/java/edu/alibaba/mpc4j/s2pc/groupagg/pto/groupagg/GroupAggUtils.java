@@ -114,7 +114,7 @@ public class GroupAggUtils {
      */
     public static SquareZ2Vector[] transposeOsnResult(OsnPartyOutput osnPartyOutput, int l) {
         int fullL = CommonUtils.getByteLength(l) * Byte.SIZE;
-        Vector<byte[]> osn = osnPartyOutput.getShare();
+        Vector<byte[]> osn = osnPartyOutput.getVector();
         SquareZ2Vector[] transpose = Arrays.stream(TransposeUtils.transposeSplit(osn, fullL))
             .map(v -> SquareZ2Vector.create(v, false)).toArray(SquareZ2Vector[]::new);
         return Arrays.stream(transpose, 0, l).toArray(SquareZ2Vector[]::new);

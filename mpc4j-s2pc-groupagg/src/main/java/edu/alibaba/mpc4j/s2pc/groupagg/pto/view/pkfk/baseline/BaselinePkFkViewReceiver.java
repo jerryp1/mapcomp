@@ -6,7 +6,10 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.pto.AbstractTwoPartyPto;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
+import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.BigIntegerUtils;
+import edu.alibaba.mpc4j.common.tool.utils.BytesUtils;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.crypto.matrix.database.ZlDatabase;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.Z2MuxFactory;
@@ -18,25 +21,31 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiverOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewReceiver;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnReceiver;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiClientOutput;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Feng Han
  * @date 2024/7/19
  */
 public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkFkViewReceiver {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaselinePkFkViewReceiver.class);
     private final Z2MuxParty z2MuxParty;
     private final PlpsiClient<byte[]> plpsiClient;
     private final OsnReceiver osnReceiver;
@@ -77,7 +86,6 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
 
     private PkFkViewReceiverOutput innerCommon(byte[][] key, BitVector[] payload, int senderSize, int senderPayloadBitLen) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
-        int receiverSize = key.length;
         int keyByteLen = key[0].length;
         assert key.length == payload.length;
 
@@ -86,6 +94,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         byte[][] appendKey = PkFkUtils.addIndex(key);
         PlpsiClientOutput<byte[]> psiRes = plpsiClient.psiWithPayload(Arrays.stream(appendKey).collect(Collectors.toList()),
             senderSize, new int[]{senderPayloadBitLen}, new boolean[]{true});
+        byte[][] allPsiKey = psiRes.getTable().toArray(new byte[0][]);
         stopWatch.stop();
         long psiProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
@@ -100,16 +109,45 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 4, muxProcess);
 
+        // debug
+        int payloadByteLen = CommonUtils.getByteLength(sharePayload.length);
+        List<byte[]> senderKey = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+        List<byte[]> senderPayload = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+        List<byte[]> senderShares = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+        assert senderShares.size() == sharePayload.length;
+        // 恢复出share的payload
+        BitVector[] joinPayload = new BitVector[sharePayload.length];
+        for (int i = 0; i < joinPayload.length; i++) {
+            joinPayload[i] = sharePayload[i].getBitVector().xor(BitVectorFactory.create(sharePayload[i].bitNum(), senderShares.get(i)));
+        }
+        byte[][] actualPayload = ZlDatabase.create(envType, parallel, joinPayload).getBytesData();
+        HashMap<BigInteger, byte[]> senderMap = new HashMap<>();
+        for (int i = 0; i < senderKey.size(); i++) {
+            byte[] originalKey = senderKey.get(i);
+            byte[] tmpKey = new byte[originalKey.length + 4];
+            System.arraycopy(originalKey, 0, tmpKey, 0, originalKey.length);
+            senderMap.put(new BigInteger(tmpKey), senderPayload.get(i));
+        }
+        for (int i = 0; i < allPsiKey.length; i++) {
+            if (allPsiKey[i] == null) {
+                assert Arrays.equals(actualPayload[i], new byte[payloadByteLen]);
+            } else if (senderMap.containsKey(new BigInteger(allPsiKey[i]))) {
+                assert Arrays.equals(actualPayload[i], senderMap.get(new BigInteger(allPsiKey[i])));
+            } else {
+                assert Arrays.equals(actualPayload[i], new byte[payloadByteLen]);
+            }
+        }
+
         // 3. osn
         stopWatch.start();
-        // 2.1 sort based on psiRes result
-        HashMap<byte[], Integer> map2PsiRes = new HashMap<>();
-        for(int i = 0; i < appendKey.length; i++){
-            map2PsiRes.put(appendKey[i], i);
+        // 3.1 sort based on psiRes result
+        HashMap<BigInteger, Integer> map2PsiRes = new HashMap<>();
+        for (int i = 0; i < appendKey.length; i++) {
+            map2PsiRes.put(new BigInteger(appendKey[i]), i);
         }
         BigInteger maxNum = BigInteger.ONE.shiftLeft(key[0].length * 8 + 32);
         BigInteger[] sortData = new BigInteger[psiRes.getBeta()];
-        byte[][] allPsiKey = psiRes.getTable().toArray(new byte[0][]);
+
         int[] pi = new int[psiRes.getBeta()];
         int startPos = appendKey.length;
         for (int i = 0; i < sortData.length; i++) {
@@ -118,7 +156,7 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
                 pi[i] = startPos++;
             } else {
                 sortData[i] = BigIntegerUtils.byteArrayToNonNegBigInteger(allPsiKey[i]).shiftLeft(32).add(BigInteger.valueOf(i));
-                pi[i] = map2PsiRes.get(allPsiKey[i]);
+                pi[i] = map2PsiRes.get(new BigInteger(allPsiKey[i]));
             }
         }
         assert startPos == sortData.length;
@@ -143,6 +181,31 @@ public class BaselinePkFkViewReceiver extends AbstractTwoPartyPto implements PkF
         long osnTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 4, osnTime);
+
+
+        // debug osns
+        List<byte[]> osnSenderRes = receiveOtherPartyPayload(PtoStep.DEBUG.ordinal());
+        byte[][] osnRes = IntStream.range(0, osnSenderRes.size())
+            .mapToObj(i -> BytesUtils.xor(osnSenderRes.get(i), osnPartyOutput.getShare(i)))
+            .toArray(byte[][]::new);
+        HashMap<BigInteger, byte[]> receiverKey2SharePayload = new HashMap<>();
+        for (int i = 0; i < allPsiKey.length; i++) {
+            if (allPsiKey[i] != null) {
+                receiverKey2SharePayload.put(new BigInteger(allPsiKey[i]), actualPayload[i]);
+            }
+        }
+        for (int i = 0; i < sortData.length; i++) {
+            BigInteger appSortReceiverKey = sortData[i].shiftRight(32);
+            byte[] osnResPayload = Arrays.copyOfRange(osnRes[i], 1, osnRes[i].length);
+            if (receiverKey2SharePayload.containsKey(appSortReceiverKey)) {
+                assert (osnRes[i][0] & 1) == (senderMap.containsKey(appSortReceiverKey) ? 1 : 0);
+                assert Arrays.equals(osnResPayload, receiverKey2SharePayload.get(appSortReceiverKey));
+            } else {
+                assert (osnRes[i][0] & 1) == 0;
+                assert Arrays.equals(osnResPayload, new byte[osnResPayload.length]);
+            }
+        }
+
 
         // 4. 复制值
         stopWatch.start();

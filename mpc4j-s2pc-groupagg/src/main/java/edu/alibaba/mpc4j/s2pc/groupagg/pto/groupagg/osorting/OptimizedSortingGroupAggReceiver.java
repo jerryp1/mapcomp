@@ -217,7 +217,7 @@ public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
             .put(groupBytes.get(i)).put(e.getBitVector().get(i) ? (byte) 1 : (byte) 0).array())
             .collect(Collectors.toCollection(Vector::new));
 
-        Vector<byte[]> osnOutput1 = osnSender.osn(osnInput1, receiverGroupByteLength + 1).getShare();
+        Vector<byte[]> osnOutput1 = osnSender.osn(osnInput1, receiverGroupByteLength + 1).getVector();
         // split
         List<Vector<byte[]>> splitOsn1 = GroupAggUtils.split(osnOutput1, new int[]{receiverGroupByteLength, 1});
         receiverGroupShare = splitOsn1.get(0);

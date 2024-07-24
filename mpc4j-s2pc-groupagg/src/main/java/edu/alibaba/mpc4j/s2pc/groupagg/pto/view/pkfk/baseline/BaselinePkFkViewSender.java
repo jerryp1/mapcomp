@@ -15,12 +15,15 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggOutput;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewSender;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewSenderOutput;
+import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewPtoDesc.PtoStep;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnPartyOutput;
 import edu.alibaba.mpc4j.s2pc.opf.osn.OsnSender;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiServer;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiShareOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
  * @date 2024/7/19
  */
 public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkViewSender {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaselinePkFkViewSender.class);
     private final Z2MuxParty z2MuxParty;
     private final PlpsiServer<byte[], byte[]> plpsiServer;
     private final PrefixAggParty prefixAggParty;
@@ -100,6 +104,11 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 2, 4, muxProcess);
 
+        // debug
+        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(key).collect(Collectors.toList()));
+        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(payload).map(BitVector::getBytes).collect(Collectors.toList()));
+        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), Arrays.stream(sharePayload).map(SquareZ2Vector::getBitVector).map(BitVector::getBytes).collect(Collectors.toList()));
+
         // 3. osn
         stopWatch.start();
         byte[][] sharePayloadInRow = ZlDatabase.create(envType, parallel,
@@ -116,6 +125,9 @@ public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkV
         long osnProcess = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
         logStepInfo(PtoState.PTO_STEP, 3, 4, osnProcess);
+
+        // debug
+        sendOtherPartyPayload(PtoStep.DEBUG.ordinal(), osnPartyOutput.getVector());
 
         // 4. 复制值
         stopWatch.start();
