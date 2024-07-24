@@ -83,8 +83,4 @@ public class OsnPartyOutput {
     public int getN() {
         return shareVector.size();
     }
-
-    public Vector<byte[]> getShare() {
-        return shareVector;
-    }
 }

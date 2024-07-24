@@ -185,7 +185,7 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
             .getBytesData();
         OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigma,
             new Vector<>(Arrays.stream(osnInput).collect(Collectors.toList())), osnByteLen);
-        BitVector[] osnSenderPayload = Arrays.stream(osnPartyOutput.getShare().toArray(new byte[0][]))
+        BitVector[] osnSenderPayload = Arrays.stream(osnPartyOutput.getVector().toArray(new byte[0][]))
             .map(ea -> BitVectorFactory.create(senderPayloadBitLen, ea))
             .toArray(BitVector[]::new);
         stopWatch.stop();
@@ -232,10 +232,12 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
         // extend the permutation
         if (pmapRes.getIndexMap().size() < receiverSize) {
             assert pmapRes.getMapType().equals(MapType.PSI);
-            HashSet<byte[]> psiKeySet = new HashSet<>(pmapRes.getIndexMap().values());
+            HashSet<BigInteger> psiKeySet = pmapRes.getIndexMap().values().stream()
+                .map(BigInteger::new)
+                .collect(Collectors.toCollection(HashSet::new));
             int startIndex = pmapRes.getIndexMap().size();
             for (byte[] oneKey : appendKey) {
-                if (!psiKeySet.contains(oneKey)) {
+                if (!psiKeySet.contains(new BigInteger(oneKey))) {
                     resultMap.put(startIndex++, oneKey);
                 }
             }
@@ -252,18 +254,23 @@ public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkVi
             mapEqualFlag = SquareZ2Vector.create(BitVectorFactory.create(resultMap.size(), eqBig), false);
         }
         // get pi
-        HashMap<byte[], Integer> data2pos = new HashMap<>();
+        HashMap<BigInteger, Integer> data2pos = new HashMap<>();
         for (int i = 0; i < receiverSize; i++) {
-            data2pos.put(appendKey[i], i);
+            data2pos.put(new BigInteger(appendKey[i]), i);
         }
         int dummyIndex = receiverSize;
         pi = new int[resultMap.size()];
         for (int i = 0; i < resultMap.size(); i++) {
             byte[] tmp = resultMap.get(i);
-            if (data2pos.contains(tmp)) {
-                pi[i] = data2pos.get(tmp).get();
-            } else {
+            if(tmp == null || tmp.length < 1){
                 pi[i] = dummyIndex++;
+            }else{
+                BigInteger tmpBig = new BigInteger(tmp);
+                if (data2pos.contains(tmpBig)) {
+                    pi[i] = data2pos.get(tmpBig).get();
+                } else {
+                    pi[i] = dummyIndex++;
+                }
             }
         }
         assert dummyIndex == resultMap.size();

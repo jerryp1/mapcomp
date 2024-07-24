@@ -27,6 +27,7 @@ public class BaselinePkFkViewPtoDesc implements PtoDesc {
          * the client sends hash keys
          */
         SERVER_SEND_HASH_KEYS,
+        DEBUG,
     }
 
     /**

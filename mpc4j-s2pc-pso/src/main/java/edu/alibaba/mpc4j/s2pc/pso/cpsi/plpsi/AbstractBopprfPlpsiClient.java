@@ -169,7 +169,7 @@ public abstract class AbstractBopprfPlpsiClient<T> extends AbstractPlpsiClient<T
             byte[][] opprfRes = bopprfReceiver.opprf((payloadTotalByteL<<3) + opprfL, inputArray, pointNum);
             byte[][][] maskPayload = new byte[payloadBitLs.length][beta][];
             byte[] andNum = new byte[payloadBitLs.length];
-            IntStream.range(0, payloadBitLs.length).forEach(i -> andNum[i] = (byte) ((1<<(payloadBitLs[i] & 7)) - 1));
+            IntStream.range(0, payloadBitLs.length).forEach(i -> andNum[i] = payloadBitLs[i] % 8 == 0 ? (byte) 255 : (byte) ((1<<(payloadBitLs[i] & 7)) - 1));
             int[] copyIndex = new int[payloadBitLs.length];
             copyIndex[0] = opprfByteL;
             for (int i = 1; i < payloadByteLs.length; i++) {
