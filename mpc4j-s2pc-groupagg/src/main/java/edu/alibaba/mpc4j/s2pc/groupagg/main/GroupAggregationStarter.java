@@ -165,7 +165,6 @@ public class GroupAggregationStarter {
         // clean
         printWriter.close();
         fileWriter.close();
-
     }
 
     public void init() {
