@@ -210,6 +210,31 @@ public class MixGroupAggSender extends AbstractGroupAggParty {
         LOGGER.info("agg");
         for (int i = 0; i < senderGroupNum; i++) {
             stopWatch.start();
+            LOGGER.info("mux with bitmap:" + i);
+            SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], aggZl);
+            stopWatch.stop();
+            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+            // prefix agg
+            stopWatch.start();
+            outputs[i] = prefixAggSender.agg((String[]) null, mul);
+            z2cSender.revealOther(outputs[i].getIndicator());
+            zlcSender.revealOther(outputs[i].getAggs());
+            stopWatch.stop();
+            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
+            stopWatch.reset();
+        }
+        aggTripleNum = TRIPLE_NUM - aggTripleNum;
+    }
+
+    private void agg2() throws MpcAbortException {
+        // temporary array
+        PrefixAggOutput[] outputs = new PrefixAggOutput[senderGroupNum];
+        aggTripleNum = TRIPLE_NUM;
+        LOGGER.info("agg");
+        for (int i = 0; i < senderGroupNum; i++) {
+            stopWatch.start();
+            LOGGER.info("mux with bitmap:" + i);
             SquareZlVector mul = zlMuxSender.mux(bitmapShares[i], aggZl);
             stopWatch.stop();
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
