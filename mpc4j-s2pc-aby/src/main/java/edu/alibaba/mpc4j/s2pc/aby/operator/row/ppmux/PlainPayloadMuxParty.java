@@ -35,6 +35,16 @@ public interface PlainPayloadMuxParty extends TwoPartyPto {
      * Executes the protocol.
      *
      * @param xi the binary share xi.
+     * @param yi the arithmetic share yi.
+     * @return the party's output.
+     * @throws MpcAbortException the protocol failure aborts.
+     */
+    SquareZlVector[] mux(SquareZ2Vector[] xi, long[] yi, int validBitLen) throws MpcAbortException;
+
+    /**
+     * Executes the protocol.
+     *
+     * @param xi the binary share xi.
      * @param yi the plain binary value in column form, which means yi[0].bitNum = xi.bitNum
      * @return the party's output.
      * @throws MpcAbortException the protocol failure aborts.
