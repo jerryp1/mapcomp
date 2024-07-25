@@ -96,6 +96,23 @@ public class Php24PlainPayloadMuxSender extends AbstractPlainPayloadMuxParty {
     }
 
     @Override
+    public SquareZlVector[] mux(SquareZ2Vector[] xi, long[] yi, int validBitLen) throws MpcAbortException {
+        int num = xi.length;
+        // merge
+        SquareZ2Vector tempXi = SquareZ2Vector.mergeWithPadding(xi);
+        long[] tempYi = new long[num * yi.length];
+        for (int i = 0; i < num; i++) {
+            System.arraycopy(yi, 0, tempYi, i * yi.length, yi.length);
+        }
+        // split
+        int[] nums = Arrays.stream(xi)
+            .mapToInt(SquareZ2Vector::getNum).toArray();
+        SquareZlVector tempResult = mux(tempXi, tempYi, validBitLen);
+        return Arrays.stream(ZlVector.splitWithPadding(tempResult.getZlVector(), nums))
+            .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
+    }
+
+    @Override
     public SquareZ2Vector[] muxB(SquareZ2Vector xi, BitVector[] yi, int validBitLen) throws MpcAbortException {
         logPhaseInfo(PtoState.PTO_BEGIN);
         setPtoInput(xi, yi, validBitLen);

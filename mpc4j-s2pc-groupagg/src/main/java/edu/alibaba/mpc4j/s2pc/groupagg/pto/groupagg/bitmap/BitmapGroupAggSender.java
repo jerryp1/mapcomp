@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.PtoState;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.galoisfield.zl.Zl;
+import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cFactory;
 import edu.alibaba.mpc4j.s2pc.aby.basics.z2.Z2cParty;
@@ -76,6 +77,7 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
     protected List<String> senderDistinctGroup;
     protected List<String> receiverDistinctGroup;
     protected List<String> totalDistinctGroup;
+    protected int BATCH_SIZE = 16;
 
     public BitmapGroupAggSender(Rpc senderRpc, Party receiverParty, BitmapGroupAggConfig config) {
         super(BitmapGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -99,15 +101,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
 
         stopWatch.start();
 
-        zlMuxSender.init(maxNum);
-        plainAndSender.init(maxNum);
-        z2cSender.init(maxNum);
+        zlMuxSender.init(maxNum * BATCH_SIZE);
+        plainAndSender.init(maxNum * BATCH_SIZE);
+        z2cSender.init(maxNum * BATCH_SIZE);
         zlcSender.init(1);
-        zlMaxSender.init(maxL, maxNum);
-        plainPayloadMuxReceiver.init(maxNum);
-        long totalMuxNum = ((long) maxNum) <<(senderGroupBitLength + receiverGroupBitLength);
+        zlMaxSender.init(maxL, maxNum * BATCH_SIZE);
+        plainPayloadMuxReceiver.init(maxNum * BATCH_SIZE);
+        long totalMuxNum = ((long) maxNum) << (senderGroupBitLength + receiverGroupBitLength);
         int maxMuxInput = (int) Math.min(Integer.MAX_VALUE, totalMuxNum);
-        z2MuxParty.init(maxMuxInput);
+        z2MuxParty.init(maxMuxInput * BATCH_SIZE);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
         receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
@@ -151,16 +153,22 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         groupStep1Time = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
 
-
         BigInteger[] result = new BigInteger[totalGroupNum];
         // AND with e with mux
         allBitmapShare = z2MuxParty.mux(e, allBitmapShare);
-        for (int i = 0; i < totalGroupNum; i++) {
+
+
+        int batchNum = CommonUtils.getUnitNum(totalGroupNum, BATCH_SIZE);
+        for (int i = 0; i < batchNum; i++) {
+            int currentNum = i == batchNum - 1 ? totalGroupNum - i * BATCH_SIZE : BATCH_SIZE;
+            SquareZ2Vector[] tempBitmap = new SquareZ2Vector[currentNum];
+            for (int j = 0; j < currentNum; j++) {
+                tempBitmap[j] = allBitmapShare[i * BATCH_SIZE + j];
+            }
+
             stopWatch.start();
-//            // AND with e
-//            allBitmapShare[i] = z2cSender.and(allBitmapShare[i], e);
             // MUX with bitmap
-            SquareZlVector bitmapWithAgg = plainPayloadMuxReceiver.mux(allBitmapShare[i], null, zl.getL());
+            SquareZlVector[] bitmapWithAgg = plainPayloadMuxReceiver.mux(tempBitmap, null, zl.getL());
             stopWatch.stop();
             groupStep2Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
@@ -168,17 +176,47 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
             // agg
             stopWatch.start();
             long tempTripleNum = TRIPLE_NUM;
-            bitmapWithAgg = agg(bitmapWithAgg);
+            for (int j = 0; j < bitmapWithAgg.length; j++) {
+                bitmapWithAgg[j] = agg(bitmapWithAgg[j]);
+            }
             stopWatch.stop();
             aggTripleNum += TRIPLE_NUM - tempTripleNum;
             aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
             stopWatch.reset();
+
             // reveal
             zlcSender.revealOther(bitmapWithAgg);
         }
-
+//        for (int i = 0; i < totalGroupNum; i++) {
+//            stopWatch.start();
+//            // MUX with bitmap
+//            SquareZlVector bitmapWithAgg = plainPayloadMuxReceiver.mux(allBitmapShare[i], null, zl.getL());
+//            stopWatch.stop();
+//            groupStep2Time += stopWatch.getTime(TimeUnit.MILLISECONDS);
+//            stopWatch.reset();
+//
+//            // agg
+//            stopWatch.start();
+//            long tempTripleNum = TRIPLE_NUM;
+//            bitmapWithAgg = agg(bitmapWithAgg);
+//            stopWatch.stop();
+//            aggTripleNum += TRIPLE_NUM - tempTripleNum;
+//            aggTime += stopWatch.getTime(TimeUnit.MILLISECONDS);
+//            stopWatch.reset();
+//            // reveal
+//            zlcSender.revealOther(bitmapWithAgg);
+//        }
         return new GroupAggOut(totalDistinctGroup.toArray(new String[0]), result);
     }
+
+//    private SquareZlVector[] agg(SquareZlVector[] input) {
+//        int[] nums = Arrays.stream(input)
+//            .mapToInt(SquareZlVector::getNum).toArray();
+//        SquareZlVector temp = SquareZlVector.create(ZlVector.merge(Arrays.stream(input)
+//            .map(v -> v.getZlVector()).toArray(ZlVector[]::new)), false);
+//        return Arrays.stream(ZlVector.splitWithPadding(temp.getZlVector(), nums))
+//            .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
+//    }
 
     private SquareZlVector agg(SquareZlVector input) throws MpcAbortException {
         switch (prefixAggType) {
