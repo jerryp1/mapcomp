@@ -77,7 +77,7 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
     protected List<String> senderDistinctGroup;
     protected List<String> receiverDistinctGroup;
     protected List<String> totalDistinctGroup;
-    protected int BATCH_SIZE = 16;
+    protected int BATCH_SIZE = 8;
 
     public BitmapGroupAggSender(Rpc senderRpc, Party receiverParty, BitmapGroupAggConfig config) {
         super(BitmapGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
@@ -230,7 +230,7 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
     }
 
     SquareZlVector localSum(SquareZlVector input) {
-        BigInteger result = Arrays.stream(input.getZlVector().getElements()).reduce(BigInteger.ZERO, zl::add);
+        BigInteger result = Arrays.stream(input.getZlVector().getElements()).parallel().reduce(BigInteger.ZERO, zl::add);
         return SquareZlVector.create(zl, new BigInteger[]{result}, false);
     }
 }

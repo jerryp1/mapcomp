@@ -92,7 +92,7 @@ public interface ZlcParty extends TwoPartyPto, MpcZlParty {
         // reveal
         ZlVector mergeX = revealOwn(mergeXiArray);
         // split
-        int[] nums = Arrays.stream(xiArray)
+        int[] nums = Arrays.stream(xiArray).parallel()
             .map(vector -> (SquareZlVector) vector)
             .mapToInt(SquareZlVector::getNum).toArray();
         return ZlVector.split(mergeX, nums);
