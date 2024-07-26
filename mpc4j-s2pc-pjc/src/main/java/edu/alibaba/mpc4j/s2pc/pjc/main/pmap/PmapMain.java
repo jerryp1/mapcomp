@@ -6,6 +6,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.rpc.RpcPropertiesUtils;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
@@ -103,7 +104,8 @@ public class PmapMain {
         // 写入统计结果头文件
         String tab = "Party ID\tServer Element Size\tClient Element Size\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)"
+            + "\tOT num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
         // 建立连接
@@ -180,6 +182,7 @@ public class PmapMain {
         // 启动测试
         pmapServer.getRpc().synchronize();
         pmapServer.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", pmapServer.ownParty().getPartyName());
         serverStopWatch.start();
@@ -209,7 +212,9 @@ public class PmapMain {
             + "\t" + pmapServer.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         pmapServer.getRpc().synchronize();
@@ -248,7 +253,8 @@ public class PmapMain {
         // 写入统计结果头文件
         String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)"
+            + "\tOT num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", clientRpc.ownParty().getPartyName());
         // 建立连接
@@ -323,6 +329,7 @@ public class PmapMain {
         // 启动测试
         pmapClient.getRpc().synchronize();
         pmapClient.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", pmapClient.ownParty().getPartyName());
         clientStopWatch.start();
@@ -352,7 +359,9 @@ public class PmapMain {
             + "\t" + pmapClient.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         pmapClient.getRpc().synchronize();

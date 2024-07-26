@@ -7,6 +7,7 @@ import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.CommonUtils;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiClient;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
@@ -117,9 +118,10 @@ public class PlpsiMain4Batch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Set Size\tClient Set Size\tPayload Bit Length\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+        String tab = "Party_ID\tServer_Set_Size\tClient_Set_Size\tPayload_Bit_Length\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tPto_Time(ms)\tPto_DataPacket_Num\tPto_Payload_Bytes(B)\tPto_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
         // 启动测试
@@ -195,6 +197,7 @@ public class PlpsiMain4Batch {
         // 启动测试
         psiServer.getRpc().synchronize();
         psiServer.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", psiServer.ownParty().getPartyName());
         serverStopWatch.start();
@@ -225,7 +228,9 @@ public class PlpsiMain4Batch {
             + "\t" + psiServer.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         psiServer.getRpc().synchronize();
@@ -274,9 +279,10 @@ public class PlpsiMain4Batch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Set Size\tClient Set Size\tPayload Bit Length\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+        String tab = "Party_ID\tServer_Set_Size\tClient_Set_Size\tPayload_Bit_Length\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tPto_Time(ms)\tPto_DataPacket_Num\tPto_Payload_Bytes(B)\tPto_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", clientRpc.ownParty().getPartyName());
         // 启动测试
@@ -351,6 +357,7 @@ public class PlpsiMain4Batch {
         // 启动测试
         psiClient.getRpc().synchronize();
         psiClient.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", psiClient.ownParty().getPartyName());
         clientStopWatch.start();
@@ -381,7 +388,9 @@ public class PlpsiMain4Batch {
             + "\t" + psiClient.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         psiClient.getRpc().synchronize();
         psiClient.getRpc().reset();

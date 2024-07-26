@@ -2,14 +2,20 @@ package edu.alibaba.mpc4j.s2pc.pjc.main;
 
 import org.junit.Test;
 
+import java.util.Objects;
+
 public class TestLocal {
     @Test
     public void testMapServer() throws Exception {
-        PjcMain4Dir.main(new String[]{"/Users/fengdi/Documents/mpc4j/mpc4j-s2pc-pjc/src/test/resources/pmap", "server"});
+        String path = "pmap";
+        String configPath = Objects.requireNonNull(TestLocal.class.getClassLoader().getResource(path)).getPath();
+        PjcMain4Dir.main(new String[]{configPath, "server"});
     }
 
     @Test
     public void testMapClient() throws Exception {
-        PjcMain4Dir.main(new String[]{"/Users/fengdi/Documents/mpc4j/mpc4j-s2pc-pjc/src/test/resources/pmap", "client"});
+        String path = "pmap";
+        String configPath = Objects.requireNonNull(TestLocal.class.getClassLoader().getResource(path)).getPath();
+        PjcMain4Dir.main(new String[]{configPath, "client"});
     }
 }

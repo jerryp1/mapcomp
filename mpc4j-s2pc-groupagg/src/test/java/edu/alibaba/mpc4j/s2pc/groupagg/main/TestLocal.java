@@ -2,25 +2,21 @@ package edu.alibaba.mpc4j.s2pc.groupagg.main;
 
 import org.junit.Test;
 
+import java.util.Objects;
+
 public class TestLocal {
     @Test
-    public void testServer() throws Exception {
-        OneSideGroupMain.main(new String[]{"/Users/fengdi/Documents/workspace/mpc4j/mpc4j-s2pc-aby/src/test/resources/group/conf_one_side_group.txt", "server"});
-    }
-
-    @Test
-    public void testClient() throws Exception {
-        OneSideGroupMain.main(new String[]{"/Users/fengdi/Documents/workspace/mpc4j/mpc4j-s2pc-aby/src/test/resources/group/conf_one_side_group.txt", "client"});
-    }
-
-    @Test
     public void testViewServer() throws Exception {
-        GroupAggMainBatch.main(new String[]{"/Users/fengdi/Documents/mpc4j/mpc4j-s2pc-groupagg/src/test/resources/view", "server"});
+        String path = "view";
+        String configPath = Objects.requireNonNull(TestLocal.class.getClassLoader().getResource(path)).getPath();
+        GroupAggMainBatch.main(new String[]{configPath, "server"});
     }
 
     @Test
     public void testViewClient() throws Exception {
-        GroupAggMainBatch.main(new String[]{"/Users/fengdi/Documents/mpc4j/mpc4j-s2pc-groupagg/src/test/resources/view", "client"});
+        String path = "view";
+        String configPath = Objects.requireNonNull(TestLocal.class.getClassLoader().getResource(path)).getPath();
+        GroupAggMainBatch.main(new String[]{configPath, "client"});
     }
 
 }
