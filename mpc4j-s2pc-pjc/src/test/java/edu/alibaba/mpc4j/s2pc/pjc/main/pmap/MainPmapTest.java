@@ -27,13 +27,19 @@ public class MainPmapTest {
     }
 
     @Test
-    public void testHpl24Silent() throws Exception {
-        Properties properties = readConfig("pmap/conf_pmap_php24_silent.txt");
+    public void testPsiBased() throws Exception {
+        Properties properties = readConfig("pmap/conf_pmap_psi.txt");
         runTest(new PmapMain(properties));
     }
 
     @Test
-    public void testHpl24NoSilent() throws Exception {
+    public void testPidBased() throws Exception {
+        Properties properties = readConfig("pmap/conf_pmap_bkms20_byte_ecc.txt");
+        runTest(new PmapMain(properties));
+    }
+
+    @Test
+    public void testPhp24() throws Exception {
         Properties properties = readConfig("pmap/conf_pmap_php24_no_silent.txt");
         runTest(new PmapMain(properties));
     }

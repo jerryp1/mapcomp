@@ -5,6 +5,7 @@ import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapClient;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
@@ -101,9 +102,10 @@ public class PmapMain4Batch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Element Size\tClient Element Size\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+        String tab = "Party_ID\tServer_Element_Size\tClient_Element_Size\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tPto_Time(ms)\tPto_DataPacket_Num\tPto_Payload_Bytes(B)\tPto_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", serverRpc.ownParty().getPartyName());
         // 启动测试
@@ -176,6 +178,7 @@ public class PmapMain4Batch {
         // 启动测试
         pmapServer.getRpc().synchronize();
         pmapServer.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", pmapServer.ownParty().getPartyName());
         serverStopWatch.start();
@@ -205,7 +208,9 @@ public class PmapMain4Batch {
             + "\t" + pmapServer.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         pmapServer.getRpc().synchronize();
@@ -242,9 +247,10 @@ public class PmapMain4Batch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Set Size\tClient Set Size\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tPto  Time(ms)\tPto  DataPacket Num\tPto  Payload Bytes(B)\tPto  Send Bytes(B)";
+        String tab = "Party_ID\tServer_Element_Size\tClient_Element_Size\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tPto_Time(ms)\tPto_DataPacket_Num\tPto_Payload_Bytes(B)\tPto_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", clientRpc.ownParty().getPartyName());
         // 启动测试
@@ -315,6 +321,7 @@ public class PmapMain4Batch {
         // 启动测试
         pmapClient.getRpc().synchronize();
         pmapClient.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", pmapClient.ownParty().getPartyName());
         clientStopWatch.start();
@@ -344,7 +351,9 @@ public class PmapMain4Batch {
             + "\t" + pmapClient.getParallel()
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
-            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength;
+            + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         pmapClient.getRpc().synchronize();

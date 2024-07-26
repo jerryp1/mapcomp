@@ -2,7 +2,7 @@
 pto_type = PMAP
 
 # element byte length
-element_byte_length = 16
+element_byte_length = 8
 
 # 对数集合大小（log(n)）
 log_set_size = 8, 10
