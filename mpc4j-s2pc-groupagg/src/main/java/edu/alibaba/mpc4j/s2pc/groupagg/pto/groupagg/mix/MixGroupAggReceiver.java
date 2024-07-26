@@ -87,7 +87,7 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     /**
      * Group indicator.
      */
-    private BitVector groupIndicator;
+    private BitVector groupIndicator = null;
     /**
      * Sender
      */
@@ -100,6 +100,10 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
      * Aggregation attribute in zl.
      */
     private SquareZlVector aggZl;
+    /**
+     * Group start indices.
+     */
+    private int[] groupIndex = null;
 
     public MixGroupAggReceiver(Rpc receiverRpc, Party senderParty, MixGroupAggConfig config) {
         super(MixGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
@@ -195,27 +199,25 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
     }
 
     private GroupAggOut agg() throws MpcAbortException {
-        ZlVector[] plainAgg = new ZlVector[senderGroupNum];
+        BigInteger[] aggResult = null;
+        String[] groupResult = null;
         for (int i = 0; i < senderGroupNum; i++) {
             SquareZlVector mul = zlMuxReceiver.mux(bitmapShares[i], aggZl);
-            plainAgg[i] = aggregate(groupAttr, mul);
-        }
-        // indexes of valid position
-        int[] groupIndex = getGroupIndexes(groupIndicator);
-        // arrange
-        BigInteger[] aggResult = new BigInteger[senderGroupNum * groupIndex.length];
-        String[] groupResult = new String[senderGroupNum * groupIndex.length];
-        for (int i = 0; i < senderGroupNum; i++) {
+            ZlVector agg = aggregate(groupAttr, mul);
+            if (groupIndex == null) {
+                // indexes of valid position
+                groupIndex = getGroupIndexes(groupIndicator);
+            }
+            if (aggResult == null) {
+                aggResult = new BigInteger[senderGroupNum * groupIndex.length];
+                groupResult = new String[senderGroupNum * groupIndex.length];
+            }
             for (int j = 0; j < groupIndex.length; j++) {
-                aggResult[i * groupIndex.length + j] = plainAgg[i].getElement(groupIndex[j]);
+                aggResult[i * groupIndex.length + j] = agg.getElement(groupIndex[j]);
                 groupResult[i * groupIndex.length + j] = senderDistinctGroup.get(i).concat(groupAttr[groupIndex[j]]);
             }
         }
         return new GroupAggOut(groupResult, aggResult);
-    }
-
-    private int[] getGroupIndexes(BitVector indicator) {
-        return IntStream.range(0, num).filter(indicator::get).toArray();
     }
 
     private ZlVector aggregate(String[] permutedGroup, SquareZlVector agg) throws MpcAbortException {
@@ -234,14 +236,16 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         Zl zl = aggField.getZl();
         // agg
         PrefixAggOutput agg = prefixAggReceiver.agg(groupField, aggField);
-        // reveal
-        groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
+        // reveal 不需要每都reveal
+        if (groupIndicator == null) {
+            groupIndicator = z2cReceiver.revealOwn(agg.getIndicator());
+            groupIndex = getGroupIndexes(groupIndicator);
+        }
         ZlVector aggResult = zlcReceiver.revealOwn(agg.getAggs());
         // subtraction
-        int[] indexes = obtainIndexes(groupIndicator);
         BigInteger[] result = aggResult.getElements();
-        for (int i = 0; i < indexes.length - 1; i++) {
-            result[indexes[i]] = zl.sub(result[indexes[i]], result[indexes[i + 1]]);
+        for (int i = 0; i < groupIndex.length - 1; i++) {
+            result[groupIndex[i]] = zl.sub(result[groupIndex[i]], result[groupIndex[i + 1]]);
         }
         return ZlVector.create(zl, result);
     }
@@ -250,12 +254,14 @@ public class MixGroupAggReceiver extends AbstractGroupAggParty {
         // agg
         PrefixAggOutput prefixAggOutput = prefixAggReceiver.agg(groupField, aggField);
         // reveal
-        groupIndicator = z2cReceiver.revealOwn(prefixAggOutput.getIndicator());
+        if (groupIndicator == null) {
+            groupIndicator = z2cReceiver.revealOwn(prefixAggOutput.getIndicator());
+        }
         return zlcReceiver.revealOwn(prefixAggOutput.getAggs());
     }
 
-    private int[] obtainIndexes(BitVector input) {
-        return IntStream.range(0, num).filter(input::get).toArray();
+    private int[] getGroupIndexes(BitVector indicator) {
+        return IntStream.range(0, num).filter(indicator::get).toArray();
     }
 
     private String[] revealGroup(Vector<byte[]> ownGroup, int bitLength) {

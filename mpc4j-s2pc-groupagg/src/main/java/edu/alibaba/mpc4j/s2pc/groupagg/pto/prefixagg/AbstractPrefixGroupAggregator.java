@@ -240,7 +240,6 @@ public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto 
         return new PrefixAggOutput(groupField, sums, groupIndicator);
     }
 
-
     private SquareZlVector optimizeForSum(SquareZlVector aggField, SquareZ2Vector indicator) throws MpcAbortException {
         Zl zl = aggField.getZl();
         // summation
