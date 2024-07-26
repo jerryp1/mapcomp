@@ -355,7 +355,7 @@ public interface MpcZ2cParty {
     default MpcZ2Vector mergeWithPadding(MpcZ2Vector[] vectors) {
         assert vectors.length > 0 : "merged vector length must be greater than 0";
         boolean plain = vectors[0].isPlain();
-        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors).map(x -> {
+        BitVector mergeBit = BitVectorFactory.mergeWithPadding(Arrays.stream(vectors).parallel().map(x -> {
             assert x.isPlain() == plain;
             return x.getBitVector();
         }).toArray(BitVector[]::new));
@@ -371,6 +371,6 @@ public interface MpcZ2cParty {
      */
     default MpcZ2Vector[] splitWithPadding(MpcZ2Vector mergeVector, int[] bitNums) {
         BitVector[] splitBitVectors = mergeVector.getBitVector().splitWithPadding(bitNums);
-        return Arrays.stream(splitBitVectors).map(x -> create(x, mergeVector.isPlain())).toArray(MpcZ2Vector[]::new);
+        return Arrays.stream(splitBitVectors).parallel().map(x -> create(x, mergeVector.isPlain())).toArray(MpcZ2Vector[]::new);
     }
 }
