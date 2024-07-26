@@ -109,7 +109,7 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
         plainPayloadMuxSender.init(maxNum * BATCH_SIZE);
         long totalMuxNum = ((long) maxNum) << (senderGroupBitLength + receiverGroupBitLength);
         int maxMuxInput = (int) Math.min(Integer.MAX_VALUE, totalMuxNum);
-        z2MuxParty.init(maxMuxInput * BATCH_SIZE);
+        z2MuxParty.init(maxMuxInput);
         // generate distinct group
         senderDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(senderGroupBitLength));
         receiverDistinctGroup = Arrays.asList(GroupAggUtils.genStringSetFromRange(receiverGroupBitLength));
