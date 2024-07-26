@@ -9,6 +9,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.*;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
@@ -114,7 +115,8 @@ public class PkFkViewMain {
         String tab = "Party ID\tReceiver Element Size\tSender Element Size\tPayload Bit Length\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
-            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
+            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)"
+            + "\tOT num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", receiverRpc.ownParty().getPartyName());
         // 建立连接
@@ -210,6 +212,7 @@ public class PkFkViewMain {
         // 启动测试
         receiver.getRpc().synchronize();
         receiver.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", receiver.ownParty().getPartyName());
         senderStopWatch.start();
@@ -253,7 +256,9 @@ public class PkFkViewMain {
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
-            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength;
+            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         receiver.destroy();
@@ -294,7 +299,8 @@ public class PkFkViewMain {
         String tab = "Party ID\tServer Set Size\tClient Set Size\tPayload Bit Length\tIs Parallel\tThread Num"
             + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
             + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
-            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
+            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)"
+            + "\tOT num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", senderRpc.ownParty().getPartyName());
         // 建立连接
@@ -390,6 +396,7 @@ public class PkFkViewMain {
         // 启动测试
         sender.getRpc().synchronize();
         sender.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", sender.ownParty().getPartyName());
         receiverStopWatch.start();
@@ -433,7 +440,9 @@ public class PkFkViewMain {
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
-            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength;
+            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         sender.destroy();

@@ -8,6 +8,7 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
 import edu.alibaba.mpc4j.common.tool.utils.PropertiesUtils;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.*;
+import edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSender;
 import edu.alibaba.mpc4j.s2pc.pso.PsoUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bouncycastle.util.encoders.Hex;
@@ -110,10 +111,11 @@ public class PkFkViewMainBatch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tReceiver Element Size\tSender Element Size\tPayload Bit Length\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
-            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
+        String tab = "Party_ID\tReceiver_Element_Size\tSender_Element_Size\tPayload_Bit_Length\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tGenerate_Time(ms)\tGenerate_DataPacket_Num\tGenerate_Payload_Bytes(B)\tGenerate_Send_Bytes(B)"
+            + "\tRefresh_Time(ms)\tRefresh_DataPacket_Num\tRefresh_Payload_Bytes(B)\tRefresh_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", receiverRpc.ownParty().getPartyName());
         // 启动测试
@@ -205,6 +207,7 @@ public class PkFkViewMainBatch {
         // 启动测试
         receiver.getRpc().synchronize();
         receiver.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", receiver.ownParty().getPartyName());
         senderStopWatch.start();
@@ -248,7 +251,9 @@ public class PkFkViewMainBatch {
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
-            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength;
+            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         receiver.destroy();
@@ -286,10 +291,11 @@ public class PkFkViewMainBatch {
         FileWriter fileWriter = new FileWriter(filePath);
         PrintWriter printWriter = new PrintWriter(fileWriter, true);
         // 写入统计结果头文件
-        String tab = "Party ID\tServer Set Size\tClient Set Size\tPayload Bit Length\tIs Parallel\tThread Num"
-            + "\tInit Time(ms)\tInit DataPacket Num\tInit Payload Bytes(B)\tInit Send Bytes(B)"
-            + "\tGenerate  Time(ms)\tGenerate  DataPacket Num\tGenerate  Payload Bytes(B)\tGenerate  Send Bytes(B)"
-            + "\tRefresh   Time(ms)\tRefresh   DataPacket Num\tRefresh   Payload Bytes(B)\tRefresh   Send Bytes(B)";
+        String tab = "Party_ID\tReceiver_Element_Size\tSender_Element_Size\tPayload_Bit_Length\tIs_Parallel\tThread_Num"
+            + "\tInit_Time(ms)\tInit_DataPacket_Num\tInit_Payload_Bytes(B)\tInit_Send_Bytes(B)"
+            + "\tGenerate_Time(ms)\tGenerate_DataPacket_Num\tGenerate_Payload_Bytes(B)\tGenerate_Send_Bytes(B)"
+            + "\tRefresh_Time(ms)\tRefresh_DataPacket_Num\tRefresh_Payload_Bytes(B)\tRefresh_Send_Bytes(B)"
+            + "\tOT_num";
         printWriter.println(tab);
         LOGGER.info("{} ready for run", senderRpc.ownParty().getPartyName());
         // 启动测试
@@ -381,6 +387,7 @@ public class PkFkViewMainBatch {
         // 启动测试
         sender.getRpc().synchronize();
         sender.getRpc().reset();
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         // 初始化协议
         LOGGER.info("{} init", sender.ownParty().getPartyName());
         receiverStopWatch.start();
@@ -424,7 +431,9 @@ public class PkFkViewMainBatch {
             + "\t" + ForkJoinPool.getCommonPoolParallelism()
             + "\t" + initTime + "\t" + initDataPacketNum + "\t" + initPayloadByteLength + "\t" + initSendByteLength
             + "\t" + ptoTime + "\t" + ptoDataPacketNum + "\t" + ptoPayloadByteLength + "\t" + ptoSendByteLength
-            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength;
+            + "\t" + refreshTime + "\t" + refreshDataPacketNum + "\t" + refreshPayloadByteLength + "\t" + refreshSendByteLength
+            + "\t" + HardcodeZ2MtgSender.TRIPLE_NUM;
+        HardcodeZ2MtgSender.TRIPLE_NUM = 0;
         printWriter.println(info);
         // 同步
         sender.destroy();
