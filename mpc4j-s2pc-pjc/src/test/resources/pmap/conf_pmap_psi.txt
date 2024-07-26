@@ -1,0 +1,20 @@
+# 协议类型
+pto_type = PMAP
+
+# element byte length
+element_byte_length = 16
+
+# 对数集合大小（log(n)）
+log_set_size = 8, 10
+
+# 协议名称
+pmap_pto_name = PSI_BASED
+
+append_string = _psi_based
+
+server_name = server
+server_ip = localhost
+server_port = 8090
+client_name = client
+client_ip = localhost
+client_port = 8091
