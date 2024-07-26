@@ -13,6 +13,7 @@ import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory.PlpsiType;
 import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.psty19.Psty19PlpsiConfig;
@@ -47,11 +48,19 @@ public class PmapConfigUtils {
                 return createHpl24PmapConfig(properties);
             case PID_BASED:
                 return createPidBasedPmapConfig(properties);
+            case PSI_BASED:
+                return createPsiBasedPmapConfig(properties);
             default:
                 throw new IllegalArgumentException(
                     "Invalid " + PidFactory.PidType.class.getSimpleName() + ":" + pmapTypeString
                 );
         }
+    }
+
+    private static PsiBasedPmapConfig createPsiBasedPmapConfig(Properties properties) {
+        // 是否使用压缩编码
+        boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
+        return new PsiBasedPmapConfig.Builder(silent).build();
     }
 
     private static PidBasedPmapConfig createPidBasedPmapConfig(Properties properties) {
