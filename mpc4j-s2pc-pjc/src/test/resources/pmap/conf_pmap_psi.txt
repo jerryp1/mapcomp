@@ -5,7 +5,7 @@ pto_type = PMAP
 element_byte_length = 8
 
 # 对数集合大小（log(n)）
-log_set_size = 10, 12
+log_set_size = 12,16,20
 
 # 协议名称
 pmap_pto_name = PSI_BASED
@@ -13,8 +13,8 @@ pmap_pto_name = PSI_BASED
 append_string = _psi_based
 
 server_name = server
-server_ip = localhost
+server_ip = 192.168.1.1
 server_port = 8090
 client_name = client
-client_ip = localhost
+client_ip = 192.168.1.2
 client_port = 8091

@@ -5,7 +5,7 @@ pto_type = PMAP
 element_byte_length = 8
 
 # parties log set size (log(n))
-log_set_size = 10, 12
+log_set_size = 12,16,20
 
 # protocol name
 pmap_pto_name = PHP24
@@ -18,8 +18,8 @@ payload_psi_pto_name = RS21
 append_string = _silent_naive_rs21_24
 
 server_name = server
-server_ip = localhost
+server_ip = 192.168.1.1
 server_port = 8090
 client_name = client
-client_ip = localhost
+client_ip = 192.168.1.2
 client_port = 8091
