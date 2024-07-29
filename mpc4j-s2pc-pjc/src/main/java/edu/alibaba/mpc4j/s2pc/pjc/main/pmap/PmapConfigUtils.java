@@ -39,7 +39,7 @@ public class PmapConfigUtils {
      * @param properties 配置参数。
      * @return 配置项。
      */
-    static PmapConfig createConfig(Properties properties) {
+    public static PmapConfig createConfig(Properties properties) {
         // 读取协议类型
         String pmapTypeString = PropertiesUtils.readString(properties, "pmap_pto_name");
         PmapPtoType pmapPtoType = PmapPtoType.valueOf(pmapTypeString);
@@ -81,7 +81,7 @@ public class PmapConfigUtils {
     private static Php24PmapConfig createHpl24PmapConfig(Properties properties) {
         // 是否使用压缩编码
         boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
-        int bitLen = PropertiesUtils.readIntWithDefault(properties, "bitLen", 32);
+        int bitLen = PropertiesUtils.readIntWithDefault(properties, "bit_len_for_permutation", 32);
         String peqtTypeString = PropertiesUtils.readString(properties, "peqtType", PeqtType.NAIVE.name());
         PeqtConfig peqtConfig;
         if(peqtTypeString.equals(PeqtType.CGS22.toString())){

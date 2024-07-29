@@ -140,7 +140,7 @@ public class Php24PmapConfig extends AbstractMultiPartyPtoConfig implements Pmap
         public Builder(boolean silent) {
             plpsiconfig = new Rs21PlpsiConfig.Builder(silent).build();
             osnConfig = new Gmr21OsnConfig.Builder(silent).build();
-            bitLen = Long.SIZE;
+            bitLen = Integer.SIZE;
             Bit2aConfig bit2aConfig = Bit2aFactory.createDefaultConfig(SecurityModel.SEMI_HONEST,  ZlFactory.createInstance(EnvType.STANDARD, bitLen), silent);
             smallFieldPermGenConfig = new Ahi22SmallFieldPermGenConfig.Builder(bit2aConfig, silent).build();
             z2cConfig = new Rrg21Z2cConfig.Builder().build();
