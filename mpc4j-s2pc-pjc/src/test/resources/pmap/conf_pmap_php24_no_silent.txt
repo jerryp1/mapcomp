@@ -5,14 +5,14 @@ pto_type = PMAP
 element_byte_length = 8
 
 # parties log set size (log(n))
-log_set_size = 12,10
+log_set_size = 10, 12
 
 # protocol name
 pmap_pto_name = PHP24
 
 # specific config
 silent = false
-bitLen = 24
+bit_len_for_permutation = 24
 peqtType = NAIVE
 payload_psi_pto_name = RS21
 append_string = _silent_naive_rs21_24

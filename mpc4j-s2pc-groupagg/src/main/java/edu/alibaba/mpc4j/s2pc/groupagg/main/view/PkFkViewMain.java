@@ -37,10 +37,6 @@ public class PkFkViewMain {
      */
     public static final String PTO_TYPE_NAME = "PK_FK_VIEW";
     /**
-     * key字节长度
-     */
-    private static final int ELEMENT_BYTE_LENGTH = 128;
-    /**
      * warm up payload bit length
      */
     private static final int WARMUP_PAYLOAD_BIT_LENGTH = 128;
@@ -90,22 +86,24 @@ public class PkFkViewMain {
         // 读取集合大小
         int[] logPayloadBitLens = PropertiesUtils.readLogIntArray(properties, "log_payload_bit_len");
         int[] bitLens = Arrays.stream(logPayloadBitLens).map(logSetSize -> 1 << logSetSize).toArray();
+        // 读取key的byte长度
+        int keyByteLen = PropertiesUtils.readIntWithDefault(properties, "element_byte_length", 8);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", receiverRpc.ownParty().getPartyName());
         PkFkViewConfig config = PkFkViewConfigUtils.createConfig(properties);
         // 生成输入文件
         LOGGER.info("{} generate warm-up element files", receiverRpc.ownParty().getPartyName());
-        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, ELEMENT_BYTE_LENGTH);
+        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, keyByteLen);
         LOGGER.info("{} generate element files", receiverRpc.ownParty().getPartyName());
         for (int setSize : setSizes) {
-            PsoUtils.generateBytesInputFiles(setSize, ELEMENT_BYTE_LENGTH);
+            PsoUtils.generateBytesInputFiles(setSize, keyByteLen);
         }
         LOGGER.info("{} create result file", receiverRpc.ownParty().getPartyName());
         // 创建统计结果文件
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + PropertiesUtils.readString(properties, "append_string", "")
-            + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
+            + "_" + keyByteLen * Byte.SIZE
             + "_" + receiverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
@@ -124,12 +122,12 @@ public class PkFkViewMain {
         // 启动测试
         int taskId = 0;
         // 预热
-        warmupReceiver(receiverRpc, senderParty, config, taskId);
+        warmupReceiver(receiverRpc, senderParty, config, taskId, keyByteLen);
         taskId++;
         // 正式测试
         for (int setSize : setSizes) {
             // 读取输入文件
-            byte[][] serverKeys = readReceiverKeys(setSize);
+            byte[][] serverKeys = readReceiverKeys(setSize, keyByteLen);
             for (int bitlen : bitLens) {
                 // 多线程
                 runReceiver(receiverRpc, senderParty, config, taskId, true, serverKeys, setSize, bitlen, printWriter);
@@ -145,11 +143,11 @@ public class PkFkViewMain {
         fileWriter.close();
     }
 
-    private byte[][] readReceiverKeys(int setSize) throws IOException {
+    private byte[][] readReceiverKeys(int setSize, int byteLen) throws IOException {
         // 读取输入文件
         LOGGER.info("Receiver read element set, size = " + setSize);
         InputStreamReader inputStreamReader = new InputStreamReader(
-            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, byteLen))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -163,8 +161,8 @@ public class PkFkViewMain {
         return serverKeys;
     }
 
-    private void warmupReceiver(Rpc receiverRpc, Party senderParty, PkFkViewConfig config, int taskId) throws Exception {
-        byte[][] receiverKeys = readReceiverKeys(WARMUP_SET_SIZE);
+    private void warmupReceiver(Rpc receiverRpc, Party senderParty, PkFkViewConfig config, int taskId, int byteLen) throws Exception {
+        byte[][] receiverKeys = readReceiverKeys(WARMUP_SET_SIZE, byteLen);
         BitVector[] receiverPayload1 = IntStream.range(0, WARMUP_SET_SIZE)
             .mapToObj(i -> BitVectorFactory.createRandom(WARMUP_PAYLOAD_BIT_LENGTH, secureRandom))
             .toArray(BitVector[]::new);
@@ -274,22 +272,24 @@ public class PkFkViewMain {
         // 读取集合大小
         int[] logPayloadBitLens = PropertiesUtils.readLogIntArray(properties, "log_payload_bit_len");
         int[] bitLens = Arrays.stream(logPayloadBitLens).map(logSetSize -> 1 << logSetSize).toArray();
+        // 读取key的byte长度
+        int keyByteLen = PropertiesUtils.readIntWithDefault(properties, "element_byte_length", 8);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", senderRpc.ownParty().getPartyName());
         PkFkViewConfig config = PkFkViewConfigUtils.createConfig(properties);
         // 生成输入文件
         LOGGER.info("{} generate warm-up element files", senderRpc.ownParty().getPartyName());
-        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, ELEMENT_BYTE_LENGTH);
+        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, keyByteLen);
         LOGGER.info("{} generate element files", senderRpc.ownParty().getPartyName());
         for (int setSize : setSizes) {
-            PsoUtils.generateBytesInputFiles(setSize, ELEMENT_BYTE_LENGTH);
+            PsoUtils.generateBytesInputFiles(setSize, keyByteLen);
         }
         // 创建统计结果文件
         LOGGER.info("{} create result file", senderRpc.ownParty().getPartyName());
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + PropertiesUtils.readString(properties, "append_string", "")
-            + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
+            + "_" + keyByteLen * Byte.SIZE
             + "_" + senderRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
@@ -308,10 +308,10 @@ public class PkFkViewMain {
         // 启动测试
         int taskId = 0;
         // 预热
-        warmupSender(senderRpc, receiverParty, config, taskId);
+        warmupSender(senderRpc, receiverParty, config, taskId, keyByteLen);
         taskId++;
         for (int setSize : setSizes) {
-            byte[][] senderKeys = readSenderKeys(setSize);
+            byte[][] senderKeys = readSenderKeys(setSize, keyByteLen);
             for(int bitLen : bitLens){
                 // 多线程
                 runSender(senderRpc, receiverParty, config, taskId, true, senderKeys, setSize, bitLen, printWriter);
@@ -328,10 +328,10 @@ public class PkFkViewMain {
         fileWriter.close();
     }
 
-    private byte[][] readSenderKeys(int setSize) throws IOException {
+    private byte[][] readSenderKeys(int setSize, int byteLen) throws IOException {
         LOGGER.info("Sender read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, byteLen))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -345,9 +345,9 @@ public class PkFkViewMain {
         return clientKeys;
     }
 
-    private void warmupSender(Rpc senderRpc, Party receiverParty, PkFkViewConfig config, int taskId) throws Exception {
+    private void warmupSender(Rpc senderRpc, Party receiverParty, PkFkViewConfig config, int taskId, int byteLen) throws Exception {
         // 读取输入文件
-        byte[][] senderKeys = readSenderKeys(WARMUP_SET_SIZE);
+        byte[][] senderKeys = readSenderKeys(WARMUP_SET_SIZE, byteLen);
         BitVector[] senderPayload1 = IntStream.range(0, WARMUP_SET_SIZE)
             .mapToObj(i -> BitVectorFactory.createRandom(WARMUP_PAYLOAD_BIT_LENGTH, secureRandom))
             .toArray(BitVector[]::new);
