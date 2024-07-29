@@ -39,10 +39,6 @@ public class PmapMain {
      */
     public static final String PTO_TYPE_NAME = "PMAP";
     /**
-     * 预热元素字节长度
-     */
-    private static final int ELEMENT_BYTE_LENGTH = 16;
-    /**
      * 预热
      */
     private static final int WARMUP_SET_SIZE = 1 << 10;
@@ -80,22 +76,24 @@ public class PmapMain {
         // 读取集合大小
         int[] logSetSizes = PropertiesUtils.readLogIntArray(properties, "log_set_size");
         int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
+        // 读取key的byte长度
+        int keyByteLen = PropertiesUtils.readIntWithDefault(properties, "element_byte_length", 8);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
         PmapConfig config = PmapConfigUtils.createConfig(properties);
         // 生成输入文件
         LOGGER.info("{} generate warm-up element files", serverRpc.ownParty().getPartyName());
-        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, ELEMENT_BYTE_LENGTH);
+        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, keyByteLen);
         LOGGER.info("{} generate element files", serverRpc.ownParty().getPartyName());
         for (int setSize : setSizes) {
-            PsoUtils.generateBytesInputFiles(setSize, ELEMENT_BYTE_LENGTH);
+            PsoUtils.generateBytesInputFiles(setSize, keyByteLen);
         }
         LOGGER.info("{} create result file", serverRpc.ownParty().getPartyName());
         // 创建统计结果文件
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + PropertiesUtils.readString(properties, "append_string", "")
-            + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
+            + "_" + keyByteLen * Byte.SIZE
             + "_" + serverRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
@@ -113,12 +111,12 @@ public class PmapMain {
         // 启动测试
         int taskId = 0;
         // 预热
-        warmupServer(serverRpc, clientParty, config, taskId);
+        warmupServer(serverRpc, clientParty, config, taskId, keyByteLen);
         taskId++;
         // 正式测试
         for (int setSize : setSizes) {
             // 读取输入文件
-            List<ByteBuffer> serverElementSet = new ArrayList<>(readServerElementSet(setSize));
+            List<ByteBuffer> serverElementSet = new ArrayList<>(readServerElementSet(setSize, keyByteLen));
             // 多线程
             runServer(serverRpc, clientParty, config, taskId, true, serverElementSet, setSize, printWriter);
             taskId++;
@@ -132,11 +130,11 @@ public class PmapMain {
         fileWriter.close();
     }
 
-    private Set<ByteBuffer> readServerElementSet(int setSize) throws IOException {
+    private Set<ByteBuffer> readServerElementSet(int setSize, int keyByteLen) throws IOException {
         // 读取输入文件
         LOGGER.info("Server read element set, size = " + setSize);
         InputStreamReader inputStreamReader = new InputStreamReader(
-            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_SERVER_PREFIX, setSize, keyByteLen))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -149,8 +147,8 @@ public class PmapMain {
         return serverElementSet;
     }
 
-    private void warmupServer(Rpc serverRpc, Party clientParty, PmapConfig config, int taskId) throws Exception {
-        List<ByteBuffer> serverElementSet = new ArrayList<>(readServerElementSet(WARMUP_SET_SIZE));
+    private void warmupServer(Rpc serverRpc, Party clientParty, PmapConfig config, int taskId, int keyByteLen) throws Exception {
+        List<ByteBuffer> serverElementSet = new ArrayList<>(readServerElementSet(WARMUP_SET_SIZE, keyByteLen));
         PmapServer<ByteBuffer> pmapServer = PmapFactory.createServer(serverRpc, clientParty, config);
         pmapServer.setTaskId(taskId);
         pmapServer.setParallel(true);
@@ -229,22 +227,24 @@ public class PmapMain {
         // 读取集合大小
         int[] logSetSizes = PropertiesUtils.readLogIntArray(properties, "log_set_size");
         int[] setSizes = Arrays.stream(logSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
+        // 读取key的byte长度
+        int keyByteLen = PropertiesUtils.readIntWithDefault(properties, "element_byte_length", 8);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
         PmapConfig config = PmapConfigUtils.createConfig(properties);
         // 生成输入文件
         LOGGER.info("{} generate warm-up element files", clientRpc.ownParty().getPartyName());
-        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, ELEMENT_BYTE_LENGTH);
+        PsoUtils.generateBytesInputFiles(WARMUP_SET_SIZE, keyByteLen);
         LOGGER.info("{} generate element files", clientRpc.ownParty().getPartyName());
         for (int setSize : setSizes) {
-            PsoUtils.generateBytesInputFiles(setSize, ELEMENT_BYTE_LENGTH);
+            PsoUtils.generateBytesInputFiles(setSize, keyByteLen);
         }
         // 创建统计结果文件
         LOGGER.info("{} create result file", clientRpc.ownParty().getPartyName());
         String filePath = PTO_TYPE_NAME
             + "_" + config.getPtoType().name()
             + PropertiesUtils.readString(properties, "append_string", "")
-            + "_" + ELEMENT_BYTE_LENGTH * Byte.SIZE
+            + "_" + keyByteLen * Byte.SIZE
             + "_" + clientRpc.ownParty().getPartyId()
             + "_" + ForkJoinPool.getCommonPoolParallelism()
             + ".output";
@@ -262,10 +262,10 @@ public class PmapMain {
         // 启动测试
         int taskId = 0;
         // 预热
-        warmupClient(clientRpc, serverParty, config, taskId);
+        warmupClient(clientRpc, serverParty, config, taskId, keyByteLen);
         taskId++;
         for (int setSize : setSizes) {
-            List<ByteBuffer> clientElementSet = new ArrayList<>(readClientElementSet(setSize));
+            List<ByteBuffer> clientElementSet = new ArrayList<>(readClientElementSet(setSize, keyByteLen));
             // 多线程
             runClient(clientRpc, serverParty, config, taskId, true, clientElementSet, setSize, printWriter);
             taskId++;
@@ -279,10 +279,10 @@ public class PmapMain {
         fileWriter.close();
     }
 
-    private Set<ByteBuffer> readClientElementSet(int setSize) throws IOException {
+    private Set<ByteBuffer> readClientElementSet(int setSize, int keyByteLen) throws IOException {
         LOGGER.info("Client read element set");
         InputStreamReader inputStreamReader = new InputStreamReader(
-            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, ELEMENT_BYTE_LENGTH))),
+            Files.newInputStream(Paths.get(PsoUtils.getBytesFileName(PsoUtils.BYTES_CLIENT_PREFIX, setSize, keyByteLen))),
             CommonConstants.DEFAULT_CHARSET
         );
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -295,9 +295,9 @@ public class PmapMain {
         return clientElementSet;
     }
 
-    private void warmupClient(Rpc clientRpc, Party serverParty, PmapConfig config, int taskId) throws Exception {
+    private void warmupClient(Rpc clientRpc, Party serverParty, PmapConfig config, int taskId, int keyByteLen) throws Exception {
         // 读取输入文件
-        List<ByteBuffer> clientElementSet = new ArrayList<>(readClientElementSet(WARMUP_SET_SIZE));
+        List<ByteBuffer> clientElementSet = new ArrayList<>(readClientElementSet(WARMUP_SET_SIZE, keyByteLen));
         PmapClient<ByteBuffer> pmapClient = PmapFactory.createClient(clientRpc, serverParty, config);
         pmapClient.setTaskId(taskId);
         pmapClient.setParallel(true);

@@ -5,11 +5,10 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline.BaselinePkFkViewConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24.Php24PkFkViewConfig;
+import edu.alibaba.mpc4j.s2pc.pjc.main.pmap.PmapConfigUtils;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory.PmapPtoType;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.php24.Php24PmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.pidbased.PidBasedPmapConfig;
-import edu.alibaba.mpc4j.s2pc.pjc.pmap.psibased.PsiBasedPmapConfig;
+import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiConfig;
+import edu.alibaba.mpc4j.s2pc.pso.main.plpsi.PlpsiConfigUtils;
 
 import java.util.Properties;
 
@@ -46,27 +45,13 @@ public class PkFkViewConfigUtils {
 
     private static PkFkViewConfig createBaselinePkFkViewConfig(Properties properties) {
         boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
-        return new BaselinePkFkViewConfig.Builder(silent).build();
+        PlpsiConfig plpsiConfig = PlpsiConfigUtils.createPlPsiConfig(properties);
+        return new BaselinePkFkViewConfig.Builder(silent).setPlpsiConfig(plpsiConfig).build();
     }
 
     private static PkFkViewConfig createHpl24PkFkViewConfig(Properties properties) {
         boolean silent = PropertiesUtils.readBoolean(properties, "silent", false);
-        String pmapTypeString = PropertiesUtils.readString(properties, "pmap_pto_name", PmapPtoType.PHP24.name());
-        PmapPtoType pmapPtoType = PmapPtoType.valueOf(pmapTypeString);
-        PmapConfig pmapConfig;
-        switch (pmapPtoType){
-            case PHP24:
-                pmapConfig = new Php24PmapConfig.Builder(silent).build();
-                break;
-            case PSI_BASED:
-                pmapConfig = new PsiBasedPmapConfig.Builder(silent).build();
-                break;
-            case PID_BASED:
-                pmapConfig = new PidBasedPmapConfig.Builder(silent).build();
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid " + PmapPtoType.class.getSimpleName() + ":" + pmapTypeString);
-        }
+        PmapConfig pmapConfig = PmapConfigUtils.createConfig(properties);
         return new Php24PkFkViewConfig.Builder(silent).setPmapConfig(pmapConfig).build();
     }
 }

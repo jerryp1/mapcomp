@@ -94,7 +94,8 @@ public class PlpsiMain4Batch {
         int[] serverSetSizes = Arrays.stream(serverLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         int[] clientSetSizes = Arrays.stream(clientLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取payload的长度和参数
-        int[] payloadBitLength = PropertiesUtils.readIntArray(properties, "payload_bit_length");
+        int[] logPayloadBitLens = PropertiesUtils.readLogIntArray(properties, "log_payload_bit_len");
+        int[] payloadBitLength = Arrays.stream(logPayloadBitLens).map(logSetSize -> 1 << logSetSize).toArray();
         boolean isBinaryShare = PropertiesUtils.readBoolean(properties, "is_binary_share", true);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", serverRpc.ownParty().getPartyName());
@@ -255,7 +256,8 @@ public class PlpsiMain4Batch {
         int[] serverSetSizes = Arrays.stream(serverLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         int[] clientSetSizes = Arrays.stream(clientLogSetSizes).map(logSetSize -> 1 << logSetSize).toArray();
         // 读取payload的长度和参数
-        int[] payloadBitLength = PropertiesUtils.readIntArray(properties, "payload_bit_length");
+        int[] logPayloadBitLens = PropertiesUtils.readLogIntArray(properties, "log_payload_bit_len");
+        int[] payloadBitLength = Arrays.stream(logPayloadBitLens).map(logSetSize -> 1 << logSetSize).toArray();
         boolean isBinaryShare = PropertiesUtils.readBoolean(properties, "is_binary_share", true);
         // 读取特殊参数
         LOGGER.info("{} read PTO config", clientRpc.ownParty().getPartyName());
