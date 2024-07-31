@@ -50,7 +50,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * large num
      */
-    private static final int LARGE_NUM = 1 << 10;
+    private static final int LARGE_NUM = 1 << 16;
     /**
      * default Zl
      */
@@ -58,7 +58,7 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
     /**
      * Sender group bit length
      */
-    private static final int SENDER_GROUP_BIT_LEN = 4;
+    private static final int SENDER_GROUP_BIT_LEN = 6;
     /**
      * Receiver group bit length
      */
@@ -138,23 +138,23 @@ public class GroupAggTest extends AbstractTwoPartyPtoTest {
 //            new OptimizedSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
 //        });
 //
-//        // b_sort && sum
-//        configurations.add(new Object[]{
-//            "B_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-//        });
-//
-//        // b_sort && max
-//        configurations.add(new Object[]{
-//            "B-SORT_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-//            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
-//        });
+        // b_sort && sum
+        configurations.add(new Object[]{
+            "B_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+        });
+
+        // b_sort && max
+        configurations.add(new Object[]{
+            "B-SORT_" + PrefixAggTypes.MAX.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+            new BitmapSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.MAX).build()
+        });
 //
 //        // t_sort && sum
-        configurations.add(new Object[]{
-            "T_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
-            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
-        });
+//        configurations.add(new Object[]{
+//            "T_SORT_" + PrefixAggTypes.SUM.name() + " (l = " + DEFAULT_ZL.getL() + ")",
+//            new TrivialSortingGroupAggConfig.Builder(DEFAULT_ZL, silent, PrefixAggTypes.SUM).build()
+//        });
 //
 //        // t_sort && max
 //        configurations.add(new Object[]{

@@ -120,6 +120,8 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
 
     private Vector<byte[]> rho;
 
+    private int maxBatchNum;
+
     public BitmapSortingGroupAggReceiver(Rpc receiverRpc, Party senderParty, BitmapSortingGroupAggConfig config) {
         super(BitmapSortingGroupAggPtoDesc.getInstance(), receiverRpc, senderParty, config);
         osnReceiver = OsnFactory.createReceiver(receiverRpc, senderParty, config.getOsnConfig());
@@ -132,6 +134,8 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         permGenReceiver = PermGenFactory.createReceiver(receiverRpc, senderParty, config.getPermGenConfig());
         a2bReceiver = A2bFactory.createReceiver(receiverRpc, senderParty, config.getA2bConfig());
         z2MuxReceiver = Z2MuxFactory.createReceiver(receiverRpc, senderParty, config.getZ2MuxConfig());
+
+        maxBatchNum = config.getMaxBatchNum();
         addMultipleSubPtos(zlcReceiver, osnReceiver, sharedPermutationReceiver, prefixAggReceiver, z2cReceiver,
             reversePermutationSender, permutationReceiver, permGenReceiver, a2bReceiver, z2MuxReceiver);
         prefixAggType = config.getPrefixAggConfig().getPrefixType();
@@ -229,10 +233,28 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
         groupAttr = GroupAggUtils.applyPermutation(groupAttr, sigmaB);
         aggAttr = GroupAggUtils.applyPermutation(aggAttr, sigmaB);
         e = GroupAggUtils.applyPermutation(e, sigmaB);
-        // osn
-        OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, CommonUtils.getByteLength(senderGroupNum + 1));
-        // transpose
-        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+
+        int byteLen = CommonUtils.getByteLength(senderGroupNum + 1);
+        SquareZ2Vector[] transposed = new SquareZ2Vector[senderGroupNum + 1];
+        if (sigmaB.length * byteLen > maxBatchNum) {
+            int byteLenSingle = Math.max(maxBatchNum / sigmaB.length, 1);
+            for (int endIndex = byteLen; endIndex > 0; endIndex -= byteLenSingle) {
+                int startIndex = Math.max(endIndex - byteLenSingle, 0);
+                int bitCountNum = startIndex == 0 ? senderGroupNum + 1 - (byteLen - endIndex) * 8 : byteLenSingle * 8;
+                // osn
+                OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, endIndex - startIndex);
+                // transpose
+                SquareZ2Vector[] tmp = GroupAggUtils.transposeOsnResult(osnPartyOutput, bitCountNum);
+                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (byteLen - startIndex) * 8;
+                System.arraycopy(tmp, 0, transposed, destIndex, bitCountNum);
+            }
+        } else {
+            // osn
+            OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, CommonUtils.getByteLength(senderGroupNum + 1));
+            // transpose
+            transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        }
+
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         // xor own share to meet permutation
         e = SquareZ2Vector.create(transposed[0].getBitVector().xor(e.getBitVector()), false);

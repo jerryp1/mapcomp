@@ -33,7 +33,7 @@ public abstract class AbstractMultiPartyPto implements MultiPartyPto {
     /**
      * display log level.
      */
-    private static final int DISPLAY_LOG_LEVEL = 0;
+    private static final int DISPLAY_LOG_LEVEL = 2;
     /**
      * max msg size
      */
