@@ -110,7 +110,7 @@ public class Php24PlainPayloadMuxReceiver extends AbstractPlainPayloadMuxParty {
         int[] nums = Arrays.stream(xi)
             .mapToInt(SquareZ2Vector::getNum).toArray();
         SquareZlVector tempResult = mux(tempXi, yi, validBitLen);
-        return Arrays.stream(ZlVector.splitWithPadding(tempResult.getZlVector(), nums))
+        return Arrays.stream(ZlVector.splitWithPadding(tempResult.getZlVector(), nums)).parallel()
             .map(z -> SquareZlVector.create(z, false)).toArray(SquareZlVector[]::new);
     }
 
