@@ -78,7 +78,7 @@ public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
         logPhaseInfo(PtoState.INIT_BEGIN);
 
         stopWatch.start();
-        bit2aParty.init(zl.getL(), maxFullNum * maxBitNum);
+        bit2aParty.init(zl.getL(), maxNum);
         z2cParty.init(1);
         zlcParty.init(1);
         zlMuxParty.init(maxFullNum * (maxBitNum + 1));
