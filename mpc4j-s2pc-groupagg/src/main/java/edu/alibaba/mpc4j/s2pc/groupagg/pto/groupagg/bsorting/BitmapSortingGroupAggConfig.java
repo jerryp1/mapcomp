@@ -139,6 +139,10 @@ public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig imp
         return a2bConfig;
     }
 
+    public int getMaxBatchNum(){
+        return 1 << 26;
+    }
+
     @Override
     public PrefixAggTypes getAggType() {
         return prefixAggConfig.getPrefixType();

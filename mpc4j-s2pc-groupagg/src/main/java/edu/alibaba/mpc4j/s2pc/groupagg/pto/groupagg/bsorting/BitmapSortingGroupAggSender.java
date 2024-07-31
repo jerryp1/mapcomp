@@ -112,6 +112,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
 
     private Vector<byte[]> rho;
 
+    private int maxBatchNum;
+
     public BitmapSortingGroupAggSender(Rpc senderRpc, Party receiverParty, BitmapSortingGroupAggConfig config) {
         super(BitmapSortingGroupAggPtoDesc.getInstance(), senderRpc, receiverParty, config);
         osnSender = OsnFactory.createSender(senderRpc, receiverParty, config.getOsnConfig());
@@ -124,6 +126,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         permGenSender = PermGenFactory.createSender(senderRpc, receiverParty, config.getPermGenConfig());
         a2bSender = A2bFactory.createSender(senderRpc, receiverParty, config.getA2bConfig());
         z2MuxSender = Z2MuxFactory.createSender(senderRpc, receiverParty, config.getZ2MuxConfig());
+
+        maxBatchNum = config.getMaxBatchNum();
         addMultipleSubPtos(zlcSender, osnSender, sharedPermutationSender, prefixAggSender, z2cSender,
             reversePermutationReceiver, permutationSender, permGenSender, a2bSender, z2MuxSender);
     }
@@ -280,10 +284,32 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
     private void bitmap() throws MpcAbortException {
         // gen bitmap
         Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
-        // osn
-        OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
-        // transpose
-        SquareZ2Vector[] transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        SquareZ2Vector[] transposed = new SquareZ2Vector[senderGroupNum + 1];
+        if (bitmaps.size() * bitmaps.get(0).length > maxBatchNum) {
+            int byteLenSingle = Math.max(maxBatchNum / bitmaps.size(), 1);
+            byte[][] bitmapsArray = bitmaps.toArray(new byte[0][]);
+            for (int endIndex = bitmapsArray[0].length; endIndex > 0; endIndex -= byteLenSingle) {
+                int startIndex = Math.max(endIndex - byteLenSingle, 0);
+                int finalEndIndex = endIndex;
+                int bitCountNum = startIndex == 0 ? senderGroupNum + 1 - (bitmapsArray[0].length - endIndex) * 8 : byteLenSingle * 8;
+                Vector<byte[]> input = Arrays.stream(bitmapsArray)
+                    .map(ea -> Arrays.copyOfRange(ea, startIndex, finalEndIndex))
+                    .collect(Collectors.toCollection(Vector::new));
+                // osn
+                OsnPartyOutput osnPartyOutput = osnSender.osn(input, endIndex - startIndex);
+                // transpose
+                SquareZ2Vector[] tmp = GroupAggUtils.transposeOsnResult(osnPartyOutput, bitCountNum);
+                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (bitmapsArray[0].length - startIndex) * 8;
+                System.arraycopy(tmp, 0, transposed, destIndex, bitCountNum);
+            }
+
+        } else {
+            // osn
+            OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
+            // transpose
+            transposed = GroupAggUtils.transposeOsnResult(osnPartyOutput, senderGroupNum + 1);
+        }
+
         senderBitmapShares = Arrays.stream(transposed, 1, transposed.length).toArray(SquareZ2Vector[]::new);
         e = transposed[0];
         // and
