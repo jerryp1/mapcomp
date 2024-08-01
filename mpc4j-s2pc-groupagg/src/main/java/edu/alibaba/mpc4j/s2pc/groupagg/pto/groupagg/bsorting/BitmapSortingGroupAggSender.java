@@ -285,13 +285,19 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
         // gen bitmap
         Vector<byte[]> bitmaps = genBitmap(groupAttr, e);
         SquareZ2Vector[] transposed = new SquareZ2Vector[senderGroupNum + 1];
-        if (bitmaps.size() * bitmaps.get(0).length > maxBatchNum) {
+        int byteLen = bitmaps.get(0).length;
+        if (bitmaps.size() * byteLen > maxBatchNum) {
             int byteLenSingle = Math.max(maxBatchNum / bitmaps.size(), 1);
             byte[][] bitmapsArray = bitmaps.toArray(new byte[0][]);
-            for (int endIndex = bitmapsArray[0].length; endIndex > 0; endIndex -= byteLenSingle) {
+            for (int endIndex = byteLen; endIndex > 0; endIndex -= byteLenSingle) {
                 int startIndex = Math.max(endIndex - byteLenSingle, 0);
                 int finalEndIndex = endIndex;
-                int bitCountNum = startIndex == 0 ? senderGroupNum + 1 - (bitmapsArray[0].length - endIndex) * 8 : byteLenSingle * 8;
+                int bitCountNum = startIndex == 0 ? senderGroupNum + 1 - (byteLen - endIndex) * 8 : byteLenSingle * 8;
+                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (byteLen - startIndex) * 8;
+
+                LOGGER.info("startIndex:{}, endIndex:{}, bitCountNum:{}, destIndex:{}, byteLenSingle:{}",
+                    startIndex, endIndex, bitCountNum, destIndex, byteLenSingle);
+
                 Vector<byte[]> input = Arrays.stream(bitmapsArray)
                     .map(ea -> Arrays.copyOfRange(ea, startIndex, finalEndIndex))
                     .collect(Collectors.toCollection(Vector::new));
@@ -299,10 +305,8 @@ public class BitmapSortingGroupAggSender extends AbstractGroupAggParty {
                 OsnPartyOutput osnPartyOutput = osnSender.osn(input, endIndex - startIndex);
                 // transpose
                 SquareZ2Vector[] tmp = GroupAggUtils.transposeOsnResult(osnPartyOutput, bitCountNum);
-                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (bitmapsArray[0].length - startIndex) * 8;
                 System.arraycopy(tmp, 0, transposed, destIndex, bitCountNum);
             }
-
         } else {
             // osn
             OsnPartyOutput osnPartyOutput = osnSender.osn(bitmaps, bitmaps.get(0).length);
