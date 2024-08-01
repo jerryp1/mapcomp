@@ -87,7 +87,7 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime, "Receiver runs COTs");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime, "Receiver runs COTs");
 
         stopWatch.start();
         List<byte[]> switchCorrectionPayload = receiveOtherPartyEqualSizePayload(PtoStep.SENDER_SEND_SWITCH_CORRECTIONS.ordinal(), switchNum, byteLength * 2);
@@ -99,7 +99,7 @@ public class Gmr21OsnReceiver extends AbstractOsnReceiver {
         stopWatch.stop();
         long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, inputCorrectionTime, "Receiver switches correlations");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, inputCorrectionTime, "Receiver switches correlations");
 
         stopWatch.start();
         List<byte[]> inputCorrectionPayload = receiveOtherPartyPayload(PtoStep.SENDER_SEND_INPUT_CORRECTIONS.ordinal());
