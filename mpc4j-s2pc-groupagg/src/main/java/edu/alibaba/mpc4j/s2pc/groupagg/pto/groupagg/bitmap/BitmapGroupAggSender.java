@@ -144,9 +144,15 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         // and 没有merge
         SquareZ2Vector[] allBitmapShare = new SquareZ2Vector[totalGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            BitVector[] tmpInput = new BitVector[receiverGroupNum];
-            Arrays.fill(tmpInput, bitmaps[i]);
-            System.arraycopy(plainAndSender.and(tmpInput), 0, allBitmapShare, i * receiverGroupNum, receiverGroupNum);
+            int smallBatch = Math.min(Math.max((1<<24) / bitmaps[0].bitNum(), 1), receiverGroupNum);
+            int batchNum = receiverGroupNum / smallBatch;
+            for(int j = 0; j < batchNum; j++){
+                int startIndex = j * smallBatch;
+                int endIndex = Math.min(startIndex + smallBatch, receiverGroupNum);
+                BitVector[] tmpInput = new BitVector[endIndex - startIndex];
+                Arrays.fill(tmpInput, bitmaps[i]);
+                System.arraycopy(plainAndSender.and(tmpInput), 0, allBitmapShare, i * receiverGroupNum + startIndex, tmpInput.length);
+            }
 //            for (int j = 0; j < receiverGroupNum; j++) {
 //                allBitmapShare[i * receiverGroupNum + j] = plainAndSender.and(bitmaps[i]);
 //            }
