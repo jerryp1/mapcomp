@@ -102,7 +102,7 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
 
         stopWatch.start();
         zlMuxReceiver.init(maxNum * BATCH_SIZE);
-        plainAndReceiver.init(maxNum * BATCH_SIZE);
+        plainAndReceiver.init(Integer.MAX_VALUE);
         z2cReceiver.init(maxNum * BATCH_SIZE);
         zlcReceiver.init(1);
         zlMaxReceiver.init(maxL, maxNum * BATCH_SIZE);
@@ -141,9 +141,10 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
         // and 没有merge
         SquareZ2Vector[] allBitmapShare = new SquareZ2Vector[totalGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            for (int j = 0; j < receiverGroupNum; j++) {
-                allBitmapShare[i * receiverGroupNum + j] = plainAndReceiver.and(bitmaps[j]);
-            }
+            System.arraycopy(plainAndReceiver.and(bitmaps), 0, allBitmapShare, i * receiverGroupNum, receiverGroupNum);
+//            for (int j = 0; j < receiverGroupNum; j++) {
+//                allBitmapShare[i * receiverGroupNum + j] = plainAndReceiver.and(bitmaps[j]);
+//            }
         }
 
         BigInteger[] result = new BigInteger[totalGroupNum];
@@ -154,9 +155,7 @@ public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
         for (int i = 0; i < batchNum; i++) {
             int currentNum = i == batchNum - 1 ? totalGroupNum - i * BATCH_SIZE : BATCH_SIZE;
             SquareZ2Vector[] tempBitmap = new SquareZ2Vector[currentNum];
-            for (int j = 0; j < currentNum; j++) {
-                tempBitmap[j] = allBitmapShare[i * BATCH_SIZE + j];
-            }
+            System.arraycopy(allBitmapShare, i * BATCH_SIZE, tempBitmap, 0, currentNum);
             // MUX with bitmap
             SquareZlVector[] bitmapWithAgg = plainPayloadMuxSender.mux(tempBitmap, aggAttr, zl.getL());
             // agg

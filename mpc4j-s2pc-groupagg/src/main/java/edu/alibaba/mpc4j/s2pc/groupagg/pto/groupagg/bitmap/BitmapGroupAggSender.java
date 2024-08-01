@@ -102,7 +102,7 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         stopWatch.start();
 
         zlMuxSender.init(maxNum * BATCH_SIZE);
-        plainAndSender.init(maxNum * BATCH_SIZE);
+        plainAndSender.init(Integer.MAX_VALUE);
         z2cSender.init(maxNum * BATCH_SIZE);
         zlcSender.init(1);
         zlMaxSender.init(maxL, maxNum * BATCH_SIZE);
@@ -144,9 +144,12 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         // and 没有merge
         SquareZ2Vector[] allBitmapShare = new SquareZ2Vector[totalGroupNum];
         for (int i = 0; i < senderGroupNum; i++) {
-            for (int j = 0; j < receiverGroupNum; j++) {
-                allBitmapShare[i * receiverGroupNum + j] = plainAndSender.and(bitmaps[i]);
-            }
+            BitVector[] tmpInput = new BitVector[receiverGroupNum];
+            Arrays.fill(tmpInput, bitmaps[i]);
+            System.arraycopy(plainAndSender.and(tmpInput), 0, allBitmapShare, i * receiverGroupNum, receiverGroupNum);
+//            for (int j = 0; j < receiverGroupNum; j++) {
+//                allBitmapShare[i * receiverGroupNum + j] = plainAndSender.and(bitmaps[i]);
+//            }
         }
         groupTripleNum = TRIPLE_NUM - groupTripleNum;
         stopWatch.stop();
@@ -157,14 +160,11 @@ public class BitmapGroupAggSender extends AbstractGroupAggParty {
         // AND with e with mux
         allBitmapShare = z2MuxParty.mux(e, allBitmapShare);
 
-
         int batchNum = CommonUtils.getUnitNum(totalGroupNum, BATCH_SIZE);
         for (int i = 0; i < batchNum; i++) {
             int currentNum = i == batchNum - 1 ? totalGroupNum - i * BATCH_SIZE : BATCH_SIZE;
             SquareZ2Vector[] tempBitmap = new SquareZ2Vector[currentNum];
-            for (int j = 0; j < currentNum; j++) {
-                tempBitmap[j] = allBitmapShare[i * BATCH_SIZE + j];
-            }
+            System.arraycopy(allBitmapShare, i * BATCH_SIZE, tempBitmap, 0, currentNum);
 
             stopWatch.start();
             // MUX with bitmap

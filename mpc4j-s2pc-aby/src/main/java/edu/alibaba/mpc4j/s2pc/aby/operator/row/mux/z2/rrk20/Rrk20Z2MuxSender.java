@@ -1,8 +1,6 @@
 package edu.alibaba.mpc4j.s2pc.aby.operator.row.mux.z2.rrk20;
 
 import edu.alibaba.mpc4j.common.rpc.*;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacket;
-import edu.alibaba.mpc4j.common.rpc.utils.DataPacketHeader;
 import edu.alibaba.mpc4j.common.tool.CommonConstants;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.common.tool.bitvector.BitVectorFactory;
@@ -96,11 +94,12 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         logStepInfo(PtoState.PTO_STEP, 3, 4, resetAndGetTime());
 
         stopWatch.start();
-        DataPacketHeader t0t1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T0_T1.ordinal(), extraInfo,
-            otherParty().getPartyId(), ownParty().getPartyId()
-        );
-        List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
+//        DataPacketHeader t0t1Header = new DataPacketHeader(
+//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.RECEIVER_SEND_T0_T1.ordinal(), extraInfo,
+//            otherParty().getPartyId(), ownParty().getPartyId()
+//        );
+//        List<byte[]> t0t1Payload = rpc.receive(t0t1Header).getPayload();
+        List<byte[]> t0t1Payload = receiveOtherPartyEqualSizePayload(PtoStep.RECEIVER_SEND_T0_T1.ordinal(), num * 2, byteL);
         SquareZ2Vector[] z0 = t0t1(cotReceiverOutput, t0t1Payload);
         r0Z2Vectors = null;
         logStepInfo(PtoState.PTO_STEP, 4, 4, resetAndGetTime());
@@ -164,12 +163,12 @@ public class Rrk20Z2MuxSender extends AbstractZ2MuxParty {
         // merge s0 and s1
         s0s1Payload.addAll(s1Payload);
         // sends s0 and s1
-        DataPacketHeader s0s1Header = new DataPacketHeader(
-            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0_S1.ordinal(), extraInfo,
-            ownParty().getPartyId(), otherParty().getPartyId()
-        );
-
-        rpc.send(DataPacket.fromByteArrayList(s0s1Header, s0s1Payload));
+//        DataPacketHeader s0s1Header = new DataPacketHeader(
+//            encodeTaskId, getPtoDesc().getPtoId(), PtoStep.SENDER_SEND_S0_S1.ordinal(), extraInfo,
+//            ownParty().getPartyId(), otherParty().getPartyId()
+//        );
+//        rpc.send(DataPacket.fromByteArrayList(s0s1Header, s0s1Payload));
+        sendOtherPartyEqualSizePayload(PtoStep.SENDER_SEND_S0_S1.ordinal(), s0s1Payload);
     }
 
     private SquareZ2Vector[] t0t1(CotReceiverOutput cotReceiverOutput, List<byte[]> t0t1Payload) throws MpcAbortException {
