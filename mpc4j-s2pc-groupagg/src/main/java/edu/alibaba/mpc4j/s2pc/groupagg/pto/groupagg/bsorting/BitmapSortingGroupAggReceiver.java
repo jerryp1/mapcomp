@@ -241,11 +241,13 @@ public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
             for (int endIndex = byteLen; endIndex > 0; endIndex -= byteLenSingle) {
                 int startIndex = Math.max(endIndex - byteLenSingle, 0);
                 int bitCountNum = startIndex == 0 ? senderGroupNum + 1 - (byteLen - endIndex) * 8 : byteLenSingle * 8;
+                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (byteLen - startIndex) * 8;
                 // osn
                 OsnPartyOutput osnPartyOutput = osnReceiver.osn(sigmaB, endIndex - startIndex);
                 // transpose
                 SquareZ2Vector[] tmp = GroupAggUtils.transposeOsnResult(osnPartyOutput, bitCountNum);
-                int destIndex = startIndex == 0 ? 0 : senderGroupNum + 1 - (byteLen - startIndex) * 8;
+                LOGGER.info("startIndex:{}, endIndex:{}, bitCountNum:{}, destIndex:{}, byteLenSingle:{}",
+                    startIndex, endIndex, bitCountNum, destIndex, byteLenSingle);
                 System.arraycopy(tmp, 0, transposed, destIndex, bitCountNum);
             }
         } else {

@@ -100,7 +100,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long cotTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 1, 2, cotTime, "Sender runs COTs");
+        logStepInfo(PtoState.PTO_STEP, 1, 3, cotTime, "Sender runs COTs");
 
         stopWatch.start();
         List<byte[]> switchCorrectionPayload = generateSwitchCorrectionPayload();
@@ -110,7 +110,7 @@ public class Gmr21OsnSender extends AbstractOsnSender {
         stopWatch.stop();
         long inputCorrectionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
         stopWatch.reset();
-        logStepInfo(PtoState.PTO_STEP, 2, 2, inputCorrectionTime, "Sender switches correlations");
+        logStepInfo(PtoState.PTO_STEP, 2, 3, inputCorrectionTime, "Sender switches correlations");
 
         stopWatch.start();
         byte[][] sendMsg = IntStream.range(0, n).mapToObj(i -> BytesUtils.xor(inputMask[i], inputVector.get(i))).toArray(byte[][]::new);
