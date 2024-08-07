@@ -1,10 +1,8 @@
 # About MapComp.
 
-
-MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are itegregted as sub-modules in current project, which can be mainly found in mpc4j-s2pc-pjc, mpc4j-s2pc-groupagg, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
-
 **Our FULL version paper** is available: https://arxiv.org/pdf/2408.01246
 
+MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are integrated as sub-modules in current project, which can be mainly found in mpc4j-s2pc-pjc, mpc4j-s2pc-groupagg, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
 
 # Requirements
 
@@ -12,7 +10,7 @@ The requirements for building and running project are the same with mpc4j, pleas
 
 Note: it is required to build native-tools (in the module named mpc4j-native-tool) first to run any unit tests or benchmarks. The build process can be found in https://github.com/alibaba-edu/mpc4j/tree/main/mpc4j-native-tool/README.md.
 
-# Running the protocols
+# How to run our protocols
 
 MapComp contains mainly two sub-process: view operations and group-aggregation.
 
@@ -25,7 +23,7 @@ For unit tests, you can use an IDE (e.g., IntelliJ IDEA) to import the source co
 
 Unit tests of building blocks that designed in our protocol can also be performed at will.
 
-Note: The path of native-tool must be set as running parameters. An example is:
+Note: The path of native-tool MUST be set as running parameters. An example is:
 ``-ea -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release``
 
 ## Benchmarks
