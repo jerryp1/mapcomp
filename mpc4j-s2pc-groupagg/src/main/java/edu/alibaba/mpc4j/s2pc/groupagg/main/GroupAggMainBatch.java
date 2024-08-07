@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Properties;
 
 /**
+ * Group agg main batch
+ *
  * @author Feng Han
  * @date 2024/7/24
  */
