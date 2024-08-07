@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 /**
+ * Group agg main.
+ *
  * @author Feng Han
  * @date 2024/7/24
  */
