@@ -1,14 +1,13 @@
 # About MapComp.
 
-**Our FULL version paper** is available: https://arxiv.org/pdf/2408.01246
 
-MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are integrated as sub-modules in current project, which can be mainly found in mpc4j-s2pc-pjc, mpc4j-s2pc-groupagg, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
+MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are integrated as sub-modules in the current project, which can be mainly found in mpc4j-s2pc-pjc, mpc4j-s2pc-groupagg, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
 
 # Requirements
 
 The requirements for building and running project are the same with mpc4j, please refer https://github.com/alibaba-edu/mpc4j for further details.
 
-Note: it is required to build native-tools (in the module named mpc4j-native-tool) first to run any unit tests or benchmarks. The build process can be found in https://github.com/alibaba-edu/mpc4j/tree/main/mpc4j-native-tool/README.md.
+Note: it is required to build native-tools (in the module named mpc4j-native-tool) first to run any unit tests or benchmarks. The build process can be found at https://github.com/alibaba-edu/mpc4j/tree/main/mpc4j-native-tool/README.md.
 
 # How to run our protocols
 
@@ -21,7 +20,7 @@ For unit tests, you can use an IDE (e.g., IntelliJ IDEA) to import the source co
 - mpc4j-s2pc-groupagg/src/test/java/edu/alibaba/mpc4j/s2pc/groupagg/pto
 - mpc4j-s2pc-pjc/src/test/java/edu/alibaba/mpc4j/s2pc/pjc
 
-Unit tests of building blocks that designed in our protocol can also be performed at will.
+Unit tests of building blocks that are designed in our protocol can also be performed at will.
 
 Note: The path of native-tool MUST be set as running parameters. An example is:
 ``-ea -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release``
@@ -32,11 +31,11 @@ For benchmarks, please follow the instructions below.
 
 ### View operation protocols:
 
--  Package this project with maven to generate runnable jar file.
+-  Package this project with maven to generate a runnable jar file.
 - ``cd mpc4j-s2pc-pjc``
 - Execute the following command in two terminals respectively:``java -Djava.library.path=/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-tool/cmake-build-release:/YOUR_MPC4J_ABSOLUTE_PATH/mpc4j-native-fhe/cmake-build-release -jar mpc4j-s2pc-pjc-1.1.0-SNAPSHOT-jar-with-dependencies.jar fileDir role``
 
-  - `fileDir` is the directory of configure files. An example configure files can be seen in `./mpc4j-s2pc-pjc/src/test/resources/pmap`.
+  - `fileDir` is the directory of configure files. An example of configure files can be seen in `./mpc4j-s2pc-pjc/src/test/resources/pmap`.
 
   - `role` needs to be replaced with `server` or `client`
 
@@ -57,5 +56,3 @@ For benchmarks, please follow the instructions below.
   - ``-m``  means run multiple tests with spcified configure files located in a directory PATH.
 
   - An example of configure is located in ```./mpc4j-s2pc-groupagg/src/test/resources/view``
-
-Please feel free to contact jerry.pl@alibaba.com/fengdi.hf@alibaba-inc.com if you encounter any issues during testing.
