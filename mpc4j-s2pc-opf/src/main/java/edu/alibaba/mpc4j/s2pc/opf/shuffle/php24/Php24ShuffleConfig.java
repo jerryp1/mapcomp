@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 /**
  * Php+24 shuffle config.
  *
- * @author Li Peng
- * @date 2023/5/22
  */
 public class Php24ShuffleConfig extends AbstractMultiPartyPtoConfig implements ShuffleConfig {
     /**

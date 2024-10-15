@@ -46,8 +46,6 @@ import java.util.stream.IntStream;
 /**
  * Optimized mix group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/25
  */
 public class OptimizedMixGroupAggReceiver extends AbstractGroupAggParty {
     /**

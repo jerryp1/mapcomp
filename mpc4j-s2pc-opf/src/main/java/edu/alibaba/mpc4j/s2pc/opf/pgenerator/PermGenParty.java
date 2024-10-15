@@ -7,9 +7,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 
 /**
  * permutation generator Party.
- *
- * @author Feng Han
- * @date 2023/11/03
  */
 public interface PermGenParty extends TwoPartyPto {
     /**

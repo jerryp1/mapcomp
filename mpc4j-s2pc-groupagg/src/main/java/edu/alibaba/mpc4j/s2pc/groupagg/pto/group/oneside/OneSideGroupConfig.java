@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.oneside.OneSideGroupFactory.One
 /**
  * group aggregation config.
  *
- * @author Feng Han
- * @date 2023/11/06
  */
 public interface OneSideGroupConfig extends MultiPartyPtoConfig {
     /**

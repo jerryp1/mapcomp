@@ -35,8 +35,6 @@ import java.util.stream.IntStream;
 /**
  * Prefix max Test.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 @RunWith(Parameterized.class)
 public class PrefixMaxTest extends AbstractTwoPartyPtoTest {

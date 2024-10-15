@@ -7,8 +7,6 @@ import java.util.stream.IntStream;
 /**
  * group aggregation utilities
  *
- * @author Feng Han
- * @date 2023/11/08
  */
 public class GroupUtils {
     public static SquareZ2Vector[] getPos(SquareZ2Vector[] data, int startIndex, int num, int skipLen, boolean parallel) {

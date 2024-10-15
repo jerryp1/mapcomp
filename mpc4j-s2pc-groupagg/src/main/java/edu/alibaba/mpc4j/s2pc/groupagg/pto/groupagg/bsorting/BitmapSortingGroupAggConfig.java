@@ -27,9 +27,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 
 /**
  * Bitmap assist sorting-based group aggregation config.
- *
- * @author Li Peng
- * @date 2023/11/20
  */
 public class BitmapSortingGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**

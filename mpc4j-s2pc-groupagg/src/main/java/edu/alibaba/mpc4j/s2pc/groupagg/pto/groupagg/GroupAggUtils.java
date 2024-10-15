@@ -19,8 +19,6 @@ import java.util.stream.IntStream;
 /**
  * Group aggregation utilities.
  *
- * @author Li Peng
- * @date 2023/11/9
  */
 public class GroupAggUtils {
     /**

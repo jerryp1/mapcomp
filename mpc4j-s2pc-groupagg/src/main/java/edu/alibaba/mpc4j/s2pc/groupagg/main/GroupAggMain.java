@@ -10,8 +10,6 @@ import java.util.Properties;
 /**
  * Group agg main.
  *
- * @author Feng Han
- * @date 2024/7/24
  */
 public class GroupAggMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggMain.class);

@@ -35,8 +35,6 @@ import java.util.stream.IntStream;
 /**
  * Prefix xor Test.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 @RunWith(Parameterized.class)
 public class PrefixXorTest extends AbstractTwoPartyPtoTest {

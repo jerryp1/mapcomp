@@ -14,8 +14,6 @@ import java.util.*;
 /**
  * Abstract shuffle sender.
  *
- * @author Li Peng
- * @date 2023/10/18
  */
 public abstract class AbstractShuffleParty extends AbstractTwoPartyPto implements ShuffleParty {
     /**

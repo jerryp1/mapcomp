@@ -14,8 +14,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.oneside.OneSideGroupFactory.One
 /**
  * AMOS22 shared group aggregation Config.
  *
- * @author Feng Han
- * @date 2023/11/08
  */
 public class Amos22OneSideGroupConfig extends AbstractMultiPartyPtoConfig implements OneSideGroupConfig {
 

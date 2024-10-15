@@ -58,8 +58,6 @@ import java.util.stream.IntStream;
 /**
  * Bitmap assist sorting-based group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/20
  */
 public class BitmapSortingGroupAggReceiver extends AbstractGroupAggParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(BitmapSortingGroupAggReceiver.class);

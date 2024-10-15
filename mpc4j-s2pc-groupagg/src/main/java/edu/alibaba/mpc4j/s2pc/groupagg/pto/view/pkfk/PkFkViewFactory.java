@@ -12,8 +12,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.php24.Php24PkFkViewSender;
 /**
  * view factory
  *
- * @author Feng Han
- * @date 2024/7/19
  */
 public class PkFkViewFactory {
     /**

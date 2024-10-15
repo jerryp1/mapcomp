@@ -28,8 +28,6 @@ import java.util.stream.IntStream;
 /**
  * Prefix xor aggregator.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public abstract class AbstractPrefixXorAggregator extends AbstractPrefixGroupAggregator implements PrefixOp, PrefixAggParty {
 

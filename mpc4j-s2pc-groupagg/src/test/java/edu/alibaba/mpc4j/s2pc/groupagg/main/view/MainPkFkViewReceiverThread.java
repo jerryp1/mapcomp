@@ -3,10 +3,6 @@ package edu.alibaba.mpc4j.s2pc.groupagg.main.view;
 import edu.alibaba.mpc4j.common.rpc.Party;
 import edu.alibaba.mpc4j.common.rpc.Rpc;
 
-/**
- * @author Feng Han
- * @date 2024/7/24
- */
 public class MainPkFkViewReceiverThread extends Thread {
     /**
      * receiver RPC

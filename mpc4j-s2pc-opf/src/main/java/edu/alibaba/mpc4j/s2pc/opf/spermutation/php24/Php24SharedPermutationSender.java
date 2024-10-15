@@ -25,8 +25,6 @@ import java.util.stream.IntStream;
 /**
  * Php+24 shared permutation sender.
  *
- * @author Li Peng
- * @date 2023/5/25
  */
 public class Php24SharedPermutationSender extends AbstractSharedPermutationParty {
     /**

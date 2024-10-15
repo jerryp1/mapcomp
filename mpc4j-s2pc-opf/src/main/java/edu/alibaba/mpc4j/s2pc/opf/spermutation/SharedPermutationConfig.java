@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory.SharedPe
 /**
  * Shared permutation config.
  *
- * @author Li Peng
- * @date 2023/10/25
  */
 public interface SharedPermutationConfig extends MultiPartyPtoConfig {
     /**

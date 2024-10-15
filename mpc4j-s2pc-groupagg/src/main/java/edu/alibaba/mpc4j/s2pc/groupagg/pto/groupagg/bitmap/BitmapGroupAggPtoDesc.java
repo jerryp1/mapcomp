@@ -4,12 +4,8 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
- * Bitmap group aggregation protocol description. The protocol comes from the following paper:
- * <p>
- * </p>
+ * Bitmap group aggregation protocol description.
  *
- * @author Li Peng
- * @date 2023/11/8
  */
 public class BitmapGroupAggPtoDesc implements PtoDesc {
     /**

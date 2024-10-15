@@ -13,8 +13,6 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.php24b.Php24bSharedPermutationSen
 /**
  * Shared permutation factory.
  *
- * @author Li Peng
- * @date 2023/10/25
  */
 public class SharedPermutationFactory {
     /**

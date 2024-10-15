@@ -33,8 +33,6 @@ import java.util.stream.IntStream;
 /**
  * Php+24 permutation receiver.
  *
- * @author Li Peng
- * @date 2023/5/22
  */
 public class Php24bPermutationReceiver extends AbstractPermutationReceiver {
     /**

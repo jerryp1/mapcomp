@@ -45,8 +45,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
 /**
  * Sorting-based group aggregation sender.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class SortingGroupAggSender extends AbstractGroupAggParty {
     /**

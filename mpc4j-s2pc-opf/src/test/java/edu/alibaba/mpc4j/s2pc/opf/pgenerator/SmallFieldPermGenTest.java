@@ -31,8 +31,6 @@ import java.util.stream.IntStream;
 /**
  * Permutable sorter test.
  *
- * @author Li Peng
- * @date 2023/10/12
  */
 @RunWith(Parameterized.class)
 public class SmallFieldPermGenTest extends AbstractTwoPartyPtoTest {

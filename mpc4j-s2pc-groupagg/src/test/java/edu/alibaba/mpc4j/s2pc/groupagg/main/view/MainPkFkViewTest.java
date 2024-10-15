@@ -9,10 +9,6 @@ import org.junit.Test;
 import java.util.Objects;
 import java.util.Properties;
 
-/**
- * @author Feng Han
- * @date 2024/7/24
- */
 public class MainPkFkViewTest {
     /**
      * sender RPC

@@ -21,8 +21,6 @@ import java.util.stream.IntStream;
 /**
  * Prefix sum aggregator.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 public abstract class AbstractPrefixSumAggregator extends AbstractPrefixGroupAggregator implements PrefixOp, PrefixAggParty {
 

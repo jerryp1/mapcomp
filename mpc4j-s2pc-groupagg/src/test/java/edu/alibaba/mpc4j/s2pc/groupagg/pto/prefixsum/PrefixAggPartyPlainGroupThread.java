@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggParty;
 /**
  * Prefix aggregation party thread.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 class PrefixAggPartyPlainGroupThread extends Thread {
     /**

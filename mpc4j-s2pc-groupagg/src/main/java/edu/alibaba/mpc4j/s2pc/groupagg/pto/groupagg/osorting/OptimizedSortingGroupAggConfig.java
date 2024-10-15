@@ -27,8 +27,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 /**
  * Optimized sorting-based group aggregation config.
  *
- * @author Li Peng
- * @date 2023/11/19
  */
 public class OptimizedSortingGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**

@@ -7,8 +7,6 @@ import java.util.Vector;
 /**
  * Permutation receiver thread.
  *
- * @author Li Peng
- * @date 2023/10/12
  */
 class SharedPermutationReceiverThread extends Thread {
     /**

@@ -49,9 +49,6 @@ import java.util.stream.IntStream;
 
 /**
  * Mix group aggregation receiver. Receiver is assumed to always has group attributes.
- *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class OnesideGroupAggReceiver extends AbstractGroupAggParty {
     /**

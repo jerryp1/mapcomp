@@ -16,10 +16,6 @@ import edu.alibaba.mpc4j.s2pc.opf.osn.OsnFactory;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapConfig;
 import edu.alibaba.mpc4j.s2pc.pjc.pmap.PmapFactory;
 
-/**
- * @author Feng Han
- * @date 2024/7/19
- */
 public class Php24PkFkViewConfig extends AbstractMultiPartyPtoConfig implements PkFkViewConfig {
     /**
      * plain text mux config

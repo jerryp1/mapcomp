@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Permutable sorter sender thread.
  *
- * @author Li Peng
- * @date 2023/10/12
  */
 class PermGenSenderThread extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger(PermGenSenderThread.class);

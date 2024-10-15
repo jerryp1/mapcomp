@@ -10,8 +10,6 @@ import java.util.Vector;
  * Permutation receiver interface.
  * Permutation party.
  *
- * @author Li Peng
- * @date 2023/10/11
  */
 public interface PermutationReceiver extends TwoPartyPto {
     /**

@@ -7,9 +7,6 @@ import java.util.Vector;
 
 /**
  * Shuffle sender thread.
- *
- * @author Li Peng
- * @date 2023/10/22
  */
 class ShuffleSenderThread extends Thread {
     /**

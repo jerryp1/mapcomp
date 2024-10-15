@@ -29,8 +29,6 @@ import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory;
 /**
  * Php+24 prefix xor Config.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public class Php24PrefixXorConfig extends AbstractMultiPartyPtoConfig implements PrefixXorConfig {
     /**

@@ -10,8 +10,6 @@ import java.util.Vector;
 /**
  * Prefix aggregation party thread.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 class PrefixAggPartyThread extends Thread {
     /**

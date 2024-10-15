@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixmax.PrefixMaxFactory.
 /**
  * Prefix max config.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public interface PrefixMaxConfig extends PrefixAggConfig {
     /**

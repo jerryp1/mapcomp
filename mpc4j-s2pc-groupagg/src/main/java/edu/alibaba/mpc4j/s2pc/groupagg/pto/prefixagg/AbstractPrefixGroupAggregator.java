@@ -44,8 +44,6 @@ import static edu.alibaba.mpc4j.crypto.matrix.TransposeUtils.transposeMergeToVec
 /**
  * Abstract group aggregator
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public abstract class AbstractPrefixGroupAggregator extends AbstractTwoPartyPto implements PrefixAggParty, PrefixOp {
     /**

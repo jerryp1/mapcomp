@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 /**
  * PMAP主函数，一次执行一个文件夹下所有的配置项。
  *
- * @author Feng Han
- * @date 2023/11/20
  */
 public class PmapMain4Batch {
     private static final Logger LOGGER = LoggerFactory.getLogger(PmapMain4Batch.class);

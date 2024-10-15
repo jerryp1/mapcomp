@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorFactory.
 /**
  * Prefix xor Config.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public interface PrefixXorConfig extends PrefixAggConfig {
     /**

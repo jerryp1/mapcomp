@@ -28,8 +28,6 @@ import java.util.stream.IntStream;
 /**
  * group aggregation test, where the group flag is plaintext to receiver
  *
- * @author Feng Han
- * @date 2023/11/19
  */
 @RunWith(Parameterized.class)
 public class OneSideGroupTest extends AbstractTwoPartyPtoTest {

@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PartyTypes;
 /**
  * Permutable sorter receiver for bitmap
  *
- * @author Feng Han
- * @date 2023/10/20
  */
 public class BitmapPermGenReceiver extends AbstractBitMapPermGenParty {
     public BitmapPermGenReceiver(Rpc rpc, Party otherParty, BitmapPermGenConfig config) {

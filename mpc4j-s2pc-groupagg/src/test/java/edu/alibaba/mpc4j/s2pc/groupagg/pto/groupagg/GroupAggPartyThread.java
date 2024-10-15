@@ -8,8 +8,6 @@ import java.util.Properties;
 /**
  * Group aggregation party thread.
  *
- * @author Li Peng
- * @date 2023/11/9
  */
 class GroupAggPartyThread extends Thread {
     /**

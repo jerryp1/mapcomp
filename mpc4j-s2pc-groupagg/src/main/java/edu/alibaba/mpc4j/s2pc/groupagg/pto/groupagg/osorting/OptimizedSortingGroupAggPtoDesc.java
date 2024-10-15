@@ -7,9 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Optimized sorting-based group aggregation protocol description. The protocol comes from the following paper:
  * <p>
  * </p>
- *
- * @author Li Peng
- * @date 2023/11/19
  */
 public class OptimizedSortingGroupAggPtoDesc implements PtoDesc {
     /**

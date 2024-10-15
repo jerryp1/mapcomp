@@ -26,8 +26,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 /**
  * Bitmap group aggregation config.
  *
- * @author Li Peng
- * @date 2023/11/8
  */
 public class BitmapGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**

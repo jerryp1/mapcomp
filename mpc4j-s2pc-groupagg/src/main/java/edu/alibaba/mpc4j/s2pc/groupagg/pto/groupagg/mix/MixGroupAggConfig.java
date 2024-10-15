@@ -26,8 +26,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 /**
  * Mix group aggregation config.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class MixGroupAggConfig extends AbstractMultiPartyPtoConfig implements GroupAggConfig {
     /**

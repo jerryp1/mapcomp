@@ -12,8 +12,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenParty;
 /**
  * Abstract Permutable Sorter Party.
  *
- * @author Li Peng
- * @date 2023/10/11
  */
 public abstract class AbstractSmallFieldPermGenParty extends AbstractPermGenParty implements PermGenParty {
 

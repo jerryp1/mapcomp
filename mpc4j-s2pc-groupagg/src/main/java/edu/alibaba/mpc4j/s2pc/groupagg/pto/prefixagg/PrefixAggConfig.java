@@ -6,9 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 
 /**
  * Prefix agg Config.
- *
- * @author Li Peng
- * @date 2023/10/30
  */
 public interface PrefixAggConfig extends MultiPartyPtoConfig {
     /**

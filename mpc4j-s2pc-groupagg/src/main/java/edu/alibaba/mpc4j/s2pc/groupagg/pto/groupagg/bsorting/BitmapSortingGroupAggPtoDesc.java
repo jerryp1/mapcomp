@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * Bitmap assist sorting-based group aggregation protocol description.
  *
- * @author Li Peng
- * @date 2023/11/20
  */
 public class BitmapSortingGroupAggPtoDesc implements PtoDesc {
     /**

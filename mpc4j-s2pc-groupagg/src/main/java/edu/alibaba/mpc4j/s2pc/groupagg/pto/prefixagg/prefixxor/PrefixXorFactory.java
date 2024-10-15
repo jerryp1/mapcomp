@@ -11,8 +11,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.php24.Php24Prefix
 /**
  * Prefix xor factory.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public class PrefixXorFactory {
     /**

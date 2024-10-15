@@ -28,10 +28,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * @author Feng Han
- * @date 2024/7/19
- */
 public class BaselinePkFkViewSender extends AbstractTwoPartyPto implements PkFkViewSender {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaselinePkFkViewSender.class);
     private final Z2MuxParty z2MuxParty;

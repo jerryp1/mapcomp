@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * Php+24 prefix xor protocol description.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public class Php24PrefixXorPtoDesc implements PtoDesc {
     /**

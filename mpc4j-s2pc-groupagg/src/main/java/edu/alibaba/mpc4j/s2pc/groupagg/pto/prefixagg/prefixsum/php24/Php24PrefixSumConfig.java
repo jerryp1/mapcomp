@@ -29,8 +29,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumFactory.
 /**
  * Php+24 prefix sum Config.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 public class Php24PrefixSumConfig extends AbstractMultiPartyPtoConfig implements PrefixSumConfig {
     /**

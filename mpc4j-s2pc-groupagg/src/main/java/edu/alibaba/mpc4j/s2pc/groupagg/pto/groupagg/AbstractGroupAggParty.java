@@ -31,8 +31,6 @@ import static edu.alibaba.mpc4j.s2pc.groupagg.pto.groupagg.CommonConstants.HAVIN
 /**
  * Abstract shuffle sender.
  *
- * @author Li Peng
- * @date 2023/10/18
  */
 public abstract class AbstractGroupAggParty extends AbstractTwoPartyPto implements GroupAggParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGroupAggParty.class);

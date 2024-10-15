@@ -21,8 +21,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Prefix max sender.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public class Php24PrefixMaxSender extends AbstractPrefixMaxAggregator {
 

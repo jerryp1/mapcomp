@@ -14,8 +14,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixmax.php24.Php24Prefix
 /**
  * Prefix max factory.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public class PrefixMaxFactory {
     /**

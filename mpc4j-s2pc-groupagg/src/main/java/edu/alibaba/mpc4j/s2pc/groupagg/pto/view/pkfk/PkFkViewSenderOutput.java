@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 /**
  * alice的output，alice是持有PK 表的一方
  *
- * @author Feng Han
- * @date 2024/7/19
  */
 public class PkFkViewSenderOutput {
     /**

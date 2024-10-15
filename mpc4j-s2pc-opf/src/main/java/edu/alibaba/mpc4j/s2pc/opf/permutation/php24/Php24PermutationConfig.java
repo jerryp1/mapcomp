@@ -19,8 +19,6 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.PermutationFactory.PermutationType
 /**
  * Php+24 permutation config.
  *
- * @author Li Peng
- * @date 2023/5/22
  */
 public class Php24PermutationConfig extends AbstractMultiPartyPtoConfig implements PermutationConfig {
     /**

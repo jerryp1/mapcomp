@@ -20,8 +20,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Prefix sum sender.
  *
- * @author Li Peng
- * @date 2023/5/30
  */
 public class Php24PrefixSumSender extends AbstractPrefixSumAggregator {
 

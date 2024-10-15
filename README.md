@@ -1,7 +1,5 @@
 # About MapComp.
-
-
-MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are integrated as sub-modules in the current project, which can be mainly found in mpc4j-s2pc-pjc, mpc4j-s2pc-groupagg, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
+MapComp is a secure view-based collaborative analytics framework for join group aggregation. MapComp is developed upon mpc4j (https://github.com/alibaba-edu/mpc4j). The protocols and building blocks of MapComp are integrated as sub-modules in the current project, which can be mainly found in mpc4j-s2pc-groupagg, mpc4j-s2pc-pjc, mpc4j-s2pc-opf, mpc4j-s2pc-aby, mpc4j-common-circuit.
 
 # Requirements
 

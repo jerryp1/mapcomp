@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * <p>
  * </p>
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class SortingGroupAggPtoDesc implements PtoDesc {
     /**

@@ -9,9 +9,7 @@ import java.util.Vector;
 
 /**
  * Permutation sender interface.
- *
- * @author Li Peng
- * @date 2023/10/18
+
  */
 public interface PermutationSender extends TwoPartyPto {
     /**

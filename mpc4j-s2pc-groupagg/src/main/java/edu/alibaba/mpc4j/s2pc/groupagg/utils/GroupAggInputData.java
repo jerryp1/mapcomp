@@ -4,9 +4,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.z2.SquareZ2Vector;
 
 /**
  * Input data
- *
- * @author Li Peng
- * @date 2023/11/17
  */
 public class GroupAggInputData {
     /**

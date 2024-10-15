@@ -11,8 +11,6 @@ import java.util.Vector;
 /**
  * Prefix sum Interface.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 public interface PrefixAggParty extends TwoPartyPto {
     /**

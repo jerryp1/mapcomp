@@ -32,8 +32,6 @@ import java.util.stream.IntStream;
 /**
  * Permutable bitmap sorter test.
  *
- * @author Feng Han
- * @date 2023/11/03
  */
 @RunWith(Parameterized.class)
 public class BitmapPermGenTest extends AbstractTwoPartyPtoTest {

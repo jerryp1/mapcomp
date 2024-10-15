@@ -8,9 +8,6 @@ import java.util.Properties;
 
 /**
  * Group-Aggregation party
- *
- * @author Li Peng
- * @date 2023/11/3
  */
 public interface GroupAggParty extends TwoPartyPto {
     /**

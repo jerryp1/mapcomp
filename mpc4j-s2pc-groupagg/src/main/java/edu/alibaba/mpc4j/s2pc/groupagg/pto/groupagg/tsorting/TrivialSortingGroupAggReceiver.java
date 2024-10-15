@@ -53,8 +53,6 @@ import java.util.stream.IntStream;
 /**
  * Trivial sorting-based group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/19
  */
 public class TrivialSortingGroupAggReceiver extends AbstractGroupAggParty {
     /**

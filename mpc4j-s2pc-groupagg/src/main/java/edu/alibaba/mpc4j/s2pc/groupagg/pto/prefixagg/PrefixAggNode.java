@@ -7,8 +7,6 @@ import java.math.BigInteger;
 /**
  * Prefix aggregation node in a prefix tree.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 public class PrefixAggNode implements PrefixNode {
     /**

@@ -31,8 +31,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Pmap protocol test.
  *
- * @author Feng Han
- * @date 2023/11/03
  */
 @RunWith(Parameterized.class)
 public class PmapTest extends AbstractTwoPartyPtoTest {

@@ -9,9 +9,6 @@ import java.util.Vector;
 
 /**
  * Shuffle party interface.
- *
- * @author Li Peng
- * @date 2023/10/18
  */
 public interface ShuffleParty extends TwoPartyPto {
     /**

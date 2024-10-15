@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.share.amos22.Amos22ShareGroupSe
 /**
  * group aggregation factory
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public class ShareGroupFactory extends GroupTypes {
     /**

@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Triple test runner.
  *
- * @author Li Peng
- * @date 2023/8/3
  */
 public class TripleTestRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(TripleTestRunner.class);

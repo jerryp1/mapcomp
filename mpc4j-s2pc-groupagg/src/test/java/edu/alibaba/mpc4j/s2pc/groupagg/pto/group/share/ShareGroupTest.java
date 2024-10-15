@@ -31,8 +31,6 @@ import java.util.stream.IntStream;
 /**
  * group aggregation with shared group flag test
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 @RunWith(Parameterized.class)
 public class ShareGroupTest extends AbstractTwoPartyPtoTest {

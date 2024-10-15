@@ -18,8 +18,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
 /**
  * Permutable bitmap sorter config.
  *
- * @author Feng Han
- * @date 2023/10/20
  */
 public class BitmapPermGenConfig extends AbstractMultiPartyPtoConfig implements PermGenConfig {
     /**

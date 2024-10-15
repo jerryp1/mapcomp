@@ -3,10 +3,6 @@ package edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.baseline;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDesc;
 import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
-/**
- * @author Feng Han
- * @date 2024/7/19
- */
 public class BaselinePkFkViewPtoDesc implements PtoDesc {
     /**
      * protocol ID

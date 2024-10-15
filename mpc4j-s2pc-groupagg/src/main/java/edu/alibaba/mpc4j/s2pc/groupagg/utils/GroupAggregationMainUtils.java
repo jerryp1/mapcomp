@@ -24,8 +24,6 @@ import java.util.Properties;
 /**
  * Group aggregation utilities for main.
  *
- * @author Li Peng
- * @date 2023/8/3
  */
 public class GroupAggregationMainUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationMainUtils.class);

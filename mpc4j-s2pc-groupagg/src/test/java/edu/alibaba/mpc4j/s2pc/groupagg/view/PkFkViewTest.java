@@ -28,10 +28,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-/**
- * @author Feng Han
- * @date 2024/7/22
- */
 @RunWith(Parameterized.class)
 public class PkFkViewTest extends AbstractTwoPartyPtoTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PkFkViewTest.class);

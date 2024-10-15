@@ -42,9 +42,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
 
 /**
  * Group aggregation starter.
- *
- * @author Li Peng
- * @date 2023/8/4
  */
 public class GroupAggregationStarter {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationStarter.class);

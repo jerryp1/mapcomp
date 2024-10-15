@@ -19,8 +19,6 @@ import edu.alibaba.mpc4j.s2pc.pso.cpsi.plpsi.PlpsiFactory;
 /**
  * configure of baseline PkFk view
  *
- * @author Feng Han
- * @date 2024/7/19
  */
 public class BaselinePkFkViewConfig extends AbstractMultiPartyPtoConfig implements PkFkViewConfig {
     /**

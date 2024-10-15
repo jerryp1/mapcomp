@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Group Aggregation protocol runner.
  *
- * @author Li Peng
- * @date 2023/8/3
  */
 public class GroupAggregationPtoRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationPtoRunner.class);

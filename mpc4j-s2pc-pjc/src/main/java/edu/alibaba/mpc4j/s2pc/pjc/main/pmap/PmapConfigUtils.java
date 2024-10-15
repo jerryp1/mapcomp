@@ -24,8 +24,6 @@ import java.util.Properties;
 /**
  * PMAP协议配置项工具类。
  *
- * @author Feng Han
- * @date 2023/11/20
  */
 public class PmapConfigUtils {
 

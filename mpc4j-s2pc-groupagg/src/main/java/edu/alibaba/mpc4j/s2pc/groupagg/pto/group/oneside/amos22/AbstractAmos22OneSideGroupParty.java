@@ -33,8 +33,6 @@ import java.util.stream.IntStream;
 /**
  * Group aggregation party, where the group flag is plaintext
  *
- * @author Feng Han
- * @date 2023/11/08
  */
 public abstract class AbstractAmos22OneSideGroupParty extends AbstractOneSideGroupParty implements OneSideGroupParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAmos22OneSideGroupParty.class);

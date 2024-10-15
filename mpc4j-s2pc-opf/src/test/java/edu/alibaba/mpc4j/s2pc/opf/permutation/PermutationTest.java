@@ -28,8 +28,6 @@ import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
 /**
  * Permutation test.
  *
- * @author Li Peng
- * @date 2023/10/12
  */
 @RunWith(Parameterized.class)
 public class PermutationTest extends AbstractTwoPartyPtoTest {

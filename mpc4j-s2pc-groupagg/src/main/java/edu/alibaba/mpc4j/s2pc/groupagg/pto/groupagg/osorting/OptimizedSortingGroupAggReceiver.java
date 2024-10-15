@@ -54,8 +54,6 @@ import java.util.stream.IntStream;
 /**
  * Optimized sorting-based group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/19
  */
 public class OptimizedSortingGroupAggReceiver extends AbstractGroupAggParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSortingGroupAggReceiver.class);

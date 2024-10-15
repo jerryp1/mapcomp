@@ -38,10 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * @author Feng Han
- * @date 2024/7/19
- */
 public class Php24PkFkViewReceiver extends AbstractTwoPartyPto implements PkFkViewReceiver {
     private final PlainPayloadMuxParty plainPayloadMuxParty;
     private final PmapClient<byte[]> pmapClient;

@@ -21,8 +21,6 @@ import java.util.stream.IntStream;
 /**
  * Prefix max aggregator.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public abstract class AbstractPrefixMaxAggregator extends AbstractPrefixGroupAggregator {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPrefixMaxAggregator.class);

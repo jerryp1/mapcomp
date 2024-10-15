@@ -37,8 +37,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
 /**
  * Group aggregation Test.
  *
- * @author Li Peng
- * @date 2023/11/9
  */
 @RunWith(Parameterized.class)
 public class GroupAggTest extends AbstractTwoPartyPtoTest {

@@ -37,8 +37,6 @@ import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
 /**
  * Prefix sum Test.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 @RunWith(Parameterized.class)
 public class PrefixSumTest extends AbstractTwoPartyPtoTest {

@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Secure Parallel Computation on Privately Partitioned Data and Applications. CCS 2022, pp. 151-164. 2022.
  * </p>
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public class Amos22ShareGroupPtoDesc implements PtoDesc {
     /**

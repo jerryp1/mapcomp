@@ -9,8 +9,6 @@ import java.util.Properties;
 /**
  * Triple test main class
  *
- * @author Li Peng
- * @date 2023/11/24
  */
 public class TupleTestMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(TupleTestMain.class);

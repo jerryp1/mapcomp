@@ -16,9 +16,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
 
 /**
  * Ahi22 Permutable Sorter Config.
- *
- * @author Li Peng
- * @date 2023/10/11
  */
 public class Ahi22SmallFieldPermGenConfig extends AbstractMultiPartyPtoConfig implements PermGenConfig {
     /**

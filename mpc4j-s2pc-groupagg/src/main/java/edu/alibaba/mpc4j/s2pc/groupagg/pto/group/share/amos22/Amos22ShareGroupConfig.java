@@ -12,8 +12,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.share.ShareGroupFactory.ShareGr
 /**
  * AMOS22 shared group aggregation Config.
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public class Amos22ShareGroupConfig extends AbstractMultiPartyPtoConfig implements ShareGroupConfig {
     /**

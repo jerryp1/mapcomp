@@ -29,8 +29,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
 /**
  * Triple test starter.
  *
- * @author Li Peng
- * @date 2023/11/24
  */
 public class TripleTestStarter {
     private static final Logger LOGGER = LoggerFactory.getLogger(TripleTestStarter.class);

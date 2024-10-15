@@ -48,8 +48,6 @@ import java.util.stream.IntStream;
 /**
  * Mix group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class MixGroupAggReceiver extends AbstractGroupAggParty {
     /**

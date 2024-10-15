@@ -8,8 +8,6 @@ import java.util.Vector;
 /**
  * Shuffle receiver thread.
  *
- * @author Li Peng
- * @date 2023/10/22
  */
 class ShuffleReceiverThread extends Thread {
     /**

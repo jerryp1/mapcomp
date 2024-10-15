@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.opf.shuffle.ShuffleFactory.ShuffleTypes;
 /**
  * Shuffle config.
  *
- * @author Li Peng
- * @date 2023/10/11
  */
 public interface ShuffleConfig extends MultiPartyPtoConfig {
     /**

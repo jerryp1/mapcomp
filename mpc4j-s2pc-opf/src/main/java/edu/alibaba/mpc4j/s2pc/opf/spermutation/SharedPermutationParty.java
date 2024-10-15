@@ -9,8 +9,6 @@ import java.util.Vector;
 /**
  * Shared permutation party interface.
  *
- * @author Li Peng
- * @date 2023/10/25
  */
 public interface SharedPermutationParty extends TwoPartyPto {
     /**

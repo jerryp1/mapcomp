@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.share.ShareGroupFactory.ShareGr
 /**
  * group aggregation config.
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public interface ShareGroupConfig extends MultiPartyPtoConfig {
     /**

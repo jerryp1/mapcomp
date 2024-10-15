@@ -21,8 +21,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Prefix xor sender.
  *
- * @author Li Peng
- * @date 2024/7/19
  */
 public class Php24PrefixXorSender extends AbstractPrefixXorAggregator {
 

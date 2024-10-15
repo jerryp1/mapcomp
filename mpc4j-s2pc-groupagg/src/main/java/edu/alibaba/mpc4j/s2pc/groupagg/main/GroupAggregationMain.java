@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 /**
  * Group aggregation main class.
  *
- * @author Li Peng
- * @date 2023/8/3
  */
 public class GroupAggregationMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupAggregationMain.class);

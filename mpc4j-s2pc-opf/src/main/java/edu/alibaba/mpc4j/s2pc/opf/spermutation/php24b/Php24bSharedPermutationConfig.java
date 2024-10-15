@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.s2pc.opf.spermutation.SharedPermutationFactory.SharedPe
 /**
  * Php+24 shared permutation config.
  *
- * @author Li Peng
- * @date 2023/5/25
  */
 public class Php24bSharedPermutationConfig extends AbstractMultiPartyPtoConfig implements SharedPermutationConfig {
     /**

@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.GroupTypes.AggTypes;
 /**
  * Group aggregation Party Thread.
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public class ShareGroupPartyThread extends Thread {
     /**

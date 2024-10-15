@@ -5,8 +5,6 @@ import java.math.BigInteger;
 /**
  * Group aggregation output, including the plain group attribute and result aggregation attribute.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class GroupAggOut {
     /**

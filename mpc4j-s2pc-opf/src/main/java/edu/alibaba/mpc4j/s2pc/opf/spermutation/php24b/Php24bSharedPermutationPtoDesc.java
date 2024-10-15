@@ -5,9 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
  * Php+24 shared permutation protocol description.
- *
- * @author Li Peng
- * @date 2023/5/25
  */
 public class Php24bSharedPermutationPtoDesc implements PtoDesc {
     /**

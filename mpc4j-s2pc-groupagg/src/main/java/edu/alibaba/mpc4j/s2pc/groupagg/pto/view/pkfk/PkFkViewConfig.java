@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewFactory.ViewPtoType
 /**
  * view config
  *
- * @author Feng Han
- * @date 2024/7/19
  */
 public interface PkFkViewConfig extends MultiPartyPtoConfig {
     /**

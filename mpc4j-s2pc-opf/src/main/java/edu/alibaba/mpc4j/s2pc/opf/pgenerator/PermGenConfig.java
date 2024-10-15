@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PermGenTypes;
 /**
  * permutation generator config.
  *
- * @author Feng Han
- * @date 2023/11/03
  */
 public interface PermGenConfig extends MultiPartyPtoConfig {
     /**

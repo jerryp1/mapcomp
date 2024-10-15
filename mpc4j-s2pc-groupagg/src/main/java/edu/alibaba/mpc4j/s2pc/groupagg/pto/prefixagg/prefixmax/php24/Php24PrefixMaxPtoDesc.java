@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * Php+24 prefix max protocol description.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public class Php24PrefixMaxPtoDesc implements PtoDesc {
     /**

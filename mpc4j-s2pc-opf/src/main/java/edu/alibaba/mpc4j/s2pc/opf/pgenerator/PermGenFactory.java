@@ -12,8 +12,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.smallfield.ahi22.Ahi22SmallFieldPer
 /**
  * permutation generator Factory
  *
- * @author Feng Han
- * @date 2023/11/03
  */
 public class PermGenFactory {
 

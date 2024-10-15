@@ -5,9 +5,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumFactory.
 
 /**
  * Prefix Sum Config.
- *
- * @author Li Peng
- * @date 2023/10/30
  */
 public interface PrefixSumConfig extends PrefixAggConfig {
     /**

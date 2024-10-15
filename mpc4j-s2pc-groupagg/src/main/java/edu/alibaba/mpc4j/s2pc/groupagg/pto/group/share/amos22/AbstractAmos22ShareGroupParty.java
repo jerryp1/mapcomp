@@ -29,8 +29,6 @@ import java.util.stream.IntStream;
 /**
  * Group aggregation party, where the group flag is secret shared
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public abstract class AbstractAmos22ShareGroupParty extends AbstractShareGroupParty implements ShareGroupParty {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAmos22ShareGroupParty.class);

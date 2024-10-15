@@ -5,9 +5,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 
 /**
  * One-side group aggregation protocol description, which is specially used for one-side TPC-H test.
- *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class OnesideGroupAggPtoDesc implements PtoDesc {
     /**

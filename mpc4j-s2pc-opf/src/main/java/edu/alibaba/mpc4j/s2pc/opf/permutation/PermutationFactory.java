@@ -13,9 +13,6 @@ import edu.alibaba.mpc4j.s2pc.opf.permutation.php24b.Php24bPermutationSender;
 
 /**
  * Permutation factory.
- *
- * @author Li Peng
- * @date 2023/10/11
  */
 public class PermutationFactory {
     /**

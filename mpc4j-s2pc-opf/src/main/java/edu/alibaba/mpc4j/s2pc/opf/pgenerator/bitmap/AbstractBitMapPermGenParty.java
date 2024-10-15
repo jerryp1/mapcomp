@@ -27,8 +27,6 @@ import java.util.stream.IntStream;
 /**
  * Permutable bitmap sorter abstract party
  *
- * @author Feng Han
- * @date 2023/10/27
  */
 public abstract class AbstractBitMapPermGenParty extends AbstractPermGenParty {
     /**

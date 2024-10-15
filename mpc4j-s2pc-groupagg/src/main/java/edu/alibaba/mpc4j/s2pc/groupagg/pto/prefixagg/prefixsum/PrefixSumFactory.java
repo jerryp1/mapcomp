@@ -11,8 +11,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.php24.Php24Prefix
 /**
  * Prefix sum factory.
  *
- * @author Li Peng
- * @date 2023/10/30
  */
 public class PrefixSumFactory {
     /**

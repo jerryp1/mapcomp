@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * Php+24 prefix sum protocol description.
  *
- * @author Li Peng
- * @date 2023/5/30
  */
 public class Php24PrefixSumPtoDesc implements PtoDesc {
     /**

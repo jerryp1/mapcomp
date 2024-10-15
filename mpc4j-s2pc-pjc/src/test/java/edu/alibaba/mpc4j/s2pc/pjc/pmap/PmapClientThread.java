@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * Pmap protocol test.
  *
- * @author Feng Han
- * @date 2023/11/03
  */
 public class PmapClientThread extends Thread {
     /**

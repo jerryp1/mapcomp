@@ -31,8 +31,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixmax.PrefixMaxFactory.
 /**
  * Php+24 prefix max Config.
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public class Php24PrefixMaxConfig extends AbstractMultiPartyPtoConfig implements PrefixMaxConfig {
     /**

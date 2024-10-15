@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 /**
  * PMID主函数。
  *
- * @author Weiran Liu
- * @date 2022/5/17
  */
 public class PmidMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);

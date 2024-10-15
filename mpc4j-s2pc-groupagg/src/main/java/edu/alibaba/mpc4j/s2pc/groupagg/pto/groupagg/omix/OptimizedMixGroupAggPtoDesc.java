@@ -7,9 +7,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Optimized mix group aggregation protocol description. The protocol comes from the following paper:
  * <p>
  * </p>
- *
- * @author Li Peng
- * @date 2023/11/25
  */
 public class OptimizedMixGroupAggPtoDesc implements PtoDesc {
     /**

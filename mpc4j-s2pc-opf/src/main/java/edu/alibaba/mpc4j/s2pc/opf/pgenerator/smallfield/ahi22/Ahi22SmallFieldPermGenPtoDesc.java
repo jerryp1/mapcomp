@@ -10,8 +10,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
  * Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security. 2022.
  * </p>
  *
- * @author Li Peng
- * @date 2023/10/11
  */
 public class Ahi22SmallFieldPermGenPtoDesc implements PtoDesc {
     /**

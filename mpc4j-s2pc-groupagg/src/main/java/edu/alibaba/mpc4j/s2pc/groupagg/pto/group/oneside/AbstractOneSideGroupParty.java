@@ -12,8 +12,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.GroupTypes.AggTypes;
 /**
  * Abstract group aggregation Party.
  *
- * @author Feng Han
- * @date 2023/11/06
  */
 public abstract class AbstractOneSideGroupParty extends AbstractTwoPartyPto implements OneSideGroupParty {
     /**

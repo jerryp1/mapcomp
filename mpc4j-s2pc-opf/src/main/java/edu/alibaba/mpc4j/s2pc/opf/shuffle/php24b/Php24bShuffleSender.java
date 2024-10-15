@@ -23,8 +23,6 @@ import java.util.stream.IntStream;
 /**
  * Php+24 un-shuffle sender.
  *
- * @author Li Peng
- * @date 2023/5/26
  */
 public class Php24bShuffleSender extends AbstractShuffleParty {
     /**

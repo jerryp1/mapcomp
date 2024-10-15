@@ -17,9 +17,6 @@ import java.util.stream.IntStream;
 
 /**
  * Abstract permutation receiver.
- *
- * @author Li Peng
- * @date 2023/10/11
  */
 public abstract class AbstractPermutationReceiver extends AbstractTwoPartyPto implements PermutationReceiver {
     /**

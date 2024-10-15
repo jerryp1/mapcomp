@@ -9,8 +9,6 @@ import java.util.Vector;
 /**
  * Prefix agg output
  *
- * @author Li Peng
- * @date 2023/11/1
  */
 public class PrefixAggOutput {
     /**

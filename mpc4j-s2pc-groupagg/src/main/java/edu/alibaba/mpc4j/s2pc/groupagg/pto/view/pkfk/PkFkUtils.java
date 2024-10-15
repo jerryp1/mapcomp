@@ -7,10 +7,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 
-/**
- * @author Feng Han
- * @date 2024/7/19
- */
 public class PkFkUtils {
     /**
      * add index for data

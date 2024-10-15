@@ -5,10 +5,6 @@ import edu.alibaba.mpc4j.common.tool.bitvector.BitVector;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewSender;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.pkfk.PkFkViewSenderOutput;
 
-/**
- * @author Feng Han
- * @date 2024/7/22
- */
 public class PkFkViewSenderThread extends Thread {
     /**
      * join key

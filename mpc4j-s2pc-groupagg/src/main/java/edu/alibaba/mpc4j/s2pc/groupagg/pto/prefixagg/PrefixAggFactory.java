@@ -12,10 +12,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixsum.PrefixSumFactory.
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorConfig;
 import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.prefixxor.PrefixXorFactory;
 
-/**
- * @author Li Peng
- * @date 2023/11/6
- */
 public class PrefixAggFactory {
 
     /**

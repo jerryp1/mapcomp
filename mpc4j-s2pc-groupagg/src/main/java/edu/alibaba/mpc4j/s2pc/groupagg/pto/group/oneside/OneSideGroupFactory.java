@@ -11,8 +11,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.oneside.amos22.Amos22OneSideGro
 /**
  * group aggregation factory
  *
- * @author Feng Han
- * @date 2023/11/06
  */
 public class OneSideGroupFactory extends GroupTypes {
     /**

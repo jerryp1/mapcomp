@@ -13,8 +13,6 @@ import java.util.Properties;
 /**
  * PJC协议主函数。
  *
- * @author Weiran Liu
- * @date 2022/11/15
  */
 public class PjcMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsoMain.class);

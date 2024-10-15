@@ -15,8 +15,6 @@ import java.util.Vector;
 /**
  * Abstract shared permutation sender.
  *
- * @author Li Peng
- * @date 2023/10/25
  */
 public abstract class AbstractSharedPermutationParty extends AbstractTwoPartyPto implements SharedPermutationParty {
     /**

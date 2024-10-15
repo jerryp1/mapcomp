@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.aby.basics.zl.SquareZlVector;
 /**
  * Permutation sender thread.
  *
- * @author Li Peng
- * @date 2023/10/12
  */
 class PermutationSenderThread extends Thread {
     /**

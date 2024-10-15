@@ -40,8 +40,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Bitmap group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/8
  */
 public class BitmapGroupAggReceiver extends AbstractGroupAggParty {
     /**

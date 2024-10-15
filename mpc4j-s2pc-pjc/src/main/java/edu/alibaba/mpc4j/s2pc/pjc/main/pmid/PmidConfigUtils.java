@@ -16,8 +16,6 @@ import java.util.Properties;
 /**
  * PMID协议配置项工具类。
  *
- * @author Weiran Liu
- * @date 2022/5/17
  */
 public class PmidConfigUtils {
 

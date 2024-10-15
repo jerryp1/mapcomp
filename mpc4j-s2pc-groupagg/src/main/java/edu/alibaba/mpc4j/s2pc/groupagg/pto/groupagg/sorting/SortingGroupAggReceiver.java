@@ -50,8 +50,6 @@ import java.util.stream.IntStream;
 /**
  * Sorting-based group aggregation receiver.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class SortingGroupAggReceiver extends AbstractGroupAggParty {
     /**

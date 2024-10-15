@@ -40,8 +40,6 @@ import static edu.alibaba.mpc4j.s2pc.pcg.mtg.z2.impl.hardcode.HardcodeZ2MtgSende
 /**
  * Bitmap group aggregation sender.
  *
- * @author Li Peng
- * @date 2023/11/8
  */
 public class BitmapGroupAggSender extends AbstractGroupAggParty {
     /**

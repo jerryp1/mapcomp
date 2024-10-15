@@ -30,8 +30,6 @@ import static edu.alibaba.mpc4j.common.tool.CommonConstants.BLOCK_BIT_LENGTH;
 /**
  * Shuffle test.
  *
- * @author Li Peng
- * @date 2023/10/22
  */
 @RunWith(Parameterized.class)
 public class ShuffleTest extends AbstractTwoPartyPtoTest {

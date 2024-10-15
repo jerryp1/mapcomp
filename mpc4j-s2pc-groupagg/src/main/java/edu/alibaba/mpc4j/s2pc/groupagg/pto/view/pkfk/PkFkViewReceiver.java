@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.view.ViewParty;
 /**
  * view receiver, the party who holds the foreign key
  *
- * @author Feng Han
- * @date 2024/7/19
  */
 public interface PkFkViewReceiver extends ViewParty {
     /**

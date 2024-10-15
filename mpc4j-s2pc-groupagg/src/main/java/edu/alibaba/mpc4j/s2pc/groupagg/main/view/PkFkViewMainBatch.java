@@ -26,10 +26,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-/**
- * @author Feng Han
- * @date 2024/7/24
- */
 public class PkFkViewMainBatch {
     private static final Logger LOGGER = LoggerFactory.getLogger(PkFkViewMainBatch.class);
     /**

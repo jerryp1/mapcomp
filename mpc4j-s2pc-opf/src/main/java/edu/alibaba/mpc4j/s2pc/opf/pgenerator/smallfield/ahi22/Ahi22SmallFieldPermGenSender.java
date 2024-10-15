@@ -7,8 +7,6 @@ import edu.alibaba.mpc4j.s2pc.opf.pgenerator.PermGenFactory.PartyTypes;
 /**
  * Ahi22 Permutable Sorter Sender.
  *
- * @author Li Peng
- * @date 2023/10/11
  */
 public class Ahi22SmallFieldPermGenSender extends AbstractAhi22SmallFieldPermGenParty {
     public Ahi22SmallFieldPermGenSender(Rpc rpc, Party otherParty, Ahi22SmallFieldPermGenConfig config) {

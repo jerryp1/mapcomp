@@ -8,8 +8,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.group.GroupTypes.AggTypes;
 /**
  * abstract group aggregation party for shared values and flag
  *
- * @author Feng Han
- * @date 2023/11/28
  */
 public interface ShareGroupParty extends TwoPartyPto {
     /**

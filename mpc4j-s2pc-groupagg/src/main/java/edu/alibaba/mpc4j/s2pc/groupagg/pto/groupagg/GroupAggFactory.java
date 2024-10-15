@@ -33,8 +33,6 @@ import edu.alibaba.mpc4j.s2pc.groupagg.pto.prefixagg.PrefixAggFactory.PrefixAggT
 /**
  * Group aggregation factory.
  *
- * @author Li Peng
- * @date 2023/11/3
  */
 public class GroupAggFactory {
     /**

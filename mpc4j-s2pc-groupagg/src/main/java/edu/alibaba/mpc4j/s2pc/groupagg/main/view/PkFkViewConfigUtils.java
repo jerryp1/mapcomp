@@ -12,10 +12,6 @@ import edu.alibaba.mpc4j.s2pc.pso.main.plpsi.PlpsiConfigUtils;
 
 import java.util.Properties;
 
-/**
- * @author Feng Han
- * @date 2024/7/23
- */
 public class PkFkViewConfigUtils {
     private PkFkViewConfigUtils() {
         // empty

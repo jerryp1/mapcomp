@@ -6,8 +6,6 @@ import edu.alibaba.mpc4j.common.rpc.desc.PtoDescManager;
 /**
  * Php+24b un-shuffle protocol description.
  *
- * @author Li Peng
- * @date 2023/5/26
  */
 public class Php24bShufflePtoDesc implements PtoDesc {
     /**

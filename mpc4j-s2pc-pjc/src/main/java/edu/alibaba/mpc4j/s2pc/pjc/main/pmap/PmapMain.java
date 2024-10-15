@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 /**
  * PMAP主函数。
  *
- * @author Feng Han
- * @date 2023/11/20
  */
 public class PmapMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(PmapMain.class);
